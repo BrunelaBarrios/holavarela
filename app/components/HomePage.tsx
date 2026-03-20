@@ -1,0 +1,1297 @@
+'use client'
+
+import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
+import { MyTunerWidget } from "./MyTunerWidget"
+import {
+  ArrowRight,
+  CalendarDays,
+  GraduationCap,
+  Mail,
+  MapPin,
+  Phone,
+  Pill,
+  Play,
+  Radio,
+  UserRound,
+  X,
+} from "lucide-react"
+import { supabase } from "../supabase"
+import { RADIO_STORAGE_KEY } from "../lib/localStorageKeys"
+
+type RadioConfig = {
+  title: string
+  description: string
+  streamUrl: string
+  isLive: boolean
+}
+
+type Comercio = {
+  id: number
+  nombre: string
+  descripcion: string | null
+  direccion: string | null
+  telefono: string | null
+  imagen?: string | null
+  imagen_url?: string | null
+  destacado?: boolean | null
+  usa_whatsapp?: boolean | null
+}
+
+type Evento = {
+  id: number
+  titulo: string
+  descripcion: string
+  fecha: string
+  ubicacion: string
+  imagen?: string | null
+  estado?: string | null
+}
+
+type Curso = {
+  id: number
+  nombre: string
+  descripcion: string
+  responsable: string
+  contacto: string
+  imagen: string | null
+  destacado?: boolean | null
+  usa_whatsapp?: boolean | null
+}
+
+type Servicio = {
+  id: number
+  nombre: string
+  categoria: string
+  descripcion: string | null
+  responsable: string | null
+  contacto: string | null
+  direccion: string | null
+  imagen: string | null
+  destacado?: boolean | null
+  usa_whatsapp?: boolean | null
+}
+
+type SobreVarelaConfig = {
+  titulo: string
+  texto_1: string
+  texto_2: string
+  texto_3: string
+  imagen_url: string | null
+}
+
+type WelcomeHighlight = {
+  key: string
+  kind: "comercio" | "servicio" | "curso"
+  title: string
+  description: string
+  image: string | null
+  subtitle?: string | null
+  contact?: string | null
+  usesWhatsapp?: boolean
+}
+
+const defaultRadioConfig: RadioConfig = {
+  title: "Delta FM 88.3",
+  description: "Escucha Delta FM 88.3 en vivo desde Jose Pedro Varela.",
+  streamUrl:
+    "https://mytuner-radio.com/radio/delta-fm-uruguay-450623/?utm_source=widget&utm_medium=player",
+  isLive: true,
+}
+
+const defaultSobreVarela: SobreVarelaConfig = {
+  titulo: "Jose Pedro Varela",
+  texto_1:
+    "Jose Pedro Varela es una ciudad del departamento de Lavalleja, Uruguay. Conocida por su rica historia y su comunidad vibrante, es un importante centro agropecuario de la region.",
+  texto_2:
+    "La ciudad cuenta con todos los servicios esenciales y una amplia variedad de comercios locales que sirven a la comunidad y sus alrededores.",
+  texto_3:
+    "A traves de Hola Varela!, podes mantenerte informado sobre todo lo que acontece en nuestra ciudad: eventos culturales, comercios, cursos, servicios y nuestra querida radio local.",
+  imagen_url: null,
+}
+
+const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
+const WELCOME_LAST_KEY = "guia-varela-last-highlight"
+
+export function HomePage() {
+  const [radioConfig, setRadioConfig] = useState<RadioConfig>(defaultRadioConfig)
+  const [featuredBusinesses, setFeaturedBusinesses] = useState<Comercio[]>([])
+  const [eventos, setEventos] = useState<Evento[]>([])
+  const [cursos, setCursos] = useState<Curso[]>([])
+  const [servicios, setServicios] = useState<Servicio[]>([])
+  const [allCursos, setAllCursos] = useState<Curso[]>([])
+  const [allServicios, setAllServicios] = useState<Servicio[]>([])
+  const [sobreVarela, setSobreVarela] = useState<SobreVarelaConfig>(defaultSobreVarela)
+  const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null)
+  const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
+  const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null)
+  const [selectedCurso, setSelectedCurso] = useState<Curso | null>(null)
+  const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(null)
+
+  const serviciosAgrupados = useMemo(() => {
+    return servicios.reduce<Record<string, Servicio[]>>((acc, servicio) => {
+      const categoria = servicio.categoria?.trim() || "Otros"
+      if (!acc[categoria]) {
+        acc[categoria] = []
+      }
+      acc[categoria].push(servicio)
+      return acc
+    }, {})
+  }, [servicios])
+
+  useEffect(() => {
+    const loadRadioConfig = () => {
+      const raw = window.localStorage.getItem(RADIO_STORAGE_KEY)
+      if (!raw) {
+        setRadioConfig(defaultRadioConfig)
+        return
+      }
+
+      try {
+        const parsed = JSON.parse(raw) as RadioConfig
+        setRadioConfig({ ...defaultRadioConfig, ...parsed })
+      } catch {
+        setRadioConfig(defaultRadioConfig)
+      }
+    }
+
+    const loadHomeData = async () => {
+      const today = new Date().toISOString().slice(0, 10)
+
+      const [
+        { data: comerciosData },
+        { data: eventosData },
+        { data: cursosData },
+        { data: serviciosData },
+        { data: sobreVarelaData },
+      ] =
+        await Promise.all([
+          supabase
+            .from("comercios")
+            .select("*")
+            .or("estado.is.null,estado.eq.activo")
+            .eq("destacado", true)
+            .order("id", { ascending: false })
+            .limit(8),
+        supabase
+          .from("eventos")
+          .select("*")
+          .or("estado.is.null,estado.eq.activo")
+          .gte("fecha", today)
+          .order("fecha", { ascending: true }),
+          supabase
+            .from("cursos")
+            .select("*")
+            .or("estado.is.null,estado.eq.activo")
+            .order("id", { ascending: false }),
+          supabase
+            .from("servicios")
+            .select("*")
+            .or("estado.is.null,estado.eq.activo")
+            .order("id", { ascending: false }),
+          supabase
+            .from("sitio")
+            .select("titulo, texto_1, texto_2, texto_3, imagen_url")
+            .eq("id", 1)
+            .maybeSingle(),
+        ])
+
+      setFeaturedBusinesses(comerciosData || [])
+      setEventos((eventosData || []).slice(0, 6))
+      setCursos(cursosData || [])
+      setServicios((serviciosData || []).slice(0, 8))
+      setAllCursos(cursosData || [])
+      setAllServicios(serviciosData || [])
+      if (sobreVarelaData) {
+        setSobreVarela({
+          ...defaultSobreVarela,
+          ...sobreVarelaData,
+        })
+      }
+
+      const alreadyShownThisSession =
+        window.sessionStorage.getItem(WELCOME_SESSION_KEY) === "true"
+
+      const welcomeItems: WelcomeHighlight[] = [
+        ...(comerciosData || []).map((item) => ({
+          key: `comercio-${item.id}`,
+          kind: "comercio" as const,
+          title: item.nombre,
+          description: item.descripcion || "Conoce este comercio destacado de la ciudad.",
+          image: item.imagen_url || item.imagen || null,
+          subtitle: item.direccion || null,
+          contact: item.telefono || null,
+          usesWhatsapp: item.usa_whatsapp ?? true,
+        })),
+        ...((serviciosData || [])
+          .filter((item) => item.destacado)
+          .map((item) => ({
+            key: `servicio-${item.id}`,
+            kind: "servicio" as const,
+            title: item.nombre,
+            description:
+              item.descripcion || "Servicio destacado para descubrir en Jose Pedro Varela.",
+            image: item.imagen || null,
+            subtitle: item.categoria || null,
+            contact: item.contacto || null,
+            usesWhatsapp: item.usa_whatsapp ?? true,
+          }))),
+        ...((cursosData || [])
+          .filter((item) => item.destacado)
+          .map((item) => ({
+            key: `curso-${item.id}`,
+            kind: "curso" as const,
+            title: item.nombre,
+            description:
+              item.descripcion || "Curso o clase destacada para sumarte en la ciudad.",
+            image: item.imagen || null,
+            subtitle: item.responsable || null,
+            contact: item.contacto || null,
+            usesWhatsapp: item.usa_whatsapp ?? true,
+          }))),
+      ]
+
+      if (!alreadyShownThisSession && welcomeItems.length > 0) {
+        const lastShownKey = window.localStorage.getItem(WELCOME_LAST_KEY)
+        const lastIndex = welcomeItems.findIndex((item) => item.key === lastShownKey)
+        const nextIndex = lastIndex >= 0 ? (lastIndex + 1) % welcomeItems.length : 0
+        const nextItem = welcomeItems[nextIndex]
+
+        setWelcomeHighlight(nextItem)
+        window.localStorage.setItem(WELCOME_LAST_KEY, nextItem.key)
+      }
+    }
+
+    loadRadioConfig()
+    loadHomeData()
+
+    const refreshLocalConfig = () => {
+      loadRadioConfig()
+    }
+
+    window.addEventListener("radio-config-updated", refreshLocalConfig)
+
+    return () => {
+      window.removeEventListener("radio-config-updated", refreshLocalConfig)
+    }
+  }, [])
+
+  const formatearFecha = (fecha: string) => {
+    if (!fecha) return "Sin fecha"
+
+    const date = new Date(`${fecha}T00:00:00`)
+    if (Number.isNaN(date.getTime())) return fecha
+
+    return date.toLocaleDateString("es-UY", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+  }
+
+  const whatsappLink = (telefono: string | null) => {
+    if (!telefono) return "#"
+    return `https://wa.me/${telefono.replace(/\D/g, "")}`
+  }
+
+  const getContactHref = (contacto: string | null, usaWhatsapp?: boolean | null) => {
+    if (!contacto) return "#"
+    return usaWhatsapp === false ? `tel:${contacto}` : whatsappLink(contacto)
+  }
+
+  const getContactLabel = (usaWhatsapp?: boolean | null) =>
+    usaWhatsapp === false ? "Llamar" : "Contactar por WhatsApp"
+
+  const closeWelcomeHighlight = () => {
+    window.sessionStorage.setItem(WELCOME_SESSION_KEY, "true")
+    setWelcomeHighlight(null)
+  }
+
+  const openWelcomeDetail = () => {
+    if (!welcomeHighlight) return
+
+    if (welcomeHighlight.kind === "comercio") {
+      const comercio = featuredBusinesses.find(
+        (item) => `comercio-${item.id}` === welcomeHighlight.key
+      )
+      if (comercio) {
+        setSelectedComercio(comercio)
+      }
+    }
+
+    if (welcomeHighlight.kind === "servicio") {
+      const servicio = servicios.find(
+        (item) => `servicio-${item.id}` === welcomeHighlight.key
+      ) || allServicios.find(
+        (item) => `servicio-${item.id}` === welcomeHighlight.key
+      )
+      if (servicio) {
+        setSelectedServicio(servicio)
+      }
+    }
+
+    if (welcomeHighlight.kind === "curso") {
+      const curso =
+        cursos.find((item) => `curso-${item.id}` === welcomeHighlight.key) ||
+        allCursos.find((item) => `curso-${item.id}` === welcomeHighlight.key)
+      if (curso) {
+        setSelectedCurso(curso)
+      }
+    }
+
+    closeWelcomeHighlight()
+  }
+
+  return (
+    <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#f2f7f5_48%,#ffffff_100%)] text-slate-900">
+      {welcomeHighlight && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/70 p-4">
+          <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
+            <button
+              type="button"
+              onClick={closeWelcomeHighlight}
+              className="absolute right-4 top-4 z-10 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white"
+              aria-label="Cerrar bienvenida"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr]">
+              <div className="bg-slate-100">
+                {welcomeHighlight.image ? (
+                  <img
+                    src={welcomeHighlight.image}
+                    alt={welcomeHighlight.title}
+                    className="h-full min-h-[280px] w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex min-h-[280px] items-center justify-center text-slate-400">
+                    Sin imagen
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 md:p-8">
+                <div className="mb-4 inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
+                  Descubri en Varela
+                </div>
+
+                <h2 className="text-3xl font-semibold leading-tight text-slate-900">
+                  {welcomeHighlight.title}
+                </h2>
+
+                {welcomeHighlight.subtitle && (
+                  <p className="mt-3 text-base font-medium text-slate-500">
+                    {welcomeHighlight.subtitle}
+                  </p>
+                )}
+
+                <p className="mt-5 text-lg leading-8 text-slate-600">
+                  {welcomeHighlight.description}
+                </p>
+
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={openWelcomeDetail}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+                  >
+                    Ver mas
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+
+                  {welcomeHighlight.contact && (
+                    <a
+                      href={getContactHref(
+                        welcomeHighlight.contact,
+                        welcomeHighlight.usesWhatsapp
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                    >
+                      <Phone className="h-4 w-4" />
+                      {getContactLabel(welcomeHighlight.usesWhatsapp)}
+                    </a>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={closeWelcomeHighlight}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedComercio && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4">
+          <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setSelectedComercio(null)}
+              className="absolute right-4 top-4 z-10 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white"
+              aria-label="Cerrar detalle"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="bg-slate-100">
+                {selectedComercio.imagen_url || selectedComercio.imagen ? (
+                  <img
+                    src={selectedComercio.imagen_url || selectedComercio.imagen || ""}
+                    alt={selectedComercio.nombre}
+                    className="h-full min-h-[320px] w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex min-h-[320px] items-center justify-center text-slate-400">
+                    Sin imagen
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 md:p-8">
+                <h3 className="text-3xl font-semibold leading-tight text-slate-900">
+                  {selectedComercio.nombre}
+                </h3>
+
+                {selectedComercio.direccion && (
+                  <div className="mt-4 flex items-center gap-2 text-slate-500">
+                    <MapPin className="h-4 w-4" />
+                    <span>{selectedComercio.direccion}</span>
+                  </div>
+                )}
+
+                {selectedComercio.telefono && (
+                  <div className="mt-3 flex items-center gap-2 text-slate-500">
+                    <Phone className="h-4 w-4" />
+                    <span>{selectedComercio.telefono}</span>
+                  </div>
+                )}
+
+                {selectedComercio.descripcion && (
+                  <p className="mt-6 text-lg leading-8 text-slate-600">
+                    {selectedComercio.descripcion}
+                  </p>
+                )}
+
+                <div className="mt-8 flex flex-wrap gap-3">
+                  {selectedComercio.telefono && (
+                    <a
+                      href={getContactHref(
+                        selectedComercio.telefono,
+                        selectedComercio.usa_whatsapp
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
+                    >
+                      <Phone className="h-4 w-4" />
+                      {getContactLabel(selectedComercio.usa_whatsapp)}
+                    </a>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedComercio(null)}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedServicio && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4">
+          <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setSelectedServicio(null)}
+              className="absolute right-4 top-4 z-10 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white"
+              aria-label="Cerrar detalle"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="bg-slate-100">
+                {selectedServicio.imagen ? (
+                  <img
+                    src={selectedServicio.imagen}
+                    alt={selectedServicio.nombre}
+                    className="h-full min-h-[320px] w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex min-h-[320px] items-center justify-center text-slate-400">
+                    Sin imagen
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 md:p-8">
+                <div className="mb-4 inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-700">
+                  {selectedServicio.categoria}
+                </div>
+
+                <h3 className="text-3xl font-semibold leading-tight text-slate-900">
+                  {selectedServicio.nombre}
+                </h3>
+
+                {selectedServicio.descripcion && (
+                  <p className="mt-6 text-lg leading-8 text-slate-600">
+                    {selectedServicio.descripcion}
+                  </p>
+                )}
+
+                <div className="mt-6 space-y-3 text-slate-600">
+                  {selectedServicio.responsable && (
+                    <div className="flex items-center gap-2">
+                      <UserRound className="h-4 w-4" />
+                      <span>{selectedServicio.responsable}</span>
+                    </div>
+                  )}
+                  {selectedServicio.contacto && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4" />
+                      <span>{selectedServicio.contacto}</span>
+                    </div>
+                  )}
+                  {selectedServicio.direccion && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      <span>{selectedServicio.direccion}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-8 flex flex-wrap gap-3">
+                  {selectedServicio.contacto && (
+                    <a
+                      href={getContactHref(
+                        selectedServicio.contacto,
+                        selectedServicio.usa_whatsapp
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+                    >
+                      <Phone className="h-4 w-4" />
+                      {getContactLabel(selectedServicio.usa_whatsapp)}
+                    </a>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedServicio(null)}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedEvento && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4">
+          <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setSelectedEvento(null)}
+              className="absolute right-4 top-4 z-10 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white"
+              aria-label="Cerrar detalle"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="bg-slate-100">
+                {selectedEvento.imagen ? (
+                  <img
+                    src={selectedEvento.imagen}
+                    alt={selectedEvento.titulo}
+                    className="h-full min-h-[320px] w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex min-h-[320px] items-center justify-center text-slate-400">
+                    Sin imagen
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 md:p-8">
+                <div className="mb-4 flex items-center gap-2 text-base font-medium text-blue-500">
+                  <CalendarDays className="h-5 w-5" />
+                  <span>{formatearFecha(selectedEvento.fecha)}</span>
+                </div>
+
+                <h3 className="text-3xl font-semibold leading-tight text-slate-900">
+                  {selectedEvento.titulo}
+                </h3>
+
+                <div className="mt-4 flex items-center gap-2 text-slate-500">
+                  <MapPin className="h-4 w-4" />
+                  <span>{selectedEvento.ubicacion}</span>
+                </div>
+
+                <p className="mt-6 text-lg leading-8 text-slate-600">
+                  {selectedEvento.descripcion}
+                </p>
+
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Link
+                    href="/eventos"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+                  >
+                    Ver todos los eventos
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedEvento(null)}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedCurso && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4">
+          <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setSelectedCurso(null)}
+              className="absolute right-4 top-4 z-10 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white"
+              aria-label="Cerrar detalle"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="bg-slate-100">
+                {selectedCurso.imagen ? (
+                  <img
+                    src={selectedCurso.imagen}
+                    alt={selectedCurso.nombre}
+                    className="h-full min-h-[320px] w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex min-h-[320px] items-center justify-center text-slate-400">
+                    Sin imagen
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 md:p-8">
+                <h3 className="text-3xl font-semibold leading-tight text-slate-900">
+                  {selectedCurso.nombre}
+                </h3>
+
+                <div className="mt-4 flex items-center gap-2 text-slate-500">
+                  <GraduationCap className="h-4 w-4" />
+                  <span>{selectedCurso.responsable}</span>
+                </div>
+
+                <div className="mt-3 flex items-center gap-2 text-slate-500">
+                  <Phone className="h-4 w-4" />
+                  <span>{selectedCurso.contacto}</span>
+                </div>
+
+                <p className="mt-6 text-lg leading-8 text-slate-600">
+                  {selectedCurso.descripcion}
+                </p>
+
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <a
+                    href={getContactHref(
+                      selectedCurso.contacto,
+                      selectedCurso.usa_whatsapp
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+                  >
+                    <Phone className="h-4 w-4" />
+                    {getContactLabel(selectedCurso.usa_whatsapp)}
+                  </a>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCurso(null)}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <header className="sticky top-0 z-50 border-b border-white/60 bg-white/80 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+          <Link href="/" className="flex items-center gap-3">
+            <img
+              src="/logo-varela-chico.png"
+              alt="Hola Varela"
+              className="h-10 w-auto"
+            />
+            <span className="text-[20px] font-semibold tracking-tight">
+              Hola Varela!
+            </span>
+          </Link>
+
+          <nav className="hidden items-center gap-8 text-[15px] font-medium text-slate-700 md:flex">
+            <a href="#inicio" className="hover:text-blue-500">
+              Inicio
+            </a>
+            <a href="#radio" className="hover:text-blue-500">
+              Radio en Vivo
+            </a>
+            <a href="#comercios" className="hover:text-blue-500">
+              Comercios
+            </a>
+            <a href="#eventos" className="hover:text-blue-500">
+              Eventos
+            </a>
+            <a href="#cursos" className="hover:text-blue-500">
+              Cursos y Clases
+            </a>
+            <a href="#contacto" className="hover:text-blue-500">
+              Contacto
+            </a>
+          </nav>
+        </div>
+      </header>
+
+      <section
+        id="inicio"
+        className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,#d7f3df_0%,#eff9f2_38%,#eef6ff_100%)] py-20 md:py-28"
+      >
+        <div className="absolute inset-x-0 top-0 -z-0 h-56 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.15),transparent_60%)]" />
+        <div className="absolute -left-16 top-20 -z-0 h-48 w-48 rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="absolute right-0 top-10 -z-0 h-56 w-56 rounded-full bg-emerald-200/40 blur-3xl" />
+
+        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+          <div className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-white/80 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm">
+            <Radio className="h-4 w-4" />
+            Jose Pedro Varela, Uruguay
+          </div>
+
+          <div className="mx-auto max-w-5xl">
+            <h1 className="text-4xl font-bold leading-[1.05] tracking-tight text-slate-950 sm:text-5xl lg:text-7xl">
+              Todo lo que pasa en Jose Pedro Varela en un solo lugar
+            </h1>
+          </div>
+
+          <p className="mx-auto mt-8 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
+            Informacion de la ciudad, comercios, eventos, cursos, servicios y radio en vivo con una experiencia mas clara y ordenada.
+          </p>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm font-medium text-slate-700">
+            <span className="rounded-full border border-white/80 bg-white/75 px-4 py-2 shadow-sm">
+              Radio local en vivo
+            </span>
+            <span className="rounded-full border border-white/80 bg-white/75 px-4 py-2 shadow-sm">
+              Comercios destacados
+            </span>
+            <span className="rounded-full border border-white/80 bg-white/75 px-4 py-2 shadow-sm">
+              Cursos y servicios de la ciudad
+            </span>
+          </div>
+
+          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <button
+              onClick={() =>
+                document.getElementById("radio")?.scrollIntoView({ behavior: "smooth" })
+              }
+              className="inline-flex items-center gap-3 rounded-2xl bg-slate-950 px-8 py-4 text-base font-semibold text-white shadow-[0_18px_40px_-20px_rgba(15,23,42,0.85)] transition hover:-translate-y-0.5 hover:bg-slate-900"
+            >
+              <Radio className="h-5 w-5" />
+              Escuchar Radio
+              <ArrowRight className="h-5 w-5" />
+            </button>
+
+            <Link
+              href="/comercios"
+              className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/90 px-8 py-4 text-base font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-600"
+            >
+              Ver comercios
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section id="radio" className="py-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-start justify-between gap-6 rounded-[32px] border border-white/50 bg-[linear-gradient(120deg,#1d4ed8_0%,#0ea5e9_55%,#34d399_120%)] px-8 py-9 text-white shadow-[0_24px_60px_-30px_rgba(14,116,144,0.9)] md:flex-row md:items-center">
+            <div className="flex items-center gap-6">
+              <div className="flex h-28 w-28 items-center justify-center rounded-full bg-white/15">
+                <Radio className="h-12 w-12" />
+              </div>
+
+              <div>
+                <h2 className="text-4xl font-bold">{radioConfig.title}</h2>
+                <p className="mt-3 text-xl text-white/90">
+                  {radioConfig.description}
+                </p>
+                <div className="mt-4 flex items-center gap-2 text-white/95">
+                  <Radio className="h-4 w-4" />
+                  <span className="text-base">
+                    {radioConfig.isLive ? "En vivo" : "Fuera del aire"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full max-w-xl">
+              {radioConfig.streamUrl ? (
+                <MyTunerWidget />
+              ) : (
+                <Link
+                  href="/admin/radio"
+                  className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-white px-8 py-5 text-xl font-semibold text-blue-500 shadow-sm transition hover:bg-slate-50"
+                >
+                  <Play className="h-6 w-6 fill-current" />
+                  Configurar radio
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="comercios" className="py-18">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <div className="mb-4 inline-flex rounded-full bg-blue-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">
+              Seleccionados para destacar
+            </div>
+            <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
+              Comercios Destacados
+            </h2>
+            <p className="mt-4 text-xl text-slate-500">
+              Elegidos desde el panel admin para aparecer en la home
+            </p>
+            <div className="mt-6">
+              <Link
+                href="/comercios"
+                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+              >
+                Ver todos los comercios
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            {featuredBusinesses.map((business) => {
+              const imageSrc = business.imagen_url || business.imagen
+
+              return (
+                <div
+                  key={business.id}
+                  className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.5)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(59,130,246,0.35)]"
+                >
+                  {imageSrc && (
+                    <img
+                      src={imageSrc}
+                      alt={business.nombre}
+                      className="h-52 w-full object-cover"
+                    />
+                  )}
+
+                  <div className="p-5">
+                    <h3 className="text-[22px] font-semibold text-slate-900">
+                      {business.nombre}
+                    </h3>
+                    {business.descripcion && (
+                      <p className="mt-2 line-clamp-2 text-base text-slate-500">
+                        {business.descripcion}
+                      </p>
+                    )}
+                    {business.direccion && (
+                      <p className="mt-2 text-sm text-slate-500">
+                        {business.direccion}
+                      </p>
+                    )}
+
+                    {business.telefono && (
+                      <a
+                        href={getContactHref(
+                          business.telefono,
+                          business.usa_whatsapp
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-3 text-lg font-semibold text-white transition hover:bg-green-600"
+                      >
+                        <Phone className="h-5 w-5" />
+                        {business.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
+                      </a>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedComercio(business)}
+                      className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
+                    >
+                      Ver mas
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section id="servicios" className="py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <div className="mb-4 inline-flex rounded-full bg-amber-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">
+              Profesionales y apoyo local
+            </div>
+            <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
+              Servicios y Profesionales
+            </h2>
+            <p className="mt-4 text-xl text-slate-500">
+              Abogados, escribanos, alojamientos y otros servicios locales
+            </p>
+            <div className="mt-6">
+              <Link
+                href="/servicios"
+                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+              >
+                Ver todos los servicios
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+
+          {servicios.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
+              Todavia no hay servicios cargados.
+            </div>
+          ) : (
+            <div className="space-y-10">
+              {Object.entries(serviciosAgrupados).map(([categoria, items]) => (
+                <section key={categoria}>
+                  <div className="mb-5 flex items-center gap-3">
+                    <div className="h-px flex-1 bg-amber-100" />
+                    <h3 className="rounded-full bg-amber-50 px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-amber-700">
+                      {categoria}
+                    </h3>
+                    <div className="h-px flex-1 bg-amber-100" />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+                    {items.map((servicio) => (
+                      <div
+                        key={servicio.id}
+                        className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"
+                      >
+                        {servicio.imagen && (
+                          <img
+                            src={servicio.imagen}
+                            alt={servicio.nombre}
+                            className="h-48 w-full object-cover"
+                          />
+                        )}
+
+                        <div className="p-5">
+                          <h3 className="text-xl font-semibold text-slate-900">
+                            {servicio.nombre}
+                          </h3>
+
+                          {servicio.descripcion && (
+                            <p className="mt-3 line-clamp-3 text-sm leading-7 text-slate-500">
+                              {servicio.descripcion}
+                            </p>
+                          )}
+
+                          <div className="mt-4 space-y-2 text-sm text-slate-600">
+                            {servicio.responsable && (
+                              <div className="flex items-center gap-2">
+                                <UserRound className="h-4 w-4" />
+                                <span>{servicio.responsable}</span>
+                              </div>
+                            )}
+
+                            {servicio.contacto && (
+                              <div className="flex items-center gap-2">
+                                <Phone className="h-4 w-4" />
+                                <span>{servicio.contacto}</span>
+                              </div>
+                            )}
+
+                            {servicio.direccion && (
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4" />
+                                <span>{servicio.direccion}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setSelectedServicio(servicio)}
+                            className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
+                          >
+                            Ver mas
+                            <ArrowRight className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section id="eventos" className="py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <div className="mb-4 inline-flex rounded-full bg-sky-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
+              Agenda viva
+            </div>
+            <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
+              Proximos Eventos
+            </h2>
+            <p className="mt-4 text-xl text-slate-500">
+              Ordenados por fecha y mostrando solo los que vienen
+            </p>
+            <div className="mt-6">
+              <Link
+                href="/eventos"
+                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+              >
+                Ver todos los eventos
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            {eventos.map((event) => (
+              <div
+                key={event.id}
+                className="overflow-hidden rounded-[28px] border border-white/80 bg-white/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)]"
+              >
+                {event.imagen && (
+                  <img
+                    src={event.imagen}
+                    alt={event.titulo}
+                    className="h-64 w-full object-cover"
+                  />
+                )}
+
+                <div className="p-5">
+                  <div className="mb-4 flex items-center gap-2 text-lg text-blue-500">
+                    <CalendarDays className="h-5 w-5" />
+                    <span>{formatearFecha(event.fecha)}</span>
+                  </div>
+
+                  <h3 className="text-[22px] font-semibold text-slate-900">
+                    {event.titulo}
+                  </h3>
+
+                  <p className="mt-2 text-sm text-slate-500">{event.ubicacion}</p>
+                  <p className="mt-3 text-lg leading-8 text-slate-500">
+                    {event.descripcion}
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedEvento(event)}
+                    className="mt-5 inline-flex items-center gap-2 text-lg font-medium text-blue-500 hover:text-blue-600"
+                  >
+                    Ver mas
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="cursos" className="py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <div className="mb-4 inline-flex rounded-full bg-violet-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-violet-700">
+              Aprender en comunidad
+            </div>
+            <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
+              Cursos y Clases
+            </h2>
+            <p className="mt-4 text-xl text-slate-500">
+              Propuestas de aprendizaje y formacion en la ciudad
+            </p>
+            <div className="mt-6">
+              <Link
+                href="/cursos"
+                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+              >
+                Ver todos los cursos y clases
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+
+          {cursos.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
+              Todavia no hay cursos o clases cargados.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {cursos.map((curso) => (
+                <div
+                  key={curso.id}
+                  className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]"
+                >
+                  {curso.imagen && (
+                    <img
+                      src={curso.imagen}
+                      alt={curso.nombre}
+                      className="h-56 w-full object-cover"
+                    />
+                  )}
+
+                  <div className="p-5">
+                    <h3 className="text-[22px] font-semibold text-slate-900">
+                      {curso.nombre}
+                    </h3>
+                    <p className="mt-3 text-base leading-7 text-slate-500">
+                      {curso.descripcion}
+                    </p>
+                    <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
+                      <GraduationCap className="h-4 w-4" />
+                      <span>{curso.responsable}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCurso(curso)}
+                      className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-500"
+                    >
+                      Ver mas
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
+            <div>
+              <div className="mb-4 inline-flex rounded-full bg-emerald-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
+                Identidad local
+              </div>
+              <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
+                {sobreVarela.titulo}
+              </h2>
+
+              <div className="mt-8 space-y-6 text-xl leading-10 text-slate-500">
+                <p>{sobreVarela.texto_1}</p>
+                <p>{sobreVarela.texto_2}</p>
+                <p>{sobreVarela.texto_3}</p>
+              </div>
+            </div>
+
+            {sobreVarela.imagen_url ? (
+              <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-100 shadow-lg">
+                <img
+                  src={sobreVarela.imagen_url}
+                  alt={sobreVarela.titulo}
+                  className="h-full min-h-[320px] w-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="flex min-h-[320px] items-center justify-center rounded-[28px] border border-slate-200 bg-slate-100 p-8 text-center shadow-lg">
+                <div>
+                  <MapPin className="mx-auto h-10 w-10 text-slate-400" />
+                  <p className="mt-4 text-lg font-medium text-slate-600">
+                    Imagen de Jose Pedro Varela pendiente
+                  </p>
+                  <p className="mt-2 text-sm text-slate-500">
+                    Cargala desde el panel admin cuando la tengas pronta.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <footer id="contacto" className="mt-6 border-t border-slate-200/80 bg-white/80 py-14 backdrop-blur">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 sm:px-6 md:grid-cols-2 lg:px-8">
+          <div>
+            <div className="flex items-center gap-3">
+              <img
+                src="/logo-varela-chico.png"
+                alt="Hola Varela"
+                className="h-10 w-auto"
+              />
+              <span className="text-[28px] font-semibold">Hola Varela!</span>
+            </div>
+
+            <p className="mt-6 text-lg leading-8 text-slate-500">
+              Portal informativo independiente de Jose Pedro Varela. Tu guia
+              digital para todo lo que pasa en la ciudad.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-[28px] font-semibold text-slate-900">Contacto</h3>
+
+            <div className="mt-6 space-y-4 text-lg text-slate-500">
+              <div className="flex items-center gap-3">
+                <Mail className="h-5 w-5 text-slate-400" />
+                <span>holajpvarela@gmail.com</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 text-slate-400" />
+                <span>Jose Pedro Varela, Lavalleja</span>
+              </div>
+
+              <p className="pt-2">
+                ¿Queres agregar tu comercio, evento o curso? Contactanos.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </footer>
+    </div>
+  )
+}
