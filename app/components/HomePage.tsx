@@ -818,22 +818,13 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <button
               onClick={() =>
-                document.getElementById("radio")?.scrollIntoView({ behavior: "smooth" })
+                document.getElementById("eventos")?.scrollIntoView({ behavior: "smooth" })
               }
               className="inline-flex items-center gap-3 rounded-2xl bg-slate-950 px-8 py-4 text-base font-semibold text-white shadow-[0_18px_40px_-20px_rgba(15,23,42,0.85)] transition hover:-translate-y-0.5 hover:bg-slate-900"
             >
-              <Radio className="h-5 w-5" />
-              Escuchar Radio
+              Hoy en Varela
               <ArrowRight className="h-5 w-5" />
             </button>
-
-            <Link
-              href="/comercios"
-              className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-white/90 px-8 py-4 text-base font-semibold text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-300 hover:text-blue-600"
-            >
-              Ver comercios
-              <ArrowRight className="h-5 w-5" />
-            </Link>
           </div>
         </div>
       </section>
@@ -1076,13 +1067,13 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <div className="mb-4 inline-flex rounded-full bg-sky-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
-              Descubri los proximos eventos
+              Hoy en Varela
             </div>
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
               Proximos Eventos
             </h2>
             <p className="mt-4 text-xl text-slate-500">
-              Ordenados por fecha y mostrando solo los que vienen
+              Eventos, promos y sorteos activos
             </p>
             <div className="mt-6">
               <Link
