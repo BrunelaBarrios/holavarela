@@ -1,8 +1,10 @@
 'use client'
 
 import Link from "next/link"
+import dynamic from "next/dynamic"
+import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
-import { MyTunerWidget } from "./MyTunerWidget"
+import { OptimizedImage } from "./OptimizedImage"
 import {
   ArrowRight,
   CalendarDays,
@@ -10,13 +12,11 @@ import {
   Mail,
   MapPin,
   Phone,
-  Pill,
   Play,
   Radio,
   UserRound,
   X,
 } from "lucide-react"
-import { supabase } from "../supabase"
 import { RADIO_STORAGE_KEY } from "../lib/localStorageKeys"
 
 type RadioConfig = {
@@ -80,6 +80,16 @@ type SobreVarelaConfig = {
   imagen_url: string | null
 }
 
+export type HomePageData = {
+  featuredBusinesses: Comercio[]
+  eventos: Evento[]
+  cursos: Curso[]
+  servicios: Servicio[]
+  allCursos: Curso[]
+  allServicios: Servicio[]
+  sobreVarela: SobreVarelaConfig
+}
+
 type WelcomeHighlight = {
   key: string
   kind: "comercio" | "servicio" | "curso"
@@ -89,6 +99,72 @@ type WelcomeHighlight = {
   subtitle?: string | null
   contact?: string | null
   usesWhatsapp?: boolean
+}
+
+const buildWelcomeItems = (
+  featuredBusinesses: Comercio[],
+  allServicios: Servicio[],
+  allCursos: Curso[]
+): WelcomeHighlight[] => [
+  ...featuredBusinesses.map((item) => ({
+    key: `comercio-${item.id}`,
+    kind: "comercio" as const,
+    title: item.nombre,
+    description: item.descripcion || "Conoce este comercio destacado de la ciudad.",
+    image: item.imagen_url || item.imagen || null,
+    subtitle: item.direccion || null,
+    contact: item.telefono || null,
+    usesWhatsapp: item.usa_whatsapp ?? true,
+  })),
+  ...(allServicios
+    .filter((item) => item.destacado)
+    .map((item) => ({
+      key: `servicio-${item.id}`,
+      kind: "servicio" as const,
+      title: item.nombre,
+      description:
+        item.descripcion || "Servicio destacado para descubrir en Jose Pedro Varela.",
+      image: item.imagen || null,
+      subtitle: item.categoria || null,
+      contact: item.contacto || null,
+      usesWhatsapp: item.usa_whatsapp ?? true,
+    }))),
+  ...(allCursos
+    .filter((item) => item.destacado)
+    .map((item) => ({
+      key: `curso-${item.id}`,
+      kind: "curso" as const,
+      title: item.nombre,
+      description: item.descripcion || "Curso o clase destacada para sumarte en la ciudad.",
+      image: item.imagen || null,
+      subtitle: item.responsable || null,
+      contact: item.contacto || null,
+      usesWhatsapp: item.usa_whatsapp ?? true,
+    }))),
+]
+
+const getInitialWelcomeHighlight = (
+  featuredBusinesses: Comercio[],
+  allServicios: Servicio[],
+  allCursos: Curso[]
+): WelcomeHighlight | null => {
+  if (typeof window === "undefined") return null
+
+  const alreadyShownThisSession =
+    window.sessionStorage.getItem(WELCOME_SESSION_KEY) === "true"
+
+  if (alreadyShownThisSession) return null
+
+  const welcomeItems = buildWelcomeItems(featuredBusinesses, allServicios, allCursos)
+  if (welcomeItems.length === 0) return null
+
+  const lastShownKey = window.localStorage.getItem(WELCOME_LAST_KEY)
+  const lastIndex = welcomeItems.findIndex((item) => item.key === lastShownKey)
+  const nextIndex = lastIndex >= 0 ? (lastIndex + 1) % welcomeItems.length : 0
+  const nextItem = welcomeItems[nextIndex]
+
+  window.localStorage.setItem(WELCOME_LAST_KEY, nextItem.key)
+  return nextItem
 }
 
 const defaultRadioConfig: RadioConfig = {
@@ -113,20 +189,40 @@ const defaultSobreVarela: SobreVarelaConfig = {
 const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
 
-export function HomePage() {
+const LazyMyTunerWidget = dynamic(
+  () => import("./MyTunerWidget").then((module) => module.MyTunerWidget),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-2xl bg-white/10 p-5 text-white/85">
+        Cargando reproductor...
+      </div>
+    ),
+  }
+)
+
+export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [radioConfig, setRadioConfig] = useState<RadioConfig>(defaultRadioConfig)
-  const [featuredBusinesses, setFeaturedBusinesses] = useState<Comercio[]>([])
-  const [eventos, setEventos] = useState<Evento[]>([])
-  const [cursos, setCursos] = useState<Curso[]>([])
-  const [servicios, setServicios] = useState<Servicio[]>([])
-  const [allCursos, setAllCursos] = useState<Curso[]>([])
-  const [allServicios, setAllServicios] = useState<Servicio[]>([])
-  const [sobreVarela, setSobreVarela] = useState<SobreVarelaConfig>(defaultSobreVarela)
+  const [featuredBusinesses] = useState<Comercio[]>(initialData.featuredBusinesses)
+  const [eventos] = useState<Evento[]>(initialData.eventos)
+  const [cursos] = useState<Curso[]>(initialData.cursos)
+  const [servicios] = useState<Servicio[]>(initialData.servicios)
+  const [allCursos] = useState<Curso[]>(initialData.allCursos)
+  const [allServicios] = useState<Servicio[]>(initialData.allServicios)
+  const [sobreVarela] = useState<SobreVarelaConfig>(
+    initialData.sobreVarela || defaultSobreVarela
+  )
   const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null)
   const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null)
   const [selectedCurso, setSelectedCurso] = useState<Curso | null>(null)
-  const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(null)
+  const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(() =>
+    getInitialWelcomeHighlight(
+      initialData.featuredBusinesses,
+      initialData.allServicios,
+      initialData.allCursos
+    )
+  )
 
   const serviciosAgrupados = useMemo(() => {
     return servicios.reduce<Record<string, Servicio[]>>((acc, servicio) => {
@@ -155,115 +251,7 @@ export function HomePage() {
       }
     }
 
-    const loadHomeData = async () => {
-      const today = new Date().toISOString().slice(0, 10)
-
-      const [
-        { data: comerciosData },
-        { data: eventosData },
-        { data: cursosData },
-        { data: serviciosData },
-        { data: sobreVarelaData },
-      ] =
-        await Promise.all([
-          supabase
-            .from("comercios")
-            .select("*")
-            .or("estado.is.null,estado.eq.activo")
-            .eq("destacado", true)
-            .order("id", { ascending: false })
-            .limit(8),
-        supabase
-          .from("eventos")
-          .select("*")
-          .or("estado.is.null,estado.eq.activo")
-          .gte("fecha", today)
-          .order("fecha", { ascending: true }),
-          supabase
-            .from("cursos")
-            .select("*")
-            .or("estado.is.null,estado.eq.activo")
-            .order("id", { ascending: false }),
-          supabase
-            .from("servicios")
-            .select("*")
-            .or("estado.is.null,estado.eq.activo")
-            .order("id", { ascending: false }),
-          supabase
-            .from("sitio")
-            .select("titulo, texto_1, texto_2, texto_3, imagen_url")
-            .eq("id", 1)
-            .maybeSingle(),
-        ])
-
-      setFeaturedBusinesses(comerciosData || [])
-      setEventos((eventosData || []).slice(0, 6))
-      setCursos(cursosData || [])
-      setServicios((serviciosData || []).slice(0, 8))
-      setAllCursos(cursosData || [])
-      setAllServicios(serviciosData || [])
-      if (sobreVarelaData) {
-        setSobreVarela({
-          ...defaultSobreVarela,
-          ...sobreVarelaData,
-        })
-      }
-
-      const alreadyShownThisSession =
-        window.sessionStorage.getItem(WELCOME_SESSION_KEY) === "true"
-
-      const welcomeItems: WelcomeHighlight[] = [
-        ...(comerciosData || []).map((item) => ({
-          key: `comercio-${item.id}`,
-          kind: "comercio" as const,
-          title: item.nombre,
-          description: item.descripcion || "Conoce este comercio destacado de la ciudad.",
-          image: item.imagen_url || item.imagen || null,
-          subtitle: item.direccion || null,
-          contact: item.telefono || null,
-          usesWhatsapp: item.usa_whatsapp ?? true,
-        })),
-        ...((serviciosData || [])
-          .filter((item) => item.destacado)
-          .map((item) => ({
-            key: `servicio-${item.id}`,
-            kind: "servicio" as const,
-            title: item.nombre,
-            description:
-              item.descripcion || "Servicio destacado para descubrir en Jose Pedro Varela.",
-            image: item.imagen || null,
-            subtitle: item.categoria || null,
-            contact: item.contacto || null,
-            usesWhatsapp: item.usa_whatsapp ?? true,
-          }))),
-        ...((cursosData || [])
-          .filter((item) => item.destacado)
-          .map((item) => ({
-            key: `curso-${item.id}`,
-            kind: "curso" as const,
-            title: item.nombre,
-            description:
-              item.descripcion || "Curso o clase destacada para sumarte en la ciudad.",
-            image: item.imagen || null,
-            subtitle: item.responsable || null,
-            contact: item.contacto || null,
-            usesWhatsapp: item.usa_whatsapp ?? true,
-          }))),
-      ]
-
-      if (!alreadyShownThisSession && welcomeItems.length > 0) {
-        const lastShownKey = window.localStorage.getItem(WELCOME_LAST_KEY)
-        const lastIndex = welcomeItems.findIndex((item) => item.key === lastShownKey)
-        const nextIndex = lastIndex >= 0 ? (lastIndex + 1) % welcomeItems.length : 0
-        const nextItem = welcomeItems[nextIndex]
-
-        setWelcomeHighlight(nextItem)
-        window.localStorage.setItem(WELCOME_LAST_KEY, nextItem.key)
-      }
-    }
-
     loadRadioConfig()
-    loadHomeData()
 
     const refreshLocalConfig = () => {
       loadRadioConfig()
@@ -359,11 +347,14 @@ export function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr]">
               <div className="bg-slate-100">
                 {welcomeHighlight.image ? (
-                  <img
-                    src={welcomeHighlight.image}
-                    alt={welcomeHighlight.title}
-                    className="h-full min-h-[280px] w-full object-cover"
-                  />
+                  <div className="relative h-full min-h-[280px] w-full">
+                    <OptimizedImage
+                      src={welcomeHighlight.image}
+                      alt={welcomeHighlight.title}
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="flex min-h-[280px] items-center justify-center text-slate-400">
                     Sin imagen
@@ -444,11 +435,14 @@ export function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="bg-slate-100">
                 {selectedComercio.imagen_url || selectedComercio.imagen ? (
-                  <img
-                    src={selectedComercio.imagen_url || selectedComercio.imagen || ""}
-                    alt={selectedComercio.nombre}
-                    className="h-full min-h-[320px] w-full object-cover"
-                  />
+                  <div className="relative h-full min-h-[320px] w-full">
+                    <OptimizedImage
+                      src={selectedComercio.imagen_url || selectedComercio.imagen || ""}
+                      alt={selectedComercio.nombre}
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      className="object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
                     Sin imagen
@@ -526,11 +520,14 @@ export function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="bg-slate-100">
                 {selectedServicio.imagen ? (
-                  <img
-                    src={selectedServicio.imagen}
-                    alt={selectedServicio.nombre}
-                    className="h-full min-h-[320px] w-full object-cover"
-                  />
+                  <div className="relative h-full min-h-[320px] w-full">
+                    <OptimizedImage
+                      src={selectedServicio.imagen}
+                      alt={selectedServicio.nombre}
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      className="object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
                     Sin imagen
@@ -619,11 +616,14 @@ export function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="bg-slate-100">
                 {selectedEvento.imagen ? (
-                  <img
-                    src={selectedEvento.imagen}
-                    alt={selectedEvento.titulo}
-                    className="h-full min-h-[320px] w-full object-cover"
-                  />
+                  <div className="relative h-full min-h-[320px] w-full">
+                    <OptimizedImage
+                      src={selectedEvento.imagen}
+                      alt={selectedEvento.titulo}
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      className="object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
                     Sin imagen
@@ -688,11 +688,14 @@ export function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="bg-slate-100">
                 {selectedCurso.imagen ? (
-                  <img
-                    src={selectedCurso.imagen}
-                    alt={selectedCurso.nombre}
-                    className="h-full min-h-[320px] w-full object-cover"
-                  />
+                  <div className="relative h-full min-h-[320px] w-full">
+                    <OptimizedImage
+                      src={selectedCurso.imagen}
+                      alt={selectedCurso.nombre}
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      className="object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
                     Sin imagen
@@ -750,9 +753,12 @@ export function HomePage() {
       <header className="sticky top-0 z-50 border-b border-white/60 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3">
-            <img
+            <Image
               src="/logo-varela-chico.png"
               alt="Hola Varela"
+              width={40}
+              height={40}
+              priority
               className="h-10 w-auto"
             />
             <span className="text-[20px] font-semibold tracking-tight">
@@ -807,18 +813,6 @@ export function HomePage() {
             Informacion de la ciudad, comercios, eventos, cursos, servicios y radio en vivo con una experiencia mas clara y ordenada.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm font-medium text-slate-700">
-            <span className="rounded-full border border-white/80 bg-white/75 px-4 py-2 shadow-sm">
-              Radio local en vivo
-            </span>
-            <span className="rounded-full border border-white/80 bg-white/75 px-4 py-2 shadow-sm">
-              Comercios destacados
-            </span>
-            <span className="rounded-full border border-white/80 bg-white/75 px-4 py-2 shadow-sm">
-              Cursos y servicios de la ciudad
-            </span>
-          </div>
-
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <button
               onClick={() =>
@@ -864,9 +858,9 @@ export function HomePage() {
               </div>
             </div>
 
-              <div className="w-full max-w-xl">
+            <div className="w-full max-w-xl">
               {radioConfig.streamUrl ? (
-                <MyTunerWidget
+                <LazyMyTunerWidget
                   streamUrl={radioConfig.streamUrl}
                   title={radioConfig.title}
                 />
@@ -914,11 +908,14 @@ export function HomePage() {
                   className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.5)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(59,130,246,0.35)]"
                 >
                   {imageSrc && (
-                    <img
-                      src={imageSrc}
-                      alt={business.nombre}
-                      className="h-52 w-full object-cover"
-                    />
+                    <div className="relative h-52 w-full">
+                      <OptimizedImage
+                        src={imageSrc}
+                        alt={business.nombre}
+                        sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                        className="object-cover"
+                      />
+                    </div>
                   )}
 
                   <div className="p-5">
@@ -1010,11 +1007,14 @@ export function HomePage() {
                         className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"
                       >
                         {servicio.imagen && (
-                          <img
-                            src={servicio.imagen}
-                            alt={servicio.nombre}
-                            className="h-48 w-full object-cover"
-                          />
+                          <div className="relative h-48 w-full">
+                            <OptimizedImage
+                              src={servicio.imagen}
+                              alt={servicio.nombre}
+                              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                              className="object-cover"
+                            />
+                          </div>
                         )}
 
                         <div className="p-5">
@@ -1100,11 +1100,14 @@ export function HomePage() {
                 className="overflow-hidden rounded-[28px] border border-white/80 bg-white/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)]"
               >
                 {event.imagen && (
-                  <img
-                    src={event.imagen}
-                    alt={event.titulo}
-                    className="h-64 w-full object-cover"
-                  />
+                  <div className="relative h-64 w-full">
+                    <OptimizedImage
+                      src={event.imagen}
+                      alt={event.titulo}
+                      sizes="(max-width: 1024px) 100vw, 33vw"
+                      className="object-cover"
+                    />
+                  </div>
                 )}
 
                 <div className="p-5">
@@ -1169,11 +1172,14 @@ export function HomePage() {
                   className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]"
                 >
                   {curso.imagen && (
-                    <img
-                      src={curso.imagen}
-                      alt={curso.nombre}
-                      className="h-56 w-full object-cover"
-                    />
+                    <div className="relative h-56 w-full">
+                      <OptimizedImage
+                        src={curso.imagen}
+                        alt={curso.nombre}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        className="object-cover"
+                      />
+                    </div>
                   )}
 
                   <div className="p-5">
@@ -1220,11 +1226,14 @@ export function HomePage() {
 
             {sobreVarela.imagen_url ? (
               <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-slate-100 shadow-lg">
-                <img
-                  src={sobreVarela.imagen_url}
-                  alt={sobreVarela.titulo}
-                  className="h-full min-h-[320px] w-full object-cover"
-                />
+                <div className="relative h-full min-h-[320px] w-full">
+                  <OptimizedImage
+                    src={sobreVarela.imagen_url}
+                    alt={sobreVarela.titulo}
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    className="object-cover"
+                  />
+                </div>
               </div>
             ) : (
               <div className="flex min-h-[320px] items-center justify-center rounded-[28px] border border-slate-200 bg-slate-100 p-8 text-center shadow-lg">
@@ -1247,9 +1256,12 @@ export function HomePage() {
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 sm:px-6 md:grid-cols-2 lg:px-8">
           <div>
             <div className="flex items-center gap-3">
-              <img
+              <Image
                 src="/logo-varela-chico.png"
                 alt="Hola Varela"
+                width={40}
+                height={40}
+                loading="lazy"
                 className="h-10 w-auto"
               />
               <span className="text-[28px] font-semibold">Hola Varela!</span>

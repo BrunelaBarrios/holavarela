@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import "./globals.css"
-import { ComerciosProvider } from "./context/ComerciosContext"
 
 export const metadata: Metadata = {
   title: "Hola Varela!",
@@ -14,9 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body>
-        <ComerciosProvider>{children}</ComerciosProvider>
-      </body>
+      <body>{children}</body>
     </html>
   )
 }
