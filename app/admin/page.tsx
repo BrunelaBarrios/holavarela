@@ -3,7 +3,15 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Calendar, FileText, GraduationCap, Plus, Radio, Store } from "lucide-react"
+import {
+  Calendar,
+  FileText,
+  GraduationCap,
+  Plus,
+  Radio,
+  ShieldAlert,
+  Store,
+} from "lucide-react"
 import { supabase } from "../supabase"
 
 type EventoResumen = {
@@ -16,6 +24,7 @@ export default function AdminDashboardPage() {
   const router = useRouter()
   const [comerciosCount, setComerciosCount] = useState(0)
   const [eventosCount, setEventosCount] = useState(0)
+  const [serviciosCount, setServiciosCount] = useState(0)
   const [cursosCount, setCursosCount] = useState(0)
   const [proximosEventos, setProximosEventos] = useState<EventoResumen[]>([])
 
@@ -24,11 +33,13 @@ export default function AdminDashboardPage() {
       const [
         { count: comercios },
         { count: eventos },
+        { count: servicios },
         { count: cursos },
         { data: eventosData },
       ] = await Promise.all([
         supabase.from("comercios").select("*", { count: "exact", head: true }),
         supabase.from("eventos").select("*", { count: "exact", head: true }),
+        supabase.from("servicios").select("*", { count: "exact", head: true }),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
         supabase
           .from("eventos")
@@ -40,6 +51,7 @@ export default function AdminDashboardPage() {
 
       setComerciosCount(comercios || 0)
       setEventosCount(eventos || 0)
+      setServiciosCount(servicios || 0)
       setCursosCount(cursos || 0)
       setProximosEventos(eventosData || [])
     }
@@ -63,6 +75,14 @@ export default function AdminDashboardPage() {
       icon: Calendar,
       color: "bg-emerald-600",
       action: () => router.push("/admin/eventos"),
+    },
+    {
+      id: "servicios",
+      title: "Servicios",
+      value: serviciosCount,
+      icon: ShieldAlert,
+      color: "bg-amber-600",
+      action: () => router.push("/admin/servicios"),
     },
     {
       id: "secciones",
@@ -94,7 +114,7 @@ export default function AdminDashboardPage() {
         <p className="text-slate-500">Bienvenido al panel de administracion</p>
       </div>
 
-      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => {
           const Icon = stat.icon
 
@@ -186,6 +206,14 @@ export default function AdminDashboardPage() {
             >
               <Radio className="h-5 w-5" />
               <span>Configurar Radio</span>
+            </button>
+
+            <button
+              onClick={() => router.push("/admin/servicios")}
+              className="flex w-full items-center gap-3 rounded-xl bg-amber-600 px-4 py-3 text-white transition hover:bg-amber-500"
+            >
+              <Plus className="h-5 w-5" />
+              <span>Agregar Servicio</span>
             </button>
 
             <button
