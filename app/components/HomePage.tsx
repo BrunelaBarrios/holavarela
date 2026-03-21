@@ -864,9 +864,12 @@ export function HomePage() {
               </div>
             </div>
 
-            <div className="w-full max-w-xl">
+              <div className="w-full max-w-xl">
               {radioConfig.streamUrl ? (
-                <MyTunerWidget />
+                <MyTunerWidget
+                  streamUrl={radioConfig.streamUrl}
+                  title={radioConfig.title}
+                />
               ) : (
                 <Link
                   href="/admin/radio"
