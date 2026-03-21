@@ -170,8 +170,7 @@ const getInitialWelcomeHighlight = (
 const defaultRadioConfig: RadioConfig = {
   title: "Delta FM 88.3",
   description: "Escucha Delta FM 88.3 en vivo desde Jose Pedro Varela.",
-  streamUrl:
-    "https://mytuner-radio.com/radio/delta-fm-uruguay-450623/?utm_source=widget&utm_medium=player",
+  streamUrl: "https://radios.com.uy/delta/?utm_source=chatgpt.com",
   isLive: true,
 }
 

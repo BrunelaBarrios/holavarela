@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Radio } from "lucide-react"
 
 const RADIO_STORAGE_KEY = "guia-varela-radio-config"
@@ -15,25 +15,26 @@ type RadioConfig = {
 const defaultConfig: RadioConfig = {
   title: "Delta FM 88.3",
   description: "Escucha Delta FM 88.3 en vivo desde Jose Pedro Varela.",
-  streamUrl: "https://mytuner-radio.com/radio/delta-fm-uruguay-450623/?utm_source=widget&utm_medium=player",
+  streamUrl: "https://radios.com.uy/delta/?utm_source=chatgpt.com",
   isLive: true,
 }
 
 export default function AdminRadioPage() {
-  const [config, setConfig] = useState<RadioConfig>(defaultConfig)
-  const [saved, setSaved] = useState(false)
+  const [config, setConfig] = useState<RadioConfig>(() => {
+    if (typeof window === "undefined") return defaultConfig
 
-  useEffect(() => {
     const raw = window.localStorage.getItem(RADIO_STORAGE_KEY)
-    if (!raw) return
+    if (!raw) return defaultConfig
 
     try {
       const parsed = JSON.parse(raw) as RadioConfig
-      setConfig({ ...defaultConfig, ...parsed })
+      return { ...defaultConfig, ...parsed }
     } catch {
       window.localStorage.removeItem(RADIO_STORAGE_KEY)
+      return defaultConfig
     }
-  }, [])
+  })
+  const [saved, setSaved] = useState(false)
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault()
