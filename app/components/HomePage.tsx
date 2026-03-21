@@ -770,10 +770,13 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               Inicio
             </a>
             <a href="#radio" className="hover:text-blue-500">
-              Radio en Vivo
+              Radio
             </a>
             <a href="#comercios" className="hover:text-blue-500">
               Comercios
+            </a>
+            <a href="#servicios" className="hover:text-blue-500">
+              Servicios
             </a>
             <a href="#eventos" className="hover:text-blue-500">
               Eventos

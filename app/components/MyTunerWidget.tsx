@@ -23,10 +23,15 @@ export function MyTunerWidget({ streamUrl, title }: MyTunerWidgetProps) {
       href={normalizedUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-white px-8 py-5 text-xl font-semibold text-blue-700 shadow-sm transition hover:bg-slate-50"
+      className="inline-flex w-full items-center justify-center gap-4 rounded-2xl bg-white px-8 py-5 text-blue-700 shadow-sm transition hover:bg-slate-50"
     >
       <Radio className="h-6 w-6" />
-      Escuchar {title} en otra web
+      <span className="flex flex-col text-left">
+        <span className="text-xl font-semibold">Escucha: Radio {title}</span>
+        <span className="text-sm font-medium text-slate-500">
+          te redirigiremos a radios.com.uy
+        </span>
+      </span>
       <ExternalLink className="h-5 w-5" />
     </a>
   )
