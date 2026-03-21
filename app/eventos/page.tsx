@@ -8,6 +8,7 @@ import { supabase } from "../supabase"
 type Evento = {
   id: string
   titulo: string
+  categoria?: string | null
   descripcion: string
   fecha: string
   ubicacion: string
@@ -18,6 +19,7 @@ type Evento = {
 export default function EventosPage() {
   const [eventos, setEventos] = useState<Evento[]>([])
   const [search, setSearch] = useState("")
+  const [categoria, setCategoria] = useState("Todos")
 
   useEffect(() => {
     const cargarEventos = async () => {
@@ -38,7 +40,11 @@ export default function EventosPage() {
       setEventos(data || [])
     }
 
-    cargarEventos()
+    const timeoutId = window.setTimeout(() => {
+      void cargarEventos()
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [])
 
   const formatearFecha = (fecha: string) => {
@@ -53,14 +59,18 @@ export default function EventosPage() {
 
   const eventosFiltrados = useMemo(() => {
     const term = search.trim().toLowerCase()
-    if (!term) return eventos
-
-    return eventos.filter((evento) =>
-      `${evento.titulo} ${evento.descripcion || ""} ${evento.ubicacion || ""} ${evento.fecha || ""}`
+    return eventos.filter((evento) => {
+      const matchesCategoria =
+        categoria === "Todos" || (evento.categoria || "Evento") === categoria
+      const matchesSearch =
+        !term ||
+        `${evento.titulo} ${evento.descripcion || ""} ${evento.ubicacion || ""} ${evento.fecha || ""} ${evento.categoria || ""}`
         .toLowerCase()
         .includes(term)
-    )
-  }, [eventos, search])
+
+      return matchesCategoria && matchesSearch
+    })
+  }, [categoria, eventos, search])
 
   return (
     <main className="min-h-screen bg-white">
@@ -122,6 +132,23 @@ export default function EventosPage() {
           </div>
         </div>
 
+        <div className="mt-6 flex flex-wrap gap-3">
+          {["Todos", "Evento", "Promocion", "Sorteo"].map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setCategoria(item)}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                categoria === item
+                  ? "bg-blue-600 text-white"
+                  : "border border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-600"
+              }`}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+
         {eventosFiltrados.length === 0 ? (
           <div className="mt-10 rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
             <p className="text-gray-600">
@@ -148,6 +175,9 @@ export default function EventosPage() {
                 <h2 className="text-xl font-semibold text-gray-900">
                   {evento.titulo}
                 </h2>
+                <div className="mt-3 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                  {evento.categoria || "Evento"}
+                </div>
 
                 <p className="mt-2 text-sm text-gray-600">
                   Fecha: {formatearFecha(evento.fecha)}

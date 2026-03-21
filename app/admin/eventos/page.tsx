@@ -10,6 +10,7 @@ import { fileToDataUrl } from "../../lib/fileToDataUrl"
 type Evento = {
   id: number
   titulo: string
+  categoria?: string | null
   fecha: string
   ubicacion: string
   descripcion: string
@@ -19,6 +20,7 @@ type Evento = {
 
 type EventoForm = {
   titulo: string
+  categoria: string
   fecha: string
   ubicacion: string
   descripcion: string
@@ -27,11 +29,14 @@ type EventoForm = {
 
 const initialForm: EventoForm = {
   titulo: "",
+  categoria: "Evento",
   fecha: "",
   ubicacion: "",
   descripcion: "",
   imagen: "",
 }
+
+const categoriasEvento = ["Evento", "Promocion", "Sorteo"]
 
 export default function AdminEventosPage() {
   const [eventos, setEventos] = useState<Evento[]>([])
@@ -58,7 +63,11 @@ export default function AdminEventosPage() {
   }
 
   useEffect(() => {
-    cargarEventos()
+    const timeoutId = window.setTimeout(() => {
+      void cargarEventos()
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [])
 
   const resetForm = () => {
@@ -72,6 +81,7 @@ export default function AdminEventosPage() {
     setEditingEvento(evento)
     setFormData({
       titulo: evento.titulo || "",
+      categoria: evento.categoria || "Evento",
       fecha: evento.fecha || "",
       ubicacion: evento.ubicacion || "",
       descripcion: evento.descripcion || "",
@@ -159,6 +169,7 @@ export default function AdminEventosPage() {
 
     const payload = {
       titulo: formData.titulo,
+      categoria: formData.categoria,
       fecha: formData.fecha,
       ubicacion: formData.ubicacion,
       descripcion: formData.descripcion,
@@ -282,6 +293,39 @@ export default function AdminEventosPage() {
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-900">
+                  Categoria *
+                </label>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                  {categoriasEvento.map((categoria) => (
+                    <label
+                      key={categoria}
+                      className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium transition ${
+                        formData.categoria === categoria
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-800"
+                          : "border-slate-200 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/40"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="categoria"
+                        value={categoria}
+                        checked={formData.categoria === categoria}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            categoria: e.target.value,
+                          }))
+                        }
+                        className="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <span>{categoria}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -432,6 +476,9 @@ export default function AdminEventosPage() {
               <h3 className="mb-2 text-lg font-medium text-slate-900">
                 {evento.titulo}
               </h3>
+              <div className="mb-3 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                {evento.categoria || "Evento"}
+              </div>
               <p className="mb-1 text-sm text-slate-500">{evento.ubicacion}</p>
               <p className="mb-4 line-clamp-2 text-sm text-slate-500">
                 {evento.descripcion}
