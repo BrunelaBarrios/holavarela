@@ -47,7 +47,7 @@ const categoriasServicio = [
   "Profesionales",
   "Alojamientos",
   "Oficios",
-  "Otros",
+  "Servicios varios",
 ]
 
 export default function AdminServiciosPage() {

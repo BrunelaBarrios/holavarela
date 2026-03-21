@@ -1,4 +1,4 @@
-import { HomePage, type HomePageData } from "./components/HomePage"
+import { HomePage, type HomePageData, type WeatherData } from "./components/HomePage"
 import { supabase } from "./supabase"
 
 const defaultSobreVarela = {
@@ -14,6 +14,30 @@ const defaultSobreVarela = {
 
 export default async function Page() {
   const today = new Date().toISOString().slice(0, 10)
+  const weatherPromise = fetch(
+    "https://api.open-meteo.com/v1/forecast?latitude=-33.45&longitude=-54.53&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FMontevideo&forecast_days=1",
+    {
+      next: { revalidate: 1800 },
+    }
+  )
+    .then(async (response) => {
+      if (!response.ok) return null
+      const data = await response.json()
+
+      const weather: WeatherData | null =
+        data?.current && data?.daily
+          ? {
+              temperature: data.current.temperature_2m,
+              weatherCode: data.current.weather_code,
+              tempMax: data.daily.temperature_2m_max?.[0] ?? data.current.temperature_2m,
+              tempMin: data.daily.temperature_2m_min?.[0] ?? data.current.temperature_2m,
+              windSpeed: data.current.wind_speed_10m ?? 0,
+            }
+          : null
+
+      return weather
+    })
+    .catch(() => null)
 
   const [
     { data: featuredBusinesses },
@@ -21,6 +45,7 @@ export default async function Page() {
     { data: cursos },
     { data: servicios },
     { data: sobreVarelaData },
+    weather,
   ] = await Promise.all([
     supabase
       .from("comercios")
@@ -50,6 +75,7 @@ export default async function Page() {
       .select("titulo, texto_1, texto_2, texto_3, imagen_url")
       .eq("id", 1)
       .maybeSingle(),
+    weatherPromise,
   ])
 
   const initialData: HomePageData = {
@@ -62,6 +88,7 @@ export default async function Page() {
     sobreVarela: sobreVarelaData
       ? { ...defaultSobreVarela, ...sobreVarelaData }
       : defaultSobreVarela,
+    weather,
   }
 
   return <HomePage initialData={initialData} />

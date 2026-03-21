@@ -8,6 +8,10 @@ import { OptimizedImage } from "./OptimizedImage"
 import {
   ArrowRight,
   CalendarDays,
+  Cloud,
+  CloudDrizzle,
+  CloudRain,
+  CloudSun,
   GraduationCap,
   Mail,
   MapPin,
@@ -81,6 +85,14 @@ type SobreVarelaConfig = {
   imagen_url: string | null
 }
 
+export type WeatherData = {
+  temperature: number
+  weatherCode: number
+  tempMax: number
+  tempMin: number
+  windSpeed: number
+}
+
 export type HomePageData = {
   featuredBusinesses: Comercio[]
   eventos: Evento[]
@@ -89,6 +101,29 @@ export type HomePageData = {
   allCursos: Curso[]
   allServicios: Servicio[]
   sobreVarela: SobreVarelaConfig
+  weather: WeatherData | null
+}
+
+const WEATHER_LABELS: Record<number, string> = {
+  0: "Despejado",
+  1: "Mayormente despejado",
+  2: "Parcialmente nublado",
+  3: "Nublado",
+  45: "Neblina",
+  48: "Niebla con escarcha",
+  51: "Llovizna leve",
+  53: "Llovizna moderada",
+  55: "Llovizna intensa",
+  61: "Lluvia leve",
+  63: "Lluvia moderada",
+  65: "Lluvia intensa",
+  71: "Nieve leve",
+  73: "Nieve moderada",
+  75: "Nieve intensa",
+  80: "Chaparrones leves",
+  81: "Chaparrones moderados",
+  82: "Chaparrones intensos",
+  95: "Tormenta",
 }
 
 type WelcomeHighlight = {
@@ -234,6 +269,17 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       return acc
     }, {})
   }, [servicios])
+
+  const weather = initialData.weather
+  const weatherLabel = weather ? WEATHER_LABELS[weather.weatherCode] || "Clima actual" : null
+
+  const WeatherIcon = useMemo(() => {
+    if (!weather) return CloudSun
+    if ([61, 63, 65, 80, 81, 82].includes(weather.weatherCode)) return CloudRain
+    if ([51, 53, 55].includes(weather.weatherCode)) return CloudDrizzle
+    if ([1, 2].includes(weather.weatherCode)) return CloudSun
+    return Cloud
+  }, [weather])
 
   useEffect(() => {
     const loadRadioConfig = () => {
@@ -833,6 +879,35 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
           </div>
         </div>
       </section>
+
+      {weather && (
+        <section className="py-6">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-4 rounded-[28px] border border-sky-100 bg-white/90 p-6 shadow-[0_18px_45px_-30px_rgba(14,165,233,0.35)] backdrop-blur md:grid-cols-[auto_1fr_auto] md:items-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+                <WeatherIcon className="h-8 w-8" />
+              </div>
+
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-700">
+                  Estado del tiempo
+                </p>
+                <h2 className="mt-1 text-2xl font-semibold text-slate-900">
+                  Clima en Jose Pedro Varela
+                </h2>
+                <p className="mt-2 text-base text-slate-600">
+                  {weatherLabel}. Min {Math.round(weather.tempMin)}°C, max {Math.round(weather.tempMax)}°C y viento de {Math.round(weather.windSpeed)} km/h.
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-sky-50 px-5 py-4 text-center text-sky-700">
+                <div className="text-3xl font-bold">{Math.round(weather.temperature)}°C</div>
+                <div className="text-sm font-medium">Ahora</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       <section id="radio" className="py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
