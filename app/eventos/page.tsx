@@ -16,6 +16,12 @@ type Evento = {
   estado: string
 }
 
+const normalizeEventCategory = (categoria?: string | null) => {
+  const value = categoria?.trim()
+  if (!value || value.toUpperCase() === "NOT NULL") return "Evento"
+  return value
+}
+
 export default function EventosPage() {
   const [eventos, setEventos] = useState<Evento[]>([])
   const [search, setSearch] = useState("")
@@ -61,10 +67,11 @@ export default function EventosPage() {
     const term = search.trim().toLowerCase()
     return eventos.filter((evento) => {
       const matchesCategoria =
-        categoria === "Todos" || (evento.categoria || "Evento") === categoria
+        categoria === "Todos" ||
+        normalizeEventCategory(evento.categoria) === categoria
       const matchesSearch =
         !term ||
-        `${evento.titulo} ${evento.descripcion || ""} ${evento.ubicacion || ""} ${evento.fecha || ""} ${evento.categoria || ""}`
+        `${evento.titulo} ${evento.descripcion || ""} ${evento.ubicacion || ""} ${evento.fecha || ""} ${normalizeEventCategory(evento.categoria)}`
         .toLowerCase()
         .includes(term)
 
@@ -176,7 +183,7 @@ export default function EventosPage() {
                   {evento.titulo}
                 </h2>
                 <div className="mt-3 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                  {evento.categoria || "Evento"}
+                  {normalizeEventCategory(evento.categoria)}
                 </div>
 
                 <p className="mt-2 text-sm text-gray-600">

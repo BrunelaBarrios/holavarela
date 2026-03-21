@@ -53,6 +53,12 @@ type Evento = {
   estado?: string | null
 }
 
+const normalizeEventCategory = (categoria?: string | null) => {
+  const value = categoria?.trim()
+  if (!value || value.toUpperCase() === "NOT NULL") return "Evento"
+  return value
+}
+
 type Curso = {
   id: number
   nombre: string
@@ -693,7 +699,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 </div>
 
                 <div className="mt-4 inline-flex rounded-full bg-sky-50 px-3 py-1 text-sm font-semibold text-sky-700">
-                  {selectedEvento.categoria || "Evento"}
+                  {normalizeEventCategory(selectedEvento.categoria)}
                 </div>
 
                 <p className="mt-6 text-lg leading-8 text-slate-600">
@@ -1190,7 +1196,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   </div>
 
                   <div className="mb-3 inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
-                    {event.categoria || "Evento"}
+                    {normalizeEventCategory(event.categoria)}
                   </div>
 
                   <h3 className="text-[22px] font-semibold text-slate-900">
