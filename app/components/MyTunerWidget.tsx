@@ -1,10 +1,22 @@
 'use client'
 
-import { useEffect, useRef } from "react"
+import { ExternalLink, Radio } from "lucide-react"
+import { useEffect, useMemo, useRef } from "react"
 
 const WIDGET_ID = "delta-fm-player-inline"
+const DEFAULT_TUNER_URL =
+  "https://mytuner-radio.com/radio/delta-fm-uruguay-450623/?utm_source=widget&utm_medium=player"
 
-const DELTA_FM_WIDGET_HTML = `
+type MyTunerWidgetProps = {
+  streamUrl: string
+  title: string
+}
+
+const isDirectAudioStream = (url: string) =>
+  /\.(mp3|aac|m3u8|ogg|opus)(\?.*)?$/i.test(url) ||
+  /stream|listen|live/i.test(url)
+
+const buildWidgetHtml = (streamUrl: string) => `
 <div id="${WIDGET_ID}" class="mytuner-widget" data-target="450623" data-requires_initialization="true" data-autoplay="false" data-hidehistory="true" style="width: 100%; max-width: 100%; overflow: hidden; border-radius: 18px;">
   <style type="text/css">
     .mytuner-widget { all: initial; display: block; color: #1e3a8a; }
@@ -98,7 +110,7 @@ const DELTA_FM_WIDGET_HTML = `
     <div id="${WIDGET_ID}play-button" class="main-play-button disabled" data-id="${WIDGET_ID}">
       <div class="play-image"></div>
     </div>
-    <a class="player-radio-link" href="https://mytuner-radio.com/radio/delta-fm-uruguay-450623/?utm_source=widget&utm_medium=player" rel="noopener" target="_blank">
+    <a class="player-radio-link" href="${streamUrl}" rel="noopener" target="_blank">
       <span class="player-radio-name">Reproducir radio</span>
     </a>
     <div class="volume-controls"></div>
@@ -107,14 +119,23 @@ const DELTA_FM_WIDGET_HTML = `
 </div>
 `
 
-export function MyTunerWidget() {
+export function MyTunerWidget({ streamUrl, title }: MyTunerWidgetProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const normalizedUrl = streamUrl.trim()
+  const canUseWidget = useMemo(
+    () => normalizedUrl.includes("mytuner-radio.com"),
+    [normalizedUrl]
+  )
+  const canUseNativeAudio = useMemo(
+    () => isDirectAudioStream(normalizedUrl) && !canUseWidget,
+    [canUseWidget, normalizedUrl]
+  )
 
   useEffect(() => {
     const container = containerRef.current
-    if (!container) return
+    if (!container || !canUseWidget) return
 
-    container.innerHTML = DELTA_FM_WIDGET_HTML
+    container.innerHTML = buildWidgetHtml(normalizedUrl || DEFAULT_TUNER_URL)
 
     const scriptUrls = [
       "https://mytuner-radio.com/static/js/widgets/player-v1.js",
@@ -145,7 +166,55 @@ export function MyTunerWidget() {
       appendedScripts.forEach((script) => script.remove())
       container.innerHTML = ""
     }
-  }, [])
+  }, [canUseWidget, normalizedUrl])
 
-  return <div ref={containerRef} className="w-full" />
+  if (!normalizedUrl) {
+    return (
+      <div className="rounded-2xl bg-white/10 p-5 text-white/85">
+        Carga una URL de radio para habilitar la reproduccion.
+      </div>
+    )
+  }
+
+  if (canUseNativeAudio) {
+    return (
+      <div className="space-y-4">
+        <audio
+          controls
+          preload="none"
+          src={normalizedUrl}
+          className="w-full rounded-2xl bg-white/95 p-3"
+        >
+          Tu navegador no puede reproducir esta radio.
+        </audio>
+
+        <a
+          href={normalizedUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-2xl border border-white/40 bg-white/15 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+        >
+          <ExternalLink className="h-4 w-4" />
+          Abrir stream en una nueva pestaña
+        </a>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {canUseWidget ? <div ref={containerRef} className="w-full" /> : null}
+
+      <a
+        href={normalizedUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-white px-5 py-4 text-base font-semibold text-blue-700 shadow-sm transition hover:bg-slate-50"
+      >
+        <Radio className="h-5 w-5" />
+        Escuchar {title} en una nueva pestaña
+        <ExternalLink className="h-4 w-4" />
+      </a>
+    </div>
+  )
 }

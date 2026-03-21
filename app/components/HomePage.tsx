@@ -884,14 +884,11 @@ export function HomePage() {
       <section id="comercios" className="py-18">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
-            <div className="mb-4 inline-flex rounded-full bg-blue-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">
-              Seleccionados para destacar
-            </div>
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
               Comercios Destacados
             </h2>
             <p className="mt-4 text-xl text-slate-500">
-              Elegidos desde el panel admin para aparecer en la home
+              Conoce la variedad de comercio en la ciudad
             </p>
             <div className="mt-6">
               <Link
@@ -970,9 +967,6 @@ export function HomePage() {
       <section id="servicios" className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
-            <div className="mb-4 inline-flex rounded-full bg-amber-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">
-              Profesionales y apoyo local
-            </div>
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
               Servicios y Profesionales
             </h2>
@@ -1143,9 +1137,6 @@ export function HomePage() {
       <section id="cursos" className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
-            <div className="mb-4 inline-flex rounded-full bg-violet-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-violet-700">
-              Aprender en comunidad
-            </div>
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
               Cursos y Clases
             </h2>
@@ -1213,9 +1204,6 @@ export function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
             <div>
-              <div className="mb-4 inline-flex rounded-full bg-emerald-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
-                Identidad local
-              </div>
               <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
                 {sobreVarela.titulo}
               </h2>
