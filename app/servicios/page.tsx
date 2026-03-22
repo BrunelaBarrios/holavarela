@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { MapPin, Phone, Radio, Search, UserRound } from "lucide-react"
+import { ArrowRight, MapPin, Phone, Search, UserRound } from "lucide-react"
+import { PublicDetailModal } from "../components/PublicDetailModal"
 import { supabase } from "../supabase"
 
 type Servicio = {
@@ -21,6 +22,7 @@ type Servicio = {
 export default function ServiciosPage() {
   const [servicios, setServicios] = useState<Servicio[]>([])
   const [search, setSearch] = useState("")
+  const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
 
   useEffect(() => {
     const cargarServicios = async () => {
@@ -75,6 +77,43 @@ export default function ServiciosPage() {
 
   return (
     <main className="min-h-screen bg-white">
+      <PublicDetailModal
+        open={Boolean(selectedServicio)}
+        onClose={() => setSelectedServicio(null)}
+        title={selectedServicio?.nombre || ""}
+        imageSrc={selectedServicio?.imagen || null}
+        imageAlt={selectedServicio?.nombre || "Servicio"}
+        badge={selectedServicio?.categoria || null}
+        description={selectedServicio?.descripcion || null}
+        meta={[
+          ...(selectedServicio?.responsable
+            ? [{ icon: UserRound, text: selectedServicio.responsable }]
+            : []),
+          ...(selectedServicio?.contacto
+            ? [{ icon: Phone, text: selectedServicio.contacto }]
+            : []),
+          ...(selectedServicio?.direccion
+            ? [{ icon: MapPin, text: selectedServicio.direccion }]
+            : []),
+        ]}
+        actions={
+          selectedServicio?.contacto ? (
+            <a
+              href={getContactHref(
+                selectedServicio.contacto,
+                selectedServicio.usa_whatsapp
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+            >
+              <Phone className="h-4 w-4" />
+              {selectedServicio.usa_whatsapp === false ? "Llamar" : "Contactar"}
+            </a>
+          ) : null
+        }
+      />
+
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3">
@@ -173,7 +212,7 @@ export default function ServiciosPage() {
                         </h3>
 
                         {servicio.descripcion && (
-                          <p className="mt-3 text-sm leading-relaxed text-gray-700">
+                          <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
                             {servicio.descripcion}
                           </p>
                         )}
@@ -201,16 +240,27 @@ export default function ServiciosPage() {
                           )}
                         </div>
 
-                        {servicio.contacto && (
-                          <a
-                            href={getContactHref(servicio.contacto, servicio.usa_whatsapp)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="mt-5 inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
+                        <div className="mt-5 flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedServicio(servicio)}
+                            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                           >
-                            {servicio.usa_whatsapp === false ? "Llamar" : "Contactar"}
-                          </a>
-                        )}
+                            Ver mas
+                            <ArrowRight className="h-4 w-4" />
+                          </button>
+
+                          {servicio.contacto && (
+                            <a
+                              href={getContactHref(servicio.contacto, servicio.usa_whatsapp)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
+                            >
+                              {servicio.usa_whatsapp === false ? "Llamar" : "Contactar"}
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}

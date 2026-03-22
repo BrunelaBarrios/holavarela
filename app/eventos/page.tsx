@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { Radio, Search } from "lucide-react"
+import { ArrowRight, CalendarDays, MapPin, Search } from "lucide-react"
+import { PublicDetailModal } from "../components/PublicDetailModal"
 import { supabase } from "../supabase"
 
 type Evento = {
@@ -26,6 +27,7 @@ export default function EventosPage() {
   const [eventos, setEventos] = useState<Evento[]>([])
   const [search, setSearch] = useState("")
   const [categoria, setCategoria] = useState("Todos")
+  const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null)
 
   useEffect(() => {
     const cargarEventos = async () => {
@@ -81,6 +83,33 @@ export default function EventosPage() {
 
   return (
     <main className="min-h-screen bg-white">
+      <PublicDetailModal
+        open={Boolean(selectedEvento)}
+        onClose={() => setSelectedEvento(null)}
+        title={selectedEvento?.titulo || ""}
+        imageSrc={selectedEvento?.imagen || null}
+        imageAlt={selectedEvento?.titulo || "Evento"}
+        badge={selectedEvento ? normalizeEventCategory(selectedEvento.categoria) : null}
+        description={selectedEvento?.descripcion || null}
+        meta={[
+          ...(selectedEvento?.fecha
+            ? [{ icon: CalendarDays, text: formatearFecha(selectedEvento.fecha) }]
+            : []),
+          ...(selectedEvento?.ubicacion
+            ? [{ icon: MapPin, text: selectedEvento.ubicacion }]
+            : []),
+        ]}
+        actions={
+          <Link
+            href="/eventos"
+            className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+          >
+            Ver todos los eventos
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        }
+      />
+
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3">
@@ -194,9 +223,18 @@ export default function EventosPage() {
                   Ubicacion: {evento.ubicacion}
                 </p>
 
-                <p className="mt-3 text-sm leading-relaxed text-gray-700">
+                <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
                   {evento.descripcion}
                 </p>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedEvento(evento)}
+                  className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                >
+                  Ver mas
+                  <ArrowRight className="h-4 w-4" />
+                </button>
               </div>
             ))}
           </div>

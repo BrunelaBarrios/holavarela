@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { Radio, Search } from "lucide-react"
+import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
+import { PublicDetailModal } from "../components/PublicDetailModal"
 import { supabase } from "../supabase"
 
 type Comercio = {
@@ -19,6 +20,7 @@ type Comercio = {
 export default function ComerciosPage() {
   const [comercios, setComercios] = useState<Comercio[]>([])
   const [search, setSearch] = useState("")
+  const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null)
 
   useEffect(() => {
     const cargarComercios = async () => {
@@ -51,6 +53,9 @@ export default function ComerciosPage() {
   const getContactHref = (telefono: string, usaWhatsapp?: boolean | null) =>
     usaWhatsapp === false ? `tel:${telefono}` : getWhatsappLink(telefono)
 
+  const getContactLabel = (usaWhatsapp?: boolean | null) =>
+    usaWhatsapp === false ? "Llamar por telefono" : "Contactar por WhatsApp"
+
   const comerciosFiltrados = useMemo(() => {
     const term = search.trim().toLowerCase()
     if (!term) return comercios
@@ -64,6 +69,43 @@ export default function ComerciosPage() {
 
   return (
     <main className="min-h-screen bg-white">
+      <PublicDetailModal
+        open={Boolean(selectedComercio)}
+        onClose={() => setSelectedComercio(null)}
+        title={selectedComercio?.nombre || ""}
+        imageSrc={
+          selectedComercio
+            ? selectedComercio.imagen || selectedComercio.imagen_url || null
+            : null
+        }
+        imageAlt={selectedComercio?.nombre || "Comercio"}
+        description={selectedComercio?.descripcion || null}
+        meta={[
+          ...(selectedComercio?.direccion
+            ? [{ icon: MapPin, text: selectedComercio.direccion }]
+            : []),
+          ...(selectedComercio?.telefono
+            ? [{ icon: Phone, text: selectedComercio.telefono }]
+            : []),
+        ]}
+        actions={
+          selectedComercio?.telefono ? (
+            <a
+              href={getContactHref(
+                selectedComercio.telefono,
+                selectedComercio.usa_whatsapp
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
+            >
+              <Phone className="h-4 w-4" />
+              {getContactLabel(selectedComercio.usa_whatsapp)}
+            </a>
+          ) : null
+        }
+      />
+
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3">
@@ -149,7 +191,9 @@ export default function ComerciosPage() {
                     {comercio.nombre}
                   </h2>
 
-                  <p className="text-sm text-gray-600">{comercio.descripcion}</p>
+                  <p className="whitespace-pre-line text-sm text-gray-600">
+                    {comercio.descripcion}
+                  </p>
 
                   <p className="mt-2 text-sm text-gray-600">
                     Direccion: {comercio.direccion}
@@ -159,16 +203,25 @@ export default function ComerciosPage() {
                     Telefono: {comercio.telefono}
                   </p>
 
-                  <a
-                    href={getContactHref(comercio.telefono, comercio.usa_whatsapp)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 inline-block rounded-lg bg-green-600 px-4 py-2 text-sm text-white"
-                  >
-                    {comercio.usa_whatsapp === false
-                      ? "Llamar por telefono"
-                      : "Contactar por WhatsApp"}
-                  </a>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedComercio(comercio)}
+                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                    >
+                      Ver mas
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+
+                    <a
+                      href={getContactHref(comercio.telefono, comercio.usa_whatsapp)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block rounded-lg bg-green-600 px-4 py-2 text-sm text-white"
+                    >
+                      {getContactLabel(comercio.usa_whatsapp)}
+                    </a>
+                  </div>
                 </div>
               )
             })}
