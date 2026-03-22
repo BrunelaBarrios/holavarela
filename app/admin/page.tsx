@@ -124,7 +124,7 @@ export default function AdminDashboardPage() {
     <div className="mx-auto max-w-7xl">
       <div className="mb-8">
         <h1 className="mb-2 text-3xl font-semibold text-slate-900">Dashboard</h1>
-        <p className="text-slate-500">Bienvenido al panel de administracion</p>
+        <p className="text-slate-500">Bienvenido al panel de administración</p>
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-5">
@@ -155,7 +155,7 @@ export default function AdminDashboardPage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-xl font-semibold text-slate-900">
-              Proximos Eventos
+              Próximos Eventos
             </h2>
             <Link
               href="/admin/eventos"
@@ -234,7 +234,7 @@ export default function AdminDashboardPage() {
               className="flex w-full items-center gap-3 rounded-xl bg-cyan-600 px-4 py-3 text-white transition hover:bg-cyan-500"
             >
               <Plus className="h-5 w-5" />
-              <span>Agregar Institucion</span>
+              <span>Agregar institución</span>
             </button>
 
             <button

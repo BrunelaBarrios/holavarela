@@ -81,7 +81,7 @@ export default function AdminInstitucionesPage() {
     const { error } = await supabase.from("instituciones").delete().eq("id", id)
 
     if (error) {
-      setSaveError(`Error al eliminar institucion: ${error.message}`)
+      setSaveError(`Error al eliminar institución: ${error.message}`)
       return
     }
 
@@ -128,7 +128,7 @@ export default function AdminInstitucionesPage() {
         .eq("id", editingInstitucion.id)
 
       if (error) {
-        setSaveError(`Error al actualizar institucion: ${error.message}`)
+      setSaveError(`Error al actualizar institución: ${error.message}`)
         setLoading(false)
         return
       }
@@ -142,7 +142,7 @@ export default function AdminInstitucionesPage() {
       const { error } = await supabase.from("instituciones").insert([payload])
 
       if (error) {
-        setSaveError(`Error al guardar institucion: ${error.message}`)
+        setSaveError(`Error al guardar institución: ${error.message}`)
         setLoading(false)
         return
       }
@@ -163,7 +163,7 @@ export default function AdminInstitucionesPage() {
     <div className="mx-auto max-w-7xl">
       <AdminConfirmModal
         isOpen={Boolean(deletingInstitucion)}
-        title="Eliminar institucion"
+        title="Eliminar institución"
         description={`Vas a eliminar "${deletingInstitucion?.nombre || ""}". Esta accion no se puede deshacer.`}
         confirmLabel="Eliminar"
         onCancel={() => setDeletingInstitucion(null)}
@@ -185,7 +185,7 @@ export default function AdminInstitucionesPage() {
           className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-3 font-medium text-white transition hover:bg-cyan-500"
         >
           <Plus className="h-5 w-5" />
-          Agregar Institucion
+          Agregar institución
         </button>
       </div>
 
@@ -194,7 +194,7 @@ export default function AdminInstitucionesPage() {
           <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-xl">
             <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
               <h2 className="text-xl font-semibold text-slate-900">
-                {editingInstitucion ? "Editar Institucion" : "Agregar Institucion"}
+                {editingInstitucion ? "Editar institución" : "Agregar institución"}
               </h2>
               <button
                 onClick={resetForm}
@@ -228,7 +228,7 @@ export default function AdminInstitucionesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Direccion
+                  Dirección
                 </label>
                 <input
                   type="text"
@@ -242,7 +242,7 @@ export default function AdminInstitucionesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Telefono
+                  Teléfono
                 </label>
                 <input
                   type="text"
@@ -256,7 +256,7 @@ export default function AdminInstitucionesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Descripcion
+                  Descripción
                 </label>
                 <textarea
                   value={formData.descripcion || ""}
@@ -284,7 +284,7 @@ export default function AdminInstitucionesPage() {
                   <div className="mt-4 space-y-3">
                     <img
                       src={formData.foto}
-                      alt="Vista previa de la institucion"
+                      alt="Vista previa de la institución"
                       className="h-40 w-full rounded-2xl object-cover"
                     />
                     <button
@@ -308,7 +308,7 @@ export default function AdminInstitucionesPage() {
                     ? "Guardando..."
                     : editingInstitucion
                       ? "Guardar Cambios"
-                      : "Agregar Institucion"}
+                      : "Agregar institución"}
                 </button>
 
                 <button
@@ -381,13 +381,13 @@ export default function AdminInstitucionesPage() {
             No hay instituciones
           </h3>
           <p className="mb-4 text-slate-500">
-            Comienza agregando la primera institucion
+            Comenzá agregando la primera institución
           </p>
           <button
             onClick={() => setIsFormOpen(true)}
             className="rounded-xl bg-cyan-600 px-6 py-3 font-medium text-white transition hover:bg-cyan-500"
           >
-            Agregar Institucion
+            Agregar institución
           </button>
         </div>
       )}

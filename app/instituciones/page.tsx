@@ -56,8 +56,8 @@ export default function InstitucionesPage() {
         onClose={() => setSelectedInstitucion(null)}
         title={selectedInstitucion?.nombre || ""}
         imageSrc={selectedInstitucion?.foto || null}
-        imageAlt={selectedInstitucion?.nombre || "Institucion"}
-        badge="Institucion"
+        imageAlt={selectedInstitucion?.nombre || "Institución"}
+        badge="Institución"
         description={selectedInstitucion?.descripcion || null}
         meta={[
           ...(selectedInstitucion?.direccion
@@ -114,7 +114,7 @@ export default function InstitucionesPage() {
       <div className="mx-auto max-w-6xl px-6 py-16">
         <h1 className="text-3xl font-bold text-gray-900">Instituciones</h1>
         <p className="mt-2 text-gray-600">
-          Conoce instituciones y espacios de referencia en la ciudad
+          Conocé instituciones y espacios de referencia en la ciudad
         </p>
 
         <div className="mt-6 max-w-xl">
@@ -124,7 +124,7 @@ export default function InstitucionesPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nombre, direccion o descripcion"
+              placeholder="Buscar por nombre, dirección o descripción"
               className="w-full text-sm outline-none"
             />
           </div>
@@ -134,8 +134,8 @@ export default function InstitucionesPage() {
           <div className="mt-10 rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
             <p className="text-gray-600">
               {instituciones.length === 0
-                ? "Todavia no hay instituciones cargadas."
-                : "No se encontraron instituciones con esa busqueda."}
+                ? "Todavía no hay instituciones cargadas."
+                : "No se encontraron instituciones con esa búsqueda."}
             </p>
           </div>
         ) : (
@@ -155,7 +155,7 @@ export default function InstitucionesPage() {
 
                 <div className="p-5">
                   <div className="mb-3 inline-flex rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
-                    Institucion
+                    Institución
                   </div>
 
                   <h2 className="text-xl font-semibold text-gray-900">
@@ -170,13 +170,13 @@ export default function InstitucionesPage() {
 
                   {institucion.direccion && (
                     <p className="mt-2 text-sm text-gray-600">
-                      Direccion: {institucion.direccion}
+                      Dirección: {institucion.direccion}
                     </p>
                   )}
 
                   {institucion.telefono && (
                     <p className="mt-1 text-sm text-gray-600">
-                      Telefono: {institucion.telefono}
+                      Teléfono: {institucion.telefono}
                     </p>
                   )}
 
@@ -185,7 +185,7 @@ export default function InstitucionesPage() {
                     onClick={() => setSelectedInstitucion(institucion)}
                     className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                   >
-                    Ver mas
+                    Ver más
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>

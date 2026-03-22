@@ -122,7 +122,7 @@ export default function AdminLayout({
             />
             <div>
               <div className="font-semibold text-slate-900">Hola Varela!</div>
-              <div className="text-xs text-slate-500">Administracion</div>
+              <div className="text-xs text-slate-500">Administración</div>
             </div>
           </Link>
 
@@ -153,7 +153,7 @@ export default function AdminLayout({
               />
               <div>
                 <div className="font-semibold text-slate-900">Hola Varela!</div>
-                <div className="text-xs text-slate-500">Administracion</div>
+                <div className="text-xs text-slate-500">Administración</div>
               </div>
             </Link>
 
