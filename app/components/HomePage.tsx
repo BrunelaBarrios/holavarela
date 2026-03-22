@@ -774,9 +774,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   <span>{selectedCurso.contacto}</span>
                 </div>
 
-                <p className="mt-6 text-lg leading-8 text-slate-600">
-                  {selectedCurso.descripcion}
-                </p>
+                  <p className="mt-6 whitespace-pre-line text-lg leading-8 text-slate-600">
+                    {selectedCurso.descripcion}
+                  </p>
 
                 <div className="mt-8 flex flex-wrap gap-3">
                   <a
@@ -1269,9 +1269,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     <h3 className="text-[22px] font-semibold text-slate-900">
                       {curso.nombre}
                     </h3>
-                    <p className="mt-3 text-base leading-7 text-slate-500">
-                      {curso.descripcion}
-                    </p>
+                      <p className="mt-3 whitespace-pre-line text-base leading-7 text-slate-500">
+                        {curso.descripcion}
+                      </p>
                     <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
                       <GraduationCap className="h-4 w-4" />
                       <span>{curso.responsable}</span>
