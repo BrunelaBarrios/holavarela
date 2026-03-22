@@ -50,12 +50,12 @@ export function PublicDetailModal({
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="bg-slate-100">
             {imageSrc ? (
-              <div className="relative h-full min-h-[320px] w-full">
+              <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
                 <OptimizedImage
                   src={imageSrc}
                   alt={imageAlt}
                   sizes="(max-width: 1024px) 100vw, 60vw"
-                  className="object-cover"
+                  className="object-contain"
                 />
               </div>
             ) : (
