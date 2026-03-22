@@ -522,10 +522,10 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 )}
 
                 {selectedComercio.descripcion && (
-                  <p className="mt-6 text-lg leading-8 text-slate-600">
-                    {selectedComercio.descripcion}
-                  </p>
-                )}
+                    <p className="mt-6 whitespace-pre-line text-lg leading-8 text-slate-600">
+                      {selectedComercio.descripcion}
+                    </p>
+                  )}
 
                 <div className="mt-8 flex flex-wrap gap-3">
                   {selectedComercio.telefono && (
@@ -597,10 +597,10 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 </h3>
 
                 {selectedServicio.descripcion && (
-                  <p className="mt-6 text-lg leading-8 text-slate-600">
-                    {selectedServicio.descripcion}
-                  </p>
-                )}
+                    <p className="mt-6 whitespace-pre-line text-lg leading-8 text-slate-600">
+                      {selectedServicio.descripcion}
+                    </p>
+                  )}
 
                 <div className="mt-6 space-y-3 text-slate-600">
                   {selectedServicio.responsable && (
@@ -702,9 +702,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   {normalizeEventCategory(selectedEvento.categoria)}
                 </div>
 
-                <p className="mt-6 text-lg leading-8 text-slate-600">
-                  {selectedEvento.descripcion}
-                </p>
+                  <p className="mt-6 whitespace-pre-line text-lg leading-8 text-slate-600">
+                    {selectedEvento.descripcion}
+                  </p>
 
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link
@@ -1002,9 +1002,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       {business.nombre}
                     </h3>
                     {business.descripcion && (
-                      <p className="mt-2 line-clamp-2 text-base text-slate-500">
-                        {business.descripcion}
-                      </p>
+                        <p className="mt-2 line-clamp-2 whitespace-pre-line text-base text-slate-500">
+                          {business.descripcion}
+                        </p>
                     )}
                     {business.direccion && (
                       <p className="mt-2 text-sm text-slate-500">
@@ -1102,9 +1102,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           </h3>
 
                           {servicio.descripcion && (
-                            <p className="mt-3 line-clamp-3 text-sm leading-7 text-slate-500">
-                              {servicio.descripcion}
-                            </p>
+                              <p className="mt-3 line-clamp-3 whitespace-pre-line text-sm leading-7 text-slate-500">
+                                {servicio.descripcion}
+                              </p>
                           )}
 
                           <div className="mt-4 space-y-2 text-sm text-slate-600">
@@ -1204,9 +1204,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   </h3>
 
                   <p className="mt-2 text-sm text-slate-500">{event.ubicacion}</p>
-                  <p className="mt-3 text-lg leading-8 text-slate-500">
-                    {event.descripcion}
-                  </p>
+                    <p className="mt-3 whitespace-pre-line text-lg leading-8 text-slate-500">
+                      {event.descripcion}
+                    </p>
 
                   <button
                     type="button"

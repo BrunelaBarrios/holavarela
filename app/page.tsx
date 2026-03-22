@@ -1,6 +1,8 @@
 import { HomePage, type HomePageData, type WeatherData } from "./components/HomePage"
 import { supabase } from "./supabase"
 
+export const dynamic = "force-dynamic"
+
 const defaultSobreVarela = {
   titulo: "Jose Pedro Varela",
   texto_1:
