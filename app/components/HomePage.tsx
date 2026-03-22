@@ -397,15 +397,17 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </button>
 
             <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr]">
-              <div className="bg-slate-100">
+                <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {welcomeHighlight.image ? (
                     <div className="relative flex min-h-[280px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[360px]">
-                      <OptimizedImage
-                        src={welcomeHighlight.image}
-                        alt={welcomeHighlight.title}
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        className="object-contain"
-                      />
+                      <div className="relative h-full min-h-[240px] w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] md:min-h-[320px]">
+                        <OptimizedImage
+                          src={welcomeHighlight.image}
+                          alt={welcomeHighlight.title}
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                          className="object-contain p-4"
+                        />
+                      </div>
                     </div>
                   ) : (
                   <div className="flex min-h-[280px] items-center justify-center text-slate-400">
@@ -485,15 +487,17 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </button>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="bg-slate-100">
+                <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {selectedComercio.imagen_url || selectedComercio.imagen ? (
                     <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
-                      <OptimizedImage
-                        src={selectedComercio.imagen_url || selectedComercio.imagen || ""}
-                        alt={selectedComercio.nombre}
-                        sizes="(max-width: 1024px) 100vw, 60vw"
-                        className="object-contain"
-                      />
+                      <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] md:min-h-[380px]">
+                        <OptimizedImage
+                          src={selectedComercio.imagen_url || selectedComercio.imagen || ""}
+                          alt={selectedComercio.nombre}
+                          sizes="(max-width: 1024px) 100vw, 60vw"
+                          className="object-contain p-4"
+                        />
+                      </div>
                     </div>
                   ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
@@ -570,15 +574,17 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </button>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="bg-slate-100">
+                <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {selectedServicio.imagen ? (
                     <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
-                      <OptimizedImage
-                        src={selectedServicio.imagen}
-                        alt={selectedServicio.nombre}
-                        sizes="(max-width: 1024px) 100vw, 60vw"
-                        className="object-contain"
-                      />
+                      <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] md:min-h-[380px]">
+                        <OptimizedImage
+                          src={selectedServicio.imagen}
+                          alt={selectedServicio.nombre}
+                          sizes="(max-width: 1024px) 100vw, 60vw"
+                          className="object-contain p-4"
+                        />
+                      </div>
                     </div>
                   ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
@@ -666,15 +672,17 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </button>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="bg-slate-100">
+                <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {selectedEvento.imagen ? (
                     <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
-                      <OptimizedImage
-                        src={selectedEvento.imagen}
-                        alt={selectedEvento.titulo}
-                        sizes="(max-width: 1024px) 100vw, 60vw"
-                        className="object-contain"
-                      />
+                      <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] md:min-h-[380px]">
+                        <OptimizedImage
+                          src={selectedEvento.imagen}
+                          alt={selectedEvento.titulo}
+                          sizes="(max-width: 1024px) 100vw, 60vw"
+                          className="object-contain p-4"
+                        />
+                      </div>
                     </div>
                   ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
@@ -742,15 +750,17 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </button>
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="bg-slate-100">
+                <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {selectedCurso.imagen ? (
                     <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
-                      <OptimizedImage
-                        src={selectedCurso.imagen}
-                        alt={selectedCurso.nombre}
-                        sizes="(max-width: 1024px) 100vw, 60vw"
-                        className="object-contain"
-                      />
+                      <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] md:min-h-[380px]">
+                        <OptimizedImage
+                          src={selectedCurso.imagen}
+                          alt={selectedCurso.nombre}
+                          sizes="(max-width: 1024px) 100vw, 60vw"
+                          className="object-contain p-4"
+                        />
+                      </div>
                     </div>
                   ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">

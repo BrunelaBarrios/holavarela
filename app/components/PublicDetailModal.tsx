@@ -48,15 +48,17 @@ export function PublicDetailModal({
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="bg-slate-100">
+          <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
             {imageSrc ? (
               <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
-                <OptimizedImage
-                  src={imageSrc}
-                  alt={imageAlt}
-                  sizes="(max-width: 1024px) 100vw, 60vw"
-                  className="object-contain"
-                />
+                <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] md:min-h-[380px]">
+                  <OptimizedImage
+                    src={imageSrc}
+                    alt={imageAlt}
+                    sizes="(max-width: 1024px) 100vw, 60vw"
+                    className="object-contain p-4"
+                  />
+                </div>
               </div>
             ) : (
               <div className="flex min-h-[320px] items-center justify-center text-slate-400">
