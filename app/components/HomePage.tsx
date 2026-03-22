@@ -398,16 +398,16 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
             <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr]">
               <div className="bg-slate-100">
-                {welcomeHighlight.image ? (
-                  <div className="relative h-full min-h-[280px] w-full">
-                    <OptimizedImage
-                      src={welcomeHighlight.image}
-                      alt={welcomeHighlight.title}
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover"
-                    />
-                  </div>
-                ) : (
+                  {welcomeHighlight.image ? (
+                    <div className="relative flex min-h-[280px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[360px]">
+                      <OptimizedImage
+                        src={welcomeHighlight.image}
+                        alt={welcomeHighlight.title}
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-contain"
+                      />
+                    </div>
+                  ) : (
                   <div className="flex min-h-[280px] items-center justify-center text-slate-400">
                     Sin imagen
                   </div>
@@ -486,16 +486,16 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="bg-slate-100">
-                {selectedComercio.imagen_url || selectedComercio.imagen ? (
-                  <div className="relative h-full min-h-[320px] w-full">
-                    <OptimizedImage
-                      src={selectedComercio.imagen_url || selectedComercio.imagen || ""}
-                      alt={selectedComercio.nombre}
-                      sizes="(max-width: 1024px) 100vw, 60vw"
-                      className="object-cover"
-                    />
-                  </div>
-                ) : (
+                  {selectedComercio.imagen_url || selectedComercio.imagen ? (
+                    <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
+                      <OptimizedImage
+                        src={selectedComercio.imagen_url || selectedComercio.imagen || ""}
+                        alt={selectedComercio.nombre}
+                        sizes="(max-width: 1024px) 100vw, 60vw"
+                        className="object-contain"
+                      />
+                    </div>
+                  ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
                     Sin imagen
                   </div>
@@ -571,16 +571,16 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="bg-slate-100">
-                {selectedServicio.imagen ? (
-                  <div className="relative h-full min-h-[320px] w-full">
-                    <OptimizedImage
-                      src={selectedServicio.imagen}
-                      alt={selectedServicio.nombre}
-                      sizes="(max-width: 1024px) 100vw, 60vw"
-                      className="object-cover"
-                    />
-                  </div>
-                ) : (
+                  {selectedServicio.imagen ? (
+                    <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
+                      <OptimizedImage
+                        src={selectedServicio.imagen}
+                        alt={selectedServicio.nombre}
+                        sizes="(max-width: 1024px) 100vw, 60vw"
+                        className="object-contain"
+                      />
+                    </div>
+                  ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
                     Sin imagen
                   </div>
@@ -667,16 +667,16 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="bg-slate-100">
-                {selectedEvento.imagen ? (
-                  <div className="relative h-full min-h-[320px] w-full">
-                    <OptimizedImage
-                      src={selectedEvento.imagen}
-                      alt={selectedEvento.titulo}
-                      sizes="(max-width: 1024px) 100vw, 60vw"
-                      className="object-cover"
-                    />
-                  </div>
-                ) : (
+                  {selectedEvento.imagen ? (
+                    <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
+                      <OptimizedImage
+                        src={selectedEvento.imagen}
+                        alt={selectedEvento.titulo}
+                        sizes="(max-width: 1024px) 100vw, 60vw"
+                        className="object-contain"
+                      />
+                    </div>
+                  ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
                     Sin imagen
                   </div>
@@ -743,16 +743,16 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="bg-slate-100">
-                {selectedCurso.imagen ? (
-                  <div className="relative h-full min-h-[320px] w-full">
-                    <OptimizedImage
-                      src={selectedCurso.imagen}
-                      alt={selectedCurso.nombre}
-                      sizes="(max-width: 1024px) 100vw, 60vw"
-                      className="object-cover"
-                    />
-                  </div>
-                ) : (
+                  {selectedCurso.imagen ? (
+                    <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
+                      <OptimizedImage
+                        src={selectedCurso.imagen}
+                        alt={selectedCurso.nombre}
+                        sizes="(max-width: 1024px) 100vw, 60vw"
+                        className="object-contain"
+                      />
+                    </div>
+                  ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
                     Sin imagen
                   </div>
