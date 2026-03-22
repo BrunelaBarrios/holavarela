@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import {
   Activity,
   BadgeCheck,
+  Building2,
   Calendar,
   FileText,
   GraduationCap,
@@ -28,6 +29,7 @@ const menuItems = [
   { href: "/admin/comercios", icon: Store, label: "Comercios", roles: ["superadmin", "admin"] },
   { href: "/admin/eventos", icon: Calendar, label: "Eventos", roles: ["superadmin", "admin"] },
   { href: "/admin/servicios", icon: ShieldAlert, label: "Servicios", roles: ["superadmin", "admin"] },
+  { href: "/admin/instituciones", icon: Building2, label: "Instituciones", roles: ["superadmin", "admin"] },
   { href: "/admin/cursos", icon: GraduationCap, label: "Cursos", roles: ["superadmin", "admin"] },
   { href: "/admin/sitio", icon: FileText, label: "Sitio", roles: ["superadmin"] },
   { href: "/admin/radio", icon: Radio, label: "Radio", roles: ["superadmin"] },

@@ -83,6 +83,15 @@ type Servicio = {
   usa_whatsapp?: boolean | null
 }
 
+type Institucion = {
+  id: number
+  nombre: string
+  descripcion: string | null
+  direccion: string | null
+  telefono: string | null
+  foto: string | null
+}
+
 type SobreVarelaConfig = {
   titulo: string
   texto_1: string
@@ -104,6 +113,7 @@ export type HomePageData = {
   eventos: Evento[]
   cursos: Curso[]
   servicios: Servicio[]
+  instituciones: Institucion[]
   allCursos: Curso[]
   allServicios: Servicio[]
   sobreVarela: SobreVarelaConfig
@@ -250,6 +260,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [servicios] = useState<Servicio[]>(initialData.servicios)
   const [allCursos] = useState<Curso[]>(initialData.allCursos)
   const [allServicios] = useState<Servicio[]>(initialData.allServicios)
+  const [instituciones] = useState<Institucion[]>(initialData.instituciones)
   const [sobreVarela] = useState<SobreVarelaConfig>(
     initialData.sobreVarela || defaultSobreVarela
   )
@@ -257,6 +268,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null)
   const [selectedCurso, setSelectedCurso] = useState<Curso | null>(null)
+  const [selectedInstitucion, setSelectedInstitucion] = useState<Institucion | null>(null)
   const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(() =>
     getInitialWelcomeHighlight(
       initialData.featuredBusinesses,
@@ -816,6 +828,90 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       )}
 
+      {selectedInstitucion && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4">
+          <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
+            <button
+              type="button"
+              onClick={() => setSelectedInstitucion(null)}
+              className="absolute right-4 top-4 z-10 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white"
+              aria-label="Cerrar detalle"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
+                {selectedInstitucion.foto ? (
+                  <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
+                    <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] md:min-h-[380px]">
+                      <OptimizedImage
+                        src={selectedInstitucion.foto}
+                        alt={selectedInstitucion.nombre}
+                        sizes="(max-width: 1024px) 100vw, 60vw"
+                        className="object-contain p-4"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex min-h-[320px] items-center justify-center text-slate-400">
+                    Sin imagen
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 md:p-8">
+                <div className="mb-4 inline-flex rounded-full bg-cyan-50 px-3 py-1 text-sm font-semibold text-cyan-700">
+                  Institucion
+                </div>
+
+                <h3 className="text-3xl font-semibold leading-tight text-slate-900">
+                  {selectedInstitucion.nombre}
+                </h3>
+
+                {selectedInstitucion.direccion && (
+                  <div className="mt-4 flex items-center gap-2 text-slate-500">
+                    <MapPin className="h-4 w-4" />
+                    <span>{selectedInstitucion.direccion}</span>
+                  </div>
+                )}
+
+                {selectedInstitucion.telefono && (
+                  <div className="mt-3 flex items-center gap-2 text-slate-500">
+                    <Phone className="h-4 w-4" />
+                    <span>{selectedInstitucion.telefono}</span>
+                  </div>
+                )}
+
+                {selectedInstitucion.descripcion && (
+                  <p className="mt-6 whitespace-pre-line text-lg leading-8 text-slate-600">
+                    {selectedInstitucion.descripcion}
+                  </p>
+                )}
+
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Link
+                    href="/instituciones"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-cyan-600 px-5 py-3 font-semibold text-white transition hover:bg-cyan-500"
+                  >
+                    Ver todas las instituciones
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedInstitucion(null)}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="sticky top-0 z-50 border-b border-white/60 bg-white/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/" className="flex items-center gap-3">
@@ -845,12 +941,15 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             <a href="#servicios" className="hover:text-blue-500">
               Servicios
             </a>
-            <a href="#eventos" className="hover:text-blue-500">
-              Eventos
-            </a>
-            <a href="#cursos" className="hover:text-blue-500">
-              Cursos y Clases
-            </a>
+              <a href="#eventos" className="hover:text-blue-500">
+                Eventos
+              </a>
+              <a href="#instituciones" className="hover:text-blue-500">
+                Instituciones
+              </a>
+              <a href="#cursos" className="hover:text-blue-500">
+                Cursos y Clases
+              </a>
             <a href="#contacto" className="hover:text-blue-500">
               Contacto
             </a>
@@ -1290,6 +1389,86 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       type="button"
                       onClick={() => setSelectedCurso(curso)}
                       className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-500"
+                    >
+                      Ver mas
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section id="instituciones" className="py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
+              Instituciones
+            </h2>
+            <p className="mt-4 text-xl text-slate-500">
+              Espacios y organizaciones de referencia en Jose Pedro Varela
+            </p>
+            <div className="mt-6">
+              <Link
+                href="/instituciones"
+                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-cyan-600"
+              >
+                Ver todas las instituciones
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+
+          {instituciones.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
+              Todavia no hay instituciones cargadas.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {instituciones.map((institucion) => (
+                <div
+                  key={institucion.id}
+                  className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(6,182,212,0.35)]"
+                >
+                  {institucion.foto && (
+                    <div className="relative h-56 w-full">
+                      <OptimizedImage
+                        src={institucion.foto}
+                        alt={institucion.nombre}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+
+                  <div className="p-5">
+                    <div className="mb-3 inline-flex rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
+                      Institucion
+                    </div>
+
+                    <h3 className="text-[22px] font-semibold text-slate-900">
+                      {institucion.nombre}
+                    </h3>
+
+                    {institucion.descripcion && (
+                      <p className="mt-3 line-clamp-3 whitespace-pre-line text-base leading-7 text-slate-500">
+                        {institucion.descripcion}
+                      </p>
+                    )}
+
+                    {institucion.direccion && (
+                      <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
+                        <MapPin className="h-4 w-4" />
+                        <span>{institucion.direccion}</span>
+                      </div>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedInstitucion(institucion)}
+                      className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-600 transition hover:text-cyan-700"
                     >
                       Ver mas
                       <ArrowRight className="h-4 w-4" />

@@ -46,6 +46,7 @@ export default async function Page() {
     { data: eventosData },
     { data: cursos },
     { data: servicios },
+    { data: instituciones },
     { data: sobreVarelaData },
     weather,
   ] = await Promise.all([
@@ -73,6 +74,10 @@ export default async function Page() {
       .or("estado.is.null,estado.eq.activo")
       .order("id", { ascending: false }),
     supabase
+      .from("instituciones")
+      .select("*")
+      .order("id", { ascending: false }),
+    supabase
       .from("sitio")
       .select("titulo, texto_1, texto_2, texto_3, imagen_url")
       .eq("id", 1)
@@ -85,6 +90,7 @@ export default async function Page() {
     eventos: (eventosData || []).slice(0, 6),
     cursos: cursos || [],
     servicios: (servicios || []).slice(0, 8),
+    instituciones: (instituciones || []).slice(0, 6),
     allCursos: cursos || [],
     allServicios: servicios || [],
     sobreVarela: sobreVarelaData

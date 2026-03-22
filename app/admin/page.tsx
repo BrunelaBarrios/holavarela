@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
+  Building2,
   Calendar,
   FileText,
   GraduationCap,
@@ -25,6 +26,7 @@ export default function AdminDashboardPage() {
   const [comerciosCount, setComerciosCount] = useState(0)
   const [eventosCount, setEventosCount] = useState(0)
   const [serviciosCount, setServiciosCount] = useState(0)
+  const [institucionesCount, setInstitucionesCount] = useState(0)
   const [cursosCount, setCursosCount] = useState(0)
   const [proximosEventos, setProximosEventos] = useState<EventoResumen[]>([])
 
@@ -34,12 +36,14 @@ export default function AdminDashboardPage() {
         { count: comercios },
         { count: eventos },
         { count: servicios },
+        { count: instituciones },
         { count: cursos },
         { data: eventosData },
       ] = await Promise.all([
         supabase.from("comercios").select("*", { count: "exact", head: true }),
         supabase.from("eventos").select("*", { count: "exact", head: true }),
         supabase.from("servicios").select("*", { count: "exact", head: true }),
+        supabase.from("instituciones").select("*", { count: "exact", head: true }),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
         supabase
           .from("eventos")
@@ -52,6 +56,7 @@ export default function AdminDashboardPage() {
       setComerciosCount(comercios || 0)
       setEventosCount(eventos || 0)
       setServiciosCount(servicios || 0)
+      setInstitucionesCount(instituciones || 0)
       setCursosCount(cursos || 0)
       setProximosEventos(eventosData || [])
     }
@@ -85,6 +90,14 @@ export default function AdminDashboardPage() {
       action: () => router.push("/admin/servicios"),
     },
     {
+      id: "instituciones",
+      title: "Instituciones",
+      value: institucionesCount,
+      icon: Building2,
+      color: "bg-cyan-600",
+      action: () => router.push("/admin/instituciones"),
+    },
+    {
       id: "secciones",
       title: "Cursos",
       value: cursosCount,
@@ -114,7 +127,7 @@ export default function AdminDashboardPage() {
         <p className="text-slate-500">Bienvenido al panel de administracion</p>
       </div>
 
-      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-5">
         {stats.map((stat) => {
           const Icon = stat.icon
 
@@ -214,6 +227,14 @@ export default function AdminDashboardPage() {
             >
               <Plus className="h-5 w-5" />
               <span>Agregar Servicio</span>
+            </button>
+
+            <button
+              onClick={() => router.push("/admin/instituciones")}
+              className="flex w-full items-center gap-3 rounded-xl bg-cyan-600 px-4 py-3 text-white transition hover:bg-cyan-500"
+            >
+              <Plus className="h-5 w-5" />
+              <span>Agregar Institucion</span>
             </button>
 
             <button
