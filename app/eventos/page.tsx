@@ -169,7 +169,7 @@ export default function EventosPage() {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          {["Todos", "Evento", "Promocion", "Sorteo"].map((item) => (
+          {["Todos", "Evento", "Promocion", "Sorteo", "Beneficios"].map((item) => (
             <button
               key={item}
               type="button"

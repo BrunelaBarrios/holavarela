@@ -36,7 +36,7 @@ const initialForm: EventoForm = {
   imagen: "",
 }
 
-const categoriasEvento = ["Evento", "Promocion", "Sorteo"]
+const categoriasEvento = ["Evento", "Promocion", "Sorteo", "Beneficios"]
 
 export default function AdminEventosPage() {
   const [eventos, setEventos] = useState<Evento[]>([])
@@ -299,7 +299,7 @@ export default function AdminEventosPage() {
                 <label className="mb-2 block text-sm font-medium text-slate-900">
                   Categoria *
                 </label>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                   {categoriasEvento.map((categoria) => (
                     <label
                       key={categoria}
