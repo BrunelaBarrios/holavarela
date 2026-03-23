@@ -11,8 +11,8 @@ type Curso = {
   id: number
   nombre: string
   descripcion: string
-  responsable: string
-  contacto: string
+  responsable: string | null
+  contacto: string | null
   imagen: string | null
   destacado?: boolean | null
   estado?: string | null
@@ -128,8 +128,8 @@ export default function AdminCursosPage() {
     const payload = {
       nombre: formData.nombre,
       descripcion: formData.descripcion,
-      responsable: formData.responsable,
-      contacto: formData.contacto,
+      responsable: formData.responsable || null,
+      contacto: formData.contacto || null,
       imagen: formData.imagen || null,
       destacado: editingCurso?.destacado ?? false,
       estado: editingCurso?.estado || "activo",
@@ -179,8 +179,8 @@ export default function AdminCursosPage() {
     setFormData({
       nombre: curso.nombre,
       descripcion: curso.descripcion,
-      responsable: curso.responsable,
-      contacto: curso.contacto,
+      responsable: curso.responsable || "",
+      contacto: curso.contacto || "",
       imagen: curso.imagen,
       usa_whatsapp: curso.usa_whatsapp ?? true,
     })
@@ -314,7 +314,7 @@ export default function AdminCursosPage() {
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Responsable *
+                    Responsable
                   </label>
                   <input
                     type="text"
@@ -326,13 +326,12 @@ export default function AdminCursosPage() {
                       }))
                     }
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500"
-                    required
                   />
                 </div>
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Contacto *
+                    Contacto
                   </label>
                   <input
                     type="text"
@@ -344,7 +343,6 @@ export default function AdminCursosPage() {
                       }))
                     }
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500"
-                    required
                   />
                 </div>
               </div>
@@ -454,14 +452,18 @@ export default function AdminCursosPage() {
               </p>
 
               <div className="mt-4 space-y-2 text-sm text-slate-600">
-                <div className="flex items-center gap-2">
-                  <UserRound className="h-4 w-4" />
-                  <span>{curso.responsable}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  <span>{curso.contacto}</span>
-                </div>
+                {curso.responsable && (
+                  <div className="flex items-center gap-2">
+                    <UserRound className="h-4 w-4" />
+                    <span>{curso.responsable}</span>
+                  </div>
+                )}
+                {curso.contacto && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    <span>{curso.contacto}</span>
+                  </div>
+                )}
               </div>
 
               {curso.destacado && (

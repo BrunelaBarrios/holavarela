@@ -52,8 +52,8 @@ type Curso = {
   id: number
   nombre: string
   descripcion: string
-  responsable: string
-  contacto: string
+  responsable: string | null
+  contacto: string | null
   imagen: string | null
   destacado?: boolean | null
   usa_whatsapp?: boolean | null
@@ -726,33 +726,39 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   {selectedCurso.nombre}
                 </h3>
 
-                <div className="mt-4 flex items-center gap-2 text-slate-500">
-                  <GraduationCap className="h-4 w-4" />
-                  <span>{selectedCurso.responsable}</span>
-                </div>
+                {selectedCurso.responsable && (
+                  <div className="mt-4 flex items-center gap-2 text-slate-500">
+                    <GraduationCap className="h-4 w-4" />
+                    <span>{selectedCurso.responsable}</span>
+                  </div>
+                )}
 
-                <div className="mt-3 flex items-center gap-2 text-slate-500">
-                  <Phone className="h-4 w-4" />
-                  <span>{selectedCurso.contacto}</span>
-                </div>
+                {selectedCurso.contacto && (
+                  <div className="mt-3 flex items-center gap-2 text-slate-500">
+                    <Phone className="h-4 w-4" />
+                    <span>{selectedCurso.contacto}</span>
+                  </div>
+                )}
 
                   <p className="mt-6 whitespace-pre-line text-lg leading-8 text-slate-600">
                     {selectedCurso.descripcion}
                   </p>
 
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <a
-                    href={getContactHref(
-                      selectedCurso.contacto,
-                      selectedCurso.usa_whatsapp
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
-                  >
-                    <Phone className="h-4 w-4" />
-                    {getContactLabel(selectedCurso.usa_whatsapp)}
-                  </a>
+                  {selectedCurso.contacto && (
+                    <a
+                      href={getContactHref(
+                        selectedCurso.contacto,
+                        selectedCurso.usa_whatsapp
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+                    >
+                      <Phone className="h-4 w-4" />
+                      {getContactLabel(selectedCurso.usa_whatsapp)}
+                    </a>
+                  )}
 
                   <button
                     type="button"
@@ -1273,10 +1279,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       <p className="mt-3 whitespace-pre-line text-base leading-7 text-slate-500">
                         {curso.descripcion}
                       </p>
-                    <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
-                      <GraduationCap className="h-4 w-4" />
-                      <span>{curso.responsable}</span>
-                    </div>
+                    {curso.responsable && (
+                      <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
+                        <GraduationCap className="h-4 w-4" />
+                        <span>{curso.responsable}</span>
+                      </div>
+                    )}
                     <button
                       type="button"
                       onClick={() => setSelectedCurso(curso)}
@@ -1434,8 +1442,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </div>
 
             <p className="mt-6 text-lg leading-8 text-slate-500">
-              Portal informativo independiente de Jose Pedro Varela. Tu guia
-              digital para todo lo que pasa en la ciudad.
+              Portal informativo independiente de Jose Pedro Varela. Tu cartelera
+              digital.
             </p>
           </div>
 
