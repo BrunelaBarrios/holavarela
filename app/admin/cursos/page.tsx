@@ -54,7 +54,11 @@ export default function AdminCursosPage() {
   }
 
   useEffect(() => {
-    cargarCursos()
+    const timeoutId = window.setTimeout(() => {
+      void cargarCursos()
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [])
 
   const resetForm = () => {

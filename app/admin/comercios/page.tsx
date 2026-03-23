@@ -70,7 +70,11 @@ export default function AdminComerciosPage() {
   }
 
   useEffect(() => {
-    cargarComercios()
+    const timeoutId = window.setTimeout(() => {
+      void cargarComercios()
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [])
 
   const resetForm = () => {
