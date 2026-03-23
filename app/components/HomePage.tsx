@@ -935,21 +935,21 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             <a href="#radio" className="hover:text-blue-500">
               Radio
             </a>
+            <a href="#eventos" className="hover:text-blue-500">
+                Eventos
+            </a>
+            <a href="#cursos" className="hover:text-blue-500">
+              Cursos y Clases
+            </a>
+            <a href="#instituciones" className="hover:text-blue-500">
+              Instituciones
+            </a>
             <a href="#comercios" className="hover:text-blue-500">
               Comercios
             </a>
             <a href="#servicios" className="hover:text-blue-500">
               Servicios
             </a>
-              <a href="#eventos" className="hover:text-blue-500">
-                Eventos
-              </a>
-              <a href="#instituciones" className="hover:text-blue-500">
-                Instituciones
-              </a>
-              <a href="#cursos" className="hover:text-blue-500">
-                Cursos y Clases
-              </a>
             <a href="#contacto" className="hover:text-blue-500">
               Contacto
             </a>
@@ -1024,7 +1024,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </section>
       )}
 
-      <section id="radio" className="py-10">
+      <div className="flex flex-col">
+      <section id="radio" className="order-1 py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-start justify-between gap-6 rounded-[32px] border border-white/50 bg-[linear-gradient(120deg,#1d4ed8_0%,#0ea5e9_55%,#34d399_120%)] px-8 py-9 text-white shadow-[0_24px_60px_-30px_rgba(14,116,144,0.9)] md:flex-row md:items-center">
             <div className="flex items-center gap-6">
@@ -1066,7 +1067,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       </section>
 
-      <section id="comercios" className="py-18">
+      <section id="comercios" className="order-5 py-18">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
@@ -1152,7 +1153,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       </section>
 
-      <section id="servicios" className="py-16">
+      <section id="servicios" className="order-6 py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
@@ -1258,7 +1259,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       </section>
 
-      <section id="eventos" className="py-16">
+      <section id="eventos" className="order-2 py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <div className="mb-4 inline-flex rounded-full bg-sky-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
@@ -1332,7 +1333,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       </section>
 
-      <section id="cursos" className="py-16">
+      <section id="cursos" className="order-3 py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
@@ -1401,7 +1402,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       </section>
 
-      <section id="instituciones" className="py-16">
+      <section id="instituciones" className="order-4 py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
@@ -1480,6 +1481,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
           )}
         </div>
       </section>
+
+      </div>
 
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
