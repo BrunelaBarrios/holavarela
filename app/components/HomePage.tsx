@@ -1,9 +1,8 @@
 'use client'
 
 import Link from "next/link"
-import dynamic from "next/dynamic"
 import Image from "next/image"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { OptimizedImage } from "./OptimizedImage"
 import {
   ArrowRight,
@@ -16,19 +15,10 @@ import {
   Mail,
   MapPin,
   Phone,
-  Play,
   Radio,
   UserRound,
   X,
 } from "lucide-react"
-import { RADIO_STORAGE_KEY } from "../lib/localStorageKeys"
-
-type RadioConfig = {
-  title: string
-  description: string
-  streamUrl: string
-  isLive: boolean
-}
 
 type Comercio = {
   id: number
@@ -219,13 +209,6 @@ const getInitialWelcomeHighlight = (
   return nextItem
 }
 
-const defaultRadioConfig: RadioConfig = {
-  title: "Delta FM 88.3",
-  description: "Escucha Delta FM 88.3 en vivo desde Jose Pedro Varela.",
-  streamUrl: "https://radios.com.uy/delta/?utm_source=chatgpt.com",
-  isLive: true,
-}
-
 const defaultSobreVarela: SobreVarelaConfig = {
   titulo: "Jose Pedro Varela",
   texto_1:
@@ -240,20 +223,7 @@ const defaultSobreVarela: SobreVarelaConfig = {
 const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
 
-const LazyMyTunerWidget = dynamic(
-  () => import("./MyTunerWidget").then((module) => module.MyTunerWidget),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="rounded-2xl bg-white/10 p-5 text-white/85">
-        Cargando reproductor...
-      </div>
-    ),
-  }
-)
-
 export function HomePage({ initialData }: { initialData: HomePageData }) {
-  const [radioConfig, setRadioConfig] = useState<RadioConfig>(defaultRadioConfig)
   const [featuredBusinesses] = useState<Comercio[]>(initialData.featuredBusinesses)
   const [eventos] = useState<Evento[]>(initialData.eventos)
   const [cursos] = useState<Curso[]>(initialData.cursos)
@@ -298,35 +268,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     if ([1, 2].includes(weather.weatherCode)) return CloudSun
     return Cloud
   }, [weather])
-
-  useEffect(() => {
-    const loadRadioConfig = () => {
-      const raw = window.localStorage.getItem(RADIO_STORAGE_KEY)
-      if (!raw) {
-        setRadioConfig(defaultRadioConfig)
-        return
-      }
-
-      try {
-        const parsed = JSON.parse(raw) as RadioConfig
-        setRadioConfig({ ...defaultRadioConfig, ...parsed })
-      } catch {
-        setRadioConfig(defaultRadioConfig)
-      }
-    }
-
-    loadRadioConfig()
-
-    const refreshLocalConfig = () => {
-      loadRadioConfig()
-    }
-
-    window.addEventListener("radio-config-updated", refreshLocalConfig)
-
-    return () => {
-      window.removeEventListener("radio-config-updated", refreshLocalConfig)
-    }
-  }, [])
 
   const formatearFecha = (fecha: string) => {
     if (!fecha) return "Sin fecha"
@@ -932,9 +873,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             <a href="#inicio" className="hover:text-blue-500">
               Inicio
             </a>
-            <a href="#radio" className="hover:text-blue-500">
-              Radio
-            </a>
             <a href="#eventos" className="hover:text-blue-500">
                 Eventos
             </a>
@@ -1025,53 +963,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       )}
 
       <div className="flex flex-col">
-      <section id="radio" className="order-1 py-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-start justify-between gap-6 rounded-[32px] border border-white/50 bg-[linear-gradient(120deg,#1d4ed8_0%,#0ea5e9_55%,#34d399_120%)] px-8 py-9 text-white shadow-[0_24px_60px_-30px_rgba(14,116,144,0.9)] md:flex-row md:items-center">
-            <div className="flex items-center gap-6">
-              <div className="flex h-28 w-28 items-center justify-center rounded-full bg-white/15">
-                <Radio className="h-12 w-12" />
-              </div>
-
-              <div>
-                <h2 className="text-4xl font-bold">{radioConfig.title}</h2>
-                <p className="mt-3 text-xl text-white/90">
-                  {radioConfig.description}
-                </p>
-                <div className="mt-4 flex items-center gap-2 text-white/95">
-                  <Radio className="h-4 w-4" />
-                  <span className="text-base">
-                    {radioConfig.isLive ? "En vivo" : "Fuera del aire"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full max-w-xl">
-              {radioConfig.streamUrl ? (
-                <LazyMyTunerWidget
-                  streamUrl={radioConfig.streamUrl}
-                  title={radioConfig.title}
-                />
-              ) : (
-                <Link
-                  href="/admin/radio"
-                  className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-white px-8 py-5 text-xl font-semibold text-blue-500 shadow-sm transition hover:bg-slate-50"
-                >
-                  <Play className="h-6 w-6 fill-current" />
-                  Configurar radio
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
 
       <section id="comercios" className="order-5 py-18">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
-              Comercios Destacados
+              Comercios
             </h2>
             <p className="mt-4 text-xl text-slate-500">
               Conoce la variedad de comercio en la ciudad
