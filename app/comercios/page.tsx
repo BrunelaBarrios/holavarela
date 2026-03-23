@@ -123,9 +123,6 @@ export default function ComerciosPage() {
             <Link href="/#inicio" className="hover:text-blue-500">
               Inicio
             </Link>
-            <Link href="/#radio" className="hover:text-blue-500">
-              Radio en Vivo
-            </Link>
             <Link href="/comercios" className="text-blue-500">
               Comercios
             </Link>

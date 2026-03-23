@@ -86,9 +86,6 @@ export default function InstitucionesPage() {
             <Link href="/#inicio" className="hover:text-blue-500">
               Inicio
             </Link>
-            <Link href="/#radio" className="hover:text-blue-500">
-              Radio
-            </Link>
             <Link href="/comercios" className="hover:text-blue-500">
               Comercios
             </Link>

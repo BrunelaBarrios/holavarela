@@ -10,7 +10,7 @@ const defaultSobreVarela = {
   texto_2:
     "La ciudad cuenta con todos los servicios esenciales y una amplia variedad de comercios locales que sirven a la comunidad y sus alrededores.",
   texto_3:
-    "A traves de Hola Varela!, podes mantenerte informado sobre todo lo que acontece en nuestra ciudad: eventos culturales, comercios, cursos, servicios y nuestra querida radio local.",
+    "Cartelera online de Jose Pedro Varela: encontra aca eventos, cursos, clases, servicios y mas.",
   imagen_url: null,
 }
 

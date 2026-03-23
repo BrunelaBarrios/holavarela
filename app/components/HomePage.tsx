@@ -15,7 +15,6 @@ import {
   Mail,
   MapPin,
   Phone,
-  Radio,
   UserRound,
   X,
 } from "lucide-react"
@@ -216,7 +215,7 @@ const defaultSobreVarela: SobreVarelaConfig = {
   texto_2:
     "La ciudad cuenta con todos los servicios esenciales y una amplia variedad de comercios locales que sirven a la comunidad y sus alrededores.",
   texto_3:
-    "A traves de Hola Varela!, podes mantenerte informado sobre todo lo que acontece en nuestra ciudad: eventos culturales, comercios, cursos, servicios y nuestra querida radio local.",
+    "Cartelera online de Jose Pedro Varela: encontra aca eventos, cursos, clases, servicios y mas.",
   imagen_url: null,
 }
 
@@ -905,7 +904,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <div className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-white/80 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm">
-            <Radio className="h-4 w-4" />
+            <MapPin className="h-4 w-4" />
             Jose Pedro Varela, Uruguay
           </div>
 
@@ -916,7 +915,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
           </div>
 
           <p className="mx-auto mt-8 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
-            Información de la ciudad, comercios, eventos, cursos, servicios y radio en vivo con una experiencia más clara y ordenada.
+            Cartelera online de Jose Pedro Varela: encontrá acá eventos, cursos, clases, servicios y más.
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
