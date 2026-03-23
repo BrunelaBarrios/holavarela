@@ -903,19 +903,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         <div className="absolute right-0 top-10 -z-0 h-56 w-56 rounded-full bg-emerald-200/40 blur-3xl" />
 
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-          <div className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-white/80 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm">
-            <MapPin className="h-4 w-4" />
-            Jose Pedro Varela, Uruguay
-          </div>
-
           <div className="mx-auto max-w-5xl">
             <h1 className="text-4xl font-bold leading-[1.05] tracking-tight text-slate-950 sm:text-5xl lg:text-7xl">
-              Todo lo que pasa en Jose Pedro Varela en un solo lugar
+              Cartelera online de Jose Pedro Varela
             </h1>
           </div>
 
           <p className="mx-auto mt-8 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
-            Cartelera online de Jose Pedro Varela: encontrá acá eventos, cursos, clases, servicios y más.
+            Encontrá acá eventos, cursos, clases, servicios y más.
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
