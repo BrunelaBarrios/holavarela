@@ -1,6 +1,6 @@
 'use client'
 
-import { ExternalLink, Play, Radio, VolumeX } from "lucide-react"
+import { ExternalLink, Play, Radio } from "lucide-react"
 
 type MyTunerWidgetProps = {
   streamUrl: string
@@ -42,11 +42,7 @@ export function MyTunerWidget({
           <p className="mt-3 text-2xl font-medium text-white/95 max-md:text-xl">
             {description}
           </p>
-          <div className="mt-6 flex items-center gap-3 text-xl text-white/95 max-md:text-lg">
-            <VolumeX className="h-5 w-5" />
-            <span>Fuera del aire</span>
-          </div>
-          <div className="mt-3 flex items-center gap-2 text-sm font-medium text-blue-100/95">
+          <div className="mt-5 flex items-center gap-2 text-sm font-medium text-blue-100/95">
             <ExternalLink className="h-4 w-4" />
             <span>Te redirigiremos a radios.com.uy</span>
           </div>
