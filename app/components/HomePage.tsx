@@ -419,7 +419,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
               <div className="p-6 md:p-8">
                 <div className="mb-4 inline-flex rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
-                  Descubrí en Varela
+                  DescubrÃ­ en Varela
                 </div>
 
                 <h2 className="text-3xl font-semibold leading-tight text-slate-900">
@@ -442,7 +442,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     onClick={openWelcomeDetail}
                     className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
                   >
-                    Ver más
+                    Ver mÃ¡s
                     <ArrowRight className="h-4 w-4" />
                   </button>
 
@@ -851,7 +851,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
               <div className="p-6 md:p-8">
                 <div className="mb-4 inline-flex rounded-full bg-cyan-50 px-3 py-1 text-sm font-semibold text-cyan-700">
-                  Institución
+                  InstituciÃ³n
                 </div>
 
                 <h3 className="text-3xl font-semibold leading-tight text-slate-900">
@@ -964,7 +964,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
           </div>
 
           <p className="mx-auto mt-8 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
-            Encontr� ac� eventos, cursos, servicios y m�s.
+            Encontrá acá eventos, cursos, servicios y más.
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -997,12 +997,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   Clima en Jose Pedro Varela
                 </h2>
                 <p className="mt-2 text-base text-slate-600">
-                  {weatherLabel}. Min {Math.round(weather.tempMin)}°C, max {Math.round(weather.tempMax)}°C y viento de {Math.round(weather.windSpeed)} km/h.
+                  {weatherLabel}. Min {Math.round(weather.tempMin)}Â°C, max {Math.round(weather.tempMax)}Â°C y viento de {Math.round(weather.windSpeed)} km/h.
                 </p>
               </div>
 
               <div className="rounded-2xl bg-sky-50 px-5 py-4 text-center text-sky-700">
-                <div className="text-3xl font-bold">{Math.round(weather.temperature)}°C</div>
+                <div className="text-3xl font-bold">{Math.round(weather.temperature)}Â°C</div>
                 <div className="text-sm font-medium">Ahora</div>
               </div>
             </div>
@@ -1099,7 +1099,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       onClick={() => setSelectedComercio(business)}
                       className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
                     >
-                      Ver más
+                      Ver mÃ¡s
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
@@ -1202,7 +1202,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             onClick={() => setSelectedServicio(servicio)}
                             className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
                           >
-                            Ver más
+                            Ver mÃ¡s
                             <ArrowRight className="h-4 w-4" />
                           </button>
                         </div>
@@ -1223,7 +1223,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               Hoy en Varela
             </div>
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
-              Próximos Eventos
+              PrÃ³ximos Eventos
             </h2>
             <p className="mt-4 text-xl text-slate-500">
               Eventos, promos y sorteos activos
@@ -1280,7 +1280,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     onClick={() => setSelectedEvento(event)}
                     className="mt-5 inline-flex items-center gap-2 text-lg font-medium text-blue-500 hover:text-blue-600"
                   >
-                    Ver más
+                    Ver mÃ¡s
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -1297,7 +1297,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               Cursos y Clases
             </h2>
             <p className="mt-4 text-xl text-slate-500">
-              Propuestas de aprendizaje y formación en la ciudad
+              Propuestas de aprendizaje y formaciÃ³n en la ciudad
             </p>
             <div className="mt-6">
               <Link
@@ -1348,7 +1348,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       onClick={() => setSelectedCurso(curso)}
                       className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-500"
                     >
-                      Ver más
+                      Ver mÃ¡s
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
@@ -1381,7 +1381,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
           {instituciones.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
-              Todavía no hay instituciones cargadas.
+              TodavÃ­a no hay instituciones cargadas.
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -1403,7 +1403,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
                   <div className="p-5">
                     <div className="mb-3 inline-flex rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
-                      Institución
+                      InstituciÃ³n
                     </div>
 
                     <h3 className="text-[22px] font-semibold text-slate-900">
@@ -1428,7 +1428,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       onClick={() => setSelectedInstitucion(institucion)}
                       className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-600 transition hover:text-cyan-700"
                     >
-                      Ver más
+                      Ver mÃ¡s
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
@@ -1520,7 +1520,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               </div>
 
               <p className="pt-2">
-                ¿Queres agregar tu comercio, evento o curso? Contactanos.
+                Â¿Queres agregar tu comercio, evento o curso? Contactanos.
               </p>
             </div>
           </div>
