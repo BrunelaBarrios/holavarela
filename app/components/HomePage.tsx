@@ -4,7 +4,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { useMemo, useState } from "react"
 import { OptimizedImage } from "./OptimizedImage"
-import { MyTunerWidget } from "./MyTunerWidget"
 import {
   ArrowRight,
   CalendarDays,
@@ -90,13 +89,6 @@ type SobreVarelaConfig = {
   imagen_url: string | null
 }
 
-type RadioConfig = {
-  title: string
-  description: string
-  streamUrl: string
-  isLive: boolean
-}
-
 export type WeatherData = {
   temperature: number
   weatherCode: number
@@ -114,7 +106,6 @@ export type HomePageData = {
   allCursos: Curso[]
   allServicios: Servicio[]
   sobreVarela: SobreVarelaConfig
-  radio: RadioConfig
   weather: WeatherData | null
 }
 
@@ -228,13 +219,6 @@ const defaultSobreVarela: SobreVarelaConfig = {
   imagen_url: null,
 }
 
-const defaultRadioConfig: RadioConfig = {
-  title: "Delta FM 88.3",
-  description: "Escucha Delta FM 88.3 en vivo desde Jose Pedro Varela.",
-  streamUrl: "",
-  isLive: false,
-}
-
 const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
 
@@ -249,7 +233,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [sobreVarela] = useState<SobreVarelaConfig>(
     initialData.sobreVarela || defaultSobreVarela
   )
-  const [radio] = useState<RadioConfig>(initialData.radio || defaultRadioConfig)
   const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null)
   const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null)
@@ -978,13 +961,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
           </div>
         </section>
       )}
-
-      <MyTunerWidget
-        streamUrl={radio.streamUrl}
-        title={radio.title}
-        description={radio.description}
-        isLive={radio.isLive}
-      />
 
       <div className="flex flex-col">
 

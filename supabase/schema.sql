@@ -38,24 +38,8 @@ create table if not exists public.sitio (
   texto_2 text not null default '',
   texto_3 text not null default '',
   imagen_url text,
-  radio_titulo text not null default 'Delta FM 88.3',
-  radio_descripcion text not null default 'Escucha Delta FM 88.3 en vivo desde Jose Pedro Varela.',
-  radio_stream_url text,
-  radio_is_live boolean not null default false,
   updated_at timestamp with time zone default now()
 );
-
-alter table public.sitio
-add column if not exists radio_titulo text not null default 'Delta FM 88.3';
-
-alter table public.sitio
-add column if not exists radio_descripcion text not null default 'Escucha Delta FM 88.3 en vivo desde Jose Pedro Varela.';
-
-alter table public.sitio
-add column if not exists radio_stream_url text;
-
-alter table public.sitio
-add column if not exists radio_is_live boolean not null default false;
 
 create table if not exists public.administradores (
   id bigint generated always as identity primary key,
