@@ -959,12 +959,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
           <div className="mx-auto max-w-5xl">
             <h1 className="text-4xl font-bold leading-[1.05] tracking-tight text-slate-950 sm:text-5xl lg:text-7xl">
-              Todo lo que pasa en Jose Pedro Varela en un solo lugar
+              Cartelera online de Jose Pedro Varela
             </h1>
           </div>
 
           <p className="mx-auto mt-8 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
-            Cartelera online de Jose Pedro Varela: encontr√° ac√° eventos, cursos, clases, servicios y m√°s.
+            Encontr· ac· eventos, cursos, servicios y m·s.
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
