@@ -1,6 +1,6 @@
 'use client'
 
-import { Play, Radio, VolumeX } from "lucide-react"
+import { ExternalLink, Play, Radio, VolumeX } from "lucide-react"
 
 type MyTunerWidgetProps = {
   streamUrl: string
@@ -17,7 +17,7 @@ export function MyTunerWidget({
 
   if (!normalizedUrl) {
     return (
-      <div className="rounded-[28px] bg-[linear-gradient(135deg,#4da3e6_0%,#5ea8e6_55%,#6bb2ea_100%)] p-6 text-white shadow-[0_20px_45px_-24px_rgba(59,130,246,0.65)]">
+      <div className="rounded-[28px] border border-blue-100/40 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_58%,#38bdf8_100%)] p-6 text-white shadow-[0_22px_55px_-28px_rgba(29,78,216,0.72)]">
         Carga una URL de radio para habilitar la reproduccion.
       </div>
     )
@@ -28,10 +28,10 @@ export function MyTunerWidget({
       href={normalizedUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex w-full items-center justify-between gap-6 rounded-[28px] bg-[linear-gradient(135deg,#4a99de_0%,#5ba6e5_55%,#69b2eb_100%)] px-10 py-8 text-white shadow-[0_20px_50px_-24px_rgba(59,130,246,0.7)] transition hover:-translate-y-0.5 hover:brightness-[1.03] max-md:flex-col max-md:items-start"
+      className="flex w-full items-center justify-between gap-6 rounded-[28px] border border-blue-100/35 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_58%,#38bdf8_100%)] px-10 py-8 text-white shadow-[0_22px_55px_-28px_rgba(29,78,216,0.72)] transition hover:-translate-y-0.5 hover:brightness-[1.04] max-md:flex-col max-md:items-start"
     >
       <div className="flex items-center gap-7">
-        <div className="flex h-[120px] w-[120px] items-center justify-center rounded-full bg-white/14">
+        <div className="flex h-[120px] w-[120px] items-center justify-center rounded-full bg-white/14 shadow-inner shadow-white/10">
           <Radio className="h-12 w-12" strokeWidth={2.2} />
         </div>
 
@@ -46,11 +46,15 @@ export function MyTunerWidget({
             <VolumeX className="h-5 w-5" />
             <span>Fuera del aire</span>
           </div>
+          <div className="mt-3 flex items-center gap-2 text-sm font-medium text-blue-100/95">
+            <ExternalLink className="h-4 w-4" />
+            <span>Te redirigiremos a radios.com.uy</span>
+          </div>
         </div>
       </div>
 
       <div className="flex shrink-0 items-center">
-        <div className="inline-flex items-center gap-4 rounded-2xl bg-white px-10 py-5 text-[2rem] font-semibold text-blue-500 shadow-sm max-md:px-8 max-md:py-4 max-md:text-xl">
+        <div className="inline-flex items-center gap-4 rounded-2xl bg-white px-10 py-5 text-[2rem] font-semibold text-blue-600 shadow-[0_16px_35px_-22px_rgba(255,255,255,0.9)] max-md:px-8 max-md:py-4 max-md:text-xl">
           <Play className="h-7 w-7 fill-current" />
           <span>Escuchar ahora</span>
         </div>
