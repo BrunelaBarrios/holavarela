@@ -2,8 +2,9 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { OptimizedImage } from "./OptimizedImage"
+import { MyTunerWidget } from "./MyTunerWidget"
 import {
   ArrowRight,
   CalendarDays,
@@ -87,6 +88,13 @@ type SobreVarelaConfig = {
   texto_2: string
   texto_3: string
   imagen_url: string | null
+}
+
+type RadioConfig = {
+  title: string
+  description: string
+  streamUrl: string
+  isLive: boolean
 }
 
 export type WeatherData = {
@@ -219,6 +227,15 @@ const defaultSobreVarela: SobreVarelaConfig = {
   imagen_url: null,
 }
 
+const RADIO_STORAGE_KEY = "guia-varela-radio-config"
+
+const defaultRadioConfig: RadioConfig = {
+  title: "Delta FM 88.3",
+  description: "Escucha Delta FM 88.3 en vivo desde Jose Pedro Varela.",
+  streamUrl: "https://radios.com.uy/delta/?utm_source=chatgpt.com",
+  isLive: true,
+}
+
 const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
 
@@ -233,6 +250,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [sobreVarela] = useState<SobreVarelaConfig>(
     initialData.sobreVarela || defaultSobreVarela
   )
+  const [radio, setRadio] = useState<RadioConfig>(defaultRadioConfig)
   const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null)
   const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null)
@@ -259,6 +277,38 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
   const weather = initialData.weather
   const weatherLabel = weather ? WEATHER_LABELS[weather.weatherCode] || "Clima actual" : null
+
+  useEffect(() => {
+    const loadRadioConfig = () => {
+      const raw = window.localStorage.getItem(RADIO_STORAGE_KEY)
+      if (!raw) {
+        setRadio(defaultRadioConfig)
+        return
+      }
+
+      try {
+        const parsed = JSON.parse(raw) as Partial<RadioConfig>
+        setRadio({
+          title: parsed.title?.trim() || defaultRadioConfig.title,
+          description: parsed.description?.trim() || defaultRadioConfig.description,
+          streamUrl: parsed.streamUrl?.trim() || defaultRadioConfig.streamUrl,
+          isLive: parsed.isLive ?? defaultRadioConfig.isLive,
+        })
+      } catch {
+        window.localStorage.removeItem(RADIO_STORAGE_KEY)
+        setRadio(defaultRadioConfig)
+      }
+    }
+
+    loadRadioConfig()
+    window.addEventListener("radio-config-updated", loadRadioConfig)
+    window.addEventListener("storage", loadRadioConfig)
+
+    return () => {
+      window.removeEventListener("radio-config-updated", loadRadioConfig)
+      window.removeEventListener("storage", loadRadioConfig)
+    }
+  }, [])
 
   const WeatherIcon = useMemo(() => {
     if (!weather) return CloudSun
@@ -958,6 +1008,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 <div className="text-sm font-medium">Ahora</div>
               </div>
             </div>
+          </div>
+        </section>
+      )}
+
+      {radio.isLive && (
+        <section className="py-6">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <MyTunerWidget streamUrl={radio.streamUrl} title={radio.title} />
           </div>
         </section>
       )}
