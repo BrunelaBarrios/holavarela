@@ -1223,7 +1223,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               Hoy en Varela
             </div>
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
-              PrÃ³ximos Eventos
+              Proximos eventos
             </h2>
             <p className="mt-4 text-xl text-slate-500">
               Eventos, promos y sorteos activos
