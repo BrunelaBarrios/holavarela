@@ -1013,7 +1013,11 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       {radio.isLive && (
         <section className="py-6">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <MyTunerWidget streamUrl={radio.streamUrl} title={radio.title} />
+            <MyTunerWidget
+              streamUrl={radio.streamUrl}
+              title={radio.title}
+              description={radio.description}
+            />
           </div>
         </section>
       )}
