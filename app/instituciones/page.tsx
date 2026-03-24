@@ -56,7 +56,7 @@ export default function InstitucionesPage() {
         onClose={() => setSelectedInstitucion(null)}
         title={selectedInstitucion?.nombre || ""}
         imageSrc={selectedInstitucion?.foto || null}
-        imageAlt={selectedInstitucion?.nombre || "Logo de la institución"}
+        imageAlt={selectedInstitucion?.nombre || "Institución"}
         badge="Institución"
         description={selectedInstitucion?.descripcion || null}
         meta={[
@@ -145,8 +145,8 @@ export default function InstitucionesPage() {
                 {institucion.foto && (
                   <img
                     src={institucion.foto}
-                    alt={`Logo de ${institucion.nombre}`}
-                    className="h-56 w-full bg-slate-50 object-contain p-4"
+                    alt={institucion.nombre}
+                    className="h-56 w-full object-cover"
                   />
                 )}
 

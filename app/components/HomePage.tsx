@@ -2,9 +2,8 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { OptimizedImage } from "./OptimizedImage"
-import { MyTunerWidget } from "./MyTunerWidget"
 import {
   ArrowRight,
   CalendarDays,
@@ -53,8 +52,8 @@ type Curso = {
   id: number
   nombre: string
   descripcion: string
-  responsable: string | null
-  contacto: string | null
+  responsable: string
+  contacto: string
   imagen: string | null
   destacado?: boolean | null
   usa_whatsapp?: boolean | null
@@ -88,13 +87,6 @@ type SobreVarelaConfig = {
   texto_2: string
   texto_3: string
   imagen_url: string | null
-}
-
-type RadioConfig = {
-  title: string
-  description: string
-  streamUrl: string
-  isLive: boolean
 }
 
 export type WeatherData = {
@@ -227,15 +219,6 @@ const defaultSobreVarela: SobreVarelaConfig = {
   imagen_url: null,
 }
 
-const RADIO_STORAGE_KEY = "guia-varela-radio-config"
-
-const defaultRadioConfig: RadioConfig = {
-  title: "Delta FM 88.3",
-  description: "Escucha Delta FM 88.3 en vivo desde Jose Pedro Varela.",
-  streamUrl: "https://radios.com.uy/delta/?utm_source=chatgpt.com",
-  isLive: true,
-}
-
 const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
 
@@ -250,7 +233,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [sobreVarela] = useState<SobreVarelaConfig>(
     initialData.sobreVarela || defaultSobreVarela
   )
-  const [radio, setRadio] = useState<RadioConfig>(defaultRadioConfig)
   const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null)
   const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null)
@@ -277,38 +259,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
   const weather = initialData.weather
   const weatherLabel = weather ? WEATHER_LABELS[weather.weatherCode] || "Clima actual" : null
-
-  useEffect(() => {
-    const loadRadioConfig = () => {
-      const raw = window.localStorage.getItem(RADIO_STORAGE_KEY)
-      if (!raw) {
-        setRadio(defaultRadioConfig)
-        return
-      }
-
-      try {
-        const parsed = JSON.parse(raw) as Partial<RadioConfig>
-        setRadio({
-          title: parsed.title?.trim() || defaultRadioConfig.title,
-          description: parsed.description?.trim() || defaultRadioConfig.description,
-          streamUrl: parsed.streamUrl?.trim() || defaultRadioConfig.streamUrl,
-          isLive: parsed.isLive ?? defaultRadioConfig.isLive,
-        })
-      } catch {
-        window.localStorage.removeItem(RADIO_STORAGE_KEY)
-        setRadio(defaultRadioConfig)
-      }
-    }
-
-    loadRadioConfig()
-    window.addEventListener("radio-config-updated", loadRadioConfig)
-    window.addEventListener("storage", loadRadioConfig)
-
-    return () => {
-      window.removeEventListener("radio-config-updated", loadRadioConfig)
-      window.removeEventListener("storage", loadRadioConfig)
-    }
-  }, [])
 
   const WeatherIcon = useMemo(() => {
     if (!weather) return CloudSun
@@ -776,39 +726,33 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   {selectedCurso.nombre}
                 </h3>
 
-                {selectedCurso.responsable && (
-                  <div className="mt-4 flex items-center gap-2 text-slate-500">
-                    <GraduationCap className="h-4 w-4" />
-                    <span>{selectedCurso.responsable}</span>
-                  </div>
-                )}
+                <div className="mt-4 flex items-center gap-2 text-slate-500">
+                  <GraduationCap className="h-4 w-4" />
+                  <span>{selectedCurso.responsable}</span>
+                </div>
 
-                {selectedCurso.contacto && (
-                  <div className="mt-3 flex items-center gap-2 text-slate-500">
-                    <Phone className="h-4 w-4" />
-                    <span>{selectedCurso.contacto}</span>
-                  </div>
-                )}
+                <div className="mt-3 flex items-center gap-2 text-slate-500">
+                  <Phone className="h-4 w-4" />
+                  <span>{selectedCurso.contacto}</span>
+                </div>
 
                   <p className="mt-6 whitespace-pre-line text-lg leading-8 text-slate-600">
                     {selectedCurso.descripcion}
                   </p>
 
                 <div className="mt-8 flex flex-wrap gap-3">
-                  {selectedCurso.contacto && (
-                    <a
-                      href={getContactHref(
-                        selectedCurso.contacto,
-                        selectedCurso.usa_whatsapp
-                      )}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
-                    >
-                      <Phone className="h-4 w-4" />
-                      {getContactLabel(selectedCurso.usa_whatsapp)}
-                    </a>
-                  )}
+                  <a
+                    href={getContactHref(
+                      selectedCurso.contacto,
+                      selectedCurso.usa_whatsapp
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+                  >
+                    <Phone className="h-4 w-4" />
+                    {getContactLabel(selectedCurso.usa_whatsapp)}
+                  </a>
 
                   <button
                     type="button"
@@ -959,14 +903,19 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         <div className="absolute right-0 top-10 -z-0 h-56 w-56 rounded-full bg-emerald-200/40 blur-3xl" />
 
         <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+          <div className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-white/80 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm">
+            <MapPin className="h-4 w-4" />
+            Jose Pedro Varela, Uruguay
+          </div>
+
           <div className="mx-auto max-w-5xl">
             <h1 className="text-4xl font-bold leading-[1.05] tracking-tight text-slate-950 sm:text-5xl lg:text-7xl">
-              Cartelera online de Jose Pedro Varela
+              Todo lo que pasa en Jose Pedro Varela en un solo lugar
             </h1>
           </div>
 
           <p className="mx-auto mt-8 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
-            Encontrá acá eventos, cursos, clases, servicios y más.
+            Cartelera online de Jose Pedro Varela: encontrá acá eventos, cursos, clases, servicios y más.
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -1008,14 +957,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 <div className="text-sm font-medium">Ahora</div>
               </div>
             </div>
-          </div>
-        </section>
-      )}
-
-      {radio.isLive && (
-        <section className="py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <MyTunerWidget streamUrl={radio.streamUrl} title={radio.title} />
           </div>
         </section>
       )}
@@ -1337,12 +1278,10 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       <p className="mt-3 whitespace-pre-line text-base leading-7 text-slate-500">
                         {curso.descripcion}
                       </p>
-                    {curso.responsable && (
-                      <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
-                        <GraduationCap className="h-4 w-4" />
-                        <span>{curso.responsable}</span>
-                      </div>
-                    )}
+                    <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
+                      <GraduationCap className="h-4 w-4" />
+                      <span>{curso.responsable}</span>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setSelectedCurso(curso)}
@@ -1500,8 +1439,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </div>
 
             <p className="mt-6 text-lg leading-8 text-slate-500">
-              Portal informativo independiente de Jose Pedro Varela. Tu cartelera
-              digital.
+              Portal informativo independiente de Jose Pedro Varela. Tu guia
+              digital para todo lo que pasa en la ciudad.
             </p>
           </div>
 

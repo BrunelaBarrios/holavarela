@@ -103,7 +103,7 @@ export default function AdminInstitucionesPage() {
       setFormData((prev) => ({ ...prev, foto: imageDataUrl }))
     } catch (error) {
       setSaveError(
-        error instanceof Error ? error.message : "No se pudo cargar el logo."
+        error instanceof Error ? error.message : "No se pudo cargar la imagen."
       )
     }
   }
@@ -272,7 +272,7 @@ export default function AdminInstitucionesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Logo de la institución
+                  Imagen desde tu computadora
                 </label>
                 <input
                   type="file"
@@ -284,15 +284,15 @@ export default function AdminInstitucionesPage() {
                   <div className="mt-4 space-y-3">
                     <img
                       src={formData.foto}
-                      alt="Vista previa del logo de la institución"
-                      className="h-40 w-full rounded-2xl bg-slate-50 object-contain p-4"
+                      alt="Vista previa de la institución"
+                      className="h-40 w-full rounded-2xl object-cover"
                     />
                     <button
                       type="button"
                       onClick={() => setFormData((prev) => ({ ...prev, foto: "" }))}
                       className="text-sm font-medium text-red-600 transition hover:text-red-500"
                     >
-                      Quitar logo
+                      Quitar imagen
                     </button>
                   </div>
                 )}
@@ -334,7 +334,7 @@ export default function AdminInstitucionesPage() {
               <img
                 src={institucion.foto}
                 alt={institucion.nombre}
-                className="h-48 w-full bg-slate-50 object-contain p-4"
+                className="h-48 w-full object-cover"
               />
             )}
 

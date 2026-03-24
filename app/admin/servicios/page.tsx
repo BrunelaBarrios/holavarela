@@ -74,11 +74,7 @@ export default function AdminServiciosPage() {
   }
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      void cargarServicios()
-    }, 0)
-
-    return () => window.clearTimeout(timeoutId)
+    cargarServicios()
   }, [])
 
   const resetForm = () => {

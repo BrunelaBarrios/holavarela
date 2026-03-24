@@ -52,42 +52,38 @@ export default function AdminLayout({
   const [adminName, setAdminName] = useState("")
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      const isLoginPage = pathname === "/admin/loginV"
-      const session = getAdminSession()
-      const isLoggedIn = Boolean(session)
+    const isLoginPage = pathname === "/admin/loginV"
+    const session = getAdminSession()
+    const isLoggedIn = Boolean(session)
 
-      if (!isLoggedIn && !isLoginPage) {
-        router.replace("/admin/loginV")
-        setIsCheckingAuth(false)
-        return
-      }
-
-      if (isLoggedIn && isLoginPage) {
-        router.replace("/admin")
-        setIsCheckingAuth(false)
-        return
-      }
-
-      if (session) {
-        setAdminRole(session.role)
-        setAdminName(session.name)
-      }
-
-      const isSuperAdminOnlyRoute = superAdminOnlyPrefixes.some((prefix) =>
-        pathname.startsWith(prefix)
-      )
-
-      if (session?.role !== "superadmin" && isSuperAdminOnlyRoute) {
-        router.replace("/admin")
-        setIsCheckingAuth(false)
-        return
-      }
-
+    if (!isLoggedIn && !isLoginPage) {
+      router.replace("/admin/loginV")
       setIsCheckingAuth(false)
-    }, 0)
+      return
+    }
 
-    return () => window.clearTimeout(timeoutId)
+    if (isLoggedIn && isLoginPage) {
+      router.replace("/admin")
+      setIsCheckingAuth(false)
+      return
+    }
+
+    if (session) {
+      setAdminRole(session.role)
+      setAdminName(session.name)
+    }
+
+    const isSuperAdminOnlyRoute = superAdminOnlyPrefixes.some((prefix) =>
+      pathname.startsWith(prefix)
+    )
+
+    if (session?.role !== "superadmin" && isSuperAdminOnlyRoute) {
+      router.replace("/admin")
+      setIsCheckingAuth(false)
+      return
+    }
+
+    setIsCheckingAuth(false)
   }, [pathname, router])
 
   if (isCheckingAuth) {

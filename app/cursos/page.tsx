@@ -10,8 +10,8 @@ type Curso = {
   id: number
   nombre: string
   descripcion: string
-  responsable: string | null
-  contacto: string | null
+  responsable: string
+  contacto: string
   imagen: string | null
   estado?: string | null
   usa_whatsapp?: boolean | null
@@ -45,10 +45,8 @@ export default function CursosPage() {
     return `https://wa.me/${telefono.replace(/\D/g, "")}`
   }
 
-  const getContactHref = (contacto: string | null, usaWhatsapp?: boolean | null) => {
-    if (!contacto) return "#"
-    return usaWhatsapp === false ? `tel:${contacto}` : whatsappLink(contacto)
-  }
+  const getContactHref = (contacto: string, usaWhatsapp?: boolean | null) =>
+    usaWhatsapp === false ? `tel:${contacto}` : whatsappLink(contacto)
 
   const cursosFiltrados = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -180,12 +178,10 @@ export default function CursosPage() {
                     {curso.descripcion}
                   </p>
 
-                  {curso.responsable && (
-                    <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
-                      <GraduationCap className="h-4 w-4" />
-                      <span>{curso.responsable}</span>
-                    </div>
-                  )}
+                  <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
+                    <GraduationCap className="h-4 w-4" />
+                    <span>{curso.responsable}</span>
+                  </div>
 
                   <div className="mt-5 flex flex-wrap gap-3">
                     <button
@@ -197,17 +193,15 @@ export default function CursosPage() {
                       <ArrowRight className="h-4 w-4" />
                     </button>
 
-                    {curso.contacto && (
-                      <a
-                        href={getContactHref(curso.contacto, curso.usa_whatsapp)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
-                      >
-                        <Phone className="h-4 w-4" />
-                        {curso.usa_whatsapp === false ? "Llamar" : "Contactar"}
-                      </a>
-                    )}
+                    <a
+                      href={getContactHref(curso.contacto, curso.usa_whatsapp)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
+                    >
+                      <Phone className="h-4 w-4" />
+                      {curso.usa_whatsapp === false ? "Llamar" : "Contactar"}
+                    </a>
                   </div>
                 </div>
               </div>
