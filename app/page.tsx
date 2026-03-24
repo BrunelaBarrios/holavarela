@@ -14,6 +14,13 @@ const defaultSobreVarela = {
   imagen_url: null,
 }
 
+const defaultRadio = {
+  title: "Delta FM 88.3",
+  description: "Escucha Delta FM 88.3 en vivo desde Jose Pedro Varela.",
+  streamUrl: "",
+  isLive: false,
+}
+
 export default async function Page() {
   const today = new Date().toISOString().slice(0, 10)
   const weatherPromise = fetch(
@@ -79,7 +86,9 @@ export default async function Page() {
       .order("id", { ascending: false }),
     supabase
       .from("sitio")
-      .select("titulo, texto_1, texto_2, texto_3, imagen_url")
+      .select(
+        "titulo, texto_1, texto_2, texto_3, imagen_url, radio_titulo, radio_descripcion, radio_stream_url, radio_is_live"
+      )
       .eq("id", 1)
       .maybeSingle(),
     weatherPromise,
@@ -96,6 +105,14 @@ export default async function Page() {
     sobreVarela: sobreVarelaData
       ? { ...defaultSobreVarela, ...sobreVarelaData }
       : defaultSobreVarela,
+    radio: sobreVarelaData
+      ? {
+          title: sobreVarelaData.radio_titulo || defaultRadio.title,
+          description: sobreVarelaData.radio_descripcion || defaultRadio.description,
+          streamUrl: sobreVarelaData.radio_stream_url || defaultRadio.streamUrl,
+          isLive: sobreVarelaData.radio_is_live ?? defaultRadio.isLive,
+        }
+      : defaultRadio,
     weather,
   }
 
