@@ -5,6 +5,7 @@ import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 import { OptimizedImage } from "./OptimizedImage"
 import { MyTunerWidget } from "./MyTunerWidget"
+import { PublicHeader } from "./PublicHeader"
 import {
   ArrowRight,
   CalendarDays,
@@ -901,47 +902,19 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       )}
 
-      <header className="sticky top-0 z-50 border-b border-white/60 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-3">
-            <Image
-              src="/logo-varela-chico.png"
-              alt="Hola Varela"
-              width={40}
-              height={40}
-              priority
-              className="h-10 w-auto"
-            />
-            <span className="text-[20px] font-semibold tracking-tight">
-              Hola Varela!
-            </span>
-          </Link>
-
-          <nav className="hidden items-center gap-8 text-[15px] font-medium text-slate-700 md:flex">
-            <a href="#inicio" className="hover:text-blue-500">
-              Inicio
-            </a>
-            <a href="#eventos" className="hover:text-blue-500">
-                Eventos
-            </a>
-            <a href="#cursos" className="hover:text-blue-500">
-              Cursos y Clases
-            </a>
-            <a href="#instituciones" className="hover:text-blue-500">
-              Instituciones
-            </a>
-            <a href="#comercios" className="hover:text-blue-500">
-              Comercios
-            </a>
-            <a href="#servicios" className="hover:text-blue-500">
-              Servicios
-            </a>
-            <a href="#contacto" className="hover:text-blue-500">
-              Contacto
-            </a>
-          </nav>
-        </div>
-      </header>
+      <PublicHeader
+        items={[
+          { href: "/#inicio", label: "Inicio" },
+          { href: "/#eventos", label: "Eventos" },
+          { href: "/#cursos", label: "Cursos y Clases" },
+          { href: "/#instituciones", label: "Instituciones" },
+          { href: "/#comercios", label: "Comercios" },
+          { href: "/#servicios", label: "Servicios" },
+          { href: "/#contacto", label: "Contacto" },
+        ]}
+        borderClassName="border-white/60"
+        backgroundClassName="bg-white/80"
+      />
 
       <section
         id="inicio"

@@ -1,9 +1,9 @@
 'use client'
 
-import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
 import { PublicDetailModal } from "../components/PublicDetailModal"
+import { PublicHeader } from "../components/PublicHeader"
 import { supabase } from "../supabase"
 
 type Institucion = {
@@ -69,44 +69,17 @@ export default function InstitucionesPage() {
         ]}
       />
 
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-3">
-            <img
-              src="/logo-varela-chico.png"
-              alt="Hola Varela"
-              className="h-10 w-auto"
-            />
-            <span className="text-[20px] font-semibold tracking-tight">
-              Hola Varela!
-            </span>
-          </Link>
-
-          <nav className="hidden items-center gap-8 text-[15px] font-medium text-slate-700 md:flex">
-            <Link href="/#inicio" className="hover:text-blue-500">
-              Inicio
-            </Link>
-            <Link href="/comercios" className="hover:text-blue-500">
-              Comercios
-            </Link>
-            <Link href="/eventos" className="hover:text-blue-500">
-              Eventos
-            </Link>
-            <Link href="/servicios" className="hover:text-blue-500">
-              Servicios
-            </Link>
-            <Link href="/instituciones" className="text-blue-500">
-              Instituciones
-            </Link>
-            <Link href="/cursos" className="hover:text-blue-500">
-              Cursos y Clases
-            </Link>
-            <Link href="/#contacto" className="hover:text-blue-500">
-              Contacto
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <PublicHeader
+        items={[
+          { href: "/#inicio", label: "Inicio" },
+          { href: "/comercios", label: "Comercios" },
+          { href: "/eventos", label: "Eventos" },
+          { href: "/servicios", label: "Servicios" },
+          { href: "/instituciones", label: "Instituciones", active: true },
+          { href: "/cursos", label: "Cursos y Clases" },
+          { href: "/#contacto", label: "Contacto" },
+        ]}
+      />
 
       <div className="mx-auto max-w-6xl px-6 py-16">
         <h1 className="text-3xl font-bold text-gray-900">Instituciones</h1>
