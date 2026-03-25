@@ -1,4 +1,5 @@
 import { HomePage, type HomePageData, type WeatherData } from "./components/HomePage"
+import { buildActiveEventsFilter } from "./lib/eventDates"
 import { supabase } from "./supabase"
 
 export const dynamic = "force-dynamic"
@@ -61,7 +62,7 @@ export default async function Page() {
       .from("eventos")
       .select("*")
       .or("estado.is.null,estado.eq.activo")
-      .gte("fecha", today)
+      .or(buildActiveEventsFilter(today))
       .order("fecha", { ascending: true }),
     supabase
       .from("cursos")

@@ -7,6 +7,9 @@ add column if not exists destacado boolean default false;
 alter table public.cursos
 add column if not exists destacado boolean default false;
 
+alter table public.eventos
+add column if not exists fecha_fin date;
+
 create table if not exists public.cursos (
   id bigint generated always as identity primary key,
   nombre text not null,

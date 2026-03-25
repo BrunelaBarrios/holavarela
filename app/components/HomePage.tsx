@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react"
 import { OptimizedImage } from "./OptimizedImage"
 import { MyTunerWidget } from "./MyTunerWidget"
 import { PublicHeader } from "./PublicHeader"
+import { formatEventDateRange } from "../lib/eventDates"
 import {
   ArrowRight,
   CalendarDays,
@@ -39,6 +40,7 @@ type Evento = {
   categoria?: string | null
   descripcion: string
   fecha: string
+  fecha_fin?: string | null
   ubicacion: string
   imagen?: string | null
   estado?: string | null
@@ -317,19 +319,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     if ([1, 2].includes(weather.weatherCode)) return CloudSun
     return Cloud
   }, [weather])
-
-  const formatearFecha = (fecha: string) => {
-    if (!fecha) return "Sin fecha"
-
-    const date = new Date(`${fecha}T00:00:00`)
-    if (Number.isNaN(date.getTime())) return fecha
-
-    return date.toLocaleDateString("es-UY", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
 
   const whatsappLink = (telefono: string | null) => {
     if (!telefono) return "#"
@@ -696,7 +685,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               <div className="p-6 md:p-8">
                 <div className="mb-4 flex items-center gap-2 text-base font-medium text-blue-500">
                   <CalendarDays className="h-5 w-5" />
-                  <span>{formatearFecha(selectedEvento.fecha)}</span>
+                  <span>
+                    {formatEventDateRange(
+                      selectedEvento.fecha,
+                      selectedEvento.fecha_fin
+                    )}
+                  </span>
                 </div>
 
                 <h3 className="text-3xl font-semibold leading-tight text-slate-900">
@@ -1232,7 +1226,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 <div className="p-5">
                   <div className="mb-4 flex items-center gap-2 text-lg text-blue-500">
                     <CalendarDays className="h-5 w-5" />
-                    <span>{formatearFecha(event.fecha)}</span>
+                    <span>{formatEventDateRange(event.fecha, event.fecha_fin)}</span>
                   </div>
 
                   <div className="mb-3 inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">

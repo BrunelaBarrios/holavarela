@@ -13,12 +13,14 @@ import {
   ShieldAlert,
   Store,
 } from "lucide-react"
+import { buildActiveEventsFilter, formatEventDateRange } from "../lib/eventDates"
 import { supabase } from "../supabase"
 
 type EventoResumen = {
   id: string
   titulo: string
   fecha: string
+  fecha_fin?: string | null
 }
 
 export default function AdminDashboardPage() {
@@ -32,6 +34,7 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     const cargarDashboard = async () => {
+      const today = new Date().toISOString().slice(0, 10)
       const [
         { count: comercios },
         { count: eventos },
@@ -47,8 +50,9 @@ export default function AdminDashboardPage() {
         supabase.from("cursos").select("*", { count: "exact", head: true }),
         supabase
           .from("eventos")
-          .select("id, titulo, fecha")
+          .select("id, titulo, fecha, fecha_fin")
           .eq("estado", "activo")
+          .or(buildActiveEventsFilter(today))
           .order("fecha", { ascending: true })
           .limit(3),
       ])
@@ -106,19 +110,6 @@ export default function AdminDashboardPage() {
       action: () => router.push("/admin/cursos"),
     },
   ]
-
-  const formatearFecha = (fecha: string) => {
-    if (!fecha) return "Sin fecha"
-
-    const date = new Date(`${fecha}T00:00:00`)
-    if (Number.isNaN(date.getTime())) return fecha
-
-    return date.toLocaleDateString("es-UY", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -182,7 +173,7 @@ export default function AdminDashboardPage() {
                   <div className="flex-1">
                     <h4 className="font-medium text-slate-900">{event.titulo}</h4>
                     <p className="text-sm text-slate-500">
-                      {formatearFecha(event.fecha)}
+                      {formatEventDateRange(event.fecha, event.fecha_fin)}
                     </p>
                   </div>
                 </div>

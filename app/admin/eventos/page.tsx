@@ -5,6 +5,7 @@ import { Calendar, Eye, EyeOff, Pencil, Plus, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
+import { formatEventDateRange } from "../../lib/eventDates"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 
 type Evento = {
@@ -12,6 +13,7 @@ type Evento = {
   titulo: string
   categoria?: string | null
   fecha: string
+  fecha_fin?: string | null
   ubicacion: string
   descripcion: string
   imagen?: string | null
@@ -22,6 +24,7 @@ type EventoForm = {
   titulo: string
   categoria: string
   fecha: string
+  fechaFin: string
   ubicacion: string
   descripcion: string
   imagen: string
@@ -31,6 +34,7 @@ const initialForm: EventoForm = {
   titulo: "",
   categoria: "Evento",
   fecha: "",
+  fechaFin: "",
   ubicacion: "",
   descripcion: "",
   imagen: "",
@@ -83,6 +87,7 @@ export default function AdminEventosPage() {
       titulo: evento.titulo || "",
       categoria: evento.categoria || "Evento",
       fecha: evento.fecha || "",
+      fechaFin: evento.fecha_fin || "",
       ubicacion: evento.ubicacion || "",
       descripcion: evento.descripcion || "",
       imagen: evento.imagen || "",
@@ -167,10 +172,17 @@ export default function AdminEventosPage() {
       return
     }
 
+    if (formData.fechaFin && formData.fechaFin < formData.fecha) {
+      setSaveError("La fecha final no puede ser anterior a la fecha inicial.")
+      setLoading(false)
+      return
+    }
+
     const payload = {
       titulo: formData.titulo,
       categoria: formData.categoria,
       fecha: formData.fecha,
+      fecha_fin: formData.fechaFin || null,
       ubicacion: formData.ubicacion,
       descripcion: formData.descripcion,
       imagen: formData.imagen || null,
@@ -213,19 +225,6 @@ export default function AdminEventosPage() {
     await cargarEventos()
     resetForm()
     setLoading(false)
-  }
-
-  const formatearFecha = (fecha: string) => {
-    if (!fecha) return "Sin fecha"
-
-    const date = new Date(`${fecha}T00:00:00`)
-    if (Number.isNaN(date.getTime())) return fecha
-
-    return date.toLocaleDateString("es-UY", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
   }
 
   return (
@@ -328,10 +327,10 @@ export default function AdminEventosPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Fecha *
+                    Fecha desde *
                   </label>
                   <input
                     type="date"
@@ -343,6 +342,24 @@ export default function AdminEventosPage() {
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
                     required
                   />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Fecha hasta
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.fechaFin}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, fechaFin: e.target.value }))
+                    }
+                    min={formData.fecha || today}
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
+                  />
+                  <p className="mt-2 text-sm text-slate-500">
+                    Opcional. Ejemplo: del 12 al 14 de mayo.
+                  </p>
                 </div>
 
                 <div>
@@ -459,7 +476,7 @@ export default function AdminEventosPage() {
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm text-emerald-600">
                   <Calendar className="h-4 w-4" />
-                  <span>{formatearFecha(evento.fecha)}</span>
+                  <span>{formatEventDateRange(evento.fecha, evento.fecha_fin)}</span>
                 </div>
 
                 <div

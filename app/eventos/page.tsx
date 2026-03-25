@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, CalendarDays, MapPin, Search } from "lucide-react"
 import { PublicDetailModal } from "../components/PublicDetailModal"
 import { PublicHeader } from "../components/PublicHeader"
+import { buildActiveEventsFilter, formatEventDateRange } from "../lib/eventDates"
 import { supabase } from "../supabase"
 
 type Evento = {
@@ -13,6 +14,7 @@ type Evento = {
   categoria?: string | null
   descripcion: string
   fecha: string
+  fecha_fin?: string | null
   ubicacion: string
   imagen: string
   estado: string
@@ -38,7 +40,7 @@ export default function EventosPage() {
         .from("eventos")
         .select("*")
         .eq("estado", "activo")
-        .gte("fecha", today)
+        .or(buildActiveEventsFilter(today))
         .order("fecha", { ascending: true })
 
       if (error) {
@@ -55,16 +57,6 @@ export default function EventosPage() {
 
     return () => window.clearTimeout(timeoutId)
   }, [])
-
-  const formatearFecha = (fecha: string) => {
-    if (!fecha) return ""
-
-    const partes = fecha.split("-")
-    if (partes.length !== 3) return fecha
-
-    const [anio, mes, dia] = partes
-    return `${dia}/${mes}/${anio}`
-  }
 
   const eventosFiltrados = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -94,7 +86,13 @@ export default function EventosPage() {
         description={selectedEvento?.descripcion || null}
         meta={[
           ...(selectedEvento?.fecha
-            ? [{ icon: CalendarDays, text: formatearFecha(selectedEvento.fecha) }]
+            ? [{
+                icon: CalendarDays,
+                text: formatEventDateRange(
+                  selectedEvento.fecha,
+                  selectedEvento.fecha_fin
+                ),
+              }]
             : []),
           ...(selectedEvento?.ubicacion
             ? [{ icon: MapPin, text: selectedEvento.ubicacion }]
@@ -189,7 +187,7 @@ export default function EventosPage() {
                 </div>
 
                 <p className="mt-2 text-sm text-gray-600">
-                  Fecha: {formatearFecha(evento.fecha)}
+                  Fecha: {formatEventDateRange(evento.fecha, evento.fecha_fin)}
                 </p>
 
                 <p className="mt-1 text-sm text-gray-600">
