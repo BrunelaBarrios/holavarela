@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
 import { PublicDetailModal } from "../components/PublicDetailModal"
 import { PublicHeader } from "../components/PublicHeader"
+import { ShareButton } from "../components/ShareButton"
 import { supabase } from "../supabase"
 
 type Comercio = {
@@ -22,6 +23,11 @@ export default function ComerciosPage() {
   const [search, setSearch] = useState("")
   const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null)
 
+  const getShareUrl = (id: number) => {
+    if (typeof window === "undefined") return `/comercios?item=${id}`
+    return `${window.location.origin}/comercios?item=${id}`
+  }
+
   useEffect(() => {
     const cargarComercios = async () => {
       const { data, error } = await supabase
@@ -35,11 +41,30 @@ export default function ComerciosPage() {
         return
       }
 
-      setComercios(data || [])
+      const items = data || []
+      setComercios(items)
+
+      const itemId = new URLSearchParams(window.location.search).get("item")
+      if (!itemId) return
+
+      const selectedItem = items.find((comercio) => String(comercio.id) === itemId)
+      if (selectedItem) {
+        setSelectedComercio(selectedItem)
+      }
     }
 
     cargarComercios()
   }, [])
+
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (selectedComercio) {
+      url.searchParams.set("item", String(selectedComercio.id))
+    } else {
+      url.searchParams.delete("item")
+    }
+    window.history.replaceState({}, "", url)
+  }, [selectedComercio])
 
   const getWhatsappLink = (telefono: string) => {
     const limpio = telefono.replace(/\D/g, "")
@@ -89,19 +114,29 @@ export default function ComerciosPage() {
             : []),
         ]}
         actions={
-          selectedComercio?.telefono ? (
-            <a
-              href={getContactHref(
-                selectedComercio.telefono,
-                selectedComercio.usa_whatsapp
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
-            >
-              <Phone className="h-4 w-4" />
-              {getContactLabel(selectedComercio.usa_whatsapp)}
-            </a>
+          selectedComercio ? (
+            <>
+              {selectedComercio.telefono ? (
+                <a
+                  href={getContactHref(
+                    selectedComercio.telefono,
+                    selectedComercio.usa_whatsapp
+                  )}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
+                >
+                  <Phone className="h-4 w-4" />
+                  {getContactLabel(selectedComercio.usa_whatsapp)}
+                </a>
+              ) : null}
+              <ShareButton
+                title={selectedComercio.nombre}
+                text={selectedComercio.descripcion}
+                url={getShareUrl(selectedComercio.id)}
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+              />
+            </>
           ) : null
         }
       />
@@ -163,7 +198,7 @@ export default function ComerciosPage() {
                     {comercio.nombre}
                   </h2>
 
-                  <p className="whitespace-pre-line text-sm text-gray-600">
+                  <p className="line-clamp-5 whitespace-pre-line text-sm text-gray-600">
                     {comercio.descripcion}
                   </p>
 
@@ -193,6 +228,13 @@ export default function ComerciosPage() {
                     >
                       {getContactLabel(comercio.usa_whatsapp)}
                     </a>
+
+                    <ShareButton
+                      title={comercio.nombre}
+                      text={comercio.descripcion}
+                      url={getShareUrl(comercio.id)}
+                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                    />
                   </div>
                 </div>
               )

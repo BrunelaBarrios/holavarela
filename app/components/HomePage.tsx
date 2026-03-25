@@ -1036,7 +1036,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       {business.nombre}
                     </h3>
                     {business.descripcion && (
-                        <p className="mt-2 line-clamp-2 whitespace-pre-line text-base text-slate-500">
+                        <p className="line-clamp-5 mt-2 whitespace-pre-line text-base text-slate-500">
                           {business.descripcion}
                         </p>
                     )}
@@ -1136,7 +1136,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           </h3>
 
                           {servicio.descripcion && (
-                              <p className="mt-3 line-clamp-3 whitespace-pre-line text-sm leading-7 text-slate-500">
+                              <p className="line-clamp-5 mt-3 whitespace-pre-line text-sm leading-7 text-slate-500">
                                 {servicio.descripcion}
                               </p>
                           )}
@@ -1303,7 +1303,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     <h3 className="text-[22px] font-semibold text-slate-900">
                       {curso.nombre}
                     </h3>
-                      <p className="mt-3 whitespace-pre-line text-base leading-7 text-slate-500">
+                      <p className="line-clamp-5 mt-3 whitespace-pre-line text-base leading-7 text-slate-500">
                         {curso.descripcion}
                       </p>
                     <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">

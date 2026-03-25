@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, GraduationCap, Phone, Search } from "lucide-react"
 import { PublicDetailModal } from "../components/PublicDetailModal"
 import { PublicHeader } from "../components/PublicHeader"
+import { ShareButton } from "../components/ShareButton"
 import { supabase } from "../supabase"
 
 type Curso = {
@@ -22,6 +23,11 @@ export default function CursosPage() {
   const [search, setSearch] = useState("")
   const [selectedCurso, setSelectedCurso] = useState<Curso | null>(null)
 
+  const getShareUrl = (id: number) => {
+    if (typeof window === "undefined") return `/cursos?item=${id}`
+    return `${window.location.origin}/cursos?item=${id}`
+  }
+
   useEffect(() => {
     const cargarCursos = async () => {
       const { data, error } = await supabase
@@ -35,11 +41,30 @@ export default function CursosPage() {
         return
       }
 
-      setCursos(data || [])
+      const items = data || []
+      setCursos(items)
+
+      const itemId = new URLSearchParams(window.location.search).get("item")
+      if (!itemId) return
+
+      const selectedItem = items.find((curso) => String(curso.id) === itemId)
+      if (selectedItem) {
+        setSelectedCurso(selectedItem)
+      }
     }
 
     cargarCursos()
   }, [])
+
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (selectedCurso) {
+      url.searchParams.set("item", String(selectedCurso.id))
+    } else {
+      url.searchParams.delete("item")
+    }
+    window.history.replaceState({}, "", url)
+  }, [selectedCurso])
 
   const whatsappLink = (telefono: string) => {
     return `https://wa.me/${telefono.replace(/\D/g, "")}`
@@ -77,16 +102,29 @@ export default function CursosPage() {
             : []),
         ]}
         actions={
-          selectedCurso?.contacto ? (
-            <a
-              href={getContactHref(selectedCurso.contacto, selectedCurso.usa_whatsapp)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
-            >
-              <Phone className="h-4 w-4" />
-              {selectedCurso.usa_whatsapp === false ? "Llamar" : "Contactar"}
-            </a>
+          selectedCurso ? (
+            <>
+              {selectedCurso.contacto ? (
+                <a
+                  href={getContactHref(
+                    selectedCurso.contacto,
+                    selectedCurso.usa_whatsapp
+                  )}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+                >
+                  <Phone className="h-4 w-4" />
+                  {selectedCurso.usa_whatsapp === false ? "Llamar" : "Contactar"}
+                </a>
+              ) : null}
+              <ShareButton
+                title={selectedCurso.nombre}
+                text={selectedCurso.descripcion}
+                url={getShareUrl(selectedCurso.id)}
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+              />
+            </>
           ) : null
         }
       />
@@ -149,7 +187,7 @@ export default function CursosPage() {
                     {curso.nombre}
                   </h2>
 
-                  <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
+                  <p className="line-clamp-5 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
                     {curso.descripcion}
                   </p>
 
@@ -177,6 +215,13 @@ export default function CursosPage() {
                       <Phone className="h-4 w-4" />
                       {curso.usa_whatsapp === false ? "Llamar" : "Contactar"}
                     </a>
+
+                    <ShareButton
+                      title={curso.nombre}
+                      text={curso.descripcion}
+                      url={getShareUrl(curso.id)}
+                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                    />
                   </div>
                 </div>
               </div>

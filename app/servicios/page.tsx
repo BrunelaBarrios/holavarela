@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, MapPin, Phone, Search, UserRound } from "lucide-react"
 import { PublicDetailModal } from "../components/PublicDetailModal"
 import { PublicHeader } from "../components/PublicHeader"
+import { ShareButton } from "../components/ShareButton"
 import { supabase } from "../supabase"
 
 type Servicio = {
@@ -24,6 +25,11 @@ export default function ServiciosPage() {
   const [search, setSearch] = useState("")
   const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
 
+  const getShareUrl = (id: number) => {
+    if (typeof window === "undefined") return `/servicios?item=${id}`
+    return `${window.location.origin}/servicios?item=${id}`
+  }
+
   useEffect(() => {
     const cargarServicios = async () => {
       const { data, error } = await supabase
@@ -37,11 +43,30 @@ export default function ServiciosPage() {
         return
       }
 
-      setServicios(data || [])
+      const items = data || []
+      setServicios(items)
+
+      const itemId = new URLSearchParams(window.location.search).get("item")
+      if (!itemId) return
+
+      const selectedItem = items.find((servicio) => String(servicio.id) === itemId)
+      if (selectedItem) {
+        setSelectedServicio(selectedItem)
+      }
     }
 
     cargarServicios()
   }, [])
+
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (selectedServicio) {
+      url.searchParams.set("item", String(selectedServicio.id))
+    } else {
+      url.searchParams.delete("item")
+    }
+    window.history.replaceState({}, "", url)
+  }, [selectedServicio])
 
   const whatsappLink = (telefono: string | null) => {
     if (!telefono) return "#"
@@ -97,19 +122,29 @@ export default function ServiciosPage() {
             : []),
         ]}
         actions={
-          selectedServicio?.contacto ? (
-            <a
-              href={getContactHref(
-                selectedServicio.contacto,
-                selectedServicio.usa_whatsapp
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
-            >
-              <Phone className="h-4 w-4" />
-              {selectedServicio.usa_whatsapp === false ? "Llamar" : "Contactar"}
-            </a>
+          selectedServicio ? (
+            <>
+              {selectedServicio.contacto ? (
+                <a
+                  href={getContactHref(
+                    selectedServicio.contacto,
+                    selectedServicio.usa_whatsapp
+                  )}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+                >
+                  <Phone className="h-4 w-4" />
+                  {selectedServicio.usa_whatsapp === false ? "Llamar" : "Contactar"}
+                </a>
+              ) : null}
+              <ShareButton
+                title={selectedServicio.nombre}
+                text={selectedServicio.descripcion || undefined}
+                url={getShareUrl(selectedServicio.id)}
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+              />
+            </>
           ) : null
         }
       />
@@ -184,7 +219,7 @@ export default function ServiciosPage() {
                         </h3>
 
                         {servicio.descripcion && (
-                          <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
+                          <p className="line-clamp-5 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
                             {servicio.descripcion}
                           </p>
                         )}
@@ -232,6 +267,13 @@ export default function ServiciosPage() {
                               {servicio.usa_whatsapp === false ? "Llamar" : "Contactar"}
                             </a>
                           )}
+
+                          <ShareButton
+                            title={servicio.nombre}
+                            text={servicio.descripcion || undefined}
+                            url={getShareUrl(servicio.id)}
+                            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                          />
                         </div>
                       </div>
                     </div>

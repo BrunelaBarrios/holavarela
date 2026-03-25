@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, CalendarDays, MapPin, Search } from "lucide-react"
 import { PublicDetailModal } from "../components/PublicDetailModal"
 import { PublicHeader } from "../components/PublicHeader"
+import { ShareButton } from "../components/ShareButton"
 import { buildActiveEventsFilter, formatEventDateRange } from "../lib/eventDates"
 import { supabase } from "../supabase"
 
@@ -32,6 +33,11 @@ export default function EventosPage() {
   const [categoria, setCategoria] = useState("Todos")
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null)
 
+  const getShareUrl = (id: string) => {
+    if (typeof window === "undefined") return `/eventos?item=${id}`
+    return `${window.location.origin}/eventos?item=${id}`
+  }
+
   useEffect(() => {
     const cargarEventos = async () => {
       const today = new Date().toISOString().slice(0, 10)
@@ -48,7 +54,16 @@ export default function EventosPage() {
         return
       }
 
-      setEventos(data || [])
+      const items = data || []
+      setEventos(items)
+
+      const itemId = new URLSearchParams(window.location.search).get("item")
+      if (!itemId) return
+
+      const selectedItem = items.find((evento) => String(evento.id) === itemId)
+      if (selectedItem) {
+        setSelectedEvento(selectedItem)
+      }
     }
 
     const timeoutId = window.setTimeout(() => {
@@ -57,6 +72,16 @@ export default function EventosPage() {
 
     return () => window.clearTimeout(timeoutId)
   }, [])
+
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (selectedEvento) {
+      url.searchParams.set("item", String(selectedEvento.id))
+    } else {
+      url.searchParams.delete("item")
+    }
+    window.history.replaceState({}, "", url)
+  }, [selectedEvento])
 
   const eventosFiltrados = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -99,13 +124,23 @@ export default function EventosPage() {
             : []),
         ]}
         actions={
-          <Link
-            href="/eventos"
-            className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
-          >
-            Ver todos los eventos
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <>
+            {selectedEvento ? (
+              <ShareButton
+                title={selectedEvento.titulo}
+                text={selectedEvento.descripcion}
+                url={getShareUrl(String(selectedEvento.id))}
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+              />
+            ) : null}
+            <Link
+              href="/eventos"
+              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+            >
+              Ver todos los eventos
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </>
         }
       />
 
@@ -206,6 +241,13 @@ export default function EventosPage() {
                   Ver mas
                   <ArrowRight className="h-4 w-4" />
                 </button>
+
+                <ShareButton
+                  title={evento.titulo}
+                  text={evento.descripcion}
+                  url={getShareUrl(String(evento.id))}
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                />
               </div>
             ))}
           </div>
