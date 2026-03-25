@@ -1238,7 +1238,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   </h3>
 
                   <p className="mt-2 text-sm text-slate-500">{event.ubicacion}</p>
-                    <p className="mt-3 whitespace-pre-line text-lg leading-8 text-slate-500">
+                    <p className="line-clamp-5 mt-3 whitespace-pre-line text-lg leading-8 text-slate-500">
                       {event.descripcion}
                     </p>
 

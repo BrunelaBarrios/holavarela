@@ -26,3 +26,10 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+.line-clamp-5 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  overflow: hidden;
+}

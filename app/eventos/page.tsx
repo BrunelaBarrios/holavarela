@@ -194,7 +194,7 @@ export default function EventosPage() {
                   Ubicacion: {evento.ubicacion}
                 </p>
 
-                <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
+                <p className="line-clamp-5 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
                   {evento.descripcion}
                 </p>
 
