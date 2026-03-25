@@ -24,8 +24,8 @@ export default function ComerciosPage() {
   const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null)
 
   const getShareUrl = (id: number) => {
-    if (typeof window === "undefined") return `/comercios?item=${id}`
-    return `${window.location.origin}/comercios?item=${id}`
+    if (typeof window === "undefined") return `/comercios/${id}`
+    return `${window.location.origin}/comercios/${id}`
   }
 
   useEffect(() => {

@@ -26,8 +26,8 @@ export default function ServiciosPage() {
   const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
 
   const getShareUrl = (id: number) => {
-    if (typeof window === "undefined") return `/servicios?item=${id}`
-    return `${window.location.origin}/servicios?item=${id}`
+    if (typeof window === "undefined") return `/servicios/${id}`
+    return `${window.location.origin}/servicios/${id}`
   }
 
   useEffect(() => {

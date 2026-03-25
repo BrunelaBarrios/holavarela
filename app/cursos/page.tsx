@@ -24,8 +24,8 @@ export default function CursosPage() {
   const [selectedCurso, setSelectedCurso] = useState<Curso | null>(null)
 
   const getShareUrl = (id: number) => {
-    if (typeof window === "undefined") return `/cursos?item=${id}`
-    return `${window.location.origin}/cursos?item=${id}`
+    if (typeof window === "undefined") return `/cursos/${id}`
+    return `${window.location.origin}/cursos/${id}`
   }
 
   useEffect(() => {

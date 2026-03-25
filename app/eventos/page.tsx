@@ -34,8 +34,8 @@ export default function EventosPage() {
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null)
 
   const getShareUrl = (id: string) => {
-    if (typeof window === "undefined") return `/eventos?item=${id}`
-    return `${window.location.origin}/eventos?item=${id}`
+    if (typeof window === "undefined") return `/eventos/${id}`
+    return `${window.location.origin}/eventos/${id}`
   }
 
   useEffect(() => {
