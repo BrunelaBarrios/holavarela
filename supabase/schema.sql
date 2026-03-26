@@ -73,3 +73,12 @@ create table if not exists public.share_events (
   item_title text,
   created_at timestamp with time zone default now()
 );
+
+create table if not exists public.contacto_solicitudes (
+  id bigint generated always as identity primary key,
+  nombre text not null,
+  email text not null,
+  telefono text not null,
+  mensaje text not null,
+  created_at timestamp with time zone default now()
+);

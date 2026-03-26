@@ -7,6 +7,7 @@ import { OptimizedImage } from "./OptimizedImage"
 import { MyTunerWidget } from "./MyTunerWidget"
 import { PublicHeader } from "./PublicHeader"
 import { formatEventDateRange } from "../lib/eventDates"
+import { supabase } from "../supabase"
 import {
   ArrowRight,
   CalendarDays,
@@ -98,6 +99,13 @@ type RadioConfig = {
   description: string
   streamUrl: string
   isLive: boolean
+}
+
+type ContactLeadForm = {
+  nombre: string
+  email: string
+  telefono: string
+  mensaje: string
 }
 
 export type WeatherData = {
@@ -240,6 +248,12 @@ const defaultRadioConfig: RadioConfig = {
 
 const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
+const initialContactLeadForm: ContactLeadForm = {
+  nombre: "",
+  email: "",
+  telefono: "",
+  mensaje: "",
+}
 
 export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [featuredBusinesses] = useState<Comercio[]>(initialData.featuredBusinesses)
@@ -258,6 +272,11 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null)
   const [selectedCurso, setSelectedCurso] = useState<Curso | null>(null)
   const [selectedInstitucion, setSelectedInstitucion] = useState<Institucion | null>(null)
+  const [contactLeadForm, setContactLeadForm] = useState<ContactLeadForm>(
+    initialContactLeadForm
+  )
+  const [contactLeadStatus, setContactLeadStatus] = useState("")
+  const [contactLeadLoading, setContactLeadLoading] = useState(false)
   const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(() =>
     getInitialWelcomeHighlight(
       initialData.featuredBusinesses,
@@ -336,6 +355,31 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const closeWelcomeHighlight = () => {
     window.sessionStorage.setItem(WELCOME_SESSION_KEY, "true")
     setWelcomeHighlight(null)
+  }
+
+  const handleContactLeadSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setContactLeadLoading(true)
+    setContactLeadStatus("")
+
+    const payload = {
+      nombre: contactLeadForm.nombre.trim(),
+      email: contactLeadForm.email.trim(),
+      telefono: contactLeadForm.telefono.trim(),
+      mensaje: contactLeadForm.mensaje.trim(),
+    }
+
+    const { error } = await supabase.from("contacto_solicitudes").insert([payload])
+
+    if (error) {
+      setContactLeadStatus("No pudimos enviar tu solicitud. Proba de nuevo.")
+      setContactLeadLoading(false)
+      return
+    }
+
+    setContactLeadForm(initialContactLeadForm)
+    setContactLeadStatus("Recibimos tu mensaje. Te vamos a contactar pronto.")
+    setContactLeadLoading(false)
   }
 
   const openWelcomeDetail = () => {
@@ -1451,8 +1495,137 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       </section>
 
+      <section id="quiero-estar" className="pb-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="rounded-[28px] border border-sky-100 bg-[linear-gradient(135deg,#f0f9ff_0%,#ffffff_100%)] p-8 shadow-sm">
+              <div className="inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                Quiero estar en Hola Varela
+              </div>
+              <h3 className="mt-4 text-3xl font-semibold text-slate-900">
+                Sumate a la guia digital de la ciudad
+              </h3>
+              <p className="mt-4 text-lg leading-8 text-slate-500">
+                Si queres aparecer con tu comercio, servicio, curso o propuesta,
+                completa este formulario y te contactamos.
+              </p>
+              <div className="mt-6 space-y-4 text-base text-slate-500">
+                <div className="flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-sky-500" />
+                  <span>holajpvarela@gmail.com</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <MapPin className="h-5 w-5 text-sky-500" />
+                  <span>Jose Pedro Varela, Lavalleja</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-8">
+              <h3 className="text-[28px] font-semibold text-slate-900">
+                Formulario de contacto
+              </h3>
+              <p className="mt-3 text-base leading-7 text-slate-500">
+                Dejanos tus datos y contanos que queres publicar en Hola Varela.
+              </p>
+
+              <form onSubmit={handleContactLeadSubmit} className="mt-8 space-y-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Nombre
+                    </label>
+                    <input
+                      type="text"
+                      value={contactLeadForm.nombre}
+                      onChange={(e) =>
+                        setContactLeadForm((prev) => ({
+                          ...prev,
+                          nombre: e.target.value,
+                        }))
+                      }
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Numero
+                    </label>
+                    <input
+                      type="tel"
+                      value={contactLeadForm.telefono}
+                      onChange={(e) =>
+                        setContactLeadForm((prev) => ({
+                          ...prev,
+                          telefono: e.target.value,
+                        }))
+                      }
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={contactLeadForm.email}
+                    onChange={(e) =>
+                      setContactLeadForm((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Mensaje
+                  </label>
+                  <textarea
+                    value={contactLeadForm.mensaje}
+                    onChange={(e) =>
+                      setContactLeadForm((prev) => ({
+                        ...prev,
+                        mensaje: e.target.value,
+                      }))
+                    }
+                    className="min-h-36 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                    placeholder="Contanos que queres publicar y como te gustaria aparecer."
+                    required
+                  />
+                </div>
+
+                {contactLeadStatus && (
+                  <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
+                    {contactLeadStatus}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={contactLeadLoading}
+                  className="inline-flex items-center gap-2 rounded-full bg-sky-600 px-6 py-3 font-semibold text-white transition hover:bg-sky-500 disabled:opacity-60"
+                >
+                  {contactLeadLoading ? "Enviando..." : "Quiero estar en Hola Varela"}
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <footer id="contacto" className="mt-6 border-t border-slate-200/80 bg-white/80 py-14 backdrop-blur">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 sm:px-6 md:grid-cols-2 lg:px-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:px-8">
           <div>
             <div className="flex items-center gap-3">
               <Image
@@ -1470,10 +1643,38 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               Portal informativo independiente de Jose Pedro Varela. Tu guia
               digital para todo lo que pasa en la ciudad.
             </p>
+
+            <div className="mt-8 rounded-[28px] border border-sky-100 bg-[linear-gradient(135deg,#f0f9ff_0%,#ffffff_100%)] p-6 shadow-sm">
+              <div className="inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                Quiero estar en Hola Varela
+              </div>
+              <h4 className="mt-4 text-2xl font-semibold text-slate-900">
+                Sumate a la guia digital de la ciudad
+              </h4>
+              <p className="mt-3 text-base leading-7 text-slate-500">
+                Si queres aparecer con tu comercio, servicio, curso o propuesta,
+                dejanos tus datos y te contactamos.
+              </p>
+              <a
+                href="#quiero-estar-formulario"
+                className="mt-5 inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600"
+              >
+                Ir al formulario
+                <ArrowRight className="h-4 w-4" />
+              </a>
+            </div>
           </div>
 
-          <div>
-            <h3 className="text-[28px] font-semibold text-slate-900">Contacto</h3>
+          <div
+            id="quiero-estar-formulario"
+            className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-8"
+          >
+            <h3 className="text-[28px] font-semibold text-slate-900">
+              Formulario de contacto
+            </h3>
+            <p className="mt-3 text-base leading-7 text-slate-500">
+              Completa tus datos y contanos que queres publicar en Hola Varela.
+            </p>
 
             <div className="mt-6 space-y-4 text-lg text-slate-500">
               <div className="flex items-center gap-3">
@@ -1486,8 +1687,11 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 <span>Jose Pedro Varela, Lavalleja</span>
               </div>
 
-              <p className="pt-2">
+              <p className="hidden pt-2">
               ¿Queres agregar tu comercio, evento o curso? Contactanos.
+              </p>
+              <p className="pt-2">
+                Si queres aparecer en Hola Varela, completa el formulario y te contactamos.
               </p>
             </div>
           </div>
