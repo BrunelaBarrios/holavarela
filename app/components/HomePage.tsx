@@ -1656,9 +1656,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 <span>Jose Pedro Varela, Lavalleja</span>
               </div>
 
-              <p className="pt-2">
-                Consultas, propuestas y participaciones a traves del formulario o por email.
-              </p>
               <button
                 type="button"
                 onClick={() => {
