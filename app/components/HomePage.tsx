@@ -277,6 +277,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   )
   const [contactLeadStatus, setContactLeadStatus] = useState("")
   const [contactLeadLoading, setContactLeadLoading] = useState(false)
+  const [isContactLeadOpen, setIsContactLeadOpen] = useState(false)
   const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(() =>
     getInitialWelcomeHighlight(
       initialData.featuredBusinesses,
@@ -505,6 +506,130 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {isContactLeadOpen && (
+        <div className="fixed inset-0 z-[75] flex items-center justify-center bg-slate-950/55 p-4">
+          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[28px] border border-slate-200 bg-white p-6 shadow-2xl sm:p-8">
+            <button
+              type="button"
+              onClick={() => setIsContactLeadOpen(false)}
+              className="absolute right-4 top-4 rounded-full bg-slate-100 p-2 text-slate-600 transition hover:bg-slate-200"
+              aria-label="Cerrar formulario"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="pr-10">
+              <div className="inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                Quiero estar en Hola Varela
+              </div>
+              <h3 className="mt-4 text-[30px] font-semibold text-slate-900">
+                Contanos tu propuesta
+              </h3>
+              <p className="mt-3 text-base leading-7 text-slate-500">
+                Dejanos tus datos y te contactamos para sumar tu comercio,
+                servicio, curso o propuesta.
+              </p>
+            </div>
+
+            <form onSubmit={handleContactLeadSubmit} className="mt-8 space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Nombre
+                  </label>
+                  <input
+                    type="text"
+                    value={contactLeadForm.nombre}
+                    onChange={(e) =>
+                      setContactLeadForm((prev) => ({
+                        ...prev,
+                        nombre: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">
+                    Numero
+                  </label>
+                  <input
+                    type="tel"
+                    value={contactLeadForm.telefono}
+                    onChange={(e) =>
+                      setContactLeadForm((prev) => ({
+                        ...prev,
+                        telefono: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={contactLeadForm.email}
+                  onChange={(e) =>
+                    setContactLeadForm((prev) => ({
+                      ...prev,
+                      email: e.target.value,
+                    }))
+                  }
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  Mensaje
+                </label>
+                <textarea
+                  value={contactLeadForm.mensaje}
+                  onChange={(e) =>
+                    setContactLeadForm((prev) => ({
+                      ...prev,
+                      mensaje: e.target.value,
+                    }))
+                  }
+                  className="min-h-36 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                  placeholder="Contanos que queres publicar y como te gustaria aparecer."
+                  required
+                />
+              </div>
+
+              {contactLeadStatus && (
+                <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
+                  {contactLeadStatus}
+                </div>
+              )}
+
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-slate-500">
+                  Tambien podes escribir a holajpvarela@gmail.com
+                </p>
+                <button
+                  type="submit"
+                  disabled={contactLeadLoading}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-600 px-6 py-3 font-semibold text-white transition hover:bg-sky-500 disabled:opacity-60"
+                >
+                  {contactLeadLoading ? "Enviando..." : "Enviar consulta"}
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -1495,137 +1620,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       </section>
 
-      <section id="quiero-estar" className="pb-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="rounded-[28px] border border-sky-100 bg-[linear-gradient(135deg,#f0f9ff_0%,#ffffff_100%)] p-8 shadow-sm">
-              <div className="inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-                Quiero estar en Hola Varela
-              </div>
-              <h3 className="mt-4 text-3xl font-semibold text-slate-900">
-                Sumate a la guia digital de la ciudad
-              </h3>
-              <p className="mt-4 text-lg leading-8 text-slate-500">
-                Si queres aparecer con tu comercio, servicio, curso o propuesta,
-                completa este formulario y te contactamos.
-              </p>
-              <div className="mt-6 space-y-4 text-base text-slate-500">
-                <div className="flex items-center gap-3">
-                  <Mail className="h-5 w-5 text-sky-500" />
-                  <span>holajpvarela@gmail.com</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <MapPin className="h-5 w-5 text-sky-500" />
-                  <span>Jose Pedro Varela, Lavalleja</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-8">
-              <h3 className="text-[28px] font-semibold text-slate-900">
-                Formulario de contacto
-              </h3>
-              <p className="mt-3 text-base leading-7 text-slate-500">
-                Dejanos tus datos y contanos que queres publicar en Hola Varela.
-              </p>
-
-              <form onSubmit={handleContactLeadSubmit} className="mt-8 space-y-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Nombre
-                    </label>
-                    <input
-                      type="text"
-                      value={contactLeadForm.nombre}
-                      onChange={(e) =>
-                        setContactLeadForm((prev) => ({
-                          ...prev,
-                          nombre: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Numero
-                    </label>
-                    <input
-                      type="tel"
-                      value={contactLeadForm.telefono}
-                      onChange={(e) =>
-                        setContactLeadForm((prev) => ({
-                          ...prev,
-                          telefono: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={contactLeadForm.email}
-                    onChange={(e) =>
-                      setContactLeadForm((prev) => ({
-                        ...prev,
-                        email: e.target.value,
-                      }))
-                    }
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Mensaje
-                  </label>
-                  <textarea
-                    value={contactLeadForm.mensaje}
-                    onChange={(e) =>
-                      setContactLeadForm((prev) => ({
-                        ...prev,
-                        mensaje: e.target.value,
-                      }))
-                    }
-                    className="min-h-36 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                    placeholder="Contanos que queres publicar y como te gustaria aparecer."
-                    required
-                  />
-                </div>
-
-                {contactLeadStatus && (
-                  <div className="rounded-2xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
-                    {contactLeadStatus}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={contactLeadLoading}
-                  className="inline-flex items-center gap-2 rounded-full bg-sky-600 px-6 py-3 font-semibold text-white transition hover:bg-sky-500 disabled:opacity-60"
-                >
-                  {contactLeadLoading ? "Enviando..." : "Quiero estar en Hola Varela"}
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <footer id="contacto" className="mt-6 border-t border-slate-200/80 bg-white/80 py-14 backdrop-blur">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:px-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 sm:px-6 md:grid-cols-2 lg:px-8">
           <div>
             <div className="flex items-center gap-3">
               <Image
@@ -1644,37 +1640,10 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               digital para todo lo que pasa en la ciudad.
             </p>
 
-            <div className="mt-8 rounded-[28px] border border-sky-100 bg-[linear-gradient(135deg,#f0f9ff_0%,#ffffff_100%)] p-6 shadow-sm">
-              <div className="inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-                Quiero estar en Hola Varela
-              </div>
-              <h4 className="mt-4 text-2xl font-semibold text-slate-900">
-                Sumate a la guia digital de la ciudad
-              </h4>
-              <p className="mt-3 text-base leading-7 text-slate-500">
-                Si queres aparecer con tu comercio, servicio, curso o propuesta,
-                dejanos tus datos y te contactamos.
-              </p>
-              <a
-                href="#quiero-estar-formulario"
-                className="mt-5 inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600"
-              >
-                Ir al formulario
-                <ArrowRight className="h-4 w-4" />
-              </a>
-            </div>
           </div>
 
-          <div
-            id="quiero-estar-formulario"
-            className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] sm:p-8"
-          >
-            <h3 className="text-[28px] font-semibold text-slate-900">
-              Formulario de contacto
-            </h3>
-            <p className="mt-3 text-base leading-7 text-slate-500">
-              Completa tus datos y contanos que queres publicar en Hola Varela.
-            </p>
+          <div>
+            <h3 className="text-[28px] font-semibold text-slate-900">Contacto</h3>
 
             <div className="mt-6 space-y-4 text-lg text-slate-500">
               <div className="flex items-center gap-3">
@@ -1687,12 +1656,20 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 <span>Jose Pedro Varela, Lavalleja</span>
               </div>
 
-              <p className="hidden pt-2">
-              ¿Queres agregar tu comercio, evento o curso? Contactanos.
-              </p>
               <p className="pt-2">
-                Si queres aparecer en Hola Varela, completa el formulario y te contactamos.
+                Consultas, propuestas y participaciones a traves del formulario o por email.
               </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setContactLeadStatus("")
+                  setIsContactLeadOpen(true)
+                }}
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-800 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+              >
+                Quiero estar en Hola Varela
+                <ArrowRight className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
