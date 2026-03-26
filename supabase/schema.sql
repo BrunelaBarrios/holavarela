@@ -65,3 +65,11 @@ create table if not exists public.admin_actividad (
   detalle text,
   created_at timestamp with time zone default now()
 );
+
+create table if not exists public.share_events (
+  id bigint generated always as identity primary key,
+  section text not null,
+  item_id text not null,
+  item_title text,
+  created_at timestamp with time zone default now()
+);

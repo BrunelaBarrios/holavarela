@@ -142,6 +142,8 @@ export default function ServiciosPage() {
                 title={selectedServicio.nombre}
                 text={selectedServicio.descripcion || undefined}
                 url={getShareUrl(selectedServicio.id)}
+                section="servicios"
+                itemId={String(selectedServicio.id)}
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
               />
             </>
@@ -272,6 +274,8 @@ export default function ServiciosPage() {
                             title={servicio.nombre}
                             text={servicio.descripcion || undefined}
                             url={getShareUrl(servicio.id)}
+                            section="servicios"
+                            itemId={String(servicio.id)}
                             className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                           />
                         </div>

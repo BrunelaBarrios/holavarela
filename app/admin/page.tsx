@@ -10,10 +10,12 @@ import {
   GraduationCap,
   Plus,
   Radio,
+  Share2,
   ShieldAlert,
   Store,
 } from "lucide-react"
 import { buildActiveEventsFilter, formatEventDateRange } from "../lib/eventDates"
+import { buildShareTotals, emptyShareTotals, type ShareTotals } from "../lib/shareTracking"
 import { supabase } from "../supabase"
 
 type EventoResumen = {
@@ -31,6 +33,7 @@ export default function AdminDashboardPage() {
   const [institucionesCount, setInstitucionesCount] = useState(0)
   const [cursosCount, setCursosCount] = useState(0)
   const [proximosEventos, setProximosEventos] = useState<EventoResumen[]>([])
+  const [shareTotals, setShareTotals] = useState<ShareTotals>(emptyShareTotals())
 
   useEffect(() => {
     const cargarDashboard = async () => {
@@ -42,6 +45,7 @@ export default function AdminDashboardPage() {
         { count: instituciones },
         { count: cursos },
         { data: eventosData },
+        { data: shareRows },
       ] = await Promise.all([
         supabase.from("comercios").select("*", { count: "exact", head: true }),
         supabase.from("eventos").select("*", { count: "exact", head: true }),
@@ -55,6 +59,7 @@ export default function AdminDashboardPage() {
           .or(buildActiveEventsFilter(today))
           .order("fecha", { ascending: true })
           .limit(3),
+        supabase.from("share_events").select("section"),
       ])
 
       setComerciosCount(comercios || 0)
@@ -63,6 +68,7 @@ export default function AdminDashboardPage() {
       setInstitucionesCount(instituciones || 0)
       setCursosCount(cursos || 0)
       setProximosEventos(eventosData || [])
+      setShareTotals(buildShareTotals(shareRows || []))
     }
 
     cargarDashboard()
@@ -183,10 +189,45 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-slate-900">
+              Compartidos
+            </h2>
+            <div className="rounded-xl bg-slate-100 p-2 text-slate-600">
+              <Share2 className="h-5 w-5" />
+            </div>
+          </div>
+
+          <div className="mb-6 grid grid-cols-2 gap-4">
+            <div className="rounded-xl bg-blue-50 p-4">
+              <div className="text-sm text-slate-500">Comercios</div>
+              <div className="mt-1 text-2xl font-semibold text-slate-900">
+                {shareTotals.comercios}
+              </div>
+            </div>
+            <div className="rounded-xl bg-emerald-50 p-4">
+              <div className="text-sm text-slate-500">Eventos</div>
+              <div className="mt-1 text-2xl font-semibold text-slate-900">
+                {shareTotals.eventos}
+              </div>
+            </div>
+            <div className="rounded-xl bg-violet-50 p-4">
+              <div className="text-sm text-slate-500">Cursos</div>
+              <div className="mt-1 text-2xl font-semibold text-slate-900">
+                {shareTotals.cursos}
+              </div>
+            </div>
+            <div className="rounded-xl bg-amber-50 p-4">
+              <div className="text-sm text-slate-500">Servicios</div>
+              <div className="mt-1 text-2xl font-semibold text-slate-900">
+                {shareTotals.servicios}
+              </div>
+            </div>
+          </div>
+
           <h2 className="mb-6 text-xl font-semibold text-slate-900">
             Acciones Rapidas
           </h2>
-
           <div className="space-y-3">
             <button
               onClick={() => router.push("/admin/comercios")}

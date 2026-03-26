@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { Eye, EyeOff, GraduationCap, Pencil, Phone, Plus, Star, Trash2, UserRound, X } from "lucide-react"
+import { Eye, EyeOff, GraduationCap, Pencil, Phone, Plus, Share2, Star, Trash2, UserRound, X } from "lucide-react"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
+import { buildShareCountMap } from "../../lib/shareTracking"
 
 type Curso = {
   id: number
@@ -17,6 +18,7 @@ type Curso = {
   destacado?: boolean | null
   estado?: string | null
   usa_whatsapp?: boolean | null
+  share_count?: number
 }
 
 type CursoForm = Omit<Curso, "id">
@@ -40,21 +42,39 @@ export default function AdminCursosPage() {
   const [deletingCurso, setDeletingCurso] = useState<Curso | null>(null)
 
   const cargarCursos = async () => {
-    const { data, error } = await supabase
-      .from("cursos")
-      .select("*")
-      .order("id", { ascending: false })
+    const [{ data, error }, { data: shareRows, error: shareError }] = await Promise.all([
+      supabase
+        .from("cursos")
+        .select("*")
+        .order("id", { ascending: false }),
+      supabase.from("share_events").select("item_id").eq("section", "cursos"),
+    ])
 
     if (error) {
       setSaveError(`Error al cargar cursos: ${error.message}`)
       return
     }
 
-    setCursos(data || [])
+    if (shareError) {
+      setSaveError(`Error al cargar compartidos de cursos: ${shareError.message}`)
+      return
+    }
+
+    const shareMap = buildShareCountMap(shareRows || [])
+    setCursos(
+      (data || []).map((curso) => ({
+        ...curso,
+        share_count: shareMap[String(curso.id)] || 0,
+      }))
+    )
   }
 
   useEffect(() => {
-    cargarCursos()
+    const timeoutId = window.setTimeout(() => {
+      void cargarCursos()
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [])
 
   const resetForm = () => {
@@ -470,6 +490,11 @@ export default function AdminCursosPage() {
                   Destacado
                 </div>
               )}
+
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                <Share2 className="h-3.5 w-3.5" />
+                {curso.share_count || 0} compartidos
+              </div>
 
               <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
                 <button

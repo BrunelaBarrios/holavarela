@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { Eye, EyeOff, Pencil, Phone, Plus, ShieldAlert, Star, Trash2, UserRound, X } from "lucide-react"
+import { Eye, EyeOff, Pencil, Phone, Plus, Share2, ShieldAlert, Star, Trash2, UserRound, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
+import { buildShareCountMap } from "../../lib/shareTracking"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
@@ -19,6 +20,7 @@ type Servicio = {
   destacado?: boolean | null
   estado?: string | null
   usa_whatsapp?: boolean | null
+  share_count?: number
 }
 
 type ServicioForm = {
@@ -60,21 +62,39 @@ export default function AdminServiciosPage() {
   const [deletingServicio, setDeletingServicio] = useState<Servicio | null>(null)
 
   const cargarServicios = async () => {
-    const { data, error } = await supabase
-      .from("servicios")
-      .select("*")
-      .order("id", { ascending: false })
+    const [{ data, error }, { data: shareRows, error: shareError }] = await Promise.all([
+      supabase
+        .from("servicios")
+        .select("*")
+        .order("id", { ascending: false }),
+      supabase.from("share_events").select("item_id").eq("section", "servicios"),
+    ])
 
     if (error) {
       setSaveError(`Error al cargar servicios: ${error.message}`)
       return
     }
 
-    setServicios(data || [])
+    if (shareError) {
+      setSaveError(`Error al cargar compartidos de servicios: ${shareError.message}`)
+      return
+    }
+
+    const shareMap = buildShareCountMap(shareRows || [])
+    setServicios(
+      (data || []).map((servicio) => ({
+        ...servicio,
+        share_count: shareMap[String(servicio.id)] || 0,
+      }))
+    )
   }
 
   useEffect(() => {
-    cargarServicios()
+    const timeoutId = window.setTimeout(() => {
+      void cargarServicios()
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [])
 
   const resetForm = () => {
@@ -556,6 +576,11 @@ export default function AdminServiciosPage() {
                   Destacado
                 </div>
               )}
+
+              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                <Share2 className="h-3.5 w-3.5" />
+                {servicio.share_count || 0} compartidos
+              </div>
 
               <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
                 <button

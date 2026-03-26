@@ -130,6 +130,8 @@ export default function EventosPage() {
                 title={selectedEvento.titulo}
                 text={selectedEvento.descripcion}
                 url={getShareUrl(String(selectedEvento.id))}
+                section="eventos"
+                itemId={String(selectedEvento.id)}
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
               />
             ) : null}
@@ -246,6 +248,8 @@ export default function EventosPage() {
                   title={evento.titulo}
                   text={evento.descripcion}
                   url={getShareUrl(String(evento.id))}
+                  section="eventos"
+                  itemId={String(evento.id)}
                   className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                 />
               </div>

@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { Calendar, Eye, EyeOff, Pencil, Plus, Trash2, X } from "lucide-react"
+import { Calendar, Eye, EyeOff, Pencil, Plus, Share2, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
+import { buildShareCountMap } from "../../lib/shareTracking"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { formatEventDateRange } from "../../lib/eventDates"
@@ -18,6 +19,7 @@ type Evento = {
   descripcion: string
   imagen?: string | null
   estado?: string | null
+  share_count?: number
 }
 
 type EventoForm = {
@@ -53,17 +55,31 @@ export default function AdminEventosPage() {
   const today = new Date().toISOString().slice(0, 10)
 
   const cargarEventos = async () => {
-    const { data, error } = await supabase
-      .from("eventos")
-      .select("*")
-      .order("fecha", { ascending: true })
+    const [{ data, error }, { data: shareRows, error: shareError }] = await Promise.all([
+      supabase
+        .from("eventos")
+        .select("*")
+        .order("fecha", { ascending: true }),
+      supabase.from("share_events").select("item_id").eq("section", "eventos"),
+    ])
 
     if (error) {
       alert(`Error al cargar eventos: ${error.message}`)
       return
     }
 
-    setEventos(data || [])
+    if (shareError) {
+      alert(`Error al cargar compartidos de eventos: ${shareError.message}`)
+      return
+    }
+
+    const shareMap = buildShareCountMap(shareRows || [])
+    setEventos(
+      (data || []).map((evento) => ({
+        ...evento,
+        share_count: shareMap[String(evento.id)] || 0,
+      }))
+    )
   }
 
   useEffect(() => {
@@ -500,6 +516,11 @@ export default function AdminEventosPage() {
               <p className="mb-4 line-clamp-2 text-sm text-slate-500">
                 {evento.descripcion}
               </p>
+
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                <Share2 className="h-3.5 w-3.5" />
+                {evento.share_count || 0} compartidos
+              </div>
 
               <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
                 <button

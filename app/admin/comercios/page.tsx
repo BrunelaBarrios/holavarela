@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { Eye, EyeOff, Pencil, Plus, Star, Store, Trash2, X } from "lucide-react"
+import { Eye, EyeOff, Pencil, Plus, Share2, Star, Store, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
+import { buildShareCountMap } from "../../lib/shareTracking"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
@@ -18,6 +19,7 @@ type Comercio = {
   estado?: string | null
   destacado?: boolean | null
   usa_whatsapp?: boolean | null
+  share_count?: number
 }
 
 type ComercioForm = {
@@ -56,21 +58,39 @@ export default function AdminComerciosPage() {
   )
 
   const cargarComercios = async () => {
-    const { data, error } = await supabase
-      .from("comercios")
-      .select("*")
-      .order("id", { ascending: false })
+    const [{ data, error }, { data: shareRows, error: shareError }] = await Promise.all([
+      supabase
+        .from("comercios")
+        .select("*")
+        .order("id", { ascending: false }),
+      supabase.from("share_events").select("item_id").eq("section", "comercios"),
+    ])
 
     if (error) {
       alert(`Error al cargar comercios: ${error.message}`)
       return
     }
 
-    setComercios(data || [])
+    if (shareError) {
+      alert(`Error al cargar compartidos de comercios: ${shareError.message}`)
+      return
+    }
+
+    const shareMap = buildShareCountMap(shareRows || [])
+    setComercios(
+      (data || []).map((comercio) => ({
+        ...comercio,
+        share_count: shareMap[String(comercio.id)] || 0,
+      }))
+    )
   }
 
   useEffect(() => {
-    cargarComercios()
+    const timeoutId = window.setTimeout(() => {
+      void cargarComercios()
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [])
 
   const resetForm = () => {
@@ -497,6 +517,11 @@ export default function AdminComerciosPage() {
                     {comercio.descripcion}
                   </p>
                 )}
+
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                  <Share2 className="h-3.5 w-3.5" />
+                  {comercio.share_count || 0} compartidos
+                </div>
 
                 <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
                   <button

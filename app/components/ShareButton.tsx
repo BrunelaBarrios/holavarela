@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { Share2 } from "lucide-react"
+import { recordShare, type ShareSection } from "../lib/shareTracking"
 
 type ShareButtonProps = {
   title: string
   text?: string
   url: string
+  section: ShareSection
+  itemId: string
   className?: string
 }
 
@@ -14,6 +17,8 @@ export function ShareButton({
   title,
   text,
   url,
+  section,
+  itemId,
   className = "",
 }: ShareButtonProps) {
   const [feedback, setFeedback] = useState<"idle" | "copied">("idle")
@@ -29,11 +34,13 @@ export function ShareButton({
     try {
       if (navigator.share) {
         await navigator.share({ title, text, url })
+        await recordShare(section, itemId, title)
         return
       }
 
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(url)
+        await recordShare(section, itemId, title)
         setFeedback("copied")
         return
       }

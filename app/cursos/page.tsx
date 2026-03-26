@@ -122,6 +122,8 @@ export default function CursosPage() {
                 title={selectedCurso.nombre}
                 text={selectedCurso.descripcion}
                 url={getShareUrl(selectedCurso.id)}
+                section="cursos"
+                itemId={String(selectedCurso.id)}
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
               />
             </>
@@ -220,6 +222,8 @@ export default function CursosPage() {
                       title={curso.nombre}
                       text={curso.descripcion}
                       url={getShareUrl(curso.id)}
+                      section="cursos"
+                      itemId={String(curso.id)}
                       className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                     />
                   </div>
