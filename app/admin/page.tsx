@@ -8,6 +8,7 @@ import {
   Calendar,
   FileText,
   GraduationCap,
+  Mail,
   Plus,
   Radio,
   Share2,
@@ -32,6 +33,7 @@ export default function AdminDashboardPage() {
   const [serviciosCount, setServiciosCount] = useState(0)
   const [institucionesCount, setInstitucionesCount] = useState(0)
   const [cursosCount, setCursosCount] = useState(0)
+  const [contactosCount, setContactosCount] = useState(0)
   const [proximosEventos, setProximosEventos] = useState<EventoResumen[]>([])
   const [shareTotals, setShareTotals] = useState<ShareTotals>(emptyShareTotals())
 
@@ -44,6 +46,7 @@ export default function AdminDashboardPage() {
         { count: servicios },
         { count: instituciones },
         { count: cursos },
+        { count: contactos },
         { data: eventosData },
         { data: shareRows },
       ] = await Promise.all([
@@ -52,6 +55,7 @@ export default function AdminDashboardPage() {
         supabase.from("servicios").select("*", { count: "exact", head: true }),
         supabase.from("instituciones").select("*", { count: "exact", head: true }),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
+        supabase.from("contacto_solicitudes").select("*", { count: "exact", head: true }),
         supabase
           .from("eventos")
           .select("id, titulo, fecha, fecha_fin")
@@ -67,6 +71,7 @@ export default function AdminDashboardPage() {
       setServiciosCount(servicios || 0)
       setInstitucionesCount(instituciones || 0)
       setCursosCount(cursos || 0)
+      setContactosCount(contactos || 0)
       setProximosEventos(eventosData || [])
       setShareTotals(buildShareTotals(shareRows || []))
     }
@@ -115,6 +120,14 @@ export default function AdminDashboardPage() {
       color: "bg-slate-800",
       action: () => router.push("/admin/cursos"),
     },
+    {
+      id: "contactos",
+      title: "Contactos",
+      value: contactosCount,
+      icon: Mail,
+      color: "bg-rose-600",
+      action: () => router.push("/admin/contactos"),
+    },
   ]
 
   return (
@@ -124,7 +137,7 @@ export default function AdminDashboardPage() {
         <p className="text-slate-500">Bienvenido al panel de administración</p>
       </div>
 
-      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-5">
+      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-6">
         {stats.map((stat) => {
           const Icon = stat.icon
 
@@ -275,6 +288,14 @@ export default function AdminDashboardPage() {
             >
               <GraduationCap className="h-5 w-5" />
               <span>Gestionar Cursos</span>
+            </button>
+
+            <button
+              onClick={() => router.push("/admin/contactos")}
+              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 transition hover:bg-slate-100"
+            >
+              <Mail className="h-5 w-5" />
+              <span>Ver Contactos</span>
             </button>
 
             <button

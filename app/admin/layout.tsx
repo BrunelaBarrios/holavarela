@@ -12,6 +12,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   LogOut,
+  Mail,
   Menu,
   Radio,
   ShieldAlert,
@@ -31,6 +32,7 @@ const menuItems = [
   { href: "/admin/servicios", icon: ShieldAlert, label: "Servicios", roles: ["superadmin", "admin"] },
   { href: "/admin/instituciones", icon: Building2, label: "Instituciones", roles: ["superadmin", "admin"] },
   { href: "/admin/cursos", icon: GraduationCap, label: "Cursos", roles: ["superadmin", "admin"] },
+  { href: "/admin/contactos", icon: Mail, label: "Contactos", roles: ["superadmin", "admin"] },
   { href: "/admin/sitio", icon: FileText, label: "Sitio", roles: ["superadmin"] },
   { href: "/admin/radio", icon: Radio, label: "Radio", roles: ["superadmin"] },
   { href: "/admin/administradores", icon: BadgeCheck, label: "Administradores", roles: ["superadmin"] },
@@ -47,46 +49,36 @@ export default function AdminLayout({
   const pathname = usePathname()
   const router = useRouter()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
-  const [adminRole, setAdminRole] = useState<AdminRole>("admin")
-  const [adminName, setAdminName] = useState("")
+  const session = getAdminSession()
+  const adminRole: AdminRole = session?.role || "admin"
+  const adminName = session?.name || ""
+  const isLoginPage = pathname === "/admin/loginV"
+  const isLoggedIn = Boolean(session)
+  const isSuperAdminOnlyRoute = superAdminOnlyPrefixes.some((prefix) =>
+    pathname.startsWith(prefix)
+  )
+  const shouldRedirectToLogin = !isLoggedIn && !isLoginPage
+  const shouldRedirectToDashboard = isLoggedIn && isLoginPage
+  const shouldRedirectByRole =
+    session?.role !== "superadmin" && isSuperAdminOnlyRoute
 
   useEffect(() => {
-    const isLoginPage = pathname === "/admin/loginV"
-    const session = getAdminSession()
-    const isLoggedIn = Boolean(session)
-
-    if (!isLoggedIn && !isLoginPage) {
+    if (shouldRedirectToLogin) {
       router.replace("/admin/loginV")
-      setIsCheckingAuth(false)
       return
     }
 
-    if (isLoggedIn && isLoginPage) {
+    if (shouldRedirectToDashboard) {
       router.replace("/admin")
-      setIsCheckingAuth(false)
       return
     }
 
-    if (session) {
-      setAdminRole(session.role)
-      setAdminName(session.name)
-    }
-
-    const isSuperAdminOnlyRoute = superAdminOnlyPrefixes.some((prefix) =>
-      pathname.startsWith(prefix)
-    )
-
-    if (session?.role !== "superadmin" && isSuperAdminOnlyRoute) {
+    if (shouldRedirectByRole) {
       router.replace("/admin")
-      setIsCheckingAuth(false)
-      return
     }
+  }, [router, shouldRedirectByRole, shouldRedirectToDashboard, shouldRedirectToLogin])
 
-    setIsCheckingAuth(false)
-  }, [pathname, router])
-
-  if (isCheckingAuth) {
+  if (shouldRedirectToLogin || shouldRedirectToDashboard || shouldRedirectByRole) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-100">
         <div className="rounded-2xl border border-slate-200 bg-white px-6 py-4 text-slate-600 shadow-sm">
