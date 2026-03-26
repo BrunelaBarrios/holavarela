@@ -32,19 +32,20 @@ export function ShareButton({
 
   const handleShare = async () => {
     try {
+      void recordShare(section, itemId, title)
+
       if (navigator.share) {
         await navigator.share({ title, text, url })
-        await recordShare(section, itemId, title)
         return
       }
 
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(url)
-        await recordShare(section, itemId, title)
         setFeedback("copied")
         return
       }
 
+      setFeedback("copied")
       window.prompt("Copiá este enlace:", url)
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") return
