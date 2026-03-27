@@ -85,6 +85,7 @@ type Institucion = {
   direccion: string | null
   telefono: string | null
   foto: string | null
+  usa_whatsapp?: boolean | null
 }
 
 type SobreVarelaConfig = {
@@ -1075,6 +1076,26 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 )}
 
                 <div className="mt-8 flex flex-wrap gap-3">
+                  {selectedInstitucion.telefono?.trim() ? (
+                    <ContactActionLink
+                      href={getContactHref(
+                        selectedInstitucion.telefono,
+                        selectedInstitucion.usa_whatsapp
+                      )}
+                      mode={selectedInstitucion.usa_whatsapp === false ? "phone" : "whatsapp"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={
+                        selectedInstitucion.usa_whatsapp === false
+                          ? "inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                          : "inline-flex items-center gap-2 rounded-2xl bg-green-500 px-5 py-3 font-semibold text-white transition hover:bg-green-600"
+                      }
+                    >
+                      <Phone className="h-4 w-4" />
+                      {selectedInstitucion.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
+                    </ContactActionLink>
+                  ) : null}
+
                   <Link
                     href="/instituciones"
                     className="inline-flex items-center gap-2 rounded-2xl bg-cyan-600 px-5 py-3 font-semibold text-white transition hover:bg-cyan-500"

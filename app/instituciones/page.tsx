@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
+import { ContactActionLink } from "../components/ContactActionLink"
 import { OptimizedImage } from "../components/OptimizedImage"
 import { PublicDetailModal } from "../components/PublicDetailModal"
 import { PublicHeader } from "../components/PublicHeader"
@@ -14,6 +15,7 @@ type Institucion = {
   direccion: string | null
   telefono: string | null
   foto: string | null
+  usa_whatsapp?: boolean | null
 }
 
 export default function InstitucionesPage() {
@@ -50,6 +52,24 @@ export default function InstitucionesPage() {
     )
   }, [instituciones, search])
 
+  const whatsappLink = (telefono: string | null) => {
+    if (!telefono) return "#"
+    const limpio = telefono.replace(/\D/g, "")
+    const numero = limpio.startsWith("598")
+      ? limpio
+      : `598${limpio.replace(/^0+/, "")}`
+
+    return `https://wa.me/${numero}`
+  }
+
+  const getContactHref = (
+    telefono: string | null,
+    usaWhatsapp?: boolean | null
+  ) => {
+    if (!telefono) return "#"
+    return usaWhatsapp === false ? `tel:${telefono}` : whatsappLink(telefono)
+  }
+
   return (
     <main className="min-h-screen bg-white">
       <PublicDetailModal
@@ -68,6 +88,27 @@ export default function InstitucionesPage() {
             ? [{ icon: Phone, text: selectedInstitucion.telefono }]
             : []),
         ]}
+        actions={
+          selectedInstitucion?.telefono?.trim() ? (
+            <ContactActionLink
+              href={getContactHref(
+                selectedInstitucion.telefono,
+                selectedInstitucion.usa_whatsapp
+              )}
+              mode={selectedInstitucion.usa_whatsapp === false ? "phone" : "whatsapp"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={
+                selectedInstitucion.usa_whatsapp === false
+                  ? "inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                  : "inline-flex items-center gap-2 rounded-2xl bg-green-500 px-5 py-3 font-semibold text-white transition hover:bg-green-600"
+              }
+            >
+              <Phone className="h-4 w-4" />
+              {selectedInstitucion.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
+            </ContactActionLink>
+          ) : null
+        }
       />
 
       <PublicHeader

@@ -14,6 +14,7 @@ type Institucion = {
   direccion: string | null
   telefono: string | null
   foto: string | null
+  usa_whatsapp?: boolean | null
 }
 
 type InstitucionForm = Omit<Institucion, "id">
@@ -24,6 +25,7 @@ const initialForm: InstitucionForm = {
   direccion: "",
   telefono: "",
   foto: "",
+  usa_whatsapp: true,
 }
 
 export default function AdminInstitucionesPage() {
@@ -72,6 +74,7 @@ export default function AdminInstitucionesPage() {
       direccion: institucion.direccion || "",
       telefono: institucion.telefono || "",
       foto: institucion.foto || "",
+      usa_whatsapp: institucion.usa_whatsapp ?? true,
     })
     setIsFormOpen(true)
   }
@@ -119,6 +122,7 @@ export default function AdminInstitucionesPage() {
       direccion: formData.direccion || null,
       telefono: formData.telefono || null,
       foto: formData.foto || null,
+      usa_whatsapp: formData.usa_whatsapp,
     }
 
     if (editingInstitucion) {
@@ -253,6 +257,21 @@ export default function AdminInstitucionesPage() {
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-cyan-500"
                 />
               </div>
+
+              <label className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={formData.usa_whatsapp ?? true}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      usa_whatsapp: e.target.checked,
+                    }))
+                  }
+                  className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
+                />
+                <span>Este numero tiene WhatsApp</span>
+              </label>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
