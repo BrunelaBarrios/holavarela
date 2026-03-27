@@ -1364,12 +1364,31 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             )}
                           </div>
 
+                          {servicio.contacto?.trim() ? (
+                            <ContactActionLink
+                              href={getContactHref(
+                                servicio.contacto,
+                                servicio.usa_whatsapp
+                              )}
+                              mode={servicio.usa_whatsapp === false ? "phone" : "whatsapp"}
+                              section="servicios"
+                              itemId={String(servicio.id)}
+                              itemTitle={servicio.nombre}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
+                            >
+                              <Phone className="h-4 w-4" />
+                              {servicio.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
+                            </ContactActionLink>
+                          ) : null}
+
                           <button
                             type="button"
                             onClick={() => setSelectedServicio(servicio)}
-                            className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
+                            className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
                           >
-                        Ver más
+                            Ver más
                             <ArrowRight className="h-4 w-4" />
                           </button>
                         </div>
