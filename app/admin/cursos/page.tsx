@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { Eye, EyeOff, GraduationCap, Pencil, Phone, Plus, Share2, Star, Trash2, UserRound, X } from "lucide-react"
+import { Eye, EyeOff, GraduationCap, MessageCircle, Pencil, Phone, Plus, Share2, Star, Trash2, UserRound, X } from "lucide-react"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { buildShareCountMap } from "../../lib/shareTracking"
+import { buildWhatsappCountMap } from "../../lib/whatsappTracking"
 
 type Curso = {
   id: number
@@ -19,6 +20,7 @@ type Curso = {
   estado?: string | null
   usa_whatsapp?: boolean | null
   share_count?: number
+  whatsapp_count?: number
 }
 
 type CursoForm = Omit<Curso, "id">
@@ -42,12 +44,17 @@ export default function AdminCursosPage() {
   const [deletingCurso, setDeletingCurso] = useState<Curso | null>(null)
 
   const cargarCursos = async () => {
-    const [{ data, error }, { data: shareRows, error: shareError }] = await Promise.all([
+    const [
+      { data, error },
+      { data: shareRows, error: shareError },
+      { data: whatsappRows, error: whatsappError },
+    ] = await Promise.all([
       supabase
         .from("cursos")
         .select("*")
         .order("id", { ascending: false }),
       supabase.from("share_events").select("item_id").eq("section", "cursos"),
+      supabase.from("whatsapp_clicks").select("item_id").eq("section", "cursos"),
     ])
 
     if (error) {
@@ -60,11 +67,18 @@ export default function AdminCursosPage() {
       return
     }
 
+    if (whatsappError) {
+      setSaveError(`Error al cargar clics de WhatsApp: ${whatsappError.message}`)
+      return
+    }
+
     const shareMap = buildShareCountMap(shareRows || [])
+    const whatsappMap = buildWhatsappCountMap(whatsappRows || [])
     setCursos(
       (data || []).map((curso) => ({
         ...curso,
         share_count: shareMap[String(curso.id)] || 0,
+        whatsapp_count: whatsappMap[String(curso.id)] || 0,
       }))
     )
   }
@@ -494,6 +508,11 @@ export default function AdminCursosPage() {
               <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                 <Share2 className="h-3.5 w-3.5" />
                 {curso.share_count || 0} compartidos
+              </div>
+
+              <div className="mt-4 ml-2 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                <MessageCircle className="h-3.5 w-3.5" />
+                {curso.whatsapp_count || 0} WhatsApp
               </div>
 
               <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">

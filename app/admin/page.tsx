@@ -9,6 +9,7 @@ import {
   FileText,
   GraduationCap,
   Mail,
+  MessageCircle,
   Plus,
   Radio,
   Share2,
@@ -17,6 +18,11 @@ import {
 } from "lucide-react"
 import { buildActiveEventsFilter, formatEventDateRange } from "../lib/eventDates"
 import { buildShareTotals, emptyShareTotals, type ShareTotals } from "../lib/shareTracking"
+import {
+  buildWhatsappTotals,
+  emptyWhatsappTotals,
+  type WhatsappTotals,
+} from "../lib/whatsappTracking"
 import { supabase } from "../supabase"
 
 type EventoResumen = {
@@ -36,6 +42,7 @@ export default function AdminDashboardPage() {
   const [contactosCount, setContactosCount] = useState(0)
   const [proximosEventos, setProximosEventos] = useState<EventoResumen[]>([])
   const [shareTotals, setShareTotals] = useState<ShareTotals>(emptyShareTotals())
+  const [whatsappTotals, setWhatsappTotals] = useState<WhatsappTotals>(emptyWhatsappTotals())
 
   useEffect(() => {
     const cargarDashboard = async () => {
@@ -49,6 +56,7 @@ export default function AdminDashboardPage() {
         { count: contactos },
         { data: eventosData },
         { data: shareRows },
+        { data: whatsappRows },
       ] = await Promise.all([
         supabase.from("comercios").select("*", { count: "exact", head: true }),
         supabase.from("eventos").select("*", { count: "exact", head: true }),
@@ -64,6 +72,7 @@ export default function AdminDashboardPage() {
           .order("fecha", { ascending: true })
           .limit(3),
         supabase.from("share_events").select("section"),
+        supabase.from("whatsapp_clicks").select("section"),
       ])
 
       setComerciosCount(comercios || 0)
@@ -74,6 +83,7 @@ export default function AdminDashboardPage() {
       setContactosCount(contactos || 0)
       setProximosEventos(eventosData || [])
       setShareTotals(buildShareTotals(shareRows || []))
+      setWhatsappTotals(buildWhatsappTotals(whatsappRows || []))
     }
 
     cargarDashboard()
@@ -234,6 +244,39 @@ export default function AdminDashboardPage() {
               <div className="text-sm text-slate-500">Servicios</div>
               <div className="mt-1 text-2xl font-semibold text-slate-900">
                 {shareTotals.servicios}
+              </div>
+            </div>
+          </div>
+
+          <h2 className="mb-6 text-xl font-semibold text-slate-900">
+            WhatsApp
+          </h2>
+          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="rounded-xl bg-green-50 p-4">
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <MessageCircle className="h-4 w-4 text-green-600" />
+                Comercios
+              </div>
+              <div className="mt-1 text-2xl font-semibold text-slate-900">
+                {whatsappTotals.comercios}
+              </div>
+            </div>
+            <div className="rounded-xl bg-green-50 p-4">
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <MessageCircle className="h-4 w-4 text-green-600" />
+                Servicios
+              </div>
+              <div className="mt-1 text-2xl font-semibold text-slate-900">
+                {whatsappTotals.servicios}
+              </div>
+            </div>
+            <div className="rounded-xl bg-green-50 p-4">
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <MessageCircle className="h-4 w-4 text-green-600" />
+                Cursos
+              </div>
+              <div className="mt-1 text-2xl font-semibold text-slate-900">
+                {whatsappTotals.cursos}
               </div>
             </div>
           </div>

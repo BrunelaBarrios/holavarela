@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, GraduationCap, Phone, Search } from "lucide-react"
+import { ContactActionLink } from "../ContactActionLink"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
@@ -84,18 +85,22 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
           selectedCurso ? (
             <>
               {selectedCurso.contacto ? (
-                <a
+                <ContactActionLink
                   href={getContactHref(
                     selectedCurso.contacto,
                     selectedCurso.usa_whatsapp
                   )}
+                  mode={selectedCurso.usa_whatsapp === false ? "phone" : "whatsapp"}
+                  section="cursos"
+                  itemId={String(selectedCurso.id)}
+                  itemTitle={selectedCurso.nombre}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
                 >
                   <Phone className="h-4 w-4" />
                   {selectedCurso.usa_whatsapp === false ? "Llamar" : "Contactar"}
-                </a>
+                </ContactActionLink>
               ) : null}
               <ShareButton
                 title={selectedCurso.nombre}
@@ -187,15 +192,19 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                       <ArrowRight className="h-4 w-4" />
                     </button>
 
-                    <a
+                    <ContactActionLink
                       href={getContactHref(curso.contacto, curso.usa_whatsapp)}
+                      mode={curso.usa_whatsapp === false ? "phone" : "whatsapp"}
+                      section="cursos"
+                      itemId={String(curso.id)}
+                      itemTitle={curso.nombre}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
                     >
                       <Phone className="h-4 w-4" />
                       {curso.usa_whatsapp === false ? "Llamar" : "Contactar"}
-                    </a>
+                    </ContactActionLink>
 
                     <ShareButton
                       title={curso.nombre}

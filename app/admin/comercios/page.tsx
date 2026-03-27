@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { Eye, EyeOff, Pencil, Plus, Share2, Star, Store, Trash2, X } from "lucide-react"
+import { Eye, EyeOff, MessageCircle, Pencil, Plus, Share2, Star, Store, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { buildShareCountMap } from "../../lib/shareTracking"
+import { buildWhatsappCountMap } from "../../lib/whatsappTracking"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
@@ -20,6 +21,7 @@ type Comercio = {
   destacado?: boolean | null
   usa_whatsapp?: boolean | null
   share_count?: number
+  whatsapp_count?: number
 }
 
 type ComercioForm = {
@@ -58,12 +60,17 @@ export default function AdminComerciosPage() {
   )
 
   const cargarComercios = async () => {
-    const [{ data, error }, { data: shareRows, error: shareError }] = await Promise.all([
+    const [
+      { data, error },
+      { data: shareRows, error: shareError },
+      { data: whatsappRows, error: whatsappError },
+    ] = await Promise.all([
       supabase
         .from("comercios")
         .select("*")
         .order("id", { ascending: false }),
       supabase.from("share_events").select("item_id").eq("section", "comercios"),
+      supabase.from("whatsapp_clicks").select("item_id").eq("section", "comercios"),
     ])
 
     if (error) {
@@ -76,11 +83,18 @@ export default function AdminComerciosPage() {
       return
     }
 
+    if (whatsappError) {
+      alert(`Error al cargar clics de WhatsApp: ${whatsappError.message}`)
+      return
+    }
+
     const shareMap = buildShareCountMap(shareRows || [])
+    const whatsappMap = buildWhatsappCountMap(whatsappRows || [])
     setComercios(
       (data || []).map((comercio) => ({
         ...comercio,
         share_count: shareMap[String(comercio.id)] || 0,
+        whatsapp_count: whatsappMap[String(comercio.id)] || 0,
       }))
     )
   }
@@ -521,6 +535,11 @@ export default function AdminComerciosPage() {
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                   <Share2 className="h-3.5 w-3.5" />
                   {comercio.share_count || 0} compartidos
+                </div>
+
+                <div className="mb-4 ml-2 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                  <MessageCircle className="h-3.5 w-3.5" />
+                  {comercio.whatsapp_count || 0} WhatsApp
                 </div>
 
                 <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">

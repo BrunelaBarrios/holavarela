@@ -3,6 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
+import { ContactActionLink } from "./ContactActionLink"
 import { OptimizedImage } from "./OptimizedImage"
 import { MyTunerWidget } from "./MyTunerWidget"
 import { PublicHeader } from "./PublicHeader"
@@ -482,18 +483,28 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   </button>
 
                   {welcomeHighlight.contact && (
-                    <a
+                    <ContactActionLink
                       href={getContactHref(
                         welcomeHighlight.contact,
                         welcomeHighlight.usesWhatsapp
                       )}
+                      mode={welcomeHighlight.usesWhatsapp === false ? "phone" : "whatsapp"}
+                      section={
+                        welcomeHighlight.kind === "comercio"
+                          ? "comercios"
+                          : welcomeHighlight.kind === "servicio"
+                            ? "servicios"
+                            : "cursos"
+                      }
+                      itemId={welcomeHighlight.key.split("-").slice(1).join("-")}
+                      itemTitle={welcomeHighlight.title}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
                     >
                       <Phone className="h-4 w-4" />
                       {getContactLabel(welcomeHighlight.usesWhatsapp)}
-                    </a>
+                    </ContactActionLink>
                   )}
 
                   <button
@@ -693,18 +704,22 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
                 <div className="mt-8 flex flex-wrap gap-3">
                   {selectedComercio.telefono && (
-                    <a
+                    <ContactActionLink
                       href={getContactHref(
                         selectedComercio.telefono,
                         selectedComercio.usa_whatsapp
                       )}
+                      mode={selectedComercio.usa_whatsapp === false ? "phone" : "whatsapp"}
+                      section="comercios"
+                      itemId={String(selectedComercio.id)}
+                      itemTitle={selectedComercio.nombre}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
                     >
                       <Phone className="h-4 w-4" />
                       {getContactLabel(selectedComercio.usa_whatsapp)}
-                    </a>
+                    </ContactActionLink>
                   )}
 
                   <button
@@ -791,18 +806,22 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
                 <div className="mt-8 flex flex-wrap gap-3">
                   {selectedServicio.contacto && (
-                    <a
+                    <ContactActionLink
                       href={getContactHref(
                         selectedServicio.contacto,
                         selectedServicio.usa_whatsapp
                       )}
+                      mode={selectedServicio.usa_whatsapp === false ? "phone" : "whatsapp"}
+                      section="servicios"
+                      itemId={String(selectedServicio.id)}
+                      itemTitle={selectedServicio.nombre}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
                     >
                       <Phone className="h-4 w-4" />
                       {getContactLabel(selectedServicio.usa_whatsapp)}
-                    </a>
+                    </ContactActionLink>
                   )}
 
                   <button
@@ -954,18 +973,22 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   </p>
 
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <a
+                  <ContactActionLink
                     href={getContactHref(
                       selectedCurso.contacto,
                       selectedCurso.usa_whatsapp
                     )}
+                    mode={selectedCurso.usa_whatsapp === false ? "phone" : "whatsapp"}
+                    section="cursos"
+                    itemId={String(selectedCurso.id)}
+                    itemTitle={selectedCurso.nombre}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
                   >
                     <Phone className="h-4 w-4" />
                     {getContactLabel(selectedCurso.usa_whatsapp)}
-                  </a>
+                  </ContactActionLink>
 
                   <button
                     type="button"
@@ -1216,18 +1239,22 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     )}
 
                     {business.telefono && (
-                      <a
+                      <ContactActionLink
                         href={getContactHref(
                           business.telefono,
                           business.usa_whatsapp
                         )}
+                        mode={business.usa_whatsapp === false ? "phone" : "whatsapp"}
+                        section="comercios"
+                        itemId={String(business.id)}
+                        itemTitle={business.nombre}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-3 text-lg font-semibold text-white transition hover:bg-green-600"
                       >
                         <Phone className="h-5 w-5" />
                         {business.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
-                      </a>
+                      </ContactActionLink>
                     )}
 
                     <button

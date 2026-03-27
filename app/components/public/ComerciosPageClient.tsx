@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
+import { ContactActionLink } from "../ContactActionLink"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
@@ -101,18 +102,22 @@ export function ComerciosPageClient({
           selectedComercio ? (
             <>
               {selectedComercio.telefono ? (
-                <a
+                <ContactActionLink
                   href={getContactHref(
                     selectedComercio.telefono,
                     selectedComercio.usa_whatsapp
                   )}
+                  mode={selectedComercio.usa_whatsapp === false ? "phone" : "whatsapp"}
+                  section="comercios"
+                  itemId={String(selectedComercio.id)}
+                  itemTitle={selectedComercio.nombre}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
                 >
                   <Phone className="h-4 w-4" />
                   {getContactLabel(selectedComercio.usa_whatsapp)}
-                </a>
+                </ContactActionLink>
               ) : null}
               <ShareButton
                 title={selectedComercio.nombre}
@@ -206,14 +211,18 @@ export function ComerciosPageClient({
                       <ArrowRight className="h-4 w-4" />
                     </button>
 
-                    <a
+                    <ContactActionLink
                       href={getContactHref(comercio.telefono, comercio.usa_whatsapp)}
+                      mode={comercio.usa_whatsapp === false ? "phone" : "whatsapp"}
+                      section="comercios"
+                      itemId={String(comercio.id)}
+                      itemTitle={comercio.nombre}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-block rounded-lg bg-green-600 px-4 py-2 text-sm text-white"
                     >
                       {getContactLabel(comercio.usa_whatsapp)}
-                    </a>
+                    </ContactActionLink>
 
                     <ShareButton
                       title={comercio.nombre}

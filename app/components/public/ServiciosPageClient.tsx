@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, MapPin, Phone, Search, UserRound } from "lucide-react"
+import { ContactActionLink } from "../ContactActionLink"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
@@ -110,18 +111,22 @@ export function ServiciosPageClient({
           selectedServicio ? (
             <>
               {selectedServicio.contacto ? (
-                <a
+                <ContactActionLink
                   href={getContactHref(
                     selectedServicio.contacto,
                     selectedServicio.usa_whatsapp
                   )}
+                  mode={selectedServicio.usa_whatsapp === false ? "phone" : "whatsapp"}
+                  section="servicios"
+                  itemId={String(selectedServicio.id)}
+                  itemTitle={selectedServicio.nombre}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
                 >
                   <Phone className="h-4 w-4" />
                   {selectedServicio.usa_whatsapp === false ? "Llamar" : "Contactar"}
-                </a>
+                </ContactActionLink>
               ) : null}
               <ShareButton
                 title={selectedServicio.nombre}
@@ -245,14 +250,18 @@ export function ServiciosPageClient({
                           </button>
 
                           {servicio.contacto && (
-                            <a
+                            <ContactActionLink
                               href={getContactHref(servicio.contacto, servicio.usa_whatsapp)}
+                              mode={servicio.usa_whatsapp === false ? "phone" : "whatsapp"}
+                              section="servicios"
+                              itemId={String(servicio.id)}
+                              itemTitle={servicio.nombre}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
                             >
                               {servicio.usa_whatsapp === false ? "Llamar" : "Contactar"}
-                            </a>
+                            </ContactActionLink>
                           )}
 
                           <ShareButton
