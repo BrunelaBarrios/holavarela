@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
+import { OptimizedImage } from "../components/OptimizedImage"
 import { PublicDetailModal } from "../components/PublicDetailModal"
 import { PublicHeader } from "../components/PublicHeader"
 import { supabase } from "../supabase"
@@ -116,11 +117,14 @@ export default function InstitucionesPage() {
                 className="overflow-hidden rounded-xl border border-gray-200 shadow-sm"
               >
                 {institucion.foto && (
-                  <img
-                    src={institucion.foto}
-                    alt={institucion.nombre}
-                    className="h-56 w-full object-cover"
-                  />
+                  <div className="relative h-56 w-full">
+                    <OptimizedImage
+                      src={institucion.foto}
+                      alt={institucion.nombre}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 20vw"
+                      className="object-cover"
+                    />
+                  </div>
                 )}
 
                 <div className="p-5">

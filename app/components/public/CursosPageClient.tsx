@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, GraduationCap, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
+import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
@@ -161,11 +162,14 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                 className="overflow-hidden rounded-xl border border-gray-200 shadow-sm"
               >
                 {curso.imagen && (
-                  <img
-                    src={curso.imagen}
-                    alt={curso.nombre}
-                    className="h-56 w-full object-cover"
-                  />
+                  <div className="relative h-56 w-full">
+                    <OptimizedImage
+                      src={curso.imagen}
+                      alt={curso.nombre}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                      className="object-cover"
+                    />
+                  </div>
                 )}
 
                 <div className="p-5">

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
+import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
@@ -178,11 +179,14 @@ export function ComerciosPageClient({
                   className="rounded-xl border border-gray-200 p-5 shadow-sm"
                 >
                   {imagenSrc && (
-                    <img
-                      src={imagenSrc}
-                      alt={comercio.nombre}
-                      className="mb-3 h-40 w-full rounded-lg object-cover"
-                    />
+                    <div className="relative mb-3 h-40 w-full overflow-hidden rounded-lg">
+                      <OptimizedImage
+                        src={imagenSrc}
+                        alt={comercio.nombre}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                        className="object-cover"
+                      />
+                    </div>
                   )}
 
                   <h2 className="text-lg font-semibold text-gray-900">

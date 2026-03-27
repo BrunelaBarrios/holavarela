@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, MapPin, Phone, Search, UserRound } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
+import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
@@ -198,11 +199,14 @@ export function ServiciosPageClient({
                       className="overflow-hidden rounded-xl border border-gray-200 shadow-sm"
                     >
                       {servicio.imagen && (
-                        <img
-                          src={servicio.imagen}
-                          alt={servicio.nombre}
-                          className="h-56 w-full object-cover"
-                        />
+                        <div className="relative h-56 w-full">
+                          <OptimizedImage
+                            src={servicio.imagen}
+                            alt={servicio.nombre}
+                            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                            className="object-cover"
+                          />
+                        </div>
                       )}
 
                       <div className="p-5">

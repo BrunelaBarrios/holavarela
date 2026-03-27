@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { Mail, MessageSquare, Phone, Search, UserRound } from "lucide-react"
+import { Mail, MessageSquare, Phone, Search, Trash2, UserRound } from "lucide-react"
+import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { supabase } from "../../supabase"
+import { logAdminActivity } from "../../lib/adminActivity"
 
 type ContactoSolicitud = {
   id: number
@@ -18,6 +20,7 @@ export default function AdminContactosPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [search, setSearch] = useState("")
+  const [deletingSolicitud, setDeletingSolicitud] = useState<ContactoSolicitud | null>(null)
 
   useEffect(() => {
     const cargarSolicitudes = async () => {
@@ -62,8 +65,42 @@ export default function AdminContactosPage() {
     })
   }
 
+  const handleDelete = async (id: number) => {
+    const solicitud = solicitudes.find((item) => item.id === id)
+    if (!solicitud) return
+
+    const { error } = await supabase.from("contacto_solicitudes").delete().eq("id", id)
+
+    if (error) {
+      setError(`No se pudo eliminar la solicitud: ${error.message}`)
+      return
+    }
+
+    setSolicitudes((prev) => prev.filter((item) => item.id !== id))
+    setDeletingSolicitud(null)
+    await logAdminActivity({
+      action: "Eliminar",
+      section: "Contactos",
+      target: solicitud.nombre,
+      details: solicitud.email,
+    })
+  }
+
   return (
     <div className="mx-auto max-w-6xl">
+      <AdminConfirmModal
+        isOpen={Boolean(deletingSolicitud)}
+        title="Eliminar solicitud"
+        description={`Vas a eliminar la solicitud de "${deletingSolicitud?.nombre || ""}". Esta accion no se puede deshacer.`}
+        confirmLabel="Eliminar"
+        onCancel={() => setDeletingSolicitud(null)}
+        onConfirm={() => {
+          if (deletingSolicitud) {
+            void handleDelete(deletingSolicitud.id)
+          }
+        }}
+      />
+
       <div className="mb-8">
         <h1 className="mb-2 text-3xl font-semibold text-slate-900">Contactos</h1>
         <p className="text-slate-500">
@@ -151,6 +188,17 @@ export default function AdminContactosPage() {
                 <p className="whitespace-pre-wrap text-sm leading-7 text-slate-600">
                   {item.mensaje}
                 </p>
+              </div>
+
+              <div className="mt-4 flex justify-end border-t border-slate-100 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setDeletingSolicitud(item)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Borrar
+                </button>
               </div>
             </article>
           ))}
