@@ -1376,9 +1376,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                               itemTitle={servicio.nombre}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500"
+                              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-3 text-lg font-semibold text-white transition hover:bg-green-600"
                             >
-                              <Phone className="h-4 w-4" />
+                              <Phone className="h-5 w-5" />
                               {servicio.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
                             </ContactActionLink>
                           ) : null}
