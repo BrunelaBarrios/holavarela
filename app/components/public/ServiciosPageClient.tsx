@@ -57,7 +57,12 @@ export function ServiciosPageClient({
 
   const whatsappLink = (telefono: string | null) => {
     if (!telefono) return "#"
-    return `https://wa.me/${telefono.replace(/\D/g, "")}`
+    const limpio = telefono.replace(/\D/g, "")
+    const numero = limpio.startsWith("598")
+      ? limpio
+      : `598${limpio.replace(/^0+/, "")}`
+
+    return `https://wa.me/${numero}`
   }
 
   const getContactHref = (contacto: string | null, usaWhatsapp?: boolean | null) => {

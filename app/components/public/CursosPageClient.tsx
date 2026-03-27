@@ -48,7 +48,12 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
   }, [selectedCursoId])
 
   const whatsappLink = (telefono: string) => {
-    return `https://wa.me/${telefono.replace(/\D/g, "")}`
+    const limpio = telefono.replace(/\D/g, "")
+    const numero = limpio.startsWith("598")
+      ? limpio
+      : `598${limpio.replace(/^0+/, "")}`
+
+    return `https://wa.me/${numero}`
   }
 
   const getContactHref = (contacto: string, usaWhatsapp?: boolean | null) =>
