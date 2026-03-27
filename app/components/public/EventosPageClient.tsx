@@ -8,6 +8,7 @@ import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
 import { formatEventDateRange } from "../../lib/eventDates"
+import { buildPublicNav } from "../../lib/publicNav"
 
 export type Evento = {
   id: string
@@ -119,16 +120,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
         }
       />
 
-      <PublicHeader
-        items={[
-          { href: "/#inicio", label: "Inicio" },
-          { href: "/comercios", label: "Comercios" },
-          { href: "/eventos", label: "Eventos", active: true },
-          { href: "/servicios", label: "Servicios" },
-          { href: "/cursos", label: "Cursos y Clases" },
-          { href: "/#contacto", label: "Contacto" },
-        ]}
-      />
+      <PublicHeader items={buildPublicNav("eventos")} />
 
       <div className="mx-auto max-w-7xl px-6 py-16">
         <h1 className="text-3xl font-bold text-gray-900">Eventos</h1>

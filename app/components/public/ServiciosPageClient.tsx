@@ -7,6 +7,7 @@ import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
+import { buildPublicNav } from "../../lib/publicNav"
 
 export type Servicio = {
   id: number
@@ -147,16 +148,7 @@ export function ServiciosPageClient({
         }
       />
 
-      <PublicHeader
-        items={[
-          { href: "/#inicio", label: "Inicio" },
-          { href: "/comercios", label: "Comercios" },
-          { href: "/eventos", label: "Eventos" },
-          { href: "/servicios", label: "Servicios", active: true },
-          { href: "/cursos", label: "Cursos y Clases" },
-          { href: "/#contacto", label: "Contacto" },
-        ]}
-      />
+      <PublicHeader items={buildPublicNav("servicios")} />
 
       <div className="mx-auto max-w-7xl px-6 py-16">
         <h1 className="text-3xl font-bold text-gray-900">Servicios y Profesionales</h1>

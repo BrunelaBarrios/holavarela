@@ -6,6 +6,7 @@ import { ContactActionLink } from "../components/ContactActionLink"
 import { OptimizedImage } from "../components/OptimizedImage"
 import { PublicDetailModal } from "../components/PublicDetailModal"
 import { PublicHeader } from "../components/PublicHeader"
+import { buildPublicNav } from "../lib/publicNav"
 import { supabase } from "../supabase"
 
 type Institucion = {
@@ -111,17 +112,7 @@ export default function InstitucionesPage() {
         }
       />
 
-      <PublicHeader
-        items={[
-          { href: "/#inicio", label: "Inicio" },
-          { href: "/comercios", label: "Comercios" },
-          { href: "/eventos", label: "Eventos" },
-          { href: "/servicios", label: "Servicios" },
-          { href: "/instituciones", label: "Instituciones", active: true },
-          { href: "/cursos", label: "Cursos y Clases" },
-          { href: "/#contacto", label: "Contacto" },
-        ]}
-      />
+      <PublicHeader items={buildPublicNav("instituciones")} />
 
       <div className="mx-auto max-w-7xl px-6 py-16">
         <h1 className="text-3xl font-bold text-gray-900">Instituciones</h1>

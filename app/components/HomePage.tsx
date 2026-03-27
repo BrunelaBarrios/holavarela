@@ -8,6 +8,7 @@ import { OptimizedImage } from "./OptimizedImage"
 import { MyTunerWidget } from "./MyTunerWidget"
 import { PublicHeader } from "./PublicHeader"
 import { formatEventDateRange } from "../lib/eventDates"
+import { buildHomePublicNav } from "../lib/publicNav"
 import { supabase } from "../supabase"
 import {
   ArrowRight,
@@ -1119,15 +1120,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       )}
 
       <PublicHeader
-        items={[
-          { href: "/#inicio", label: "Inicio" },
-          { href: "/#eventos", label: "Eventos" },
-          { href: "/#cursos", label: "Cursos y Clases" },
-          { href: "/#instituciones", label: "Instituciones" },
-          { href: "/#comercios", label: "Comercios" },
-          { href: "/#servicios", label: "Servicios" },
-          { href: "/#contacto", label: "Contacto" },
-        ]}
+        items={buildHomePublicNav()}
         borderClassName="border-white/60"
         backgroundClassName="bg-white/80"
       />
