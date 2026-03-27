@@ -52,6 +52,7 @@ type Evento = {
 const normalizeEventCategory = (categoria?: string | null) => {
   const value = categoria?.trim()
   if (!value || value.toUpperCase() === "NOT NULL") return "Evento"
+  if (value.toLowerCase() === "beneficios") return "Beneficio"
   return value
 }
 

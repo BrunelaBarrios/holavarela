@@ -25,6 +25,7 @@ export type Evento = {
 const normalizeEventCategory = (categoria?: string | null) => {
   const value = categoria?.trim()
   if (!value || value.toUpperCase() === "NOT NULL") return "Evento"
+  if (value.toLowerCase() === "beneficios") return "Beneficio"
   return value
 }
 
@@ -142,7 +143,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          {["Todos", "Evento", "Promocion", "Sorteo", "Beneficios"].map((item) => (
+          {["Todos", "Evento", "Promocion", "Sorteo", "Beneficio", "Consulta"].map((item) => (
             <button
               key={item}
               type="button"

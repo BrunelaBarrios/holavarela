@@ -42,7 +42,14 @@ const initialForm: EventoForm = {
   imagen: "",
 }
 
-const categoriasEvento = ["Evento", "Promocion", "Sorteo", "Beneficios"]
+const normalizeAdminEventCategory = (categoria?: string | null) => {
+  const value = categoria?.trim()
+  if (!value) return "Evento"
+  if (value.toLowerCase() === "beneficios") return "Beneficio"
+  return value
+}
+
+const categoriasEvento = ["Evento", "Promocion", "Sorteo", "Beneficio", "Consulta"]
 
 export default function AdminEventosPage() {
   const [eventos, setEventos] = useState<Evento[]>([])
@@ -101,7 +108,7 @@ export default function AdminEventosPage() {
     setEditingEvento(evento)
     setFormData({
       titulo: evento.titulo || "",
-      categoria: evento.categoria || "Evento",
+      categoria: normalizeAdminEventCategory(evento.categoria),
       fecha: evento.fecha || "",
       fechaFin: evento.fecha_fin || "",
       ubicacion: evento.ubicacion || "",
@@ -510,7 +517,7 @@ export default function AdminEventosPage() {
                 {evento.titulo}
               </h3>
               <div className="mb-3 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                {evento.categoria || "Evento"}
+                {normalizeAdminEventCategory(evento.categoria)}
               </div>
               <p className="mb-1 text-sm text-slate-500">{evento.ubicacion}</p>
               <p className="mb-4 line-clamp-2 text-sm text-slate-500">
