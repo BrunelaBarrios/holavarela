@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { ArrowRight, CalendarDays, MapPin, Search } from "lucide-react"
+import { ArrowRight, CalendarDays, MapPin, Phone, Search } from "lucide-react"
+import { ContactActionLink } from "../ContactActionLink"
 import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
@@ -18,8 +19,10 @@ export type Evento = {
   fecha: string
   fecha_fin?: string | null
   ubicacion: string
+  telefono?: string | null
   imagen: string
   estado: string
+  usa_whatsapp?: boolean | null
 }
 
 const normalizeEventCategory = (categoria?: string | null) => {
@@ -57,6 +60,21 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
     }
     window.history.replaceState({}, "", url)
   }, [selectedEventoId])
+
+  const whatsappLink = (telefono: string | null) => {
+    if (!telefono) return "#"
+    const limpio = telefono.replace(/\D/g, "")
+    const numero = limpio.startsWith("598")
+      ? limpio
+      : `598${limpio.replace(/^0+/, "")}`
+
+    return `https://wa.me/${numero}`
+  }
+
+  const getContactHref = (telefono: string | null, usaWhatsapp?: boolean | null) => {
+    if (!telefono) return "#"
+    return usaWhatsapp === false ? `tel:${telefono}` : whatsappLink(telefono)
+  }
 
   const eventosFiltrados = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -97,9 +115,31 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
           ...(selectedEvento?.ubicacion
             ? [{ icon: MapPin, text: selectedEvento.ubicacion }]
             : []),
+          ...(selectedEvento?.telefono
+            ? [{ icon: Phone, text: selectedEvento.telefono }]
+            : []),
         ]}
         actions={
           <>
+            {selectedEvento?.telefono?.trim() ? (
+              <ContactActionLink
+                href={getContactHref(
+                  selectedEvento.telefono,
+                  selectedEvento.usa_whatsapp
+                )}
+                mode={selectedEvento.usa_whatsapp === false ? "phone" : "whatsapp"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={
+                  selectedEvento.usa_whatsapp === false
+                    ? "inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                    : "inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
+                }
+              >
+                <Phone className="h-4 w-4" />
+                {selectedEvento.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
+              </ContactActionLink>
+            ) : null}
             {selectedEvento ? (
               <ShareButton
                 title={selectedEvento.titulo}
@@ -199,6 +239,12 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 <p className="mt-1 text-sm text-gray-600">
                   Ubicacion: {evento.ubicacion}
                 </p>
+
+                {evento.telefono && (
+                  <p className="mt-1 text-sm text-gray-600">
+                    Telefono: {evento.telefono}
+                  </p>
+                )}
 
                 <p className="line-clamp-5 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
                   {evento.descripcion}

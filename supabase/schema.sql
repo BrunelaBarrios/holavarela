@@ -10,6 +10,12 @@ add column if not exists destacado boolean default false;
 alter table public.eventos
 add column if not exists fecha_fin date;
 
+alter table public.eventos
+add column if not exists telefono text;
+
+alter table public.eventos
+add column if not exists usa_whatsapp boolean default true;
+
 alter table public.instituciones
 add column if not exists usa_whatsapp boolean default true;
 

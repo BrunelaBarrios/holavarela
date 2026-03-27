@@ -9,7 +9,7 @@ export default async function EventosPage() {
 
   const { data } = await supabaseServer
     .from("eventos")
-    .select("id, titulo, categoria, descripcion, fecha, fecha_fin, ubicacion, imagen, estado")
+    .select("id, titulo, categoria, descripcion, fecha, fecha_fin, ubicacion, telefono, imagen, estado, usa_whatsapp")
     .eq("estado", "activo")
     .or(buildActiveEventsFilter(today))
     .order("fecha", { ascending: true })

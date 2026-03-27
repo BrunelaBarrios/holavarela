@@ -45,8 +45,10 @@ type Evento = {
   fecha: string
   fecha_fin?: string | null
   ubicacion: string
+  telefono?: string | null
   imagen?: string | null
   estado?: string | null
+  usa_whatsapp?: boolean | null
 }
 
 const normalizeEventCategory = (categoria?: string | null) => {
@@ -900,6 +902,13 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   <span>{selectedEvento.ubicacion}</span>
                 </div>
 
+                {selectedEvento.telefono && (
+                  <div className="mt-3 flex items-center gap-2 text-slate-500">
+                    <Phone className="h-4 w-4" />
+                    <span>{selectedEvento.telefono}</span>
+                  </div>
+                )}
+
                 <div className="mt-4 inline-flex rounded-full bg-sky-50 px-3 py-1 text-sm font-semibold text-sky-700">
                   {normalizeEventCategory(selectedEvento.categoria)}
                 </div>
@@ -909,6 +918,26 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   </p>
 
                 <div className="mt-8 flex flex-wrap gap-3">
+                  {selectedEvento.telefono?.trim() ? (
+                    <ContactActionLink
+                      href={getContactHref(
+                        selectedEvento.telefono,
+                        selectedEvento.usa_whatsapp
+                      )}
+                      mode={selectedEvento.usa_whatsapp === false ? "phone" : "whatsapp"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={
+                        selectedEvento.usa_whatsapp === false
+                          ? "inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
+                          : "inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
+                      }
+                    >
+                      <Phone className="h-4 w-4" />
+                      {selectedEvento.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
+                    </ContactActionLink>
+                  ) : null}
+
                   <Link
                     href="/eventos"
                     className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"

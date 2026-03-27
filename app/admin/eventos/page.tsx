@@ -16,9 +16,11 @@ type Evento = {
   fecha: string
   fecha_fin?: string | null
   ubicacion: string
+  telefono?: string | null
   descripcion: string
   imagen?: string | null
   estado?: string | null
+  usa_whatsapp?: boolean | null
   share_count?: number
 }
 
@@ -28,8 +30,10 @@ type EventoForm = {
   fecha: string
   fechaFin: string
   ubicacion: string
+  telefono: string
   descripcion: string
   imagen: string
+  usaWhatsapp: boolean
 }
 
 const initialForm: EventoForm = {
@@ -38,8 +42,10 @@ const initialForm: EventoForm = {
   fecha: "",
   fechaFin: "",
   ubicacion: "",
+  telefono: "",
   descripcion: "",
   imagen: "",
+  usaWhatsapp: true,
 }
 
 const normalizeAdminEventCategory = (categoria?: string | null) => {
@@ -112,8 +118,10 @@ export default function AdminEventosPage() {
       fecha: evento.fecha || "",
       fechaFin: evento.fecha_fin || "",
       ubicacion: evento.ubicacion || "",
+      telefono: evento.telefono || "",
       descripcion: evento.descripcion || "",
       imagen: evento.imagen || "",
+      usaWhatsapp: evento.usa_whatsapp ?? true,
     })
     setIsFormOpen(true)
   }
@@ -207,9 +215,11 @@ export default function AdminEventosPage() {
       fecha: formData.fecha,
       fecha_fin: formData.fechaFin || null,
       ubicacion: formData.ubicacion,
+      telefono: formData.telefono || null,
       descripcion: formData.descripcion,
       imagen: formData.imagen || null,
       estado: editingEvento?.estado || "activo",
+      usa_whatsapp: formData.usaWhatsapp,
     }
 
     if (editingEvento) {
@@ -406,6 +416,41 @@ export default function AdminEventosPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
+                  Telefono
+                </label>
+                <input
+                  type="text"
+                  value={formData.telefono}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      telefono: e.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
+                />
+                <p className="mt-2 text-sm text-slate-500">
+                  Opcional. Si lo completas, se mostrara para llamar o escribir.
+                </p>
+              </div>
+
+              <label className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={formData.usaWhatsapp}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      usaWhatsapp: e.target.checked,
+                    }))
+                  }
+                  className="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <span>Este numero tiene WhatsApp</span>
+              </label>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-900">
                   Descripcion *
                 </label>
                 <textarea
@@ -520,6 +565,9 @@ export default function AdminEventosPage() {
                 {normalizeAdminEventCategory(evento.categoria)}
               </div>
               <p className="mb-1 text-sm text-slate-500">{evento.ubicacion}</p>
+              {evento.telefono && (
+                <p className="mb-1 text-sm text-slate-500">{evento.telefono}</p>
+              )}
               <p className="mb-4 line-clamp-2 text-sm text-slate-500">
                 {evento.descripcion}
               </p>
