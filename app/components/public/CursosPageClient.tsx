@@ -126,7 +126,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
         ]}
       />
 
-      <div className="mx-auto max-w-6xl px-6 py-16">
+      <div className="mx-auto max-w-7xl px-6 py-16">
         <h1 className="text-3xl font-bold text-gray-900">Cursos y Clases</h1>
         <p className="mt-2 text-gray-600">
           Descubri propuestas de aprendizaje, talleres y clases disponibles en la ciudad
@@ -154,7 +154,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
             </p>
           </div>
         ) : (
-          <div className="mt-8 grid gap-6 md:grid-cols-2">
+          <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {cursosFiltrados.map((curso) => (
               <div
                 key={curso.id}

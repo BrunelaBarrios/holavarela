@@ -287,16 +287,10 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     )
   )
 
-  const serviciosAgrupados = useMemo(() => {
-    return servicios.reduce<Record<string, Servicio[]>>((acc, servicio) => {
-      const categoria = servicio.categoria?.trim() || "Otros"
-      if (!acc[categoria]) {
-        acc[categoria] = []
-      }
-      acc[categoria].push(servicio)
-      return acc
-    }, {})
-  }, [servicios])
+  const visibleServicios = useMemo(() => servicios.slice(0, 8), [servicios])
+  const visibleEventos = useMemo(() => eventos.slice(0, 8), [eventos])
+  const visibleCursos = useMemo(() => cursos.slice(0, 8), [cursos])
+  const visibleInstituciones = useMemo(() => instituciones.slice(0, 10), [instituciones])
 
   const weather = initialData.weather
   const weatherLabel = weather ? WEATHER_LABELS[weather.weatherCode] || "Clima actual" : null
@@ -1262,7 +1256,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       onClick={() => setSelectedComercio(business)}
                       className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
                     >
-                        Ver más
+                            Ver mas
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
@@ -1298,20 +1292,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               Todavia no hay servicios cargados.
             </div>
           ) : (
-            <div className="space-y-10">
-              {Object.entries(serviciosAgrupados).map(([categoria, items]) => (
-                <section key={categoria}>
-                  <div className="mb-5 flex items-center gap-3">
-                    <div className="h-px flex-1 bg-amber-100" />
-                    <h3 className="rounded-full bg-amber-50 px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-amber-700">
-                      {categoria}
-                    </h3>
-                    <div className="h-px flex-1 bg-amber-100" />
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-                    {items.map((servicio) => (
-                      <div
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+              {visibleServicios.map((servicio) => (
+                <div
                         key={servicio.id}
                         className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"
                       >
@@ -1327,6 +1310,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         )}
 
                         <div className="p-5">
+                          {servicio.categoria && (
+                            <div className="mb-3 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                              {servicio.categoria}
+                            </div>
+                          )}
+
                           <h3 className="text-xl font-semibold text-slate-900">
                             {servicio.nombre}
                           </h3>
@@ -1370,9 +1359,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           </button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </section>
               ))}
             </div>
           )}
@@ -1402,8 +1388,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {eventos.map((event) => (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+            {visibleEventos.map((event) => (
               <div
                 key={event.id}
                 className="overflow-hidden rounded-[28px] border border-white/80 bg-white/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)]"
@@ -1413,7 +1399,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     <OptimizedImage
                       src={event.imagen}
                       alt={event.titulo}
-                      sizes="(max-width: 1024px) 100vw, 33vw"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
                       className="object-cover"
                     />
                   </div>
@@ -1478,8 +1464,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               Todavia no hay cursos o clases cargados.
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {cursos.map((curso) => (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+              {visibleCursos.map((curso) => (
                 <div
                   key={curso.id}
                   className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]"
@@ -1489,7 +1475,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       <OptimizedImage
                         src={curso.imagen}
                         alt={curso.nombre}
-                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
                         className="object-cover"
                       />
                     </div>
@@ -1547,8 +1533,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 Todavía no hay instituciones cargadas.
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {instituciones.map((institucion) => (
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+              {visibleInstituciones.map((institucion) => (
                 <div
                   key={institucion.id}
                   className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(6,182,212,0.35)]"
@@ -1558,7 +1544,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       <OptimizedImage
                         src={institucion.foto}
                         alt={institucion.nombre}
-                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 20vw"
                         className="object-cover"
                       />
                     </div>

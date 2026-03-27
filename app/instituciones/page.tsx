@@ -81,7 +81,7 @@ export default function InstitucionesPage() {
         ]}
       />
 
-      <div className="mx-auto max-w-6xl px-6 py-16">
+      <div className="mx-auto max-w-7xl px-6 py-16">
         <h1 className="text-3xl font-bold text-gray-900">Instituciones</h1>
         <p className="mt-2 text-gray-600">
           Conocé instituciones y espacios de referencia en la ciudad
@@ -109,7 +109,7 @@ export default function InstitucionesPage() {
             </p>
           </div>
         ) : (
-          <div className="mt-8 grid gap-6 md:grid-cols-2">
+          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {institucionesFiltradas.map((institucion) => (
               <div
                 key={institucion.id}

@@ -129,7 +129,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
         ]}
       />
 
-      <div className="mx-auto max-w-6xl px-6 py-16">
+      <div className="mx-auto max-w-7xl px-6 py-16">
         <h1 className="text-3xl font-bold text-gray-900">Eventos</h1>
         <p className="mt-2 text-gray-600">
           Descubri los proximos eventos de Hola Varela
@@ -174,7 +174,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
             </p>
           </div>
         ) : (
-          <div className="mt-8 grid gap-6 md:grid-cols-2">
+          <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {eventosFiltrados.map((evento) => (
               <div
                 key={evento.id}

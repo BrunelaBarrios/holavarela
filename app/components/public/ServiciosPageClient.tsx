@@ -152,7 +152,7 @@ export function ServiciosPageClient({
         ]}
       />
 
-      <div className="mx-auto max-w-6xl px-6 py-16">
+      <div className="mx-auto max-w-7xl px-6 py-16">
         <h1 className="text-3xl font-bold text-gray-900">Servicios y Profesionales</h1>
         <p className="mt-2 text-gray-600">
           Profesionales, alojamientos y otros servicios disponibles en la ciudad
@@ -191,7 +191,7 @@ export function ServiciosPageClient({
                   <div className="h-px flex-1 bg-amber-100" />
                 </div>
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
                   {items.map((servicio) => (
                     <div
                       key={servicio.id}
