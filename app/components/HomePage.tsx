@@ -967,22 +967,24 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   </p>
 
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <ContactActionLink
-                    href={getContactHref(
-                      selectedCurso.contacto,
-                      selectedCurso.usa_whatsapp
-                    )}
-                    mode={selectedCurso.usa_whatsapp === false ? "phone" : "whatsapp"}
-                    section="cursos"
-                    itemId={String(selectedCurso.id)}
-                    itemTitle={selectedCurso.nombre}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
-                  >
-                    <Phone className="h-4 w-4" />
-                    {getContactLabel(selectedCurso.usa_whatsapp)}
-                  </ContactActionLink>
+                  {selectedCurso.contacto?.trim() ? (
+                    <ContactActionLink
+                      href={getContactHref(
+                        selectedCurso.contacto,
+                        selectedCurso.usa_whatsapp
+                      )}
+                      mode={selectedCurso.usa_whatsapp === false ? "phone" : "whatsapp"}
+                      section="cursos"
+                      itemId={String(selectedCurso.id)}
+                      itemTitle={selectedCurso.nombre}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+                    >
+                      <Phone className="h-4 w-4" />
+                      {getContactLabel(selectedCurso.usa_whatsapp)}
+                    </ContactActionLink>
+                  ) : null}
 
                   <button
                     type="button"
@@ -1495,9 +1497,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     <button
                       type="button"
                       onClick={() => setSelectedCurso(curso)}
-                      className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-500"
+                      className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
                     >
-                        Ver más
+                      Ver más
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>

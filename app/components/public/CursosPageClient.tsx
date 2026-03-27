@@ -84,7 +84,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
         actions={
           selectedCurso ? (
             <>
-              {selectedCurso.contacto ? (
+              {selectedCurso.contacto?.trim() ? (
                 <ContactActionLink
                   href={getContactHref(
                     selectedCurso.contacto,
@@ -192,19 +192,21 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                       <ArrowRight className="h-4 w-4" />
                     </button>
 
-                    <ContactActionLink
-                      href={getContactHref(curso.contacto, curso.usa_whatsapp)}
-                      mode={curso.usa_whatsapp === false ? "phone" : "whatsapp"}
-                      section="cursos"
-                      itemId={String(curso.id)}
-                      itemTitle={curso.nombre}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
-                    >
-                      <Phone className="h-4 w-4" />
-                      {curso.usa_whatsapp === false ? "Llamar" : "Contactar"}
-                    </ContactActionLink>
+                    {curso.contacto?.trim() ? (
+                      <ContactActionLink
+                        href={getContactHref(curso.contacto, curso.usa_whatsapp)}
+                        mode={curso.usa_whatsapp === false ? "phone" : "whatsapp"}
+                        section="cursos"
+                        itemId={String(curso.id)}
+                        itemTitle={curso.nombre}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
+                      >
+                        <Phone className="h-4 w-4" />
+                        {curso.usa_whatsapp === false ? "Llamar" : "Contactar"}
+                      </ContactActionLink>
+                    ) : null}
 
                     <ShareButton
                       title={curso.nombre}
