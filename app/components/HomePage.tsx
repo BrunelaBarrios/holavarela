@@ -1388,7 +1388,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             {visibleEventos.map((event) => (
               <div
                 key={event.id}
@@ -1399,7 +1399,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     <OptimizedImage
                       src={event.imagen}
                       alt={event.titulo}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                      sizes="(max-width: 1024px) 100vw, 33vw"
                       className="object-cover"
                     />
                   </div>
