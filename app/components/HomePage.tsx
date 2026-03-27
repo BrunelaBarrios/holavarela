@@ -279,13 +279,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [contactLeadStatus, setContactLeadStatus] = useState("")
   const [contactLeadLoading, setContactLeadLoading] = useState(false)
   const [isContactLeadOpen, setIsContactLeadOpen] = useState(false)
-  const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(() =>
-    getInitialWelcomeHighlight(
-      initialData.featuredBusinesses,
-      initialData.allServicios,
-      initialData.allCursos
-    )
-  )
+  const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(null)
 
   const visibleServicios = useMemo(() => servicios.slice(0, 8), [servicios])
   const visibleEventos = useMemo(() => eventos.slice(0, 8), [eventos])
@@ -326,6 +320,20 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       window.removeEventListener("storage", loadRadioConfig)
     }
   }, [])
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setWelcomeHighlight(
+        getInitialWelcomeHighlight(
+          initialData.featuredBusinesses,
+          initialData.allServicios,
+          initialData.allCursos
+        )
+      )
+    }, 15000)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [initialData.allCursos, initialData.allServicios, initialData.featuredBusinesses])
 
   const WeatherIcon = useMemo(() => {
     if (!weather) return CloudSun
