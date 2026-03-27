@@ -88,10 +88,10 @@ export default async function Page() {
 
   const initialData: HomePageData = {
     featuredBusinesses: featuredBusinesses || [],
-    eventos: (eventosData || []).slice(0, 6),
+    eventos: (eventosData || []).slice(0, 8),
     cursos: cursos || [],
     servicios: (servicios || []).slice(0, 8),
-    instituciones: (instituciones || []).slice(0, 6),
+    instituciones: (instituciones || []).slice(0, 10),
     allCursos: cursos || [],
     allServicios: servicios || [],
     sobreVarela: sobreVarelaData
