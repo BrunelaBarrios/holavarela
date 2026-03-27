@@ -2,7 +2,7 @@ export const ADMIN_SESSION_KEY = "guia-varela-admin-session"
 
 export const ADMIN_DEFAULT_CREDENTIALS = {
   username: "admin",
-  password: "varela2026",
+  password: "333Varela2026",
   name: "Superadministrador",
   role: "superadmin" as const,
 }
