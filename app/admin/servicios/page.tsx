@@ -62,6 +62,7 @@ export default function AdminServiciosPage() {
   const [loading, setLoading] = useState(false)
   const [saveError, setSaveError] = useState("")
   const [deletingServicio, setDeletingServicio] = useState<Servicio | null>(null)
+  const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
 
   const cargarServicios = async () => {
     const [
@@ -116,6 +117,7 @@ export default function AdminServiciosPage() {
     setEditingServicio(null)
     setIsFormOpen(false)
     setSaveError("")
+    setSubmitMode("publish")
   }
 
   const handleEdit = (servicio: Servicio) => {
@@ -180,7 +182,10 @@ export default function AdminServiciosPage() {
   }
 
   const toggleVisibility = async (servicio: Servicio) => {
-    const nextEstado = servicio.estado === "oculto" ? "activo" : "oculto"
+    const nextEstado =
+      servicio.estado === "oculto" || servicio.estado === "borrador"
+        ? "activo"
+        : "oculto"
 
     const { error } = await supabase
       .from("servicios")
@@ -199,7 +204,12 @@ export default function AdminServiciosPage() {
     )
 
     await logAdminActivity({
-      action: nextEstado === "activo" ? "Mostrar" : "Ocultar",
+      action:
+        nextEstado === "activo"
+          ? servicio.estado === "borrador"
+            ? "Publicar borrador"
+            : "Mostrar"
+          : "Ocultar",
       section: "Servicios",
       target: servicio.nombre,
     })
@@ -223,8 +233,9 @@ export default function AdminServiciosPage() {
     e.preventDefault()
     setLoading(true)
     setSaveError("")
+    const isDraft = submitMode === "draft"
 
-    if (!editingServicio && !formData.imagen) {
+    if (!isDraft && !editingServicio && !formData.imagen) {
       setSaveError("Tenes que cargar una foto para crear un servicio.")
       setLoading(false)
       return
@@ -239,7 +250,11 @@ export default function AdminServiciosPage() {
       direccion: formData.direccion || null,
       imagen: formData.imagen || null,
       destacado: editingServicio?.destacado ?? false,
-      estado: editingServicio?.estado || "activo",
+      estado: isDraft
+        ? "borrador"
+        : editingServicio?.estado === "oculto"
+          ? "oculto"
+          : "activo",
       usa_whatsapp: formData.usa_whatsapp,
     }
 
@@ -256,9 +271,9 @@ export default function AdminServiciosPage() {
       }
 
       await logAdminActivity({
-        action: "Editar",
+        action: isDraft ? "Guardar borrador" : "Editar",
         section: "Servicios",
-        target: formData.nombre,
+        target: formData.nombre || "Sin nombre",
       })
     } else {
       const { error } = await supabase.from("servicios").insert([payload])
@@ -270,9 +285,9 @@ export default function AdminServiciosPage() {
       }
 
       await logAdminActivity({
-        action: "Crear",
+        action: isDraft ? "Crear borrador" : "Crear",
         section: "Servicios",
-        target: formData.nombre,
+        target: formData.nombre || "Sin nombre",
       })
     }
 
@@ -505,6 +520,7 @@ export default function AdminServiciosPage() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="submit"
+                  onClick={() => setSubmitMode("publish")}
                   disabled={loading}
                   className="flex-1 rounded-xl bg-amber-600 py-3 font-medium text-white transition hover:bg-amber-500 disabled:opacity-60"
                 >
@@ -512,7 +528,17 @@ export default function AdminServiciosPage() {
                     ? "Guardando..."
                     : editingServicio
                       ? "Guardar Cambios"
-                      : "Agregar Servicio"}
+                      : "Guardar y publicar"}
+                </button>
+
+                <button
+                  type="submit"
+                  formNoValidate
+                  onClick={() => setSubmitMode("draft")}
+                  disabled={loading}
+                  className="rounded-xl border border-slate-200 px-6 py-3 text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                >
+                  Guardar borrador
                 </button>
 
                 <button
@@ -553,12 +579,18 @@ export default function AdminServiciosPage() {
 
                 <div
                   className={`rounded-full px-3 py-1 text-xs font-medium ${
-                    servicio.estado === "oculto"
-                      ? "bg-slate-200 text-slate-700"
-                      : "bg-emerald-50 text-emerald-700"
+                    servicio.estado === "borrador"
+                      ? "bg-amber-100 text-amber-700"
+                      : servicio.estado === "oculto"
+                        ? "bg-slate-200 text-slate-700"
+                        : "bg-emerald-50 text-emerald-700"
                   }`}
                 >
-                  {servicio.estado === "oculto" ? "oculto" : "visible"}
+                  {servicio.estado === "borrador"
+                    ? "borrador"
+                    : servicio.estado === "oculto"
+                      ? "oculto"
+                      : "visible"}
                 </div>
               </div>
 
@@ -602,11 +634,17 @@ export default function AdminServiciosPage() {
               </div>
 
               <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
-                <button
-                  onClick={() => toggleVisibility(servicio)}
-                  className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
-                  title={servicio.estado === "oculto" ? "Mostrar" : "Ocultar"}
-                >
+                  <button
+                    onClick={() => toggleVisibility(servicio)}
+                    className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
+                    title={
+                      servicio.estado === "borrador"
+                        ? "Publicar borrador"
+                        : servicio.estado === "oculto"
+                          ? "Mostrar"
+                          : "Ocultar"
+                    }
+                  >
                   {servicio.estado === "oculto" ? (
                     <Eye className="h-4 w-4" />
                   ) : (

@@ -42,6 +42,7 @@ export default function AdminCursosPage() {
   const [loading, setLoading] = useState(false)
   const [saveError, setSaveError] = useState("")
   const [deletingCurso, setDeletingCurso] = useState<Curso | null>(null)
+  const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
 
   const cargarCursos = async () => {
     const [
@@ -96,6 +97,7 @@ export default function AdminCursosPage() {
     setEditingCurso(null)
     setIsFormOpen(false)
     setSaveError("")
+    setSubmitMode("publish")
   }
 
   const toggleFeatured = async (curso: Curso) => {
@@ -123,7 +125,10 @@ export default function AdminCursosPage() {
   }
 
   const toggleVisibility = async (curso: Curso) => {
-    const nextEstado = curso.estado === "oculto" ? "activo" : "oculto"
+    const nextEstado =
+      curso.estado === "oculto" || curso.estado === "borrador"
+        ? "activo"
+        : "oculto"
 
     const { error } = await supabase
       .from("cursos")
@@ -142,7 +147,12 @@ export default function AdminCursosPage() {
     )
 
     await logAdminActivity({
-      action: nextEstado === "activo" ? "Mostrar" : "Ocultar",
+      action:
+        nextEstado === "activo"
+          ? curso.estado === "borrador"
+            ? "Publicar borrador"
+            : "Mostrar"
+          : "Ocultar",
       section: "Cursos",
       target: curso.nombre,
     })
@@ -152,8 +162,9 @@ export default function AdminCursosPage() {
     e.preventDefault()
     setLoading(true)
     setSaveError("")
+    const isDraft = submitMode === "draft"
 
-    if (!editingCurso && !formData.imagen) {
+    if (!isDraft && !editingCurso && !formData.imagen) {
       setSaveError("Tenes que cargar una foto para crear un curso o clase.")
       setLoading(false)
       return
@@ -166,7 +177,11 @@ export default function AdminCursosPage() {
       contacto: formData.contacto,
       imagen: formData.imagen || null,
       destacado: editingCurso?.destacado ?? false,
-      estado: editingCurso?.estado || "activo",
+      estado: isDraft
+        ? "borrador"
+        : editingCurso?.estado === "oculto"
+          ? "oculto"
+          : "activo",
       usa_whatsapp: formData.usa_whatsapp,
     }
 
@@ -183,9 +198,9 @@ export default function AdminCursosPage() {
       }
 
       await logAdminActivity({
-        action: "Editar",
+        action: isDraft ? "Guardar borrador" : "Editar",
         section: "Cursos",
-        target: formData.nombre,
+        target: formData.nombre || "Sin nombre",
       })
     } else {
       const { error } = await supabase.from("cursos").insert([payload])
@@ -197,9 +212,9 @@ export default function AdminCursosPage() {
       }
 
       await logAdminActivity({
-        action: "Crear",
+        action: isDraft ? "Crear borrador" : "Crear",
         section: "Cursos",
-        target: formData.nombre,
+        target: formData.nombre || "Sin nombre",
       })
     }
 
@@ -433,6 +448,7 @@ export default function AdminCursosPage() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="submit"
+                  onClick={() => setSubmitMode("publish")}
                   disabled={loading}
                   className="flex-1 rounded-xl bg-violet-600 py-3 font-medium text-white transition hover:bg-violet-500 disabled:opacity-60"
                 >
@@ -440,7 +456,17 @@ export default function AdminCursosPage() {
                     ? "Guardando..."
                     : editingCurso
                       ? "Guardar Cambios"
-                      : "Agregar Curso/Clase"}
+                      : "Guardar y publicar"}
+                </button>
+
+                <button
+                  type="submit"
+                  formNoValidate
+                  onClick={() => setSubmitMode("draft")}
+                  disabled={loading}
+                  className="rounded-xl border border-slate-200 px-6 py-3 text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                >
+                  Guardar borrador
                 </button>
 
                 <button
@@ -475,12 +501,18 @@ export default function AdminCursosPage() {
                 <h3 className="text-xl font-semibold text-slate-900">{curso.nombre}</h3>
                 <div
                   className={`rounded-full px-3 py-1 text-xs font-medium ${
-                    curso.estado === "oculto"
-                      ? "bg-slate-200 text-slate-700"
-                      : "bg-emerald-50 text-emerald-700"
+                    curso.estado === "borrador"
+                      ? "bg-amber-100 text-amber-700"
+                      : curso.estado === "oculto"
+                        ? "bg-slate-200 text-slate-700"
+                        : "bg-emerald-50 text-emerald-700"
                   }`}
                 >
-                  {curso.estado === "oculto" ? "oculto" : "visible"}
+                  {curso.estado === "borrador"
+                    ? "borrador"
+                    : curso.estado === "oculto"
+                      ? "oculto"
+                      : "visible"}
                 </div>
               </div>
               <p className="mt-3 line-clamp-3 text-sm leading-7 text-slate-500">
@@ -516,11 +548,17 @@ export default function AdminCursosPage() {
               </div>
 
               <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
-                <button
-                  onClick={() => toggleVisibility(curso)}
-                  className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
-                  title={curso.estado === "oculto" ? "Mostrar" : "Ocultar"}
-                >
+                  <button
+                    onClick={() => toggleVisibility(curso)}
+                    className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
+                    title={
+                      curso.estado === "borrador"
+                        ? "Publicar borrador"
+                        : curso.estado === "oculto"
+                          ? "Mostrar"
+                          : "Ocultar"
+                    }
+                  >
                   {curso.estado === "oculto" ? (
                     <Eye className="h-4 w-4" />
                   ) : (

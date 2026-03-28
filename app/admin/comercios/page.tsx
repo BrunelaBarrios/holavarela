@@ -53,6 +53,7 @@ export default function AdminComerciosPage() {
   const [loading, setLoading] = useState(false)
   const [saveError, setSaveError] = useState("")
   const [deletingComercio, setDeletingComercio] = useState<Comercio | null>(null)
+  const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
 
   const comerciosVisibles = useMemo(
     () => comercios.slice(0, visibleCount),
@@ -112,6 +113,7 @@ export default function AdminComerciosPage() {
     setEditingComercio(null)
     setIsFormOpen(false)
     setSaveError("")
+    setSubmitMode("publish")
   }
 
   const handleEdit = (comercio: Comercio) => {
@@ -196,7 +198,10 @@ export default function AdminComerciosPage() {
   }
 
   const toggleVisibility = async (comercio: Comercio) => {
-    const nextEstado = comercio.estado === "oculto" ? "activo" : "oculto"
+    const nextEstado =
+      comercio.estado === "oculto" || comercio.estado === "borrador"
+        ? "activo"
+        : "oculto"
 
     const { error } = await supabase
       .from("comercios")
@@ -215,7 +220,12 @@ export default function AdminComerciosPage() {
     )
 
     await logAdminActivity({
-      action: nextEstado === "activo" ? "Mostrar" : "Ocultar",
+      action:
+        nextEstado === "activo"
+          ? comercio.estado === "borrador"
+            ? "Publicar borrador"
+            : "Mostrar"
+          : "Ocultar",
       section: "Comercios",
       target: comercio.nombre,
     })
@@ -225,8 +235,9 @@ export default function AdminComerciosPage() {
     e.preventDefault()
     setLoading(true)
     setSaveError("")
+    const isDraft = submitMode === "draft"
 
-    if (!editingComercio && !formData.imagen_url) {
+    if (!isDraft && !editingComercio && !formData.imagen_url) {
       setSaveError("Tenes que cargar una foto para crear un comercio.")
       setLoading(false)
       return
@@ -238,7 +249,11 @@ export default function AdminComerciosPage() {
       telefono: formData.telefono || null,
       descripcion: formData.descripcion || null,
       imagen_url: formData.imagen_url || null,
-      estado: editingComercio?.estado || "activo",
+      estado: isDraft
+        ? "borrador"
+        : editingComercio?.estado === "oculto"
+          ? "oculto"
+          : "activo",
       destacado: editingComercio?.destacado ?? false,
       usa_whatsapp: formData.usa_whatsapp,
     }
@@ -257,9 +272,9 @@ export default function AdminComerciosPage() {
       }
 
       await logAdminActivity({
-        action: "Editar",
+        action: isDraft ? "Guardar borrador" : "Editar",
         section: "Comercios",
-        target: formData.nombre,
+        target: formData.nombre || "Sin nombre",
       })
     } else {
       const { error } = await supabase.from("comercios").insert([payload])
@@ -272,9 +287,9 @@ export default function AdminComerciosPage() {
       }
 
       await logAdminActivity({
-        action: "Crear",
+        action: isDraft ? "Crear borrador" : "Crear",
         section: "Comercios",
-        target: formData.nombre,
+        target: formData.nombre || "Sin nombre",
       })
     }
 
@@ -451,6 +466,7 @@ export default function AdminComerciosPage() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="submit"
+                  onClick={() => setSubmitMode("publish")}
                   disabled={loading}
                   className="flex-1 rounded-xl bg-blue-600 py-3 font-medium text-white transition hover:bg-blue-500 disabled:opacity-60"
                 >
@@ -458,7 +474,17 @@ export default function AdminComerciosPage() {
                     ? "Guardando..."
                     : editingComercio
                       ? "Guardar Cambios"
-                      : "Agregar Comercio"}
+                      : "Guardar y publicar"}
+                </button>
+
+                <button
+                  type="submit"
+                  formNoValidate
+                  onClick={() => setSubmitMode("draft")}
+                  disabled={loading}
+                  className="rounded-xl border border-slate-200 px-6 py-3 text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                >
+                  Guardar borrador
                 </button>
 
                 <button
@@ -506,12 +532,18 @@ export default function AdminComerciosPage() {
 
                   <div
                     className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      comercio.estado === "oculto"
-                        ? "bg-slate-200 text-slate-700"
-                        : "bg-blue-50 text-blue-600"
+                      comercio.estado === "borrador"
+                        ? "bg-amber-100 text-amber-700"
+                        : comercio.estado === "oculto"
+                          ? "bg-slate-200 text-slate-700"
+                          : "bg-blue-50 text-blue-600"
                     }`}
                   >
-                    {comercio.estado === "oculto" ? "oculto" : "visible"}
+                    {comercio.estado === "borrador"
+                      ? "borrador"
+                      : comercio.estado === "oculto"
+                        ? "oculto"
+                        : "visible"}
                   </div>
                 </div>
 
@@ -546,7 +578,13 @@ export default function AdminComerciosPage() {
                   <button
                     onClick={() => toggleVisibility(comercio)}
                     className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
-                    title={comercio.estado === "oculto" ? "Mostrar" : "Ocultar"}
+                    title={
+                      comercio.estado === "borrador"
+                        ? "Publicar borrador"
+                        : comercio.estado === "oculto"
+                          ? "Mostrar"
+                          : "Ocultar"
+                    }
                   >
                     {comercio.estado === "oculto" ? (
                       <Eye className="h-4 w-4" />

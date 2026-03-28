@@ -65,6 +65,7 @@ export default function AdminEventosPage() {
   const [loading, setLoading] = useState(false)
   const [saveError, setSaveError] = useState("")
   const [deletingEvento, setDeletingEvento] = useState<Evento | null>(null)
+  const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
   const today = new Date().toISOString().slice(0, 10)
 
   const cargarEventos = async () => {
@@ -108,6 +109,7 @@ export default function AdminEventosPage() {
     setEditingEvento(null)
     setIsFormOpen(false)
     setSaveError("")
+    setSubmitMode("publish")
   }
 
   const handleEdit = (evento: Evento) => {
@@ -161,7 +163,10 @@ export default function AdminEventosPage() {
   }
 
   const toggleVisibility = async (evento: Evento) => {
-    const nextEstado = evento.estado === "oculto" ? "activo" : "oculto"
+    const nextEstado =
+      evento.estado === "oculto" || evento.estado === "borrador"
+        ? "activo"
+        : "oculto"
 
     const { error } = await supabase
       .from("eventos")
@@ -180,7 +185,12 @@ export default function AdminEventosPage() {
     )
 
     await logAdminActivity({
-      action: nextEstado === "activo" ? "Mostrar" : "Ocultar",
+      action:
+        nextEstado === "activo"
+          ? evento.estado === "borrador"
+            ? "Publicar borrador"
+            : "Mostrar"
+          : "Ocultar",
       section: "Eventos",
       target: evento.titulo,
     })
@@ -190,20 +200,21 @@ export default function AdminEventosPage() {
     e.preventDefault()
     setLoading(true)
     setSaveError("")
+    const isDraft = submitMode === "draft"
 
-    if (!editingEvento && !formData.imagen) {
+    if (!isDraft && !editingEvento && !formData.imagen) {
       setSaveError("Tenes que cargar una foto para crear un evento.")
       setLoading(false)
       return
     }
 
-    if (formData.fecha < today) {
+    if (!isDraft && formData.fecha < today) {
       setSaveError("La fecha del evento no puede ser anterior a hoy.")
       setLoading(false)
       return
     }
 
-    if (formData.fechaFin && formData.fechaFin < formData.fecha) {
+    if (!isDraft && formData.fechaFin && formData.fechaFin < formData.fecha) {
       setSaveError("La fecha final no puede ser anterior a la fecha inicial.")
       setLoading(false)
       return
@@ -218,7 +229,11 @@ export default function AdminEventosPage() {
       telefono: formData.telefono || null,
       descripcion: formData.descripcion,
       imagen: formData.imagen || null,
-      estado: editingEvento?.estado || "activo",
+      estado: isDraft
+        ? "borrador"
+        : editingEvento?.estado === "oculto"
+          ? "oculto"
+          : "activo",
       usa_whatsapp: formData.usaWhatsapp,
     }
 
@@ -235,9 +250,9 @@ export default function AdminEventosPage() {
       }
 
       await logAdminActivity({
-        action: "Editar",
+        action: isDraft ? "Guardar borrador" : "Editar",
         section: "Eventos",
-        target: formData.titulo,
+        target: formData.titulo || "Sin titulo",
       })
     } else {
       const { error } = await supabase.from("eventos").insert([payload])
@@ -249,9 +264,9 @@ export default function AdminEventosPage() {
       }
 
       await logAdminActivity({
-        action: "Crear",
+        action: isDraft ? "Crear borrador" : "Crear",
         section: "Eventos",
-        target: formData.titulo,
+        target: formData.titulo || "Sin titulo",
       })
     }
 
@@ -501,6 +516,7 @@ export default function AdminEventosPage() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="submit"
+                  onClick={() => setSubmitMode("publish")}
                   disabled={loading}
                   className="flex-1 rounded-xl bg-emerald-600 py-3 font-medium text-white transition hover:bg-emerald-500 disabled:opacity-60"
                 >
@@ -508,7 +524,17 @@ export default function AdminEventosPage() {
                     ? "Guardando..."
                     : editingEvento
                       ? "Guardar Cambios"
-                      : "Agregar Evento"}
+                      : "Guardar y publicar"}
+                </button>
+
+                <button
+                  type="submit"
+                  formNoValidate
+                  onClick={() => setSubmitMode("draft")}
+                  disabled={loading}
+                  className="rounded-xl border border-slate-200 px-6 py-3 text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+                >
+                  Guardar borrador
                 </button>
 
                 <button
@@ -549,12 +575,18 @@ export default function AdminEventosPage() {
 
                 <div
                   className={`rounded-full px-3 py-1 text-xs font-medium ${
-                    evento.estado === "oculto"
-                      ? "bg-slate-200 text-slate-700"
-                      : "bg-emerald-50 text-emerald-700"
+                    evento.estado === "borrador"
+                      ? "bg-amber-100 text-amber-700"
+                      : evento.estado === "oculto"
+                        ? "bg-slate-200 text-slate-700"
+                        : "bg-emerald-50 text-emerald-700"
                   }`}
                 >
-                  {evento.estado === "oculto" ? "oculto" : "visible"}
+                  {evento.estado === "borrador"
+                    ? "borrador"
+                    : evento.estado === "oculto"
+                      ? "oculto"
+                      : "visible"}
                 </div>
               </div>
 
@@ -578,11 +610,17 @@ export default function AdminEventosPage() {
               </div>
 
               <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
-                <button
-                  onClick={() => toggleVisibility(evento)}
-                  className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
-                  title={evento.estado === "oculto" ? "Mostrar" : "Ocultar"}
-                >
+                  <button
+                    onClick={() => toggleVisibility(evento)}
+                    className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
+                    title={
+                      evento.estado === "borrador"
+                        ? "Publicar borrador"
+                        : evento.estado === "oculto"
+                          ? "Mostrar"
+                          : "Ocultar"
+                    }
+                  >
                   {evento.estado === "oculto" ? (
                     <Eye className="h-4 w-4" />
                   ) : (
