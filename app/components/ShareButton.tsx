@@ -33,7 +33,11 @@ export function ShareButton({
   const handleShare = async () => {
     try {
       await recordShare(section, itemId, title)
+    } catch (error) {
+      console.error("No se pudo registrar el compartido:", error)
+    }
 
+    try {
       if (navigator.share) {
         await navigator.share({ title, text, url })
         return
