@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
 import { X } from "lucide-react"
 import { OptimizedImage } from "./OptimizedImage"
@@ -33,10 +33,39 @@ export function PublicDetailModal({
   meta = [],
   actions,
 }: PublicDetailModalProps) {
+  const [isImageZoomed, setIsImageZoomed] = useState(false)
+
   if (!open) return null
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4">
+      {isImageZoomed && imageSrc ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/92 p-4">
+          <button
+            type="button"
+            onClick={() => setIsImageZoomed(false)}
+            className="absolute right-4 top-4 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white"
+            aria-label="Cerrar imagen ampliada"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsImageZoomed(false)}
+            className="relative h-[88vh] w-full max-w-5xl overflow-hidden rounded-[28px] bg-white/5"
+          >
+            <OptimizedImage
+              src={imageSrc}
+              alt={imageAlt}
+              sizes="100vw"
+              priority
+              className="object-contain p-4"
+            />
+          </button>
+        </div>
+      ) : null}
+
       <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
         <button
           type="button"
@@ -50,15 +79,20 @@ export function PublicDetailModal({
         <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
             {imageSrc ? (
-              <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
-                <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] md:min-h-[380px]">
+              <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
+                <button
+                  type="button"
+                  onClick={() => setIsImageZoomed(true)}
+                  className="relative aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01]"
+                  aria-label="Ver imagen mas grande"
+                >
                   <OptimizedImage
                     src={imageSrc}
                     alt={imageAlt}
                     sizes="(max-width: 1024px) 100vw, 60vw"
-                    className="object-contain p-4"
+                    className="object-contain p-3 sm:p-4"
                   />
-                </div>
+                </button>
               </div>
             ) : (
               <div className="flex min-h-[320px] items-center justify-center text-slate-400">

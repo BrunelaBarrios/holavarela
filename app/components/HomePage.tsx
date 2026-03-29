@@ -285,6 +285,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [contactLeadLoading, setContactLeadLoading] = useState(false)
   const [isContactLeadOpen, setIsContactLeadOpen] = useState(false)
   const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(null)
+  const [zoomedImage, setZoomedImage] = useState<{ src: string; alt: string } | null>(null)
 
   const visibleServicios = useMemo(() => servicios.slice(0, 8), [servicios])
   const visibleEventos = useMemo(() => eventos.slice(0, 8), [eventos])
@@ -433,6 +434,34 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#f2f7f5_48%,#ffffff_100%)] text-slate-900">
+      {zoomedImage ? (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/92 p-4">
+          <button
+            type="button"
+            onClick={() => setZoomedImage(null)}
+            className="absolute right-4 top-4 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white"
+            aria-label="Cerrar imagen ampliada"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setZoomedImage(null)}
+            className="relative h-[88vh] w-full max-w-5xl overflow-hidden rounded-[28px] bg-white/5"
+            aria-label="Cerrar imagen ampliada"
+          >
+            <OptimizedImage
+              src={zoomedImage.src}
+              alt={zoomedImage.alt}
+              sizes="100vw"
+              priority
+              className="object-contain p-4"
+            />
+          </button>
+        </div>
+      ) : null}
+
       {welcomeHighlight && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/70 p-4">
           <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
@@ -448,15 +477,25 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr]">
                 <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {welcomeHighlight.image ? (
-                    <div className="relative flex min-h-[280px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[360px]">
-                      <div className="relative h-full min-h-[240px] w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] md:min-h-[320px]">
+                    <div className="flex min-h-[280px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[360px]">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setZoomedImage({
+                            src: welcomeHighlight.image || "",
+                            alt: welcomeHighlight.title,
+                          })
+                        }
+                        className="relative aspect-[4/5] w-full max-w-[360px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01]"
+                        aria-label="Ver imagen mas grande"
+                      >
                         <OptimizedImage
                           src={welcomeHighlight.image}
                           alt={welcomeHighlight.title}
                           sizes="(max-width: 768px) 100vw, 50vw"
-                          className="object-contain p-4"
+                          className="object-contain p-3 sm:p-4"
                         />
-                      </div>
+                      </button>
                     </div>
                   ) : (
                   <div className="flex min-h-[280px] items-center justify-center text-slate-400">
@@ -672,15 +711,25 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
                 <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {selectedComercio.imagen_url || selectedComercio.imagen ? (
-                    <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
-                      <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] md:min-h-[380px]">
+                    <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setZoomedImage({
+                            src: selectedComercio.imagen_url || selectedComercio.imagen || "",
+                            alt: selectedComercio.nombre,
+                          })
+                        }
+                        className="relative aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01]"
+                        aria-label="Ver imagen mas grande"
+                      >
                         <OptimizedImage
                           src={selectedComercio.imagen_url || selectedComercio.imagen || ""}
                           alt={selectedComercio.nombre}
                           sizes="(max-width: 1024px) 100vw, 60vw"
-                          className="object-contain p-4"
+                          className="object-contain p-3 sm:p-4"
                         />
-                      </div>
+                      </button>
                     </div>
                   ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
@@ -763,15 +812,25 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
                 <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {selectedServicio.imagen ? (
-                    <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
-                      <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] md:min-h-[380px]">
+                    <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setZoomedImage({
+                            src: selectedServicio.imagen,
+                            alt: selectedServicio.nombre,
+                          })
+                        }
+                        className="relative aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01]"
+                        aria-label="Ver imagen mas grande"
+                      >
                         <OptimizedImage
                           src={selectedServicio.imagen}
                           alt={selectedServicio.nombre}
                           sizes="(max-width: 1024px) 100vw, 60vw"
-                          className="object-contain p-4"
+                          className="object-contain p-3 sm:p-4"
                         />
-                      </div>
+                      </button>
                     </div>
                   ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
@@ -865,15 +924,25 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
                 <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {selectedEvento.imagen ? (
-                    <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
-                      <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] md:min-h-[380px]">
+                    <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setZoomedImage({
+                            src: selectedEvento.imagen,
+                            alt: selectedEvento.titulo,
+                          })
+                        }
+                        className="relative aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01]"
+                        aria-label="Ver imagen mas grande"
+                      >
                         <OptimizedImage
                           src={selectedEvento.imagen}
                           alt={selectedEvento.titulo}
                           sizes="(max-width: 1024px) 100vw, 60vw"
-                          className="object-contain p-4"
+                          className="object-contain p-3 sm:p-4"
                         />
-                      </div>
+                      </button>
                     </div>
                   ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
@@ -975,15 +1044,25 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
                 <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {selectedCurso.imagen ? (
-                    <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
-                      <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] md:min-h-[380px]">
+                    <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setZoomedImage({
+                            src: selectedCurso.imagen,
+                            alt: selectedCurso.nombre,
+                          })
+                        }
+                        className="relative aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01]"
+                        aria-label="Ver imagen mas grande"
+                      >
                         <OptimizedImage
                           src={selectedCurso.imagen}
                           alt={selectedCurso.nombre}
                           sizes="(max-width: 1024px) 100vw, 60vw"
-                          className="object-contain p-4"
+                          className="object-contain p-3 sm:p-4"
                         />
-                      </div>
+                      </button>
                     </div>
                   ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
@@ -1060,15 +1139,25 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                 {selectedInstitucion.foto ? (
-                  <div className="relative flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[420px]">
-                    <div className="relative h-full min-h-[280px] w-full overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] md:min-h-[380px]">
+                  <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setZoomedImage({
+                          src: selectedInstitucion.foto,
+                          alt: selectedInstitucion.nombre,
+                        })
+                      }
+                      className="relative aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01]"
+                      aria-label="Ver imagen mas grande"
+                    >
                       <OptimizedImage
                         src={selectedInstitucion.foto}
                         alt={selectedInstitucion.nombre}
                         sizes="(max-width: 1024px) 100vw, 60vw"
-                        className="object-contain p-4"
+                        className="object-contain p-3 sm:p-4"
                       />
-                    </div>
+                    </button>
                   </div>
                 ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
