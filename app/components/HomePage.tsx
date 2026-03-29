@@ -708,7 +708,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               <X className="h-5 w-5" />
             </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_0.55fr]">
                 <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {selectedComercio.imagen_url || selectedComercio.imagen ? (
                     <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
@@ -720,7 +720,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             alt: selectedComercio.nombre,
                           })
                         }
-                        className="relative aspect-[4/5] h-[320px] w-full max-w-[560px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[460px]"
+                        className="relative aspect-[4/5] h-[380px] w-full max-w-[680px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[560px]"
                         aria-label="Ver imagen mas grande"
                       >
                         <OptimizedImage
@@ -809,7 +809,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               <X className="h-5 w-5" />
             </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_0.55fr]">
                 <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {selectedServicio.imagen ? (
                     <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
@@ -821,7 +821,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             alt: selectedServicio.nombre,
                           })
                         }
-                        className="relative aspect-[4/5] h-[320px] w-full max-w-[560px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[460px]"
+                        className="relative aspect-[4/5] h-[380px] w-full max-w-[680px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[560px]"
                         aria-label="Ver imagen mas grande"
                       >
                         <OptimizedImage
@@ -921,7 +921,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               <X className="h-5 w-5" />
             </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_0.55fr]">
                 <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {selectedEvento.imagen ? (
                     <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
@@ -933,7 +933,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             alt: selectedEvento.titulo,
                           })
                         }
-                        className="relative aspect-[4/5] h-[320px] w-full max-w-[560px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[460px]"
+                        className="relative aspect-[4/5] h-[380px] w-full max-w-[680px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[560px]"
                         aria-label="Ver imagen mas grande"
                       >
                         <OptimizedImage
@@ -1041,7 +1041,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               <X className="h-5 w-5" />
             </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_0.55fr]">
                 <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {selectedCurso.imagen ? (
                     <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
@@ -1053,7 +1053,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             alt: selectedCurso.nombre,
                           })
                         }
-                        className="relative aspect-[4/5] h-[320px] w-full max-w-[560px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[460px]"
+                        className="relative aspect-[4/5] h-[380px] w-full max-w-[680px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[560px]"
                         aria-label="Ver imagen mas grande"
                       >
                         <OptimizedImage
@@ -1136,7 +1136,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               <X className="h-5 w-5" />
             </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_0.55fr]">
               <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                 {selectedInstitucion.foto ? (
                   <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
@@ -1148,7 +1148,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           alt: selectedInstitucion.nombre,
                         })
                       }
-                      className="relative aspect-[4/5] h-[320px] w-full max-w-[560px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[460px]"
+                      className="relative aspect-[4/5] h-[380px] w-full max-w-[680px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[560px]"
                       aria-label="Ver imagen mas grande"
                     >
                       <OptimizedImage

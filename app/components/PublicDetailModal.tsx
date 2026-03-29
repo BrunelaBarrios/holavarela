@@ -76,21 +76,21 @@ export function PublicDetailModal({
           <X className="h-5 w-5" />
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1.25fr_0.75fr]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_0.55fr]">
           <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
             {imageSrc ? (
-              <div className="flex min-h-[360px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[520px] md:p-6">
+              <div className="flex min-h-[420px] w-full items-center justify-center bg-slate-100 p-3 md:min-h-[620px] md:p-5">
                 <button
                   type="button"
                   onClick={() => setIsImageZoomed(true)}
-                  className="relative aspect-[4/5] h-[320px] w-full max-w-[560px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[460px]"
+                  className="relative aspect-[4/5] h-[380px] w-full max-w-[680px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[560px]"
                   aria-label="Ver imagen mas grande"
                 >
                   <OptimizedImage
                     src={imageSrc}
                     alt={imageAlt}
                     sizes="(max-width: 1024px) 100vw, 60vw"
-                    className="object-contain p-3 sm:p-4"
+                    className="object-contain p-2 sm:p-3"
                   />
                 </button>
               </div>
