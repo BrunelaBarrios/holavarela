@@ -493,7 +493,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           src={welcomeHighlight.image}
                           alt={welcomeHighlight.title}
                           sizes="(max-width: 768px) 100vw, 50vw"
-                          className="object-contain p-3 sm:p-4"
+                          className="object-cover"
                         />
                       </button>
                     </div>
@@ -727,7 +727,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           src={selectedComercio.imagen_url || selectedComercio.imagen || ""}
                           alt={selectedComercio.nombre}
                           sizes="(max-width: 1024px) 100vw, 60vw"
-                          className="object-contain p-3 sm:p-4"
+                          className="object-cover"
                         />
                       </button>
                     </div>

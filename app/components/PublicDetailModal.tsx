@@ -90,7 +90,7 @@ export function PublicDetailModal({
                     src={imageSrc}
                     alt={imageAlt}
                     sizes="(max-width: 1024px) 100vw, 60vw"
-                    className="object-contain p-2 sm:p-3"
+                    className="object-cover"
                   />
                 </button>
               </div>
