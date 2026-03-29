@@ -1718,26 +1718,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   )}
 
                   <div className="p-5">
-                    <div className="mb-3 inline-flex rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
-                    Institución
-                    </div>
-
                     <h3 className="text-[22px] font-semibold text-slate-900">
                       {institucion.nombre}
                     </h3>
-
-                    {institucion.descripcion && (
-                      <p className="mt-3 line-clamp-3 whitespace-pre-line text-base leading-7 text-slate-500">
-                        {institucion.descripcion}
-                      </p>
-                    )}
-
-                    {institucion.direccion && (
-                      <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
-                        <MapPin className="h-4 w-4" />
-                        <span>{institucion.direccion}</span>
-                      </div>
-                    )}
 
                     <button
                       type="button"

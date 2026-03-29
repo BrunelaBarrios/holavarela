@@ -160,31 +160,9 @@ export default function InstitucionesPage() {
                 )}
 
                 <div className="p-5">
-                  <div className="mb-3 inline-flex rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-700">
-                    Institución
-                  </div>
-
                   <h2 className="text-xl font-semibold text-gray-900">
                     {institucion.nombre}
                   </h2>
-
-                  {institucion.descripcion && (
-                    <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
-                      {institucion.descripcion}
-                    </p>
-                  )}
-
-                  {institucion.direccion && (
-                    <p className="mt-2 text-sm text-gray-600">
-                      Dirección: {institucion.direccion}
-                    </p>
-                  )}
-
-                  {institucion.telefono && (
-                    <p className="mt-1 text-sm text-gray-600">
-                      Teléfono: {institucion.telefono}
-                    </p>
-                  )}
 
                   <button
                     type="button"
