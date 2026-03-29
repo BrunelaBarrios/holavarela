@@ -66,7 +66,7 @@ export function PublicDetailModal({
         </div>
       ) : null}
 
-      <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
+      <div className="relative max-h-[90vh] w-full max-w-7xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
         <button
           type="button"
           onClick={onClose}
@@ -76,14 +76,14 @@ export function PublicDetailModal({
           <X className="h-5 w-5" />
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.25fr_0.75fr]">
           <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
             {imageSrc ? (
-              <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
+              <div className="flex min-h-[360px] w-full items-center justify-center bg-slate-100 p-4 md:min-h-[520px] md:p-6">
                 <button
                   type="button"
                   onClick={() => setIsImageZoomed(true)}
-                  className="relative aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01]"
+                  className="relative aspect-[4/5] h-[320px] w-full max-w-[560px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[460px]"
                   aria-label="Ver imagen mas grande"
                 >
                   <OptimizedImage

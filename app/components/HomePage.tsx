@@ -486,7 +486,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             alt: welcomeHighlight.title,
                           })
                         }
-                        className="relative aspect-[4/5] w-full max-w-[360px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01]"
+                        className="relative aspect-[4/5] h-[280px] w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[360px]"
                         aria-label="Ver imagen mas grande"
                       >
                         <OptimizedImage
@@ -720,7 +720,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             alt: selectedComercio.nombre,
                           })
                         }
-                        className="relative aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01]"
+                        className="relative aspect-[4/5] h-[320px] w-full max-w-[560px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[460px]"
                         aria-label="Ver imagen mas grande"
                       >
                         <OptimizedImage
@@ -821,7 +821,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             alt: selectedServicio.nombre,
                           })
                         }
-                        className="relative aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01]"
+                        className="relative aspect-[4/5] h-[320px] w-full max-w-[560px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[460px]"
                         aria-label="Ver imagen mas grande"
                       >
                         <OptimizedImage
@@ -933,7 +933,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             alt: selectedEvento.titulo,
                           })
                         }
-                        className="relative aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01]"
+                        className="relative aspect-[4/5] h-[320px] w-full max-w-[560px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[460px]"
                         aria-label="Ver imagen mas grande"
                       >
                         <OptimizedImage
@@ -1053,7 +1053,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             alt: selectedCurso.nombre,
                           })
                         }
-                        className="relative aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01]"
+                        className="relative aspect-[4/5] h-[320px] w-full max-w-[560px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[460px]"
                         aria-label="Ver imagen mas grande"
                       >
                         <OptimizedImage
@@ -1148,7 +1148,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           alt: selectedInstitucion.nombre,
                         })
                       }
-                      className="relative aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01]"
+                      className="relative aspect-[4/5] h-[320px] w-full max-w-[560px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[460px]"
                       aria-label="Ver imagen mas grande"
                     >
                       <OptimizedImage
