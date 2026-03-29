@@ -83,6 +83,20 @@ create table if not exists public.share_events (
   created_at timestamp with time zone default now()
 );
 
+alter table public.share_events enable row level security;
+
+create policy if not exists "Allow public insert on share_events"
+on public.share_events
+for insert
+to anon, authenticated
+with check (true);
+
+create policy if not exists "Allow public read on share_events"
+on public.share_events
+for select
+to anon, authenticated
+using (true);
+
 create table if not exists public.whatsapp_clicks (
   id bigint generated always as identity primary key,
   section text not null,
@@ -99,3 +113,26 @@ create table if not exists public.contacto_solicitudes (
   mensaje text not null,
   created_at timestamp with time zone default now()
 );
+
+create table if not exists public.event_likes (
+  id bigint generated always as identity primary key,
+  event_id text not null,
+  browser_key text not null,
+  event_title text,
+  created_at timestamp with time zone default now(),
+  constraint event_likes_event_browser_unique unique (event_id, browser_key)
+);
+
+alter table public.event_likes enable row level security;
+
+create policy if not exists "Allow public insert on event_likes"
+on public.event_likes
+for insert
+to anon, authenticated
+with check (true);
+
+create policy if not exists "Allow public read on event_likes"
+on public.event_likes
+for select
+to anon, authenticated
+using (true);

@@ -4,10 +4,12 @@ import Link from "next/link"
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 import { ContactActionLink } from "./ContactActionLink"
+import { EventLikeButton } from "./EventLikeButton"
 import { OptimizedImage } from "./OptimizedImage"
 import { MyTunerWidget } from "./MyTunerWidget"
 import { PublicHeader } from "./PublicHeader"
 import { formatEventDateRange } from "../lib/eventDates"
+import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
 import { buildHomePublicNav } from "../lib/publicNav"
 import { supabase } from "../supabase"
 import {
@@ -278,6 +280,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null)
   const [selectedCurso, setSelectedCurso] = useState<Curso | null>(null)
   const [selectedInstitucion, setSelectedInstitucion] = useState<Institucion | null>(null)
+  const [eventLikeCounts, setEventLikeCounts] = useState<Record<string, number>>({})
+  const [likedEvents, setLikedEvents] = useState<Record<string, boolean>>({})
+  const [likingEventId, setLikingEventId] = useState<string | null>(null)
   const [contactLeadForm, setContactLeadForm] = useState<ContactLeadForm>(
     initialContactLeadForm
   )
@@ -294,6 +299,17 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
   const weather = initialData.weather
   const weatherLabel = weather ? WEATHER_LABELS[weather.weatherCode] || "Clima actual" : null
+
+  useEffect(() => {
+    const loadEventLikes = async () => {
+      const eventIds = eventos.map((evento) => String(evento.id))
+      const { countMap, likedMap } = await fetchEventLikes(eventIds)
+      setEventLikeCounts(countMap)
+      setLikedEvents(likedMap)
+    }
+
+    void loadEventLikes()
+  }, [eventos])
 
   useEffect(() => {
     const loadRadioConfig = () => {
@@ -366,6 +382,29 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
   const getContactLabel = (usaWhatsapp?: boolean | null) =>
     usaWhatsapp === false ? "Llamar" : "Contactar por WhatsApp"
+
+  const handleEventLike = async (eventId: string, eventTitle: string) => {
+    if (likedEvents[eventId] || likingEventId === eventId) return
+
+    setLikingEventId(eventId)
+    const result = await recordEventLike(eventId, eventTitle)
+
+    if (result.status === "liked") {
+      setEventLikeCounts((prev) => ({
+        ...prev,
+        [eventId]: (prev[eventId] || 0) + 1,
+      }))
+    }
+
+    if (result.status === "liked" || result.status === "exists") {
+      setLikedEvents((prev) => ({
+        ...prev,
+        [eventId]: true,
+      }))
+    }
+
+    setLikingEventId(null)
+  }
 
   const closeWelcomeHighlight = () => {
     window.sessionStorage.setItem(WELCOME_SESSION_KEY, "true")
@@ -1007,6 +1046,16 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     </ContactActionLink>
                   ) : null}
 
+                  <EventLikeButton
+                    count={eventLikeCounts[String(selectedEvento.id)] || 0}
+                    liked={Boolean(likedEvents[String(selectedEvento.id)])}
+                    onClick={() =>
+                      void handleEventLike(String(selectedEvento.id), selectedEvento.titulo)
+                    }
+                    disabled={likingEventId === String(selectedEvento.id)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-rose-100 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-600 transition hover:bg-rose-100 disabled:cursor-default disabled:opacity-70"
+                  />
+
                   <Link
                     href="/eventos"
                     className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
@@ -1590,6 +1639,16 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     <p className="line-clamp-5 mt-3 whitespace-pre-line text-lg leading-8 text-slate-500">
                       {event.descripcion}
                     </p>
+
+                  <div className="mt-4">
+                    <EventLikeButton
+                      count={eventLikeCounts[String(event.id)] || 0}
+                      liked={Boolean(likedEvents[String(event.id)])}
+                      onClick={() => void handleEventLike(String(event.id), event.titulo)}
+                      disabled={likingEventId === String(event.id)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-xs font-medium text-rose-600 transition hover:bg-rose-100 disabled:cursor-default disabled:opacity-70"
+                    />
+                  </div>
 
                   <button
                     type="button"
