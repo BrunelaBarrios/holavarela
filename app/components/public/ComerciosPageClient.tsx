@@ -136,7 +136,7 @@ export function ComerciosPageClient({
 
       <PublicHeader items={buildPublicNav("comercios")} />
 
-      <div className="mx-auto max-w-6xl px-6 py-16">
+      <div className="mx-auto max-w-7xl px-6 py-16">
         <h1 className="text-3xl font-bold text-gray-900">Comercios</h1>
 
         <div className="mt-6 max-w-xl">
@@ -161,7 +161,7 @@ export function ComerciosPageClient({
             </p>
           </div>
         ) : (
-          <div className="mt-8 grid gap-6 md:grid-cols-2">
+          <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {comerciosFiltrados.map((comercio) => {
               const imagenSrc = comercio.imagen || comercio.imagen_url
 
