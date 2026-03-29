@@ -817,7 +817,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         type="button"
                         onClick={() =>
                           setZoomedImage({
-                            src: selectedServicio.imagen,
+                            src: selectedServicio.imagen!,
                             alt: selectedServicio.nombre,
                           })
                         }
@@ -929,7 +929,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         type="button"
                         onClick={() =>
                           setZoomedImage({
-                            src: selectedEvento.imagen,
+                            src: selectedEvento.imagen!,
                             alt: selectedEvento.titulo,
                           })
                         }
@@ -1049,7 +1049,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         type="button"
                         onClick={() =>
                           setZoomedImage({
-                            src: selectedCurso.imagen,
+                            src: selectedCurso.imagen!,
                             alt: selectedCurso.nombre,
                           })
                         }
@@ -1144,7 +1144,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       type="button"
                       onClick={() =>
                         setZoomedImage({
-                          src: selectedInstitucion.foto,
+                          src: selectedInstitucion.foto!,
                           alt: selectedInstitucion.nombre,
                         })
                       }
