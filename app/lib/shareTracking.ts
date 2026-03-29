@@ -34,7 +34,10 @@ export const recordShare = async (
 
   if (error) {
     console.error("No se pudo registrar el compartido:", error)
+    return false
   }
+
+  return true
 }
 
 export const buildShareCountMap = (

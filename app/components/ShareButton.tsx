@@ -32,7 +32,7 @@ export function ShareButton({
 
   const handleShare = async () => {
     try {
-      void recordShare(section, itemId, title)
+      await recordShare(section, itemId, title)
 
       if (navigator.share) {
         await navigator.share({ title, text, url })
