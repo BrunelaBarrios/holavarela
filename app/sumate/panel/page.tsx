@@ -249,6 +249,26 @@ export default function SumatePanelPage() {
 
                 <div className="flex flex-col justify-between gap-6 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-6 py-8 sm:px-8 sm:py-10">
                   <div>
+                    {imageSrc ? (
+                      <div className="mb-5 overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm">
+                        <img src={imageSrc} alt={ownedEntity?.record.nombre || "Perfil"} className="h-72 w-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="mb-5 rounded-[32px] border border-dashed border-slate-200 bg-white p-8 shadow-sm">
+                        <div className="flex items-start gap-4">
+                          <div className="rounded-[20px] bg-slate-100 p-4">
+                            <ImageIcon className="h-6 w-6 text-slate-400" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-slate-900">Falta una imagen principal</h3>
+                            <p className="mt-2 text-sm leading-7 text-slate-500">
+                              Una buena imagen mejora mucho la presentacion del perfil. Puedes subirla desde editar perfil.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                       Acciones rapidas
                     </div>
@@ -499,26 +519,6 @@ export default function SumatePanelPage() {
                     ) : null}
                   </div>
                 </div>
-
-                {imageSrc ? (
-                  <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm">
-                    <img src={imageSrc} alt={ownedEntity?.record.nombre || "Perfil"} className="h-72 w-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="rounded-[32px] border border-dashed border-slate-200 bg-white p-8 shadow-sm">
-                    <div className="flex items-start gap-4">
-                      <div className="rounded-[20px] bg-slate-100 p-4">
-                        <ImageIcon className="h-6 w-6 text-slate-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-semibold text-slate-900">Falta una imagen principal</h3>
-                        <p className="mt-2 text-sm leading-7 text-slate-500">
-                          Una buena imagen mejora mucho la presentacion del perfil. Puedes subirla desde editar perfil.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </aside>
             </div>
           </div>
