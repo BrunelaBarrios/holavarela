@@ -71,7 +71,7 @@ export default function SumateRegistroPage() {
         ? undefined
         : `${window.location.origin}/sumate`
 
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
@@ -84,6 +84,15 @@ export default function SumateRegistroPage() {
       setErrorTone(nextErrorState.tone)
       setError(nextErrorState.message)
       setLoading(false)
+      return
+    }
+
+    if (data.session) {
+      setSuccess("Tu cuenta quedo creada y ya podes completar el alta.")
+      setLoading(false)
+      window.setTimeout(() => {
+        router.push("/sumate/alta")
+      }, 900)
       return
     }
 

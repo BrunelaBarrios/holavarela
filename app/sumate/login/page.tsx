@@ -30,7 +30,7 @@ export default function SumateLoginPage() {
       return
     }
 
-    router.push("/sumate")
+    router.push("/sumate/alta")
     router.refresh()
   }
 
