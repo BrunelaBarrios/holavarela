@@ -56,7 +56,7 @@ export default function SumateRegistroPage() {
         ? undefined
         : `${window.location.origin}/sumate`
 
-    const { data, error: signUpError } = await supabase.auth.signUp({
+    const { error: signUpError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
@@ -68,23 +68,6 @@ export default function SumateRegistroPage() {
       setError(getRegistroErrorMessage(signUpError.message))
       setLoading(false)
       return
-    }
-
-    const registeredUser = data.user
-    if (registeredUser?.id && registeredUser.email) {
-      const { error: profileError } = await supabase
-        .from("usuarios_registrados")
-        .upsert(
-          {
-            user_id: registeredUser.id,
-            email: registeredUser.email,
-          },
-          { onConflict: "email" }
-        )
-
-      if (profileError) {
-        console.error("No se pudo registrar el perfil publico al crear la cuenta:", profileError)
-      }
     }
 
     setSuccess("Tu cuenta quedo creada. Si hace falta confirmar el email, hacelo desde el correo y despues inicia sesion.")
