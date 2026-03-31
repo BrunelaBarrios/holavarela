@@ -6,29 +6,40 @@ import { AccessPageShell } from "../../components/AccessPageShell"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
 import { supabase } from "../../supabase"
 
-function getRecuperarErrorMessage(message: string) {
+function getRecuperarErrorState(message: string) {
   const normalizedMessage = message.toLowerCase()
 
   if (normalizedMessage.includes("email rate limit exceeded") || normalizedMessage.includes("rate limit")) {
-    return "Ya se enviaron demasiados correos en poco tiempo. Espera unos minutos y proba de nuevo."
+    return {
+      tone: "notice" as const,
+      message: "Ya se enviaron demasiados correos en poco tiempo. Espera unos minutos y proba de nuevo.",
+    }
   }
 
   if (normalizedMessage.includes("invalid email")) {
-    return "Ingresa un email valido para recuperar la contrasena."
+    return {
+      tone: "error" as const,
+      message: "Ingresa un email valido para recuperar la contrasena.",
+    }
   }
 
-  return "No pudimos enviar el correo de recuperacion. Proba de nuevo en unos minutos."
+  return {
+    tone: "error" as const,
+    message: "No pudimos enviar el correo de recuperacion. Proba de nuevo en unos minutos.",
+  }
 }
 
 export default function SumateRecuperarPage() {
   const [email, setEmail] = useState("")
   const [error, setError] = useState("")
+  const [errorTone, setErrorTone] = useState<"error" | "notice">("error")
   const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError("")
+    setErrorTone("error")
     setSuccess("")
     setLoading(true)
 
@@ -42,7 +53,9 @@ export default function SumateRecuperarPage() {
     })
 
     if (resetError) {
-      setError(getRecuperarErrorMessage(resetError.message))
+      const nextErrorState = getRecuperarErrorState(resetError.message)
+      setErrorTone(nextErrorState.tone)
+      setError(nextErrorState.message)
       setLoading(false)
       return
     }
@@ -73,7 +86,7 @@ export default function SumateRecuperarPage() {
           />
         </div>
 
-        {error ? <AuthFormStatus tone="error" message={error} /> : null}
+        {error ? <AuthFormStatus tone={errorTone} message={error} /> : null}
         {success ? <AuthFormStatus tone="success" message={success} /> : null}
 
         <button

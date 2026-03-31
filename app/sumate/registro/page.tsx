@@ -7,22 +7,35 @@ import { AccessPageShell } from "../../components/AccessPageShell"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
 import { supabase } from "../../supabase"
 
-function getRegistroErrorMessage(message: string) {
+function getRegistroErrorState(message: string) {
   const normalizedMessage = message.toLowerCase()
 
   if (normalizedMessage.includes("email rate limit exceeded") || normalizedMessage.includes("rate limit")) {
-    return "Ya se enviaron demasiados correos en poco tiempo. Espera unos minutos y proba de nuevo."
+    return {
+      tone: "notice" as const,
+      message:
+        "Ya se enviaron demasiados correos en poco tiempo. Espera unos minutos y, si ese email ya lo usaste antes, proba iniciar sesion o recuperar tu contrasena.",
+    }
   }
 
   if (normalizedMessage.includes("user already registered")) {
-    return "Ese email ya esta registrado. Podes iniciar sesion o recuperar tu contrasena."
+    return {
+      tone: "notice" as const,
+      message: "Ese email ya esta registrado. Podes iniciar sesion o recuperar tu contrasena.",
+    }
   }
 
   if (normalizedMessage.includes("invalid email")) {
-    return "Ingresa un email valido para crear la cuenta."
+    return {
+      tone: "error" as const,
+      message: "Ingresa un email valido para crear la cuenta.",
+    }
   }
 
-  return "No pudimos crear la cuenta en este momento. Proba de nuevo en unos minutos."
+  return {
+    tone: "error" as const,
+    message: "No pudimos crear la cuenta en este momento. Proba de nuevo en unos minutos.",
+  }
 }
 
 export default function SumateRegistroPage() {
@@ -31,12 +44,14 @@ export default function SumateRegistroPage() {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
+  const [errorTone, setErrorTone] = useState<"error" | "notice">("error")
   const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError("")
+    setErrorTone("error")
     setSuccess("")
 
     if (password.length < 6) {
@@ -65,7 +80,9 @@ export default function SumateRegistroPage() {
     })
 
     if (signUpError) {
-      setError(getRegistroErrorMessage(signUpError.message))
+      const nextErrorState = getRegistroErrorState(signUpError.message)
+      setErrorTone(nextErrorState.tone)
+      setError(nextErrorState.message)
       setLoading(false)
       return
     }
@@ -127,7 +144,7 @@ export default function SumateRegistroPage() {
           />
         </div>
 
-        {error ? <AuthFormStatus tone="error" message={error} /> : null}
+        {error ? <AuthFormStatus tone={errorTone} message={error} /> : null}
         {success ? <AuthFormStatus tone="success" message={success} /> : null}
 
         <button
