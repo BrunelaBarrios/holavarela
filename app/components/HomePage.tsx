@@ -111,7 +111,6 @@ type RadioConfig = {
 
 type ContactLeadForm = {
   nombre: string
-  email: string
   telefono: string
   mensaje: string
 }
@@ -258,7 +257,6 @@ const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
 const initialContactLeadForm: ContactLeadForm = {
   nombre: "",
-  email: "",
   telefono: "",
   mensaje: "",
 }
@@ -418,7 +416,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
     const payload = {
       nombre: contactLeadForm.nombre.trim(),
-      email: contactLeadForm.email.trim(),
       telefono: contactLeadForm.telefono.trim(),
       mensaje: contactLeadForm.mensaje.trim(),
     }
@@ -673,24 +670,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     required
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={contactLeadForm.email}
-                  onChange={(e) =>
-                    setContactLeadForm((prev) => ({
-                      ...prev,
-                      email: e.target.value,
-                    }))
-                  }
-                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                  required
-                />
               </div>
 
               <div>

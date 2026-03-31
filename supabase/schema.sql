@@ -108,11 +108,14 @@ create table if not exists public.whatsapp_clicks (
 create table if not exists public.contacto_solicitudes (
   id bigint generated always as identity primary key,
   nombre text not null,
-  email text not null,
+  email text,
   telefono text not null,
   mensaje text not null,
   created_at timestamp with time zone default now()
 );
+
+alter table public.contacto_solicitudes
+alter column email drop not null;
 
 create table if not exists public.usuarios_registrados (
   id bigint generated always as identity primary key,
