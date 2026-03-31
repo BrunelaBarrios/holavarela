@@ -1,0 +1,79 @@
+'use client'
+
+import Link from "next/link"
+import { useState } from "react"
+import { AccessPageShell } from "../../components/AccessPageShell"
+import { AuthFormStatus } from "../../components/AuthFormStatus"
+import { supabase } from "../../supabase"
+
+export default function SumateRecuperarPage() {
+  const [email, setEmail] = useState("")
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setError("")
+    setSuccess("")
+    setLoading(true)
+
+    const redirectTo =
+      typeof window === "undefined"
+        ? undefined
+        : `${window.location.origin}/sumate/nueva-contrasena`
+
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo,
+    })
+
+    if (resetError) {
+      setError("No pudimos enviar el correo de recuperación.")
+      setLoading(false)
+      return
+    }
+
+    setSuccess("Te enviamos un correo para restablecer tu contraseña.")
+    setLoading(false)
+  }
+
+  return (
+    <AccessPageShell
+      eyebrow="Recuperar acceso"
+      title="Recuperá tu contraseña"
+      description="Ingresá tu email y te enviamos un enlace para elegir una nueva contraseña."
+      secondaryLink={{ href: "/sumate/login", label: "Volver al login" }}
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-2">
+          <label htmlFor="email" className="text-sm font-medium text-slate-700">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+            className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-400"
+          />
+        </div>
+
+        {error ? <AuthFormStatus tone="error" message={error} /> : null}
+        {success ? <AuthFormStatus tone="success" message={success} /> : null}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70"
+        >
+          {loading ? "Enviando..." : "Enviar recuperación"}
+        </button>
+
+        <Link href="/sumate/login" className="inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700">
+          Volver a iniciar sesión
+        </Link>
+      </form>
+    </AccessPageShell>
+  )
+}
