@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { Building2, Pencil, Plus, Trash2, X } from "lucide-react"
+import { Building2, Eye, EyeOff, Pencil, Plus, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
@@ -14,6 +14,7 @@ type Institucion = {
   direccion: string | null
   telefono: string | null
   foto: string | null
+  estado?: string | null
   usa_whatsapp?: boolean | null
 }
 
@@ -97,6 +98,40 @@ export default function AdminInstitucionesPage() {
     })
   }
 
+  const toggleVisibility = async (institucion: Institucion) => {
+    const nextEstado =
+      institucion.estado === "oculto" || institucion.estado === "borrador"
+        ? "activo"
+        : "oculto"
+
+    const { error } = await supabase
+      .from("instituciones")
+      .update({ estado: nextEstado })
+      .eq("id", institucion.id)
+
+    if (error) {
+      setSaveError(`Error al cambiar visibilidad: ${error.message}`)
+      return
+    }
+
+    setInstituciones((prev) =>
+      prev.map((item) =>
+        item.id === institucion.id ? { ...item, estado: nextEstado } : item
+      )
+    )
+
+    await logAdminActivity({
+      action:
+        nextEstado === "activo"
+          ? institucion.estado === "borrador"
+            ? "Publicar borrador"
+            : "Mostrar"
+          : "Ocultar",
+      section: "Instituciones",
+      target: institucion.nombre,
+    })
+  }
+
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -122,6 +157,7 @@ export default function AdminInstitucionesPage() {
       direccion: formData.direccion || null,
       telefono: formData.telefono || null,
       foto: formData.foto || null,
+      estado: editingInstitucion?.estado ?? "activo",
       usa_whatsapp: formData.usa_whatsapp,
     }
 
@@ -358,7 +394,24 @@ export default function AdminInstitucionesPage() {
             )}
 
             <div className="p-5">
-              <h3 className="text-xl font-semibold text-slate-900">{institucion.nombre}</h3>
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="text-xl font-semibold text-slate-900">{institucion.nombre}</h3>
+                <div
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${
+                    institucion.estado === "borrador"
+                      ? "bg-amber-100 text-amber-700"
+                      : institucion.estado === "oculto"
+                        ? "bg-slate-200 text-slate-700"
+                        : "bg-emerald-50 text-emerald-700"
+                  }`}
+                >
+                  {institucion.estado === "borrador"
+                    ? "borrador"
+                    : institucion.estado === "oculto"
+                      ? "oculto"
+                      : "visible"}
+                </div>
+              </div>
               {institucion.direccion && (
                 <p className="mt-2 text-sm text-slate-500">{institucion.direccion}</p>
               )}
@@ -372,6 +425,24 @@ export default function AdminInstitucionesPage() {
               )}
 
               <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                <button
+                  onClick={() => toggleVisibility(institucion)}
+                  className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
+                  title={
+                    institucion.estado === "borrador"
+                      ? "Publicar borrador"
+                      : institucion.estado === "oculto"
+                        ? "Mostrar"
+                        : "Ocultar"
+                  }
+                >
+                  {institucion.estado === "oculto" ? (
+                    <Eye className="h-4 w-4" />
+                  ) : (
+                    <EyeOff className="h-4 w-4" />
+                  )}
+                </button>
+
                 <button
                   onClick={() => handleEdit(institucion)}
                   className="rounded-lg p-2 text-cyan-600 transition hover:bg-cyan-50"

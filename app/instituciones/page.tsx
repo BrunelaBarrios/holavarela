@@ -16,6 +16,7 @@ type Institucion = {
   direccion: string | null
   telefono: string | null
   foto: string | null
+  estado?: string | null
   usa_whatsapp?: boolean | null
 }
 
@@ -29,6 +30,7 @@ export default function InstitucionesPage() {
       const { data, error } = await supabase
         .from("instituciones")
         .select("*")
+        .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
 
       if (error) {

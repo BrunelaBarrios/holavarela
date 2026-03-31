@@ -77,6 +77,7 @@ export default async function Page() {
     supabase
       .from("instituciones")
       .select("*")
+      .or("estado.is.null,estado.eq.activo")
       .order("id", { ascending: false }),
     supabase
       .from("sitio")

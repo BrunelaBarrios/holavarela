@@ -19,6 +19,9 @@ add column if not exists usa_whatsapp boolean default true;
 alter table public.instituciones
 add column if not exists usa_whatsapp boolean default true;
 
+alter table public.instituciones
+add column if not exists estado text default 'activo';
+
 create table if not exists public.cursos (
   id bigint generated always as identity primary key,
   nombre text not null,
