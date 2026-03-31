@@ -6,6 +6,20 @@ import { AccessPageShell } from "../../components/AccessPageShell"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
 import { supabase } from "../../supabase"
 
+function getRecuperarErrorMessage(message: string) {
+  const normalizedMessage = message.toLowerCase()
+
+  if (normalizedMessage.includes("email rate limit exceeded") || normalizedMessage.includes("rate limit")) {
+    return "Ya se enviaron demasiados correos en poco tiempo. Espera unos minutos y proba de nuevo."
+  }
+
+  if (normalizedMessage.includes("invalid email")) {
+    return "Ingresa un email valido para recuperar la contrasena."
+  }
+
+  return "No pudimos enviar el correo de recuperacion. Proba de nuevo en unos minutos."
+}
+
 export default function SumateRecuperarPage() {
   const [email, setEmail] = useState("")
   const [error, setError] = useState("")
@@ -28,20 +42,20 @@ export default function SumateRecuperarPage() {
     })
 
     if (resetError) {
-      setError("No pudimos enviar el correo de recuperación.")
+      setError(getRecuperarErrorMessage(resetError.message))
       setLoading(false)
       return
     }
 
-    setSuccess("Te enviamos un correo para restablecer tu contraseña.")
+    setSuccess("Te enviamos un correo para restablecer tu contrasena.")
     setLoading(false)
   }
 
   return (
     <AccessPageShell
       eyebrow="Recuperar acceso"
-      title="Recuperá tu contraseña"
-      description="Ingresá tu email y te enviamos un enlace para elegir una nueva contraseña."
+      title="Recupera tu contrasena"
+      description="Ingresa tu email y te enviamos un enlace para elegir una nueva contrasena."
       secondaryLink={{ href: "/sumate/login", label: "Volver al login" }}
     >
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -67,11 +81,11 @@ export default function SumateRecuperarPage() {
           disabled={loading}
           className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70"
         >
-          {loading ? "Enviando..." : "Enviar recuperación"}
+          {loading ? "Enviando..." : "Enviar recuperacion"}
         </button>
 
         <Link href="/sumate/login" className="inline-flex text-sm font-semibold text-blue-600 hover:text-blue-700">
-          Volver a iniciar sesión
+          Volver a iniciar sesion
         </Link>
       </form>
     </AccessPageShell>

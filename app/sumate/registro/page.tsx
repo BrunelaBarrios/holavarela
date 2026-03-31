@@ -7,6 +7,24 @@ import { AccessPageShell } from "../../components/AccessPageShell"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
 import { supabase } from "../../supabase"
 
+function getRegistroErrorMessage(message: string) {
+  const normalizedMessage = message.toLowerCase()
+
+  if (normalizedMessage.includes("email rate limit exceeded") || normalizedMessage.includes("rate limit")) {
+    return "Ya se enviaron demasiados correos en poco tiempo. Espera unos minutos y proba de nuevo."
+  }
+
+  if (normalizedMessage.includes("user already registered")) {
+    return "Ese email ya esta registrado. Podes iniciar sesion o recuperar tu contrasena."
+  }
+
+  if (normalizedMessage.includes("invalid email")) {
+    return "Ingresa un email valido para crear la cuenta."
+  }
+
+  return "No pudimos crear la cuenta en este momento. Proba de nuevo en unos minutos."
+}
+
 export default function SumateRegistroPage() {
   const router = useRouter()
   const [email, setEmail] = useState("")
@@ -22,12 +40,12 @@ export default function SumateRegistroPage() {
     setSuccess("")
 
     if (password.length < 6) {
-      setError("La contraseña tiene que tener al menos 6 caracteres.")
+      setError("La contrasena tiene que tener al menos 6 caracteres.")
       return
     }
 
     if (password !== confirmPassword) {
-      setError("La confirmación de contraseña no coincide.")
+      setError("La confirmacion de contrasena no coincide.")
       return
     }
 
@@ -47,7 +65,7 @@ export default function SumateRegistroPage() {
     })
 
     if (signUpError) {
-      setError(signUpError.message)
+      setError(getRegistroErrorMessage(signUpError.message))
       setLoading(false)
       return
     }
@@ -65,11 +83,11 @@ export default function SumateRegistroPage() {
         )
 
       if (profileError) {
-        console.error("No se pudo registrar el perfil público al crear la cuenta:", profileError)
+        console.error("No se pudo registrar el perfil publico al crear la cuenta:", profileError)
       }
     }
 
-    setSuccess("Tu cuenta quedó creada. Si hace falta confirmar el email, hacelo desde el correo y después iniciá sesión.")
+    setSuccess("Tu cuenta quedo creada. Si hace falta confirmar el email, hacelo desde el correo y despues inicia sesion.")
     setLoading(false)
     window.setTimeout(() => {
       router.push("/sumate/login")
@@ -79,8 +97,8 @@ export default function SumateRegistroPage() {
   return (
     <AccessPageShell
       eyebrow="Registro"
-      title="Creá tu cuenta"
-      description="Elegí tu propio email y contraseña. También te pedimos confirmación para evitar errores al registrarte."
+      title="Crea tu cuenta"
+      description="Elegi tu propio email y contrasena. Tambien te pedimos confirmacion para evitar errores al registrarte."
       secondaryLink={{ href: "/sumate/login", label: "Ya tengo cuenta" }}
     >
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -100,7 +118,7 @@ export default function SumateRegistroPage() {
 
         <div className="space-y-2">
           <label htmlFor="password" className="text-sm font-medium text-slate-700">
-            Contraseña
+            Contrasena
           </label>
           <input
             id="password"
@@ -114,7 +132,7 @@ export default function SumateRegistroPage() {
 
         <div className="space-y-2">
           <label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">
-            Confirmar contraseña
+            Confirmar contrasena
           </label>
           <input
             id="confirmPassword"
@@ -138,9 +156,9 @@ export default function SumateRegistroPage() {
         </button>
 
         <div className="text-sm text-slate-500">
-          Si ya tenés acceso, podés{" "}
+          Si ya tenes acceso, podes{" "}
           <Link href="/sumate/login" className="font-semibold text-blue-600 hover:text-blue-700">
-            iniciar sesión
+            iniciar sesion
           </Link>
           .
         </div>
