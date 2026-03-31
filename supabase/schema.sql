@@ -139,16 +139,8 @@ create table if not exists public.usuarios_registrados (
   id bigint generated always as identity primary key,
   user_id uuid unique,
   email text not null unique,
-  owner_type text,
-  owner_id bigint,
   created_at timestamp with time zone default now()
 );
-
-alter table public.usuarios_registrados
-add column if not exists owner_type text;
-
-alter table public.usuarios_registrados
-add column if not exists owner_id bigint;
 
 alter table public.usuarios_registrados enable row level security;
 
