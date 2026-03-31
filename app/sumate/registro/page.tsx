@@ -65,13 +65,11 @@ export default function SumateRegistroPage() {
         )
 
       if (profileError) {
-        setError("La cuenta se creó, pero no pudimos registrar el perfil público.")
-        setLoading(false)
-        return
+        console.error("No se pudo registrar el perfil público al crear la cuenta:", profileError)
       }
     }
 
-    setSuccess("Tu cuenta quedó creada. Ya podés iniciar sesión para seguir.")
+    setSuccess("Tu cuenta quedó creada. Si hace falta confirmar el email, hacelo desde el correo y después iniciá sesión.")
     setLoading(false)
     window.setTimeout(() => {
       router.push("/sumate/login")

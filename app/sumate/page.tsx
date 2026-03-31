@@ -13,12 +13,31 @@ export default function SumatePage() {
   const [status, setStatus] = useState("")
 
   useEffect(() => {
+    const syncRegisteredUser = async (currentUser: User | null) => {
+      if (!currentUser?.id || !currentUser.email) return
+
+      const { error } = await supabase
+        .from("usuarios_registrados")
+        .upsert(
+          {
+            user_id: currentUser.id,
+            email: currentUser.email,
+          },
+          { onConflict: "email" }
+        )
+
+      if (error) {
+        console.error("No se pudo sincronizar el usuario registrado:", error)
+      }
+    }
+
     const loadSession = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession()
 
       setUser(session?.user ?? null)
+      void syncRegisteredUser(session?.user ?? null)
       setLoading(false)
     }
 
@@ -26,6 +45,7 @@ export default function SumatePage() {
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
+      void syncRegisteredUser(session?.user ?? null)
       setLoading(false)
     })
 
