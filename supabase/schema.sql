@@ -114,6 +114,33 @@ create table if not exists public.contacto_solicitudes (
   created_at timestamp with time zone default now()
 );
 
+create table if not exists public.usuarios_registrados (
+  id bigint generated always as identity primary key,
+  user_id uuid unique,
+  email text not null unique,
+  created_at timestamp with time zone default now()
+);
+
+alter table public.usuarios_registrados enable row level security;
+
+create policy if not exists "Users can insert their own registered profile"
+on public.usuarios_registrados
+for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+create policy if not exists "Users can view their own registered profile"
+on public.usuarios_registrados
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+create policy if not exists "Admins can read registered users"
+on public.usuarios_registrados
+for select
+to anon, authenticated
+using (true);
+
 create table if not exists public.event_likes (
   id bigint generated always as identity primary key,
   event_id text not null,

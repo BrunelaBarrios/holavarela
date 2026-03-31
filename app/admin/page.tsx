@@ -15,6 +15,7 @@ import {
   Share2,
   ShieldAlert,
   Store,
+  Users,
 } from "lucide-react"
 import { buildActiveEventsFilter, formatEventDateRange } from "../lib/eventDates"
 import { buildShareTotals, emptyShareTotals, type ShareTotals } from "../lib/shareTracking"
@@ -40,6 +41,7 @@ export default function AdminDashboardPage() {
   const [institucionesCount, setInstitucionesCount] = useState(0)
   const [cursosCount, setCursosCount] = useState(0)
   const [contactosCount, setContactosCount] = useState(0)
+  const [usuariosCount, setUsuariosCount] = useState(0)
   const [proximosEventos, setProximosEventos] = useState<EventoResumen[]>([])
   const [shareTotals, setShareTotals] = useState<ShareTotals>(emptyShareTotals())
   const [whatsappTotals, setWhatsappTotals] = useState<WhatsappTotals>(emptyWhatsappTotals())
@@ -54,6 +56,7 @@ export default function AdminDashboardPage() {
         { count: instituciones },
         { count: cursos },
         { count: contactos },
+        { count: usuarios },
         { data: eventosData },
         { data: shareRows },
         { data: whatsappRows },
@@ -64,6 +67,7 @@ export default function AdminDashboardPage() {
         supabase.from("instituciones").select("*", { count: "exact", head: true }),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
         supabase.from("contacto_solicitudes").select("*", { count: "exact", head: true }),
+        supabase.from("usuarios_registrados").select("*", { count: "exact", head: true }),
         supabase
           .from("eventos")
           .select("id, titulo, fecha, fecha_fin")
@@ -81,6 +85,7 @@ export default function AdminDashboardPage() {
       setInstitucionesCount(instituciones || 0)
       setCursosCount(cursos || 0)
       setContactosCount(contactos || 0)
+      setUsuariosCount(usuarios || 0)
       setProximosEventos(eventosData || [])
       setShareTotals(buildShareTotals(shareRows || []))
       setWhatsappTotals(buildWhatsappTotals(whatsappRows || []))
@@ -137,6 +142,14 @@ export default function AdminDashboardPage() {
       icon: Mail,
       color: "bg-rose-600",
       action: () => router.push("/admin/contactos"),
+    },
+    {
+      id: "usuarios",
+      title: "Usuarios",
+      value: usuariosCount,
+      icon: Users,
+      color: "bg-sky-600",
+      action: () => router.push("/admin/usuarios"),
     },
   ]
 
