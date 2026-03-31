@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { Mail, MessageSquare, Phone, Search, Trash2, UserRound } from "lucide-react"
+import { CheckCircle2, Loader2, Mail, MessageSquare, Phone, Search, Trash2, UserRound } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
@@ -17,8 +17,84 @@ type ContactoSolicitud = {
 
 type ContactFilter = "all" | "alta" | "contacto"
 
+type AltaTargetType = "comercio" | "servicio" | "curso" | "institucion"
+
+type AltaTarget = {
+  type: AltaTargetType
+  entityId: number
+  email: string
+  name: string
+}
+
+type ApprovalState = {
+  status: "idle" | "loading" | "approved"
+  message?: string
+}
+
 function isAltaSolicitud(item: ContactoSolicitud) {
   return item.mensaje.startsWith("Solicitud de alta desde /sumate")
+}
+
+function extractAltaTarget(item: ContactoSolicitud): AltaTarget | null {
+  if (!isAltaSolicitud(item)) return null
+
+  const typeMatch = item.mensaje.match(/Tipo:\s(.+)/)
+  const selectedMatch = item.mensaje.match(/Registro seleccionado:\s(.+)\s\(ID\s(\d+)\)/)
+  const createdMatch = item.mensaje.match(/Registro creado:\sID\s(\d+)/)
+  const emailMatch = item.mensaje.match(/Email de acceso:\s(.+)/)
+
+  const rawType = typeMatch?.[1]?.trim().toLowerCase()
+  const email = emailMatch?.[1]?.trim() || item.email
+
+  if (!rawType || !email) return null
+
+  const normalizedType: AltaTargetType | null =
+    rawType === "comercio"
+      ? "comercio"
+      : rawType === "servicio"
+        ? "servicio"
+        : rawType === "curso o clase"
+          ? "curso"
+          : rawType === "institucion"
+            ? "institucion"
+            : null
+
+  if (!normalizedType) return null
+
+  if (selectedMatch) {
+    return {
+      type: normalizedType,
+      entityId: Number(selectedMatch[2]),
+      email,
+      name: selectedMatch[1].trim(),
+    }
+  }
+
+  if (createdMatch) {
+    const createdNameMatch = item.mensaje.match(/Nombre:\s(.+)/)
+
+    return {
+      type: normalizedType,
+      entityId: Number(createdMatch[1]),
+      email,
+      name: createdNameMatch?.[1]?.trim() || item.nombre,
+    }
+  }
+
+  return null
+}
+
+function resolveTable(type: AltaTargetType) {
+  switch (type) {
+    case "comercio":
+      return "comercios"
+    case "servicio":
+      return "servicios"
+    case "curso":
+      return "cursos"
+    case "institucion":
+      return "instituciones"
+  }
 }
 
 export default function AdminContactosPage() {
@@ -28,6 +104,7 @@ export default function AdminContactosPage() {
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState<ContactFilter>("all")
   const [deletingSolicitud, setDeletingSolicitud] = useState<ContactoSolicitud | null>(null)
+  const [approvalStates, setApprovalStates] = useState<Record<number, ApprovalState>>({})
 
   useEffect(() => {
     const cargarSolicitudes = async () => {
@@ -106,6 +183,56 @@ export default function AdminContactosPage() {
       section: "Contactos",
       target: solicitud.nombre,
       details: solicitud.email,
+    })
+  }
+
+  const handleApproveAlta = async (item: ContactoSolicitud) => {
+    const target = extractAltaTarget(item)
+
+    if (!target) {
+      setError("No pudimos identificar el registro que corresponde a esta alta.")
+      return
+    }
+
+    setApprovalStates((current) => ({
+      ...current,
+      [item.id]: { status: "loading" },
+    }))
+
+    const table = resolveTable(target.type)
+    const payload =
+      target.type === "institucion"
+        ? { owner_email: target.email, estado: "activo" }
+        : { owner_email: target.email, estado: "activo" }
+
+    const { error: updateError } = await supabase
+      .from(table)
+      .update(payload)
+      .eq("id", target.entityId)
+
+    if (updateError) {
+      const message = `No se pudo aceptar el alta: ${updateError.message}`
+      setError(message)
+      setApprovalStates((current) => ({
+        ...current,
+        [item.id]: { status: "idle", message },
+      }))
+      return
+    }
+
+    setApprovalStates((current) => ({
+      ...current,
+      [item.id]: {
+        status: "approved",
+        message: `${target.name} ya quedo vinculado a ${target.email}.`,
+      },
+    }))
+
+    await logAdminActivity({
+      action: "Aceptar alta",
+      section: "Contactos",
+      target: target.name,
+      details: target.email,
     })
   }
 
@@ -215,6 +342,8 @@ export default function AdminContactosPage() {
         <div className="space-y-4">
           {solicitudesFiltradas.map((item) => {
             const isAlta = isAltaSolicitud(item)
+            const approvalState = approvalStates[item.id]
+            const altaTarget = isAlta ? extractAltaTarget(item) : null
 
             return (
               <article
@@ -273,7 +402,32 @@ export default function AdminContactosPage() {
                   </p>
                 </div>
 
-                <div className="mt-4 flex justify-end border-t border-slate-100 pt-4">
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                  <div className="text-sm text-slate-500">
+                    {approvalState?.message ? approvalState.message : null}
+                  </div>
+
+                  <div className="flex flex-wrap justify-end gap-3">
+                    {isAlta && altaTarget ? (
+                      <button
+                        type="button"
+                        onClick={() => void handleApproveAlta(item)}
+                        disabled={approvalState?.status === "loading" || approvalState?.status === "approved"}
+                        className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition ${
+                          approvalState?.status === "approved"
+                            ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-70"
+                        }`}
+                      >
+                        {approvalState?.status === "loading" ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="h-4 w-4" />
+                        )}
+                        {approvalState?.status === "approved" ? "Alta aceptada" : "Aceptar alta"}
+                      </button>
+                    ) : null}
+
                   <button
                     type="button"
                     onClick={() => setDeletingSolicitud(item)}
@@ -282,6 +436,7 @@ export default function AdminContactosPage() {
                     <Trash2 className="h-4 w-4" />
                     Borrar
                   </button>
+                  </div>
                 </div>
               </article>
             )
