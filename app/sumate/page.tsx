@@ -157,10 +157,10 @@ export default function SumatePage() {
           <div className="flex flex-wrap gap-4">
             {existingRequestDate ? (
               <Link
-                href="/suscripcion-exitosa"
+                href="/sumate/panel"
                 className="inline-flex items-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
               >
-                Ver confirmacion
+                Ir a mi panel
               </Link>
             ) : (
               <Link

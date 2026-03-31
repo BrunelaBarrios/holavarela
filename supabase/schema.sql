@@ -1,11 +1,20 @@
 alter table public.comercios
 add column if not exists destacado boolean default false;
 
+alter table public.comercios
+add column if not exists owner_email text;
+
 alter table public.servicios
 add column if not exists destacado boolean default false;
 
+alter table public.servicios
+add column if not exists owner_email text;
+
 alter table public.cursos
 add column if not exists destacado boolean default false;
+
+alter table public.cursos
+add column if not exists owner_email text;
 
 alter table public.eventos
 add column if not exists fecha_fin date;
@@ -16,11 +25,17 @@ add column if not exists telefono text;
 alter table public.eventos
 add column if not exists usa_whatsapp boolean default true;
 
+alter table public.eventos
+add column if not exists owner_email text;
+
 alter table public.instituciones
 add column if not exists usa_whatsapp boolean default true;
 
 alter table public.instituciones
 add column if not exists estado text default 'activo';
+
+alter table public.instituciones
+add column if not exists owner_email text;
 
 create table if not exists public.cursos (
   id bigint generated always as identity primary key,

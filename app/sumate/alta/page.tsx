@@ -6,6 +6,7 @@ import type { User } from "@supabase/supabase-js"
 import { useRouter } from "next/navigation"
 import { AccessPageShell } from "../../components/AccessPageShell"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
+import { claimEntityOwnership } from "../../lib/sumateOwner"
 import { supabase } from "../../supabase"
 
 type EntityType = "comercio" | "servicio" | "curso" | "institucion"
@@ -13,6 +14,7 @@ type EntityType = "comercio" | "servicio" | "curso" | "institucion"
 type ExistingMatch = {
   id: number
   nombre: string
+  owner_email?: string | null
 }
 
 type ComercioDraft = {
@@ -95,13 +97,13 @@ const initialInstitucion: InstitucionDraft = {
 function buildSearchQuery(type: EntityType) {
   switch (type) {
     case "comercio":
-      return supabase.from("comercios").select("id, nombre")
+      return supabase.from("comercios").select("id, nombre, owner_email")
     case "servicio":
-      return supabase.from("servicios").select("id, nombre")
+      return supabase.from("servicios").select("id, nombre, owner_email")
     case "curso":
-      return supabase.from("cursos").select("id, nombre")
+      return supabase.from("cursos").select("id, nombre, owner_email")
     case "institucion":
-      return supabase.from("instituciones").select("id, nombre")
+      return supabase.from("instituciones").select("id, nombre, owner_email")
   }
 }
 
@@ -214,7 +216,7 @@ export default function SumateAltaPage() {
         .limit(1)
 
       if (existingRequest?.length) {
-        router.replace("/sumate")
+        router.replace("/sumate/panel")
         return
       }
 
@@ -350,6 +352,7 @@ export default function SumateAltaPage() {
         estado: "borrador",
         destacado: false,
         usa_whatsapp: comercio.usaWhatsapp,
+        owner_email: user?.email ?? null,
       }
 
       return await supabase.from("comercios").insert([payload]).select("id").single()
@@ -367,6 +370,7 @@ export default function SumateAltaPage() {
         estado: "borrador",
         destacado: false,
         usa_whatsapp: servicio.usaWhatsapp,
+        owner_email: user?.email ?? null,
       }
 
       return await supabase.from("servicios").insert([payload]).select("id").single()
@@ -382,6 +386,7 @@ export default function SumateAltaPage() {
         estado: "borrador",
         destacado: false,
         usa_whatsapp: curso.usaWhatsapp,
+        owner_email: user?.email ?? null,
       }
 
       return await supabase.from("cursos").insert([payload]).select("id").single()
@@ -395,6 +400,7 @@ export default function SumateAltaPage() {
       foto: null,
       estado: "borrador",
       usa_whatsapp: institucion.usaWhatsapp,
+      owner_email: user?.email ?? null,
     }
 
     return await supabase.from("instituciones").insert([payload]).select("id").single()
@@ -441,7 +447,7 @@ export default function SumateAltaPage() {
     }
 
     if (existingRequest?.length) {
-      router.replace("/sumate")
+      router.replace("/sumate/panel")
       router.refresh()
       return
     }
@@ -458,6 +464,22 @@ export default function SumateAltaPage() {
       }
 
       insertedId = Number(data?.id ?? null)
+    } else if (selectedMatch) {
+      try {
+        await claimEntityOwnership({
+          type: entityType,
+          entityId: selectedMatch.id,
+          email: user.email,
+        })
+      } catch (claimError) {
+        setError(
+          claimError instanceof Error
+            ? claimError.message
+            : "No pudimos vincular este registro a tu cuenta."
+        )
+        setLoadingSubmit(false)
+        return
+      }
     }
 
     const payload = {
@@ -485,7 +507,7 @@ export default function SumateAltaPage() {
       return
     }
 
-    router.push("/suscripcion-exitosa")
+    router.push("/sumate/panel")
     router.refresh()
   }
 
