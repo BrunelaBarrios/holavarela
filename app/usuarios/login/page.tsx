@@ -14,18 +14,12 @@ export default function UsuariosLoginPage() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const checkSession = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-
-      if (session?.user) {
-        router.replace("/usuarios")
-      }
+    const resetSession = async () => {
+      await supabase.auth.signOut()
     }
 
-    void checkSession()
-  }, [router])
+    void resetSession()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,6 +45,13 @@ export default function UsuariosLoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
       <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
         <div className="mb-8 text-center">
+          <div className="mb-5 flex justify-center">
+            <img
+              src="/logo-varela-grande.png"
+              alt="Hola Varela"
+              className="h-14 w-auto"
+            />
+          </div>
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 text-white">
             <Users className="h-8 w-8" />
           </div>
@@ -77,6 +78,7 @@ export default function UsuariosLoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full outline-none"
                 placeholder="tuemail@ejemplo.com"
+                autoComplete="username"
                 required
               />
             </div>
@@ -92,6 +94,7 @@ export default function UsuariosLoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full outline-none"
                 placeholder="********"
+                autoComplete="current-password"
                 required
               />
             </div>
