@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { ADMIN_DEFAULT_CREDENTIALS } from "../../../lib/adminAuth"
-import { supabaseAdmin } from "../../../lib/supabaseAdmin"
+import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
 
 type OwnerType = "comercio" | "servicio" | "curso" | "institucion"
 
@@ -27,6 +27,8 @@ function resolveTable(ownerType: OwnerType) {
 }
 
 async function validateAdminCredentials(username: string, password: string) {
+  const supabaseAdmin = getSupabaseAdmin()
+
   if (
     username === ADMIN_DEFAULT_CREDENTIALS.username &&
     password === ADMIN_DEFAULT_CREDENTIALS.password
@@ -50,6 +52,7 @@ async function validateAdminCredentials(username: string, password: string) {
 
 export async function POST(request: Request) {
   try {
+    const supabaseAdmin = getSupabaseAdmin()
     const body = (await request.json()) as CreateUserPayload
     const email = body.email?.trim().toLowerCase() || ""
     const password = body.password || ""
