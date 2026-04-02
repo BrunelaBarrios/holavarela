@@ -11,6 +11,7 @@ import { PublicHeader } from "./PublicHeader"
 import { formatEventDateRange } from "../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
 import { buildHomePublicNav } from "../lib/publicNav"
+import { recordViewMore, type ViewMoreSection } from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
 import {
   ArrowRight,
@@ -398,6 +399,16 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const getContactLabel = (usaWhatsapp?: boolean | null) =>
     usaWhatsapp === false ? "Llamar" : "Contactar por WhatsApp"
 
+  const handleViewMoreClick = (
+    section: ViewMoreSection,
+    itemId: string,
+    itemTitle: string,
+    open: () => void
+  ) => {
+    void recordViewMore(section, itemId, itemTitle)
+    open()
+  }
+
   const handleEventLike = async (eventId: string, eventTitle: string) => {
     if (likedEvents[eventId] || likingEventId === eventId) return
 
@@ -579,7 +590,18 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 <div className="mt-8 flex flex-wrap gap-3">
                   <button
                     type="button"
-                    onClick={openWelcomeDetail}
+                    onClick={() =>
+                      handleViewMoreClick(
+                        welcomeHighlight.kind === "comercio"
+                          ? "comercios"
+                          : welcomeHighlight.kind === "servicio"
+                            ? "servicios"
+                            : "cursos",
+                        welcomeHighlight.key.split("-").slice(1).join("-"),
+                        welcomeHighlight.title,
+                        openWelcomeDetail
+                      )
+                    }
                     className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
                   >
                     Ver más
@@ -1446,7 +1468,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
                     <button
                       type="button"
-                      onClick={() => setSelectedComercio(business)}
+                      onClick={() =>
+                        handleViewMoreClick(
+                          "comercios",
+                          String(business.id),
+                          business.nombre,
+                          () => setSelectedComercio(business)
+                        )
+                      }
                       className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
                     >
                             Ver mas
@@ -1563,7 +1592,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
                           <button
                             type="button"
-                            onClick={() => setSelectedServicio(servicio)}
+                            onClick={() =>
+                              handleViewMoreClick(
+                                "servicios",
+                                String(servicio.id),
+                                servicio.nombre,
+                                () => setSelectedServicio(servicio)
+                              )
+                            }
                             className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
                           >
                             Ver más
@@ -1648,7 +1684,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
                   <button
                     type="button"
-                    onClick={() => setSelectedEvento(event)}
+                    onClick={() =>
+                      handleViewMoreClick(
+                        "eventos",
+                        String(event.id),
+                        event.titulo,
+                        () => setSelectedEvento(event)
+                      )
+                    }
                     className="mt-5 inline-flex items-center gap-2 text-lg font-medium text-blue-500 hover:text-blue-600"
                   >
                         Ver más
@@ -1716,7 +1759,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     </div>
                     <button
                       type="button"
-                      onClick={() => setSelectedCurso(curso)}
+                      onClick={() =>
+                        handleViewMoreClick(
+                          "cursos",
+                          String(curso.id),
+                          curso.nombre,
+                          () => setSelectedCurso(curso)
+                        )
+                      }
                       className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
                     >
                       Ver más
@@ -1779,7 +1829,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
                     <button
                       type="button"
-                      onClick={() => setSelectedInstitucion(institucion)}
+                      onClick={() =>
+                        handleViewMoreClick(
+                          "instituciones",
+                          String(institucion.id),
+                          institucion.nombre,
+                          () => setSelectedInstitucion(institucion)
+                        )
+                      }
                       className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-600 transition hover:text-cyan-700"
                     >
                         Ver más

@@ -123,6 +123,34 @@ create table if not exists public.whatsapp_clicks (
   created_at timestamp with time zone default now()
 );
 
+create table if not exists public.view_more_clicks (
+  id bigint generated always as identity primary key,
+  section text not null,
+  item_id text not null,
+  item_title text,
+  created_at timestamp with time zone default now()
+);
+
+alter table public.view_more_clicks enable row level security;
+
+drop policy if exists "Allow public insert on view_more_clicks"
+on public.view_more_clicks;
+
+create policy "Allow public insert on view_more_clicks"
+on public.view_more_clicks
+for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists "Allow public read on view_more_clicks"
+on public.view_more_clicks;
+
+create policy "Allow public read on view_more_clicks"
+on public.view_more_clicks
+for select
+to anon, authenticated
+using (true);
+
 create table if not exists public.contacto_solicitudes (
   id bigint generated always as identity primary key,
   nombre text not null,

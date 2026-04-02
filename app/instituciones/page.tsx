@@ -7,6 +7,7 @@ import { OptimizedImage } from "../components/OptimizedImage"
 import { PublicDetailModal } from "../components/PublicDetailModal"
 import { PublicHeader } from "../components/PublicHeader"
 import { buildPublicNav } from "../lib/publicNav"
+import { recordViewMore } from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
 
 type Institucion = {
@@ -168,7 +169,14 @@ export default function InstitucionesPage() {
 
                   <button
                     type="button"
-                    onClick={() => setSelectedInstitucion(institucion)}
+                    onClick={() => {
+                      void recordViewMore(
+                        "instituciones",
+                        String(institucion.id),
+                        institucion.nombre
+                      )
+                      setSelectedInstitucion(institucion)
+                    }}
                     className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                   >
                     Ver más

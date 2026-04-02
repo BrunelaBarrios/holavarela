@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
+  BarChart3,
   Building2,
   Calendar,
   FileText,
@@ -24,6 +25,11 @@ import {
   emptyWhatsappTotals,
   type WhatsappTotals,
 } from "../lib/whatsappTracking"
+import {
+  buildViewMoreTotals,
+  emptyViewMoreTotals,
+  type ViewMoreTotals,
+} from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
 
 type EventoResumen = {
@@ -42,9 +48,13 @@ export default function AdminDashboardPage() {
   const [cursosCount, setCursosCount] = useState(0)
   const [contactosCount, setContactosCount] = useState(0)
   const [usuariosCount, setUsuariosCount] = useState(0)
+  const [newComerciosCount, setNewComerciosCount] = useState(0)
+  const [newEventosCount, setNewEventosCount] = useState(0)
+  const [newContactosCount, setNewContactosCount] = useState(0)
   const [proximosEventos, setProximosEventos] = useState<EventoResumen[]>([])
   const [shareTotals, setShareTotals] = useState<ShareTotals>(emptyShareTotals())
   const [whatsappTotals, setWhatsappTotals] = useState<WhatsappTotals>(emptyWhatsappTotals())
+  const [viewMoreTotals, setViewMoreTotals] = useState<ViewMoreTotals>(emptyViewMoreTotals())
 
   useEffect(() => {
     const cargarDashboard = async () => {
@@ -57,9 +67,13 @@ export default function AdminDashboardPage() {
         { count: cursos },
         { count: contactos },
         { count: usuarios },
+        { count: newComercios },
+        { count: newEventos },
+        { count: newContactos },
         { data: eventosData },
         { data: shareRows },
         { data: whatsappRows },
+        { data: viewMoreRows },
       ] = await Promise.all([
         supabase.from("comercios").select("*", { count: "exact", head: true }),
         supabase.from("eventos").select("*", { count: "exact", head: true }),
@@ -69,6 +83,15 @@ export default function AdminDashboardPage() {
         supabase.from("contacto_solicitudes").select("*", { count: "exact", head: true }),
         supabase.from("usuarios_registrados").select("*", { count: "exact", head: true }),
         supabase
+          .from("comercios")
+          .select("*", { count: "exact", head: true })
+          .eq("estado", "borrador"),
+        supabase
+          .from("eventos")
+          .select("*", { count: "exact", head: true })
+          .eq("estado", "borrador"),
+        supabase.from("contacto_solicitudes").select("*", { count: "exact", head: true }),
+        supabase
           .from("eventos")
           .select("id, titulo, fecha, fecha_fin")
           .eq("estado", "activo")
@@ -77,6 +100,7 @@ export default function AdminDashboardPage() {
           .limit(3),
         supabase.from("share_events").select("section"),
         supabase.from("whatsapp_clicks").select("section"),
+        supabase.from("view_more_clicks").select("section"),
       ])
 
       setComerciosCount(comercios || 0)
@@ -86,9 +110,13 @@ export default function AdminDashboardPage() {
       setCursosCount(cursos || 0)
       setContactosCount(contactos || 0)
       setUsuariosCount(usuarios || 0)
+      setNewComerciosCount(newComercios || 0)
+      setNewEventosCount(newEventos || 0)
+      setNewContactosCount(newContactos || 0)
       setProximosEventos(eventosData || [])
       setShareTotals(buildShareTotals(shareRows || []))
       setWhatsappTotals(buildWhatsappTotals(whatsappRows || []))
+      setViewMoreTotals(buildViewMoreTotals(viewMoreRows || []))
     }
 
     cargarDashboard()
@@ -153,11 +181,89 @@ export default function AdminDashboardPage() {
     },
   ]
 
+  const reviewItems = [
+    {
+      id: "review-comercios",
+      title: "Comercios nuevos",
+      value: newComerciosCount,
+      helper: "Borradores cargados desde fuera",
+      actionLabel: "Revisar comercios",
+      action: () => router.push("/admin/comercios"),
+    },
+    {
+      id: "review-eventos",
+      title: "Eventos nuevos",
+      value: newEventosCount,
+      helper: "Borradores pendientes de publicacion",
+      actionLabel: "Revisar eventos",
+      action: () => router.push("/admin/eventos"),
+    },
+    {
+      id: "review-contactos",
+      title: "Contactos nuevos",
+      value: newContactosCount,
+      helper: "Mensajes recibidos desde afuera",
+      actionLabel: "Revisar contactos",
+      action: () => router.push("/admin/contactos"),
+    },
+  ].filter((item) => item.value > 0)
+
   return (
     <div className="mx-auto max-w-7xl">
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-semibold text-slate-900">Dashboard</h1>
-        <p className="text-slate-500">Bienvenido al panel de administración</p>
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className="mb-2 text-3xl font-semibold text-slate-900">Dashboard</h1>
+          <p className="text-slate-500">Bienvenido al panel de administración</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => router.push("/admin/metricas")}
+          className="inline-flex items-center gap-2 self-start rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:text-blue-600"
+        >
+          <BarChart3 className="h-4 w-4" />
+          Ver metricas
+        </button>
+      </div>
+
+      <div className="mb-8 rounded-3xl border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-sky-50 p-6 shadow-sm">
+        <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">
+              Prioridad
+            </p>
+            <h2 className="text-2xl font-semibold text-slate-900">
+              Novedades para revisar primero
+            </h2>
+          </div>
+          <div className="inline-flex items-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+            {newComerciosCount + newEventosCount + newContactosCount} pendientes
+          </div>
+        </div>
+
+        {reviewItems.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-white/80 px-4 py-5 text-sm text-slate-500">
+            No hay ingresos nuevos desde afuera para revisar ahora.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {reviewItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={item.action}
+                className="rounded-2xl border border-white bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-sm font-medium text-slate-500">{item.title}</span>
+                  <span className="inline-flex min-w-10 items-center justify-center rounded-full bg-rose-600 px-3 py-1 text-sm font-semibold text-white">
+                    {item.value}
+                  </span>
+                </div>
+                <p className="mb-4 text-sm text-slate-500">{item.helper}</p>
+                <span className="text-sm font-semibold text-blue-600">{item.actionLabel}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-6">
@@ -290,6 +396,45 @@ export default function AdminDashboardPage() {
               </div>
               <div className="mt-1 text-2xl font-semibold text-slate-900">
                 {whatsappTotals.cursos}
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-slate-900">Ver más</h2>
+            <div className="rounded-xl bg-sky-100 p-2 text-sky-700">
+              <FileText className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mb-6 grid grid-cols-2 gap-4">
+            <div className="rounded-xl bg-sky-50 p-4">
+              <div className="text-sm text-slate-500">Comercios</div>
+              <div className="mt-1 text-2xl font-semibold text-slate-900">
+                {viewMoreTotals.comercios}
+              </div>
+            </div>
+            <div className="rounded-xl bg-sky-50 p-4">
+              <div className="text-sm text-slate-500">Eventos</div>
+              <div className="mt-1 text-2xl font-semibold text-slate-900">
+                {viewMoreTotals.eventos}
+              </div>
+            </div>
+            <div className="rounded-xl bg-sky-50 p-4">
+              <div className="text-sm text-slate-500">Cursos</div>
+              <div className="mt-1 text-2xl font-semibold text-slate-900">
+                {viewMoreTotals.cursos}
+              </div>
+            </div>
+            <div className="rounded-xl bg-sky-50 p-4">
+              <div className="text-sm text-slate-500">Servicios</div>
+              <div className="mt-1 text-2xl font-semibold text-slate-900">
+                {viewMoreTotals.servicios}
+              </div>
+            </div>
+            <div className="rounded-xl bg-sky-50 p-4 sm:col-span-2">
+              <div className="text-sm text-slate-500">Instituciones</div>
+              <div className="mt-1 text-2xl font-semibold text-slate-900">
+                {viewMoreTotals.instituciones}
               </div>
             </div>
           </div>
