@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, CalendarDays, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
+import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { EventLikeButton } from "../EventLikeButton"
 import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
@@ -22,6 +23,9 @@ export type Evento = {
   fecha_fin?: string | null
   ubicacion: string
   telefono?: string | null
+  web_url?: string | null
+  instagram_url?: string | null
+  facebook_url?: string | null
   imagen: string
   estado: string
   usa_whatsapp?: boolean | null
@@ -200,6 +204,13 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
               />
             ) : null}
+            {selectedEvento ? (
+              <ExternalLinksButtons
+                webUrl={selectedEvento.web_url}
+                instagramUrl={selectedEvento.instagram_url}
+                facebookUrl={selectedEvento.facebook_url}
+              />
+            ) : null}
             <Link
               href="/eventos"
               className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
@@ -296,7 +307,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                   </p>
                 )}
 
-                <p className="line-clamp-5 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
+                <p className="line-clamp-3 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
                   {evento.descripcion}
                 </p>
 

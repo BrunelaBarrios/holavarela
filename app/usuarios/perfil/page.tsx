@@ -17,6 +17,9 @@ type ProfileForm = {
   responsable: string
   contacto: string
   categoria: string
+  webUrl: string
+  instagramUrl: string
+  facebookUrl: string
   usaWhatsapp: boolean
   image: string
 }
@@ -31,6 +34,9 @@ const initialForm: ProfileForm = {
   responsable: "",
   contacto: "",
   categoria: "Profesionales",
+  webUrl: "",
+  instagramUrl: "",
+  facebookUrl: "",
   usaWhatsapp: true,
   image: "",
 }
@@ -72,6 +78,9 @@ export default function UsuariosPerfilPage() {
           responsable: entity.record.responsable || "",
           contacto: entity.record.contacto || "",
           categoria: entity.record.categoria || "Profesionales",
+          webUrl: entity.record.web_url || "",
+          instagramUrl: entity.record.instagram_url || "",
+          facebookUrl: entity.record.facebook_url || "",
           usaWhatsapp: entity.record.usa_whatsapp ?? true,
           image: entity.record.imagen_url || entity.record.imagen || entity.record.foto || "",
         })
@@ -117,6 +126,9 @@ export default function UsuariosPerfilPage() {
       descripcion: formData.descripcion.trim() || null,
       estado: ownedEntity.record.estado ?? "borrador",
       usa_whatsapp: formData.usaWhatsapp,
+      web_url: formData.webUrl.trim() || null,
+      instagram_url: formData.instagramUrl.trim() || null,
+      facebook_url: formData.facebookUrl.trim() || null,
       [imageColumn]: formData.image || null,
     }
 
@@ -305,6 +317,33 @@ export default function UsuariosPerfilPage() {
                     onChange={(value) => setFormData((current) => ({ ...current, descripcion: value }))}
                   />
 
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Field
+                      label="Sitio web"
+                      type="url"
+                      value={formData.webUrl}
+                      onChange={(value) =>
+                        setFormData((current) => ({ ...current, webUrl: value }))
+                      }
+                    />
+                    <Field
+                      label="Instagram"
+                      type="url"
+                      value={formData.instagramUrl}
+                      onChange={(value) =>
+                        setFormData((current) => ({ ...current, instagramUrl: value }))
+                      }
+                    />
+                    <Field
+                      label="Facebook"
+                      type="url"
+                      value={formData.facebookUrl}
+                      onChange={(value) =>
+                        setFormData((current) => ({ ...current, facebookUrl: value }))
+                      }
+                    />
+                  </div>
+
                   <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
                     <input
                       type="checkbox"
@@ -359,17 +398,19 @@ function Field({
   value,
   onChange,
   required,
+  type = "text",
 }: {
   label: string
   value: string
   onChange: (value: string) => void
   required?: boolean
+  type?: string
 }) {
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium text-slate-700">{label}</label>
       <input
-        type="text"
+        type={type}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         required={required}

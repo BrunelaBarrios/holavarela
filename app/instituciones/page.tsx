@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../components/ContactActionLink"
+import { ExternalLinksButtons } from "../components/ExternalLinksButtons"
 import { OptimizedImage } from "../components/OptimizedImage"
 import { PublicDetailModal } from "../components/PublicDetailModal"
 import { PublicHeader } from "../components/PublicHeader"
@@ -16,6 +17,9 @@ type Institucion = {
   descripcion: string | null
   direccion: string | null
   telefono: string | null
+  web_url?: string | null
+  instagram_url?: string | null
+  facebook_url?: string | null
   foto: string | null
   estado?: string | null
   usa_whatsapp?: boolean | null
@@ -93,25 +97,32 @@ export default function InstitucionesPage() {
             : []),
         ]}
         actions={
-          selectedInstitucion?.telefono?.trim() ? (
-            <ContactActionLink
-              href={getContactHref(
-                selectedInstitucion.telefono,
-                selectedInstitucion.usa_whatsapp
-              )}
-              mode={selectedInstitucion.usa_whatsapp === false ? "phone" : "whatsapp"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={
-                selectedInstitucion.usa_whatsapp === false
-                  ? "inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                  : "inline-flex items-center gap-2 rounded-2xl bg-green-500 px-5 py-3 font-semibold text-white transition hover:bg-green-600"
-              }
-            >
-              <Phone className="h-4 w-4" />
-              {selectedInstitucion.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
-            </ContactActionLink>
-          ) : null
+          <>
+            {selectedInstitucion?.telefono?.trim() ? (
+              <ContactActionLink
+                href={getContactHref(
+                  selectedInstitucion.telefono,
+                  selectedInstitucion.usa_whatsapp
+                )}
+                mode={selectedInstitucion.usa_whatsapp === false ? "phone" : "whatsapp"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={
+                  selectedInstitucion.usa_whatsapp === false
+                    ? "inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                    : "inline-flex items-center gap-2 rounded-2xl bg-green-500 px-5 py-3 font-semibold text-white transition hover:bg-green-600"
+                }
+              >
+                <Phone className="h-4 w-4" />
+                {selectedInstitucion.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
+              </ContactActionLink>
+            ) : null}
+            <ExternalLinksButtons
+              webUrl={selectedInstitucion?.web_url}
+              instagramUrl={selectedInstitucion?.instagram_url}
+              facebookUrl={selectedInstitucion?.facebook_url}
+            />
+          </>
         }
       />
 

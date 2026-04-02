@@ -17,6 +17,9 @@ type EventForm = {
   fechaFin: string
   ubicacion: string
   telefono: string
+  webUrl: string
+  instagramUrl: string
+  facebookUrl: string
   descripcion: string
   imagen: string
   usaWhatsapp: boolean
@@ -31,6 +34,9 @@ const initialForm: EventForm = {
   fechaFin: "",
   ubicacion: "",
   telefono: "",
+  webUrl: "",
+  instagramUrl: "",
+  facebookUrl: "",
   descripcion: "",
   imagen: "",
   usaWhatsapp: true,
@@ -118,6 +124,9 @@ export default function UsuariosNuevoEventoPage() {
       fecha_fin: formData.fechaFin || null,
       ubicacion: formData.ubicacion.trim(),
       telefono: formData.telefono.trim() || null,
+      web_url: formData.webUrl.trim() || null,
+      instagram_url: formData.instagramUrl.trim() || null,
+      facebook_url: formData.facebookUrl.trim() || null,
       descripcion: formData.descripcion.trim(),
       imagen: formData.imagen || null,
       estado: "borrador",
@@ -299,6 +308,47 @@ export default function UsuariosNuevoEventoPage() {
                     />
                     <span>Este numero tiene WhatsApp</span>
                   </label>
+
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">Sitio web</label>
+                      <input
+                        type="url"
+                        value={formData.webUrl}
+                        onChange={(event) =>
+                          setFormData((current) => ({ ...current, webUrl: event.target.value }))
+                        }
+                        placeholder="https://..."
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-blue-400"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">Instagram</label>
+                      <input
+                        type="url"
+                        value={formData.instagramUrl}
+                        onChange={(event) =>
+                          setFormData((current) => ({ ...current, instagramUrl: event.target.value }))
+                        }
+                        placeholder="https://instagram.com/..."
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-blue-400"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-700">Facebook</label>
+                      <input
+                        type="url"
+                        value={formData.facebookUrl}
+                        onChange={(event) =>
+                          setFormData((current) => ({ ...current, facebookUrl: event.target.value }))
+                        }
+                        placeholder="https://facebook.com/..."
+                        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-blue-400"
+                      />
+                    </div>
+                  </div>
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">Descripcion</label>

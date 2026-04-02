@@ -17,6 +17,9 @@ type Evento = {
   fecha_fin?: string | null
   ubicacion: string
   telefono?: string | null
+  web_url?: string | null
+  instagram_url?: string | null
+  facebook_url?: string | null
   descripcion: string
   imagen?: string | null
   estado?: string | null
@@ -31,6 +34,9 @@ type EventoForm = {
   fechaFin: string
   ubicacion: string
   telefono: string
+  web_url: string
+  instagram_url: string
+  facebook_url: string
   descripcion: string
   imagen: string
   usaWhatsapp: boolean
@@ -43,6 +49,9 @@ const initialForm: EventoForm = {
   fechaFin: "",
   ubicacion: "",
   telefono: "",
+  web_url: "",
+  instagram_url: "",
+  facebook_url: "",
   descripcion: "",
   imagen: "",
   usaWhatsapp: true,
@@ -121,6 +130,9 @@ export default function AdminEventosPage() {
       fechaFin: evento.fecha_fin || "",
       ubicacion: evento.ubicacion || "",
       telefono: evento.telefono || "",
+      web_url: evento.web_url || "",
+      instagram_url: evento.instagram_url || "",
+      facebook_url: evento.facebook_url || "",
       descripcion: evento.descripcion || "",
       imagen: evento.imagen || "",
       usaWhatsapp: evento.usa_whatsapp ?? true,
@@ -227,6 +239,9 @@ export default function AdminEventosPage() {
       fecha_fin: formData.fechaFin || null,
       ubicacion: formData.ubicacion,
       telefono: formData.telefono || null,
+      web_url: formData.web_url.trim() || null,
+      instagram_url: formData.instagram_url.trim() || null,
+      facebook_url: formData.facebook_url.trim() || null,
       descripcion: formData.descripcion,
       imagen: formData.imagen || null,
       estado: isDraft
@@ -479,6 +494,53 @@ export default function AdminEventosPage() {
                   className="h-32 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
                   required
                 />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Sitio web
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.web_url}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, web_url: e.target.value }))
+                    }
+                    placeholder="https://..."
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Instagram
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.instagram_url}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, instagram_url: e.target.value }))
+                    }
+                    placeholder="https://instagram.com/..."
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Facebook
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.facebook_url}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, facebook_url: e.target.value }))
+                    }
+                    placeholder="https://facebook.com/..."
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
+                  />
+                </div>
               </div>
 
               <div>

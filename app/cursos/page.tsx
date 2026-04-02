@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic"
 export default async function CursosPage() {
   const { data } = await supabaseServer
     .from("cursos")
-    .select("id, nombre, descripcion, responsable, contacto, imagen, estado, usa_whatsapp")
+    .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp")
     .eq("estado", "activo")
     .order("id", { ascending: false })
 

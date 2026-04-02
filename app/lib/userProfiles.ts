@@ -1,6 +1,15 @@
 "use client"
 
-import { Building2, MapPin, MessageSquareText, Phone, Sparkles } from "lucide-react"
+import {
+  Building2,
+  Facebook,
+  Globe,
+  Instagram,
+  MapPin,
+  MessageSquareText,
+  Phone,
+  Sparkles,
+} from "lucide-react"
 import { supabase } from "../supabase"
 
 export type UserEntityType = "comercio" | "servicio" | "curso" | "institucion"
@@ -20,6 +29,9 @@ export type UserEntityRecord = {
   estado?: string | null
   usa_whatsapp?: boolean | null
   owner_email?: string | null
+  web_url?: string | null
+  instagram_url?: string | null
+  facebook_url?: string | null
 }
 
 export type UserOwnedEntity = {
@@ -131,6 +143,15 @@ export function buildUserProfileFields(entity: UserOwnedEntity | null) {
       : null,
     entity.record.categoria
       ? { label: "Categoria", value: entity.record.categoria, icon: Sparkles }
+      : null,
+    entity.record.web_url
+      ? { label: "Sitio web", value: entity.record.web_url, icon: Globe }
+      : null,
+    entity.record.instagram_url
+      ? { label: "Instagram", value: entity.record.instagram_url, icon: Instagram }
+      : null,
+    entity.record.facebook_url
+      ? { label: "Facebook", value: entity.record.facebook_url, icon: Facebook }
       : null,
     {
       label: "Tipo de ficha",

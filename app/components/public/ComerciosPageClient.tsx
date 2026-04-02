@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
+import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
@@ -15,6 +16,9 @@ export type Comercio = {
   descripcion: string
   direccion: string
   telefono: string
+  web_url?: string | null
+  instagram_url?: string | null
+  facebook_url?: string | null
   imagen?: string | null
   imagen_url?: string | null
   usa_whatsapp?: boolean | null
@@ -129,6 +133,11 @@ export function ComerciosPageClient({
                 itemId={String(selectedComercio.id)}
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
               />
+              <ExternalLinksButtons
+                webUrl={selectedComercio.web_url}
+                instagramUrl={selectedComercio.instagram_url}
+                facebookUrl={selectedComercio.facebook_url}
+              />
             </>
           ) : null
         }
@@ -185,7 +194,7 @@ export function ComerciosPageClient({
                     {comercio.nombre}
                   </h2>
 
-                  <p className="line-clamp-5 whitespace-pre-line text-sm text-gray-600">
+                  <p className="line-clamp-3 whitespace-pre-line text-sm text-gray-600">
                     {comercio.descripcion}
                   </p>
 

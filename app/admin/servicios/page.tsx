@@ -17,6 +17,9 @@ type Servicio = {
   responsable: string | null
   contacto: string | null
   direccion: string | null
+  web_url?: string | null
+  instagram_url?: string | null
+  facebook_url?: string | null
   imagen: string | null
   destacado?: boolean | null
   estado?: string | null
@@ -32,6 +35,9 @@ type ServicioForm = {
   responsable: string
   contacto: string
   direccion: string
+  web_url: string
+  instagram_url: string
+  facebook_url: string
   imagen: string
   usa_whatsapp: boolean
 }
@@ -43,6 +49,9 @@ const initialForm: ServicioForm = {
   responsable: "",
   contacto: "",
   direccion: "",
+  web_url: "",
+  instagram_url: "",
+  facebook_url: "",
   imagen: "",
   usa_whatsapp: true,
 }
@@ -129,6 +138,9 @@ export default function AdminServiciosPage() {
       responsable: servicio.responsable || "",
       contacto: servicio.contacto || "",
       direccion: servicio.direccion || "",
+      web_url: servicio.web_url || "",
+      instagram_url: servicio.instagram_url || "",
+      facebook_url: servicio.facebook_url || "",
       imagen: servicio.imagen || "",
       usa_whatsapp: servicio.usa_whatsapp ?? true,
     })
@@ -248,6 +260,9 @@ export default function AdminServiciosPage() {
       responsable: formData.responsable || null,
       contacto: formData.contacto || null,
       direccion: formData.direccion || null,
+      web_url: formData.web_url.trim() || null,
+      instagram_url: formData.instagram_url.trim() || null,
+      facebook_url: formData.facebook_url.trim() || null,
       imagen: formData.imagen || null,
       destacado: editingServicio?.destacado ?? false,
       estado: isDraft
@@ -483,6 +498,53 @@ export default function AdminServiciosPage() {
                   }
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-amber-500"
                 />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Sitio web
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.web_url}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, web_url: e.target.value }))
+                    }
+                    placeholder="https://..."
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Instagram
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.instagram_url}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, instagram_url: e.target.value }))
+                    }
+                    placeholder="https://instagram.com/..."
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Facebook
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.facebook_url}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, facebook_url: e.target.value }))
+                    }
+                    placeholder="https://facebook.com/..."
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-amber-500"
+                  />
+                </div>
               </div>
 
               <div>

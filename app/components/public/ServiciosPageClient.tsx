@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, MapPin, Phone, Search, UserRound } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
+import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
@@ -17,6 +18,9 @@ export type Servicio = {
   responsable: string | null
   contacto: string | null
   direccion: string | null
+  web_url?: string | null
+  instagram_url?: string | null
+  facebook_url?: string | null
   imagen: string | null
   estado?: string | null
   usa_whatsapp?: boolean | null
@@ -143,6 +147,11 @@ export function ServiciosPageClient({
                 itemId={String(selectedServicio.id)}
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
               />
+              <ExternalLinksButtons
+                webUrl={selectedServicio.web_url}
+                instagramUrl={selectedServicio.instagram_url}
+                facebookUrl={selectedServicio.facebook_url}
+              />
             </>
           ) : null
         }
@@ -212,7 +221,7 @@ export function ServiciosPageClient({
                         </h3>
 
                         {servicio.descripcion && (
-                          <p className="line-clamp-5 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
+                          <p className="line-clamp-3 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
                             {servicio.descripcion}
                           </p>
                         )}

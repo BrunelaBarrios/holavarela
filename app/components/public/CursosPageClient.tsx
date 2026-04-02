@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, GraduationCap, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
+import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
@@ -15,6 +16,9 @@ export type Curso = {
   descripcion: string
   responsable: string
   contacto: string
+  web_url?: string | null
+  instagram_url?: string | null
+  facebook_url?: string | null
   imagen: string | null
   estado?: string | null
   usa_whatsapp?: boolean | null
@@ -117,6 +121,11 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                 itemId={String(selectedCurso.id)}
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
               />
+              <ExternalLinksButtons
+                webUrl={selectedCurso.web_url}
+                instagramUrl={selectedCurso.instagram_url}
+                facebookUrl={selectedCurso.facebook_url}
+              />
             </>
           ) : null
         }
@@ -174,7 +183,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                     {curso.nombre}
                   </h2>
 
-                  <p className="line-clamp-5 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
+                  <p className="line-clamp-3 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
                     {curso.descripcion}
                   </p>
 

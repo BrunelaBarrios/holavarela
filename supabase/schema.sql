@@ -4,17 +4,44 @@ add column if not exists destacado boolean default false;
 alter table public.comercios
 add column if not exists owner_email text;
 
+alter table public.comercios
+add column if not exists web_url text;
+
+alter table public.comercios
+add column if not exists instagram_url text;
+
+alter table public.comercios
+add column if not exists facebook_url text;
+
 alter table public.servicios
 add column if not exists destacado boolean default false;
 
 alter table public.servicios
 add column if not exists owner_email text;
 
+alter table public.servicios
+add column if not exists web_url text;
+
+alter table public.servicios
+add column if not exists instagram_url text;
+
+alter table public.servicios
+add column if not exists facebook_url text;
+
 alter table public.cursos
 add column if not exists destacado boolean default false;
 
 alter table public.cursos
 add column if not exists owner_email text;
+
+alter table public.cursos
+add column if not exists web_url text;
+
+alter table public.cursos
+add column if not exists instagram_url text;
+
+alter table public.cursos
+add column if not exists facebook_url text;
 
 alter table public.eventos
 add column if not exists fecha_fin date;
@@ -28,6 +55,15 @@ add column if not exists usa_whatsapp boolean default true;
 alter table public.eventos
 add column if not exists owner_email text;
 
+alter table public.eventos
+add column if not exists web_url text;
+
+alter table public.eventos
+add column if not exists instagram_url text;
+
+alter table public.eventos
+add column if not exists facebook_url text;
+
 alter table public.instituciones
 add column if not exists usa_whatsapp boolean default true;
 
@@ -37,12 +73,24 @@ add column if not exists estado text default 'activo';
 alter table public.instituciones
 add column if not exists owner_email text;
 
+alter table public.instituciones
+add column if not exists web_url text;
+
+alter table public.instituciones
+add column if not exists instagram_url text;
+
+alter table public.instituciones
+add column if not exists facebook_url text;
+
 create table if not exists public.cursos (
   id bigint generated always as identity primary key,
   nombre text not null,
   descripcion text not null,
   responsable text not null,
   contacto text not null,
+  web_url text,
+  instagram_url text,
+  facebook_url text,
   imagen text,
   estado text default 'activo',
   created_at timestamp with time zone default now()
@@ -56,6 +104,9 @@ create table if not exists public.servicios (
   responsable text,
   contacto text,
   direccion text,
+  web_url text,
+  instagram_url text,
+  facebook_url text,
   imagen text,
   estado text default 'activo',
   created_at timestamp with time zone default now()

@@ -4,6 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 import { ContactActionLink } from "./ContactActionLink"
+import { ExternalLinksButtons } from "./ExternalLinksButtons"
 import { EventLikeButton } from "./EventLikeButton"
 import { OptimizedImage } from "./OptimizedImage"
 import { MyTunerWidget } from "./MyTunerWidget"
@@ -34,6 +35,9 @@ type Comercio = {
   descripcion: string | null
   direccion: string | null
   telefono: string | null
+  web_url?: string | null
+  instagram_url?: string | null
+  facebook_url?: string | null
   imagen?: string | null
   imagen_url?: string | null
   destacado?: boolean | null
@@ -49,6 +53,9 @@ type Evento = {
   fecha_fin?: string | null
   ubicacion: string
   telefono?: string | null
+  web_url?: string | null
+  instagram_url?: string | null
+  facebook_url?: string | null
   imagen?: string | null
   estado?: string | null
   usa_whatsapp?: boolean | null
@@ -67,6 +74,9 @@ type Curso = {
   descripcion: string
   responsable: string
   contacto: string
+  web_url?: string | null
+  instagram_url?: string | null
+  facebook_url?: string | null
   imagen: string | null
   destacado?: boolean | null
   usa_whatsapp?: boolean | null
@@ -80,6 +90,9 @@ type Servicio = {
   responsable: string | null
   contacto: string | null
   direccion: string | null
+  web_url?: string | null
+  instagram_url?: string | null
+  facebook_url?: string | null
   imagen: string | null
   destacado?: boolean | null
   usa_whatsapp?: boolean | null
@@ -91,6 +104,9 @@ type Institucion = {
   descripcion: string | null
   direccion: string | null
   telefono: string | null
+  web_url?: string | null
+  instagram_url?: string | null
+  facebook_url?: string | null
   foto: string | null
   usa_whatsapp?: boolean | null
 }
@@ -840,6 +856,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     </ContactActionLink>
                   )}
 
+                  <ExternalLinksButtons
+                    webUrl={selectedComercio.web_url}
+                    instagramUrl={selectedComercio.instagram_url}
+                    facebookUrl={selectedComercio.facebook_url}
+                  />
+
                   <button
                     type="button"
                     onClick={() => setSelectedComercio(null)}
@@ -952,6 +974,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     </ContactActionLink>
                   )}
 
+                  <ExternalLinksButtons
+                    webUrl={selectedServicio.web_url}
+                    instagramUrl={selectedServicio.instagram_url}
+                    facebookUrl={selectedServicio.facebook_url}
+                  />
+
                   <button
                     type="button"
                     onClick={() => setSelectedServicio(null)}
@@ -1063,6 +1091,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       {selectedEvento.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
                     </ContactActionLink>
                   ) : null}
+
+                  <ExternalLinksButtons
+                    webUrl={selectedEvento.web_url}
+                    instagramUrl={selectedEvento.instagram_url}
+                    facebookUrl={selectedEvento.facebook_url}
+                  />
 
                   <EventLikeButton
                     count={eventLikeCounts[String(selectedEvento.id)] || 0}
@@ -1177,6 +1211,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     </ContactActionLink>
                   ) : null}
 
+                  <ExternalLinksButtons
+                    webUrl={selectedCurso.web_url}
+                    instagramUrl={selectedCurso.instagram_url}
+                    facebookUrl={selectedCurso.facebook_url}
+                  />
+
                   <button
                     type="button"
                     onClick={() => setSelectedCurso(null)}
@@ -1282,6 +1322,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       {selectedInstitucion.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
                     </ContactActionLink>
                   ) : null}
+
+                  <ExternalLinksButtons
+                    webUrl={selectedInstitucion.web_url}
+                    instagramUrl={selectedInstitucion.instagram_url}
+                    facebookUrl={selectedInstitucion.facebook_url}
+                  />
 
                   <Link
                     href="/instituciones"
@@ -1437,7 +1483,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       {business.nombre}
                     </h3>
                     {business.descripcion && (
-                        <p className="line-clamp-5 mt-2 whitespace-pre-line text-base text-slate-500">
+                        <p className="line-clamp-3 mt-2 whitespace-pre-line text-base text-slate-500">
                           {business.descripcion}
                         </p>
                     )}
@@ -1543,7 +1589,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           </h3>
 
                           {servicio.descripcion && (
-                              <p className="line-clamp-5 mt-3 whitespace-pre-line text-sm leading-7 text-slate-500">
+                              <p className="line-clamp-3 mt-3 whitespace-pre-line text-sm leading-7 text-slate-500">
                                 {servicio.descripcion}
                               </p>
                           )}
@@ -1668,7 +1714,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   </h3>
 
                   <p className="mt-2 text-sm text-slate-500">{event.ubicacion}</p>
-                    <p className="line-clamp-5 mt-3 whitespace-pre-line text-lg leading-8 text-slate-500">
+                    <p className="line-clamp-3 mt-3 whitespace-pre-line text-lg leading-8 text-slate-500">
                       {event.descripcion}
                     </p>
 
@@ -1750,7 +1796,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     <h3 className="text-[22px] font-semibold text-slate-900">
                       {curso.nombre}
                     </h3>
-                      <p className="line-clamp-5 mt-3 whitespace-pre-line text-base leading-7 text-slate-500">
+                      <p className="line-clamp-3 mt-3 whitespace-pre-line text-base leading-7 text-slate-500">
                         {curso.descripcion}
                       </p>
                     <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">

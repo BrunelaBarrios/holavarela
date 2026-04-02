@@ -13,6 +13,9 @@ type Institucion = {
   descripcion: string | null
   direccion: string | null
   telefono: string | null
+  web_url?: string | null
+  instagram_url?: string | null
+  facebook_url?: string | null
   foto: string | null
   estado?: string | null
   usa_whatsapp?: boolean | null
@@ -25,6 +28,9 @@ const initialForm: InstitucionForm = {
   descripcion: "",
   direccion: "",
   telefono: "",
+  web_url: "",
+  instagram_url: "",
+  facebook_url: "",
   foto: "",
   usa_whatsapp: true,
 }
@@ -74,6 +80,9 @@ export default function AdminInstitucionesPage() {
       descripcion: institucion.descripcion || "",
       direccion: institucion.direccion || "",
       telefono: institucion.telefono || "",
+      web_url: institucion.web_url || "",
+      instagram_url: institucion.instagram_url || "",
+      facebook_url: institucion.facebook_url || "",
       foto: institucion.foto || "",
       usa_whatsapp: institucion.usa_whatsapp ?? true,
     })
@@ -156,6 +165,9 @@ export default function AdminInstitucionesPage() {
       descripcion: formData.descripcion || null,
       direccion: formData.direccion || null,
       telefono: formData.telefono || null,
+      web_url: formData.web_url?.trim() || null,
+      instagram_url: formData.instagram_url?.trim() || null,
+      facebook_url: formData.facebook_url?.trim() || null,
       foto: formData.foto || null,
       estado: editingInstitucion?.estado ?? "activo",
       usa_whatsapp: formData.usa_whatsapp,
@@ -323,6 +335,53 @@ export default function AdminInstitucionesPage() {
                   }
                   className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-cyan-500"
                 />
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Sitio web
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.web_url || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, web_url: e.target.value }))
+                    }
+                    placeholder="https://..."
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-cyan-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Instagram
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.instagram_url || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, instagram_url: e.target.value }))
+                    }
+                    placeholder="https://instagram.com/..."
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-cyan-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Facebook
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.facebook_url || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, facebook_url: e.target.value }))
+                    }
+                    placeholder="https://facebook.com/..."
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-cyan-500"
+                  />
+                </div>
               </div>
 
               <div>
