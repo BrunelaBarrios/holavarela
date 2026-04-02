@@ -66,7 +66,7 @@ export function PublicDetailModal({
         </div>
       ) : null}
 
-      <div className="relative max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-[0_30px_120px_-34px_rgba(15,23,42,0.55)]">
+      <div className="relative max-h-[92vh] w-full max-w-6xl overflow-y-auto rounded-[32px] border border-white/70 bg-white shadow-[0_30px_120px_-34px_rgba(15,23,42,0.55)] xl:overflow-hidden">
         <button
           type="button"
           onClick={onClose}
@@ -76,14 +76,14 @@ export function PublicDetailModal({
           <X className="h-5 w-5" />
         </button>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.18fr)_390px]">
-          <div className="relative bg-[radial-gradient(circle_at_top_left,#e8f6ec_0%,#f4f9ff_38%,#eef4ff_100%)]">
+        <div className="grid grid-cols-1 xl:items-start xl:grid-cols-[minmax(0,1.1fr)_390px]">
+          <div className="relative bg-[radial-gradient(circle_at_top_left,#e8f6ec_0%,#f4f9ff_38%,#eef4ff_100%)] xl:self-start">
             {imageSrc ? (
-              <div className="flex min-h-[340px] w-full items-center justify-center p-4 md:min-h-[520px] md:p-7 xl:min-h-[640px]">
+              <div className="flex min-h-[260px] w-full items-start justify-center p-4 md:min-h-[340px] md:p-6 xl:p-8">
                 <button
                   type="button"
                   onClick={() => setIsImageZoomed(true)}
-                  className="group relative flex h-full min-h-[300px] w-full max-w-[760px] items-center justify-center overflow-hidden rounded-[30px] border border-white/80 bg-white/90 p-3 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] hover:shadow-[0_32px_90px_-34px_rgba(15,23,42,0.5)] md:min-h-[460px] md:p-4"
+                  className="group relative aspect-[4/5] w-full max-w-[620px] overflow-hidden rounded-[30px] border border-white/80 bg-white/90 p-3 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] hover:shadow-[0_32px_90px_-34px_rgba(15,23,42,0.5)] md:max-w-[680px] md:p-4"
                   aria-label="Ver imagen mas grande"
                 >
                   <span className="absolute left-4 top-4 z-10 rounded-full bg-slate-950/75 px-3 py-1 text-xs font-semibold tracking-[0.2em] text-white/90 uppercase">
