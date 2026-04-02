@@ -187,7 +187,7 @@ export default function AdminUsuariosPage() {
       action: "Crear usuario",
       section: "Usuarios",
       target: formData.email,
-      details: formData.ownerType
+      details: formData.ownerType && formData.ownerId
         ? `${ownerTypeLabels[formData.ownerType]} ID ${formData.ownerId}`
         : "Sin perfil asignado al crear",
     })
@@ -307,7 +307,7 @@ export default function AdminUsuariosPage() {
                       className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none disabled:bg-slate-100"
                     >
                       <option value="">
-                        {formData.ownerType ? "Selecciona un perfil" : "Primero elige el tipo"}
+                        {formData.ownerType ? "Sin perfil por ahora" : "Primero elige el tipo"}
                       </option>
                       {selectedOwnerOptions.map((item) => (
                         <option

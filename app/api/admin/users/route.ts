@@ -60,6 +60,7 @@ export async function POST(request: Request) {
     const adminPassword = body.adminPassword || ""
     const ownerType = body.ownerType || ""
     const ownerId = body.ownerId ? Number(body.ownerId) : null
+    const hasLinkedOwner = Boolean(ownerType && ownerId)
 
     if (!email || !password || !adminUsername || !adminPassword) {
       return NextResponse.json(
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
       )
     }
 
-    if ((ownerType && !ownerId) || (!ownerType && ownerId)) {
+    if (!ownerType && ownerId) {
       return NextResponse.json(
         { error: "La asignacion del perfil quedo incompleta." },
         { status: 400 }
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
       )
     }
 
-    if (ownerType && ownerId) {
+    if (hasLinkedOwner) {
       const table = resolveTable(ownerType)
       const { data: ownerData, error: ownerError } = await supabaseAdmin
         .from(table)
@@ -141,7 +142,7 @@ export async function POST(request: Request) {
 
       if (registeredError) throw registeredError
 
-      if (ownerType && ownerId) {
+      if (hasLinkedOwner) {
         const table = resolveTable(ownerType)
         const { error: ownerUpdateError } = await supabaseAdmin
           .from(table)
