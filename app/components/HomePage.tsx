@@ -261,6 +261,23 @@ const initialContactLeadForm: ContactLeadForm = {
   mensaje: "",
 }
 
+const SOCIAL_LINKS = [
+  {
+    id: "instagram",
+    label: "Instagram",
+    href: "https://www.instagram.com/hola.varela?igsh=MTRwczl1aGI0MTEzaw==",
+    className:
+      "border-pink-100 bg-[linear-gradient(135deg,#fff1f7_0%,#f5ecff_100%)] text-pink-700 hover:border-pink-200 hover:text-pink-800",
+  },
+  {
+    id: "facebook",
+    label: "Facebook",
+    href: "https://www.facebook.com/share/1HZBYuVRC3/",
+    className:
+      "border-blue-100 bg-[linear-gradient(135deg,#eef5ff_0%,#f3f8ff_100%)] text-blue-700 hover:border-blue-200 hover:text-blue-800",
+  },
+]
+
 export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [featuredBusinesses] = useState<Comercio[]>(initialData.featuredBusinesses)
   const [eventos] = useState<Evento[]>(initialData.eventos)
@@ -1857,6 +1874,21 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 <span>Jose Pedro Varela, Lavalleja</span>
               </div>
 
+              <div className="flex flex-wrap gap-3 pt-2">
+                {SOCIAL_LINKS.map((item) => (
+                  <a
+                    key={item.id}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center gap-3 rounded-full border px-4 py-3 text-sm font-semibold transition ${item.className}`}
+                  >
+                    {item.id === "instagram" ? <InstagramMark /> : <FacebookMark />}
+                    <span>{item.label}</span>
+                  </a>
+                ))}
+              </div>
+
               <button
                 type="button"
                 onClick={() => {
@@ -1874,5 +1906,21 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       </footer>
     </div>
+  )
+}
+
+function InstagramMark() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
+      <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2Zm0 1.75A4 4 0 0 0 3.75 7.75v8.5a4 4 0 0 0 4 4h8.5a4 4 0 0 0 4-4v-8.5a4 4 0 0 0-4-4h-8.5Zm8.94 1.31a1.06 1.06 0 1 1 0 2.12 1.06 1.06 0 0 1 0-2.12ZM12 6.5A5.5 5.5 0 1 1 6.5 12 5.5 5.5 0 0 1 12 6.5Zm0 1.75A3.75 3.75 0 1 0 15.75 12 3.75 3.75 0 0 0 12 8.25Z" />
+    </svg>
+  )
+}
+
+function FacebookMark() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
+      <path d="M13.5 22v-8.2h2.76l.41-3.2H13.5V8.56c0-.93.26-1.56 1.59-1.56H16.8V4.14c-.29-.04-1.28-.14-2.44-.14-2.42 0-4.08 1.48-4.08 4.2v2.4H7.5v3.2h2.78V22h3.22Z" />
+    </svg>
   )
 }
