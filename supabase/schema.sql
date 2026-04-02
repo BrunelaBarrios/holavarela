@@ -163,6 +163,9 @@ create table if not exists public.contacto_solicitudes (
 alter table public.contacto_solicitudes
 alter column email drop not null;
 
+alter table public.contacto_solicitudes
+add column if not exists visto boolean default false;
+
 create table if not exists public.usuarios_registrados (
   id bigint generated always as identity primary key,
   user_id uuid unique,

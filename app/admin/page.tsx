@@ -90,14 +90,17 @@ export default function AdminDashboardPage() {
           .from("eventos")
           .select("*", { count: "exact", head: true })
           .eq("estado", "borrador"),
-        supabase.from("contacto_solicitudes").select("*", { count: "exact", head: true }),
+        supabase
+          .from("contacto_solicitudes")
+          .select("*", { count: "exact", head: true })
+          .or("visto.is.null,visto.eq.false"),
         supabase
           .from("eventos")
           .select("id, titulo, fecha, fecha_fin")
           .eq("estado", "activo")
           .or(buildActiveEventsFilter(today))
           .order("fecha", { ascending: true })
-          .limit(3),
+          .limit(4),
         supabase.from("share_events").select("section"),
         supabase.from("whatsapp_clicks").select("section"),
         supabase.from("view_more_clicks").select("section"),
@@ -119,8 +122,24 @@ export default function AdminDashboardPage() {
       setViewMoreTotals(buildViewMoreTotals(viewMoreRows || []))
     }
 
-    cargarDashboard()
+    void cargarDashboard()
   }, [])
+
+  const totalContentCount =
+    comerciosCount + eventosCount + serviciosCount + institucionesCount + cursosCount
+  const totalInteractions =
+    shareTotals.comercios +
+    shareTotals.eventos +
+    shareTotals.cursos +
+    shareTotals.servicios +
+    whatsappTotals.comercios +
+    whatsappTotals.servicios +
+    whatsappTotals.cursos +
+    viewMoreTotals.comercios +
+    viewMoreTotals.eventos +
+    viewMoreTotals.cursos +
+    viewMoreTotals.servicios +
+    viewMoreTotals.instituciones
 
   const stats = [
     {
@@ -156,20 +175,12 @@ export default function AdminDashboardPage() {
       action: () => router.push("/admin/instituciones"),
     },
     {
-      id: "secciones",
+      id: "cursos",
       title: "Cursos",
       value: cursosCount,
       icon: GraduationCap,
       color: "bg-slate-800",
       action: () => router.push("/admin/cursos"),
-    },
-    {
-      id: "contactos",
-      title: "Contactos",
-      value: contactosCount,
-      icon: Mail,
-      color: "bg-rose-600",
-      action: () => router.push("/admin/contactos"),
     },
     {
       id: "usuarios",
@@ -183,37 +194,76 @@ export default function AdminDashboardPage() {
 
   const reviewItems = [
     {
-      id: "review-comercios",
-      title: "Comercios nuevos",
-      value: newComerciosCount,
-      helper: "Borradores cargados desde fuera",
-      actionLabel: "Revisar comercios",
-      action: () => router.push("/admin/comercios"),
+      id: "review-contactos",
+      title: "Contactos nuevos",
+      value: newContactosCount,
+      helper: "Mensajes sin visto",
+      actionLabel: "Revisar contactos",
+      action: () => router.push("/admin/contactos"),
     },
     {
       id: "review-eventos",
       title: "Eventos nuevos",
       value: newEventosCount,
-      helper: "Borradores pendientes de publicacion",
+      helper: "Borradores pendientes de publicación",
       actionLabel: "Revisar eventos",
       action: () => router.push("/admin/eventos"),
     },
     {
-      id: "review-contactos",
-      title: "Contactos nuevos",
-      value: newContactosCount,
-      helper: "Mensajes recibidos desde afuera",
-      actionLabel: "Revisar contactos",
-      action: () => router.push("/admin/contactos"),
+      id: "review-comercios",
+      title: "Comercios nuevos",
+      value: newComerciosCount,
+      helper: "Altas nuevas pendientes",
+      actionLabel: "Revisar comercios",
+      action: () => router.push("/admin/comercios"),
     },
   ].filter((item) => item.value > 0)
+
+  const quickActions = [
+    {
+      label: "Agregar Comercio",
+      icon: Plus,
+      className: "bg-blue-600 text-white hover:bg-blue-500",
+      action: () => router.push("/admin/comercios"),
+    },
+    {
+      label: "Agregar Evento",
+      icon: Plus,
+      className: "bg-emerald-600 text-white hover:bg-emerald-500",
+      action: () => router.push("/admin/eventos"),
+    },
+    {
+      label: "Agregar Servicio",
+      icon: Plus,
+      className: "bg-amber-600 text-white hover:bg-amber-500",
+      action: () => router.push("/admin/servicios"),
+    },
+    {
+      label: "Configurar Radio",
+      icon: Radio,
+      className: "bg-slate-800 text-white hover:bg-slate-700",
+      action: () => router.push("/admin/radio"),
+    },
+    {
+      label: "Ver Contactos",
+      icon: Mail,
+      className: "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100",
+      action: () => router.push("/admin/contactos"),
+    },
+    {
+      label: "Editar Sitio",
+      icon: FileText,
+      className: "border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100",
+      action: () => router.push("/admin/sitio"),
+    },
+  ]
 
   return (
     <div className="mx-auto max-w-7xl">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="mb-2 text-3xl font-semibold text-slate-900">Dashboard</h1>
-          <p className="text-slate-500">Bienvenido al panel de administración</p>
+          <p className="text-slate-500">Panel de administración ordenado por prioridad y actividad.</p>
         </div>
         <button
           type="button"
@@ -221,30 +271,90 @@ export default function AdminDashboardPage() {
           className="inline-flex items-center gap-2 self-start rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:text-blue-600"
         >
           <BarChart3 className="h-4 w-4" />
-          Ver metricas
+          Ver métricas
         </button>
       </div>
 
-      <div className="mb-8 rounded-3xl border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-sky-50 p-6 shadow-sm">
-        <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">
-              Prioridad
-            </p>
-            <h2 className="text-2xl font-semibold text-slate-900">
-              Novedades para revisar primero
-            </h2>
+      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <button
+          onClick={() => router.push("/admin/contactos")}
+          className="rounded-3xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <div className="rounded-2xl bg-rose-600 p-3 text-white">
+              <Mail className="h-6 w-6" />
+            </div>
+            <span className="inline-flex min-w-10 items-center justify-center rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">
+              {newContactosCount}
+            </span>
           </div>
-          <div className="inline-flex items-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-            {newComerciosCount + newEventosCount + newContactosCount} pendientes
-          </div>
-        </div>
+          <h3 className="text-lg font-semibold text-slate-900">Pendientes de contacto</h3>
+          <p className="mt-2 text-sm text-slate-500">Mensajes nuevos esperando revisión.</p>
+        </button>
 
-        {reviewItems.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-white/80 px-4 py-5 text-sm text-slate-500">
-            No hay ingresos nuevos desde afuera para revisar ahora.
+        <button
+          onClick={() => router.push("/admin/eventos")}
+          className="rounded-3xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <div className="rounded-2xl bg-emerald-600 p-3 text-white">
+              <Calendar className="h-6 w-6" />
+            </div>
+            <span className="inline-flex min-w-10 items-center justify-center rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">
+              {newEventosCount}
+            </span>
           </div>
-        ) : (
+          <h3 className="text-lg font-semibold text-slate-900">Eventos por revisar</h3>
+          <p className="mt-2 text-sm text-slate-500">Borradores o ingresos nuevos desde fuera.</p>
+        </button>
+
+        <button
+          onClick={() => router.push("/admin/comercios")}
+          className="rounded-3xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <div className="rounded-2xl bg-blue-600 p-3 text-white">
+              <Store className="h-6 w-6" />
+            </div>
+            <span className="inline-flex min-w-10 items-center justify-center rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">
+              {newComerciosCount}
+            </span>
+          </div>
+          <h3 className="text-lg font-semibold text-slate-900">Comercios por revisar</h3>
+          <p className="mt-2 text-sm text-slate-500">Altas nuevas pendientes de publicar.</p>
+        </button>
+
+        <button
+          onClick={() => router.push("/admin/metricas")}
+          className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <div className="rounded-2xl bg-white/10 p-3 text-white">
+              <BarChart3 className="h-6 w-6" />
+            </div>
+            <span className="text-3xl font-semibold text-white">{totalInteractions}</span>
+          </div>
+          <h3 className="text-lg font-semibold text-white">Interacciones</h3>
+          <p className="mt-2 text-sm text-slate-300">WhatsApp, compartir y ver más del sitio.</p>
+        </button>
+      </div>
+
+      {reviewItems.length > 0 ? (
+        <div className="mb-8 rounded-3xl border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-sky-50 p-6 shadow-sm">
+          <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">
+                Prioridad
+              </p>
+              <h2 className="text-2xl font-semibold text-slate-900">
+                Novedades para revisar primero
+              </h2>
+            </div>
+            <div className="inline-flex items-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+              {newComerciosCount + newEventosCount + newContactosCount} pendientes
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {reviewItems.map((item) => (
               <button
@@ -263,8 +373,8 @@ export default function AdminDashboardPage() {
               </button>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      ) : null}
 
       <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-6">
         {stats.map((stat) => {
@@ -274,246 +384,195 @@ export default function AdminDashboardPage() {
             <button
               key={stat.id}
               onClick={stat.action}
-              className="rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+              className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
             >
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-3 flex items-center justify-between">
                 <div className={`${stat.color} rounded-xl p-3 text-white`}>
                   <Icon className="h-6 w-6" />
                 </div>
-                <span className="text-3xl font-semibold text-slate-900">
-                  {stat.value}
-                </span>
+                <span className="text-2xl font-semibold text-slate-900">{stat.value}</span>
               </div>
-              <h3 className="text-slate-500">{stat.title}</h3>
+              <h3 className="text-sm text-slate-500">{stat.title}</h3>
             </button>
           )
         })}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-slate-900">
-              Próximos Eventos
-            </h2>
-            <Link
-              href="/admin/eventos"
-              className="text-sm font-medium text-blue-600 transition hover:text-blue-500"
-            >
-              Ver todos
-            </Link>
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_0.9fr]">
+        <div className="space-y-6">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">Resumen general</h2>
+                <p className="text-sm text-slate-500">
+                  Estado del contenido y de la gestión interna.
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="rounded-2xl bg-slate-50 p-5">
+                <div className="text-sm text-slate-500">Contenido cargado</div>
+                <div className="mt-2 text-3xl font-semibold text-slate-900">{totalContentCount}</div>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-5">
+                <div className="text-sm text-slate-500">Usuarios registrados</div>
+                <div className="mt-2 text-3xl font-semibold text-slate-900">{usuariosCount}</div>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-5">
+                <div className="text-sm text-slate-500">Contactos totales</div>
+                <div className="mt-2 text-3xl font-semibold text-slate-900">{contactosCount}</div>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-4">
-            {proximosEventos.length === 0 ? (
-              <div className="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
-                No hay eventos cargados todavia.
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">Próximos eventos</h2>
+                <p className="text-sm text-slate-500">Lo siguiente que ya está activo en el sitio.</p>
               </div>
-            ) : (
-              proximosEventos.map((event) => (
-                <div
-                  key={event.id}
-                  className="flex items-center gap-4 rounded-xl bg-slate-50 p-4"
-                >
-                  <div className="rounded-xl bg-blue-600 p-2 text-white">
-                    <Calendar className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-slate-900">{event.titulo}</h4>
-                    <p className="text-sm text-slate-500">
-                      {formatEventDateRange(event.fecha, event.fecha_fin)}
-                    </p>
-                  </div>
+              <Link
+                href="/admin/eventos"
+                className="text-sm font-medium text-blue-600 transition hover:text-blue-500"
+              >
+                Ver todos
+              </Link>
+            </div>
+
+            <div className="space-y-4">
+              {proximosEventos.length === 0 ? (
+                <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
+                  No hay eventos cargados todavía.
                 </div>
-              ))
-            )}
+              ) : (
+                proximosEventos.map((event) => (
+                  <div
+                    key={event.id}
+                    className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4"
+                  >
+                    <div className="rounded-2xl bg-blue-600 p-2 text-white">
+                      <Calendar className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-slate-900">{event.titulo}</h4>
+                      <p className="text-sm text-slate-500">
+                        {formatEventDateRange(event.fecha, event.fecha_fin)}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">Interacciones rápidas</h2>
+                <p className="text-sm text-slate-500">
+                  Resumen simple de lo que hace la gente en el sitio.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => router.push("/admin/metricas")}
+                className="text-sm font-medium text-blue-600 transition hover:text-blue-500"
+              >
+                Abrir métricas
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="rounded-2xl bg-green-50 p-5">
+                <div className="mb-2 flex items-center gap-2 text-sm text-slate-600">
+                  <MessageCircle className="h-4 w-4 text-green-600" />
+                  WhatsApp
+                </div>
+                <div className="text-3xl font-semibold text-slate-900">
+                  {whatsappTotals.comercios + whatsappTotals.servicios + whatsappTotals.cursos}
+                </div>
+              </div>
+              <div className="rounded-2xl bg-violet-50 p-5">
+                <div className="mb-2 flex items-center gap-2 text-sm text-slate-600">
+                  <Share2 className="h-4 w-4 text-violet-600" />
+                  Compartir
+                </div>
+                <div className="text-3xl font-semibold text-slate-900">
+                  {shareTotals.comercios + shareTotals.eventos + shareTotals.cursos + shareTotals.servicios}
+                </div>
+              </div>
+              <div className="rounded-2xl bg-sky-50 p-5">
+                <div className="mb-2 flex items-center gap-2 text-sm text-slate-600">
+                  <FileText className="h-4 w-4 text-sky-600" />
+                  Ver más
+                </div>
+                <div className="text-3xl font-semibold text-slate-900">
+                  {viewMoreTotals.comercios + viewMoreTotals.eventos + viewMoreTotals.cursos + viewMoreTotals.servicios + viewMoreTotals.instituciones}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-slate-900">
-              Compartidos
-            </h2>
-            <div className="rounded-xl bg-slate-100 p-2 text-slate-600">
-              <Share2 className="h-5 w-5" />
+        <div className="space-y-6">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-6 text-xl font-semibold text-slate-900">Acciones rápidas</h2>
+            <div className="space-y-3">
+              {quickActions.map((action) => {
+                const Icon = action.icon
+                return (
+                  <button
+                    key={action.label}
+                    onClick={action.action}
+                    className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition ${action.className}`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{action.label}</span>
+                  </button>
+                )
+              })}
+
+              <Link
+                href="/"
+                className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 transition hover:bg-slate-100"
+              >
+                <Store className="h-5 w-5" />
+                <span>Ver sitio público</span>
+              </Link>
             </div>
           </div>
 
-          <div className="mb-6 grid grid-cols-2 gap-4">
-            <div className="rounded-xl bg-blue-50 p-4">
-              <div className="text-sm text-slate-500">Comercios</div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900">
-                {shareTotals.comercios}
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-6 text-xl font-semibold text-slate-900">Actividad por canal</h2>
+            <div className="space-y-4">
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <div className="mb-2 text-sm text-slate-500">WhatsApp por sección</div>
+                <div className="grid grid-cols-3 gap-3 text-sm text-slate-700">
+                  <div>Comercios: <span className="font-semibold">{whatsappTotals.comercios}</span></div>
+                  <div>Servicios: <span className="font-semibold">{whatsappTotals.servicios}</span></div>
+                  <div>Cursos: <span className="font-semibold">{whatsappTotals.cursos}</span></div>
+                </div>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <div className="mb-2 text-sm text-slate-500">Compartidos por sección</div>
+                <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
+                  <div>Comercios: <span className="font-semibold">{shareTotals.comercios}</span></div>
+                  <div>Eventos: <span className="font-semibold">{shareTotals.eventos}</span></div>
+                  <div>Cursos: <span className="font-semibold">{shareTotals.cursos}</span></div>
+                  <div>Servicios: <span className="font-semibold">{shareTotals.servicios}</span></div>
+                </div>
+              </div>
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <div className="mb-2 text-sm text-slate-500">Ver más por sección</div>
+                <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
+                  <div>Comercios: <span className="font-semibold">{viewMoreTotals.comercios}</span></div>
+                  <div>Eventos: <span className="font-semibold">{viewMoreTotals.eventos}</span></div>
+                  <div>Cursos: <span className="font-semibold">{viewMoreTotals.cursos}</span></div>
+                  <div>Servicios: <span className="font-semibold">{viewMoreTotals.servicios}</span></div>
+                  <div>Instituciones: <span className="font-semibold">{viewMoreTotals.instituciones}</span></div>
+                </div>
               </div>
             </div>
-            <div className="rounded-xl bg-emerald-50 p-4">
-              <div className="text-sm text-slate-500">Eventos</div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900">
-                {shareTotals.eventos}
-              </div>
-            </div>
-            <div className="rounded-xl bg-violet-50 p-4">
-              <div className="text-sm text-slate-500">Cursos</div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900">
-                {shareTotals.cursos}
-              </div>
-            </div>
-            <div className="rounded-xl bg-amber-50 p-4">
-              <div className="text-sm text-slate-500">Servicios</div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900">
-                {shareTotals.servicios}
-              </div>
-            </div>
-          </div>
-
-          <h2 className="mb-6 text-xl font-semibold text-slate-900">
-            WhatsApp
-          </h2>
-          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-xl bg-green-50 p-4">
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <MessageCircle className="h-4 w-4 text-green-600" />
-                Comercios
-              </div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900">
-                {whatsappTotals.comercios}
-              </div>
-            </div>
-            <div className="rounded-xl bg-green-50 p-4">
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <MessageCircle className="h-4 w-4 text-green-600" />
-                Servicios
-              </div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900">
-                {whatsappTotals.servicios}
-              </div>
-            </div>
-            <div className="rounded-xl bg-green-50 p-4">
-              <div className="flex items-center gap-2 text-sm text-slate-500">
-                <MessageCircle className="h-4 w-4 text-green-600" />
-                Cursos
-              </div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900">
-                {whatsappTotals.cursos}
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-slate-900">Ver más</h2>
-            <div className="rounded-xl bg-sky-100 p-2 text-sky-700">
-              <FileText className="h-5 w-5" />
-            </div>
-          </div>
-          <div className="mb-6 grid grid-cols-2 gap-4">
-            <div className="rounded-xl bg-sky-50 p-4">
-              <div className="text-sm text-slate-500">Comercios</div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900">
-                {viewMoreTotals.comercios}
-              </div>
-            </div>
-            <div className="rounded-xl bg-sky-50 p-4">
-              <div className="text-sm text-slate-500">Eventos</div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900">
-                {viewMoreTotals.eventos}
-              </div>
-            </div>
-            <div className="rounded-xl bg-sky-50 p-4">
-              <div className="text-sm text-slate-500">Cursos</div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900">
-                {viewMoreTotals.cursos}
-              </div>
-            </div>
-            <div className="rounded-xl bg-sky-50 p-4">
-              <div className="text-sm text-slate-500">Servicios</div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900">
-                {viewMoreTotals.servicios}
-              </div>
-            </div>
-            <div className="rounded-xl bg-sky-50 p-4 sm:col-span-2">
-              <div className="text-sm text-slate-500">Instituciones</div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900">
-                {viewMoreTotals.instituciones}
-              </div>
-            </div>
-          </div>
-
-          <h2 className="mb-6 text-xl font-semibold text-slate-900">
-            Acciones Rapidas
-          </h2>
-          <div className="space-y-3">
-            <button
-              onClick={() => router.push("/admin/comercios")}
-              className="flex w-full items-center gap-3 rounded-xl bg-blue-600 px-4 py-3 text-white transition hover:bg-blue-500"
-            >
-              <Plus className="h-5 w-5" />
-              <span>Agregar Comercio</span>
-            </button>
-
-            <button
-              onClick={() => router.push("/admin/eventos")}
-              className="flex w-full items-center gap-3 rounded-xl bg-emerald-600 px-4 py-3 text-white transition hover:bg-emerald-500"
-            >
-              <Plus className="h-5 w-5" />
-              <span>Agregar Evento</span>
-            </button>
-
-            <button
-              onClick={() => router.push("/admin/radio")}
-              className="flex w-full items-center gap-3 rounded-xl bg-slate-800 px-4 py-3 text-white transition hover:bg-slate-700"
-            >
-              <Radio className="h-5 w-5" />
-              <span>Configurar Radio</span>
-            </button>
-
-            <button
-              onClick={() => router.push("/admin/servicios")}
-              className="flex w-full items-center gap-3 rounded-xl bg-amber-600 px-4 py-3 text-white transition hover:bg-amber-500"
-            >
-              <Plus className="h-5 w-5" />
-              <span>Agregar Servicio</span>
-            </button>
-
-            <button
-              onClick={() => router.push("/admin/instituciones")}
-              className="flex w-full items-center gap-3 rounded-xl bg-cyan-600 px-4 py-3 text-white transition hover:bg-cyan-500"
-            >
-              <Plus className="h-5 w-5" />
-              <span>Agregar institución</span>
-            </button>
-
-            <button
-              onClick={() => router.push("/admin/cursos")}
-              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 transition hover:bg-slate-100"
-            >
-              <GraduationCap className="h-5 w-5" />
-              <span>Gestionar Cursos</span>
-            </button>
-
-            <button
-              onClick={() => router.push("/admin/contactos")}
-              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 transition hover:bg-slate-100"
-            >
-              <Mail className="h-5 w-5" />
-              <span>Ver Contactos</span>
-            </button>
-
-            <button
-              onClick={() => router.push("/admin/sitio")}
-              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 transition hover:bg-slate-100"
-            >
-              <FileText className="h-5 w-5" />
-              <span>Editar texto del sitio</span>
-            </button>
-
-            <Link
-              href="/"
-              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 transition hover:bg-slate-100"
-            >
-              <Store className="h-5 w-5" />
-              <span>Ver sitio publico</span>
-            </Link>
           </div>
         </div>
       </div>

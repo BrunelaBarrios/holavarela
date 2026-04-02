@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { Mail, MessageSquare, Phone, Search, Trash2, UserRound } from "lucide-react"
+import { CheckCheck, Mail, MessageSquare, Phone, Search, Trash2, UserRound } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
@@ -13,6 +13,7 @@ type ContactoSolicitud = {
   telefono: string
   mensaje: string
   created_at: string
+  visto?: boolean | null
 }
 
 type ContactFilter = "all" | "alta" | "contacto"
@@ -29,12 +30,19 @@ export default function AdminContactosPage() {
   const [filter, setFilter] = useState<ContactFilter>("all")
   const [deletingSolicitud, setDeletingSolicitud] = useState<ContactoSolicitud | null>(null)
 
+  const sortSolicitudesForReview = (items: ContactoSolicitud[]) =>
+    [...items].sort((a, b) => {
+      const aPending = a.visto !== true
+      const bPending = b.visto !== true
+      if (aPending !== bPending) return aPending ? -1 : 1
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
+
   useEffect(() => {
     const cargarSolicitudes = async () => {
       const { data, error } = await supabase
         .from("contacto_solicitudes")
         .select("*")
-        .order("created_at", { ascending: false })
 
       if (error) {
         setError(`No se pudieron cargar las solicitudes: ${error.message}`)
@@ -42,7 +50,7 @@ export default function AdminContactosPage() {
         return
       }
 
-      setSolicitudes(data || [])
+      setSolicitudes(sortSolicitudesForReview(data || []))
       setLoading(false)
     }
 
@@ -73,6 +81,10 @@ export default function AdminContactosPage() {
   )
 
   const contactosCount = solicitudes.length - altasCount
+  const pendingCount = useMemo(
+    () => solicitudes.filter((item) => item.visto !== true).length,
+    [solicitudes]
+  )
 
   const formatearFecha = (fecha: string) => {
     const date = new Date(fecha)
@@ -108,6 +120,33 @@ export default function AdminContactosPage() {
     })
   }
 
+  const handleSeen = async (solicitud: ContactoSolicitud, visto: boolean) => {
+    const { error } = await supabase
+      .from("contacto_solicitudes")
+      .update({ visto })
+      .eq("id", solicitud.id)
+
+    if (error) {
+      setError(`No se pudo actualizar la solicitud: ${error.message}`)
+      return
+    }
+
+    setSolicitudes((prev) =>
+      sortSolicitudesForReview(
+        prev.map((item) =>
+          item.id === solicitud.id ? { ...item, visto } : item
+        )
+      )
+    )
+
+    await logAdminActivity({
+      action: visto ? "Marcar visto" : "Marcar no visto",
+      section: "Contactos",
+      target: solicitud.nombre,
+      details: solicitud.email,
+    })
+  }
+
   return (
     <div className="mx-auto max-w-6xl">
       <AdminConfirmModal
@@ -131,6 +170,9 @@ export default function AdminContactosPage() {
       <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-3">
+            <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Pendientes: <span className="font-semibold">{pendingCount}</span>
+            </div>
             <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
               Total recibidos: <span className="font-semibold text-slate-900">{solicitudes.length}</span>
             </div>
@@ -216,7 +258,11 @@ export default function AdminContactosPage() {
               <article
                 key={item.id}
                 className={`rounded-2xl border bg-white p-5 shadow-sm ${
-                  isAlta ? "border-emerald-200" : "border-slate-200"
+                  item.visto === true
+                    ? "border-slate-200"
+                    : isAlta
+                      ? "border-amber-300"
+                      : "border-sky-200"
                 }`}
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -232,6 +278,15 @@ export default function AdminContactosPage() {
                         }`}
                       >
                         {isAlta ? "Alta / Sumate" : "Contacto"}
+                      </span>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${
+                          item.visto === true
+                            ? "bg-slate-100 text-slate-500"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {item.visto === true ? "Visto" : "Nuevo"}
                       </span>
                     </div>
 
@@ -269,7 +324,29 @@ export default function AdminContactosPage() {
                   </p>
                 </div>
 
-                <div className="mt-4 flex justify-end border-t border-slate-100 pt-4">
+                <div className="mt-4 flex flex-wrap justify-end gap-3 border-t border-slate-100 pt-4">
+                  {item.visto === true ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleSeen(item, false)
+                      }}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+                    >
+                      Marcar como nuevo
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleSeen(item, true)
+                      }}
+                      className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 px-4 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50"
+                    >
+                      <CheckCheck className="h-4 w-4" />
+                      Dar visto
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setDeletingSolicitud(item)}
