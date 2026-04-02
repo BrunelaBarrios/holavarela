@@ -8,6 +8,7 @@ import { ExternalLinksButtons } from "./ExternalLinksButtons"
 import { EventLikeButton } from "./EventLikeButton"
 import { OptimizedImage } from "./OptimizedImage"
 import { MyTunerWidget } from "./MyTunerWidget"
+import { PublicDetailModal } from "./PublicDetailModal"
 import { PublicHeader } from "./PublicHeader"
 import { formatEventDateRange } from "../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
@@ -994,141 +995,83 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       )}
 
-      {selectedEvento && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4">
-          <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
-            <button
-              type="button"
-              onClick={() => setSelectedEvento(null)}
-              className="absolute right-4 top-4 z-10 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white"
-              aria-label="Cerrar detalle"
+      <PublicDetailModal
+        open={Boolean(selectedEvento)}
+        onClose={() => setSelectedEvento(null)}
+        title={selectedEvento?.titulo || ""}
+        imageSrc={selectedEvento?.imagen || null}
+        imageAlt={selectedEvento?.titulo || "Evento"}
+        badge={selectedEvento ? normalizeEventCategory(selectedEvento.categoria) : null}
+        description={selectedEvento?.descripcion || null}
+        meta={[
+          ...(selectedEvento?.fecha
+            ? [{
+                icon: CalendarDays,
+                text: formatEventDateRange(
+                  selectedEvento.fecha,
+                  selectedEvento.fecha_fin
+                ),
+              }]
+            : []),
+          ...(selectedEvento?.ubicacion
+            ? [{ icon: MapPin, text: selectedEvento.ubicacion }]
+            : []),
+          ...(selectedEvento?.telefono
+            ? [{ icon: Phone, text: selectedEvento.telefono }]
+            : []),
+        ]}
+        actions={
+          <>
+            {selectedEvento?.telefono?.trim() ? (
+              <ContactActionLink
+                href={getContactHref(
+                  selectedEvento.telefono,
+                  selectedEvento.usa_whatsapp
+                )}
+                mode={selectedEvento.usa_whatsapp === false ? "phone" : "whatsapp"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={
+                  selectedEvento.usa_whatsapp === false
+                    ? "inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                    : "inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
+                }
+              >
+                <Phone className="h-4 w-4" />
+                {selectedEvento.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
+              </ContactActionLink>
+            ) : null}
+
+            {selectedEvento ? (
+              <ExternalLinksButtons
+                webUrl={selectedEvento.web_url}
+                instagramUrl={selectedEvento.instagram_url}
+                facebookUrl={selectedEvento.facebook_url}
+              />
+            ) : null}
+
+            {selectedEvento ? (
+              <EventLikeButton
+                count={eventLikeCounts[String(selectedEvento.id)] || 0}
+                liked={Boolean(likedEvents[String(selectedEvento.id)])}
+                onClick={() =>
+                  void handleEventLike(String(selectedEvento.id), selectedEvento.titulo)
+                }
+                disabled={likingEventId === String(selectedEvento.id)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-default disabled:opacity-70"
+              />
+            ) : null}
+
+            <Link
+              href="/eventos"
+              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
             >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_0.55fr]">
-                <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
-                  {selectedEvento.imagen ? (
-                    <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-3 md:min-h-[420px] md:p-4">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setZoomedImage({
-                            src: selectedEvento.imagen!,
-                            alt: selectedEvento.titulo,
-                          })
-                        }
-                        className="relative aspect-[4/5] h-[390px] w-full max-w-[720px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[580px]"
-                        aria-label="Ver imagen mas grande"
-                      >
-                        <OptimizedImage
-                          src={selectedEvento.imagen}
-                          alt={selectedEvento.titulo}
-                          sizes="(max-width: 1024px) 100vw, 60vw"
-                          className="object-contain p-1 sm:p-2"
-                        />
-                      </button>
-                    </div>
-                  ) : (
-                  <div className="flex min-h-[320px] items-center justify-center text-slate-400">
-                    Sin imagen
-                  </div>
-                )}
-              </div>
-
-              <div className="p-6 md:p-8">
-                <div className="mb-4 flex items-center gap-2 text-base font-medium text-blue-500">
-                  <CalendarDays className="h-5 w-5" />
-                  <span>
-                    {formatEventDateRange(
-                      selectedEvento.fecha,
-                      selectedEvento.fecha_fin
-                    )}
-                  </span>
-                </div>
-
-                <h3 className="text-3xl font-semibold leading-tight text-slate-900">
-                  {selectedEvento.titulo}
-                </h3>
-
-                <div className="mt-4 flex items-center gap-2 text-slate-500">
-                  <MapPin className="h-4 w-4" />
-                  <span>{selectedEvento.ubicacion}</span>
-                </div>
-
-                {selectedEvento.telefono && (
-                  <div className="mt-3 flex items-center gap-2 text-slate-500">
-                    <Phone className="h-4 w-4" />
-                    <span>{selectedEvento.telefono}</span>
-                  </div>
-                )}
-
-                <div className="mt-4 inline-flex rounded-full bg-sky-50 px-3 py-1 text-sm font-semibold text-sky-700">
-                  {normalizeEventCategory(selectedEvento.categoria)}
-                </div>
-
-                  <p className="mt-6 whitespace-pre-line text-lg leading-8 text-slate-600">
-                    {selectedEvento.descripcion}
-                  </p>
-
-                <div className="mt-8 flex flex-wrap gap-3">
-                  {selectedEvento.telefono?.trim() ? (
-                    <ContactActionLink
-                      href={getContactHref(
-                        selectedEvento.telefono,
-                        selectedEvento.usa_whatsapp
-                      )}
-                      mode={selectedEvento.usa_whatsapp === false ? "phone" : "whatsapp"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={
-                        selectedEvento.usa_whatsapp === false
-                          ? "inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
-                          : "inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
-                      }
-                    >
-                      <Phone className="h-4 w-4" />
-                      {selectedEvento.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
-                    </ContactActionLink>
-                  ) : null}
-
-                  <ExternalLinksButtons
-                    webUrl={selectedEvento.web_url}
-                    instagramUrl={selectedEvento.instagram_url}
-                    facebookUrl={selectedEvento.facebook_url}
-                  />
-
-                  <EventLikeButton
-                    count={eventLikeCounts[String(selectedEvento.id)] || 0}
-                    liked={Boolean(likedEvents[String(selectedEvento.id)])}
-                    onClick={() =>
-                      void handleEventLike(String(selectedEvento.id), selectedEvento.titulo)
-                    }
-                    disabled={likingEventId === String(selectedEvento.id)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-default disabled:opacity-70"
-                  />
-
-                  <Link
-                    href="/eventos"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
-                  >
-                    Ver todos los eventos
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedEvento(null)}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
-                  >
-                    Cerrar
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+              Ver todos los eventos
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </>
+        }
+      />
 
       {selectedCurso && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4">

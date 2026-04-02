@@ -38,7 +38,7 @@ export function PublicDetailModal({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/75 p-3 backdrop-blur-sm md:p-5">
       {isImageZoomed && imageSrc ? (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/92 p-4">
           <button
@@ -66,26 +66,29 @@ export function PublicDetailModal({
         </div>
       ) : null}
 
-      <div className="relative max-h-[90vh] w-full max-w-7xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
+      <div className="relative max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-[32px] border border-white/70 bg-white shadow-[0_30px_120px_-34px_rgba(15,23,42,0.55)]">
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white"
+          className="absolute right-4 top-4 z-20 rounded-full border border-slate-200 bg-white/95 p-2 text-slate-600 shadow-sm transition hover:border-slate-300 hover:text-slate-900"
           aria-label="Cerrar detalle"
         >
           <X className="h-5 w-5" />
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_0.55fr]">
-          <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.18fr)_390px]">
+          <div className="relative bg-[radial-gradient(circle_at_top_left,#e8f6ec_0%,#f4f9ff_38%,#eef4ff_100%)]">
             {imageSrc ? (
-              <div className="flex min-h-[420px] w-full items-center justify-center bg-slate-100 p-2 md:min-h-[620px] md:p-3">
+              <div className="flex min-h-[340px] w-full items-center justify-center p-4 md:min-h-[520px] md:p-7 xl:min-h-[640px]">
                 <button
                   type="button"
                   onClick={() => setIsImageZoomed(true)}
-                  className="relative aspect-[4/5] h-[390px] w-full max-w-[720px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[580px]"
+                  className="group relative flex h-full min-h-[300px] w-full max-w-[760px] items-center justify-center overflow-hidden rounded-[30px] border border-white/80 bg-white/90 p-3 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] hover:shadow-[0_32px_90px_-34px_rgba(15,23,42,0.5)] md:min-h-[460px] md:p-4"
                   aria-label="Ver imagen mas grande"
                 >
+                  <span className="absolute left-4 top-4 z-10 rounded-full bg-slate-950/75 px-3 py-1 text-xs font-semibold tracking-[0.2em] text-white/90 uppercase">
+                    Toca para ampliar
+                  </span>
                   <OptimizedImage
                     src={imageSrc}
                     alt={imageAlt}
@@ -101,35 +104,58 @@ export function PublicDetailModal({
             )}
           </div>
 
-          <div className="p-6 md:p-8">
-            {badge && (
-              <div className="mb-4 inline-flex rounded-full bg-sky-50 px-3 py-1 text-sm font-semibold text-sky-700">
-                {badge}
-              </div>
-            )}
-
-            <h3 className="text-3xl font-semibold leading-tight text-slate-900">
-              {title}
-            </h3>
-
-            {meta.length > 0 && (
-              <div className="mt-6 space-y-3 text-slate-600">
-                {meta.map(({ icon: Icon, text }, index) => (
-                  <div key={`${text}-${index}`} className="flex items-center gap-2">
-                    <Icon className="h-4 w-4" />
-                    <span>{text}</span>
+          <div className="flex max-h-[92vh] flex-col overflow-y-auto bg-white">
+            <div className="border-b border-slate-100 px-6 pb-5 pt-7 md:px-8">
+              <div className="mb-4 flex items-start gap-3 pr-12">
+                {badge ? (
+                  <div className="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold tracking-[0.2em] text-sky-700 uppercase">
+                    {badge}
                   </div>
-                ))}
+                ) : null}
               </div>
-            )}
 
-            {description && (
-              <p className="mt-6 whitespace-pre-line text-lg leading-8 text-slate-600">
-                {description}
-              </p>
-            )}
+              <h3 className="text-[2rem] font-semibold leading-[1.05] text-slate-950 md:text-[2.35rem]">
+                {title}
+              </h3>
 
-            {actions && <div className="mt-8 flex flex-wrap gap-3">{actions}</div>}
+              {meta.length > 0 && (
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {meta.map(({ icon: Icon, text }, index) => (
+                    <div
+                      key={`${text}-${index}`}
+                      className="flex min-h-[68px] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-sm text-slate-700"
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-sm">
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <span className="leading-6">{text}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {description ? (
+              <div className="px-6 py-6 md:px-8">
+                <div className="mb-3 text-xs font-semibold tracking-[0.24em] text-slate-400 uppercase">
+                  Descripcion
+                </div>
+                <div className="rounded-[24px] border border-slate-100 bg-slate-50/80 p-5">
+                  <p className="whitespace-pre-line text-[1.02rem] leading-8 text-slate-600">
+                    {description}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            {actions ? (
+              <div className="mt-auto border-t border-slate-100 bg-white px-6 py-5 md:px-8">
+                <div className="mb-3 text-xs font-semibold tracking-[0.24em] text-slate-400 uppercase">
+                  Acciones
+                </div>
+                <div className="flex flex-wrap gap-3">{actions}</div>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
