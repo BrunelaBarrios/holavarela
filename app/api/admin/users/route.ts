@@ -61,6 +61,7 @@ export async function POST(request: Request) {
     const ownerType = body.ownerType || ""
     const ownerId = body.ownerId ? Number(body.ownerId) : null
     const hasLinkedOwner = Boolean(ownerType && ownerId)
+    const linkedOwnerType = hasLinkedOwner ? (ownerType as OwnerType) : null
 
     if (!email || !password || !adminUsername || !adminPassword) {
       return NextResponse.json(
@@ -91,8 +92,8 @@ export async function POST(request: Request) {
       )
     }
 
-    if (hasLinkedOwner) {
-      const table = resolveTable(ownerType)
+    if (linkedOwnerType && ownerId) {
+      const table = resolveTable(linkedOwnerType)
       const { data: ownerData, error: ownerError } = await supabaseAdmin
         .from(table)
         .select("id, owner_email")
@@ -142,8 +143,8 @@ export async function POST(request: Request) {
 
       if (registeredError) throw registeredError
 
-      if (hasLinkedOwner) {
-        const table = resolveTable(ownerType)
+      if (linkedOwnerType && ownerId) {
+        const table = resolveTable(linkedOwnerType)
         const { error: ownerUpdateError } = await supabaseAdmin
           .from(table)
           .update({ owner_email: email })
