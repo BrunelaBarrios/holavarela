@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
-import { CalendarDays, CircleCheckBig, Clock3, CreditCard, ExternalLink, FilePenLine, ImageIcon, KeyRound, LogOut, PlusCircle } from "lucide-react"
+import { CalendarDays, CircleCheckBig, Clock3, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, PlusCircle, Send, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../components/AuthFormStatus"
 import { getSubscriptionPlan, subscriptionPlans, type SubscriptionPlanKey } from "../lib/subscriptionPlans"
@@ -24,10 +24,19 @@ const initialCurso: CursoForm = { nombre: "", descripcion: "", responsable: "", 
 const initialInstitucion: InstitucionForm = { nombre: "", descripcion: "", direccion: "", telefono: "", webUrl: "", instagramUrl: "", facebookUrl: "", usaWhatsapp: true }
 
 function formatEventState(status?: string | null) {
-  const normalized = normalizeUserEntityStatus(status)
+  const normalized = normalizeEventStatus(status)
   if (normalized === "borrador") return "Borrador"
   if (normalized === "oculto") return "Oculto"
+  if (normalized === "cancelado") return "Cancelado"
   return "Activo"
+}
+
+function normalizeEventStatus(status?: string | null) {
+  if (status === "cancelado") return "cancelado"
+  const normalized = normalizeUserEntityStatus(status)
+  if (normalized === "borrador") return "borrador"
+  if (normalized === "oculto") return "oculto"
+  return "activo"
 }
 
 function getStatusStyles(status: "activo" | "borrador" | "oculto") {
@@ -63,6 +72,7 @@ export default function UsuariosHomePage() {
   const [institucion, setInstitucion] = useState<InstitucionForm>(initialInstitucion)
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>("presencia")
   const [savingOnboarding, setSavingOnboarding] = useState(false)
+  const [updatingEventId, setUpdatingEventId] = useState<number | null>(null)
 
   useEffect(() => {
     const loadSession = async () => {
@@ -145,14 +155,53 @@ export default function UsuariosHomePage() {
     }
   }
 
+  const handleEventStatusChange = async (
+    eventId: number,
+    nextStatus: "activo" | "oculto" | "cancelado"
+  ) => {
+    if (!user?.email) {
+      setError("Necesitas iniciar sesion para gestionar eventos.")
+      return
+    }
+
+    setError("")
+    setUpdatingEventId(eventId)
+
+    const { error: updateError } = await supabase
+      .from("eventos")
+      .update({ estado: nextStatus })
+      .eq("id", eventId)
+      .eq("owner_email", user.email)
+
+    if (updateError) {
+      setError(`No pudimos actualizar el evento: ${updateError.message}`)
+      setUpdatingEventId(null)
+      return
+    }
+
+    setEvents((current) =>
+      current.map((item) =>
+        item.id === eventId
+          ? {
+              ...item,
+              estado: nextStatus,
+            }
+          : item
+      )
+    )
+    setUpdatingEventId(null)
+  }
+
   const statusKey = normalizeUserEntityStatus(ownedEntity?.record.estado)
   const statusMeta = userEntityStatusCopy[statusKey]
   const statusStyles = getStatusStyles(statusKey)
   const isInstitution = ownedEntity?.type === "institucion"
   const imageSrc = getUserProfileImageSrc(ownedEntity)
   const profileFields = useMemo(() => buildUserProfileFields(ownedEntity), [ownedEntity])
-  const activeEvents = useMemo(() => events.filter((item) => normalizeUserEntityStatus(item.estado) === "activo"), [events])
-  const draftEvents = useMemo(() => events.filter((item) => normalizeUserEntityStatus(item.estado) === "borrador"), [events])
+  const activeEvents = useMemo(() => events.filter((item) => normalizeEventStatus(item.estado) === "activo"), [events])
+  const draftEvents = useMemo(() => events.filter((item) => normalizeEventStatus(item.estado) === "borrador"), [events])
+  const hiddenEvents = useMemo(() => events.filter((item) => normalizeEventStatus(item.estado) === "oculto"), [events])
+  const cancelledEvents = useMemo(() => events.filter((item) => normalizeEventStatus(item.estado) === "cancelado"), [events])
   const hasPremium = Boolean(ownedEntity?.record.premium_activo && ownedEntity && supportsPremiumProfile(ownedEntity.type))
   const currentPlan = getSubscriptionPlan(ownedEntity?.record.plan_suscripcion)
   const subscriptionStatusLabel = getSubscriptionStatusLabel(ownedEntity?.record.estado_suscripcion)
@@ -298,7 +347,9 @@ export default function UsuariosHomePage() {
                 <DashboardMetric label="Premium" value={hasPremium ? "Activo" : "Base"} description={hasPremium ? "Tienes contenido ampliado disponible para destacar tu ficha." : "Puedes sumar una ficha ampliada cuando se active desde admin."} />
                 {!isInstitution ? <DashboardMetric label="Plan" value={currentPlan.shortLabel} description={currentPlan.price} /> : null}
                 <DashboardMetric label="Eventos activos" value={String(activeEvents.length)} description="Se estan mostrando publicamente en Hola Varela." />
-                <DashboardMetric label="Eventos en borrador" value={String(draftEvents.length)} description="Aun no estan publicados o siguen en revision." />
+                <DashboardMetric label="En borrador" value={String(draftEvents.length)} description="Puedes seguir editandolos antes de publicarlos." />
+                <DashboardMetric label="Ocultos" value={String(hiddenEvents.length)} description="No se muestran publicamente hasta que vuelvas a activarlos." />
+                <DashboardMetric label="Cancelados" value={String(cancelledEvents.length)} description="Quedan guardados como referencia y puedes volver a publicarlos." />
               </div>
             </div>
             <div className="space-y-4 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-6 py-8 sm:px-8 sm:py-10">
@@ -328,7 +379,14 @@ export default function UsuariosHomePage() {
               </div>
               <div className="mt-5 rounded-[24px] border border-slate-200 bg-slate-50 p-5"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Descripcion</div><div className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">{ownedEntity.record.descripcion?.trim() ? ownedEntity.record.descripcion : "Aun no agregaste una descripcion. Puedes completarla desde editar mis datos."}</div></div>
             </div>
-            <UnifiedEventsSection activeEvents={activeEvents} draftEvents={draftEvents} />
+            <UnifiedEventsSection
+              activeEvents={activeEvents}
+              draftEvents={draftEvents}
+              hiddenEvents={hiddenEvents}
+              cancelledEvents={cancelledEvents}
+              updatingEventId={updatingEventId}
+              onChangeStatus={handleEventStatusChange}
+            />
           </section>
           <aside className="space-y-6">
             <div className={`rounded-[32px] border p-6 shadow-sm ${statusStyles.panel}`}>
@@ -387,7 +445,21 @@ function QuickLink({ href, title, description, icon }: { href: string; title: st
   return <Link href={href} className="group flex items-center justify-between rounded-[24px] border border-slate-200 bg-white px-5 py-4 transition hover:border-blue-300 hover:bg-blue-50/60"><div><div className="text-base font-semibold text-slate-900">{title}</div><div className="mt-1 text-sm text-slate-500">{description}</div></div>{icon}</Link>
 }
 
-function UnifiedEventsSection({ activeEvents, draftEvents }: { activeEvents: UserOwnedEvent[]; draftEvents: UserOwnedEvent[] }) {
+function UnifiedEventsSection({
+  activeEvents,
+  draftEvents,
+  hiddenEvents,
+  cancelledEvents,
+  updatingEventId,
+  onChangeStatus,
+}: {
+  activeEvents: UserOwnedEvent[]
+  draftEvents: UserOwnedEvent[]
+  hiddenEvents: UserOwnedEvent[]
+  cancelledEvents: UserOwnedEvent[]
+  updatingEventId: number | null
+  onChangeStatus: (eventId: number, nextStatus: "activo" | "oculto" | "cancelado") => void
+}) {
   return (
     <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -413,9 +485,22 @@ function UnifiedEventsSection({ activeEvents, draftEvents }: { activeEvents: Use
           <div className="mt-3 text-3xl font-semibold text-slate-950">{draftEvents.length}</div>
           <p className="mt-2 text-sm leading-6 text-slate-600">Puedes retomarlos, corregirlos y seguir cargando informacion.</p>
         </div>
+        <div className="rounded-[24px] border border-slate-200 bg-slate-100/80 p-5">
+          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">Ocultos</div>
+          <div className="mt-3 text-3xl font-semibold text-slate-950">{hiddenEvents.length}</div>
+          <p className="mt-2 text-sm leading-6 text-slate-600">No se ven en la web, pero puedes reactivarlos cuando quieras.</p>
+        </div>
+        <div className="rounded-[24px] border border-rose-100 bg-rose-50/70 p-5">
+          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-rose-700">Cancelados</div>
+          <div className="mt-3 text-3xl font-semibold text-slate-950">{cancelledEvents.length}</div>
+          <p className="mt-2 text-sm leading-6 text-slate-600">Quedan guardados como cancelados y puedes volver a publicarlos.</p>
+        </div>
       </div>
 
-      {activeEvents.length === 0 && draftEvents.length === 0 ? (
+      {activeEvents.length === 0 &&
+      draftEvents.length === 0 &&
+      hiddenEvents.length === 0 &&
+      cancelledEvents.length === 0 ? (
         <div className="mt-6 rounded-[24px] border border-dashed border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#f4faf6_100%)] p-8">
           <h3 className="text-lg font-semibold text-slate-900">Todavia no tienes eventos</h3>
           <p className="mt-2 max-w-xl text-sm leading-7 text-slate-600">
@@ -430,6 +515,8 @@ function UnifiedEventsSection({ activeEvents, draftEvents }: { activeEvents: Use
             emptyTitle="No tienes eventos activos"
             emptyDescription="Cuando un evento se publica, lo veras aqui."
             events={activeEvents}
+            updatingEventId={updatingEventId}
+            onChangeStatus={onChangeStatus}
           />
           <EventGroup
             label="Borradores"
@@ -437,6 +524,28 @@ function UnifiedEventsSection({ activeEvents, draftEvents }: { activeEvents: Use
             emptyTitle="No tienes eventos en borrador"
             emptyDescription="Los borradores quedan listos para revisar o completar antes de publicarse."
             events={draftEvents}
+            updatingEventId={updatingEventId}
+            onChangeStatus={onChangeStatus}
+            allowDraftResume
+          />
+          <EventGroup
+            label="Ocultos"
+            tone="hidden"
+            emptyTitle="No tienes eventos ocultos"
+            emptyDescription="Si desactivas la visibilidad de un evento, aparecera aqui."
+            events={hiddenEvents}
+            updatingEventId={updatingEventId}
+            onChangeStatus={onChangeStatus}
+            allowDraftResume
+          />
+          <EventGroup
+            label="Cancelados"
+            tone="cancelled"
+            emptyTitle="No tienes eventos cancelados"
+            emptyDescription="Los eventos cancelados quedan guardados para que puedas revisarlos o reactivarlos mas adelante."
+            events={cancelledEvents}
+            updatingEventId={updatingEventId}
+            onChangeStatus={onChangeStatus}
             allowDraftResume
           />
         </div>
@@ -445,11 +554,33 @@ function UnifiedEventsSection({ activeEvents, draftEvents }: { activeEvents: Use
   )
 }
 
-function EventGroup({ label, tone, emptyTitle, emptyDescription, events, allowDraftResume = false }: { label: string; tone: "active" | "draft"; emptyTitle: string; emptyDescription: string; events: UserOwnedEvent[]; allowDraftResume?: boolean }) {
+function EventGroup({
+  label,
+  tone,
+  emptyTitle,
+  emptyDescription,
+  events,
+  updatingEventId,
+  onChangeStatus,
+  allowDraftResume = false,
+}: {
+  label: string
+  tone: "active" | "draft" | "hidden" | "cancelled"
+  emptyTitle: string
+  emptyDescription: string
+  events: UserOwnedEvent[]
+  updatingEventId: number | null
+  onChangeStatus: (eventId: number, nextStatus: "activo" | "oculto" | "cancelado") => void
+  allowDraftResume?: boolean
+}) {
   const toneClass =
     tone === "active"
       ? "bg-emerald-100 text-emerald-700"
-      : "bg-amber-100 text-amber-700"
+      : tone === "draft"
+        ? "bg-amber-100 text-amber-700"
+        : tone === "hidden"
+          ? "bg-slate-200 text-slate-700"
+          : "bg-rose-100 text-rose-700"
 
   return (
     <div>
@@ -491,13 +622,47 @@ function EventGroup({ label, tone, emptyTitle, emptyDescription, events, allowDr
                   </div>
                 </div>
                 <p className="mt-4 line-clamp-4 text-sm leading-7 text-slate-500">{event.descripcion}</p>
-                {allowDraftResume ? (
-                  <div className="mt-5">
+                <div className="mt-5 flex flex-wrap gap-3">
+                  {allowDraftResume ? (
                     <Link href={`/usuarios/eventos/nuevo?edit=${event.id}`} className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100">
-                      Continuar borrador
+                      {tone === "draft" ? "Continuar borrador" : "Editar evento"}
                     </Link>
-                  </div>
-                ) : null}
+                  ) : null}
+
+                  {tone !== "active" ? (
+                    <button
+                      type="button"
+                      disabled={updatingEventId === event.id}
+                      onClick={() => onChangeStatus(event.id, "activo")}
+                      className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:opacity-60"
+                    >
+                      <Send className="h-4 w-4" />
+                      {tone === "draft" ? "Publicar" : "Volver a publicar"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={updatingEventId === event.id}
+                      onClick={() => onChangeStatus(event.id, "oculto")}
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 disabled:opacity-60"
+                    >
+                      <EyeOff className="h-4 w-4" />
+                      Desactivar visibilidad
+                    </button>
+                  )}
+
+                  {tone !== "cancelled" ? (
+                    <button
+                      type="button"
+                      disabled={updatingEventId === event.id}
+                      onClick={() => onChangeStatus(event.id, "cancelado")}
+                      className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:opacity-60"
+                    >
+                      <XCircle className="h-4 w-4" />
+                      Cancelar
+                    </button>
+                  ) : null}
+                </div>
               </div>
             </article>
           ))}
