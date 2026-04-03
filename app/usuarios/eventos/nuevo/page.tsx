@@ -4,7 +4,7 @@ import type { ChangeEvent, FormEvent } from "react"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { CheckCircle2, ImageIcon, MapPin, MessageSquareText, Phone, Sparkles } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { AuthFormStatus } from "../../../components/AuthFormStatus"
 import { fileToDataUrl } from "../../../lib/fileToDataUrl"
 import { findUserOwnedEntity } from "../../../lib/userProfiles"
@@ -44,12 +44,14 @@ const initialForm: EventForm = {
 
 export default function UsuariosNuevoEventoPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [formData, setFormData] = useState<EventForm>(initialForm)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [ownerEmail, setOwnerEmail] = useState("")
+  const [editingEventId, setEditingEventId] = useState<number | null>(null)
 
   useEffect(() => {
     const loadContext = async () => {
@@ -71,6 +73,36 @@ export default function UsuariosNuevoEventoPage() {
         }
 
         setOwnerEmail(session.user.email)
+
+        const editId = searchParams.get("edit")
+        if (editId) {
+          const { data: existingEvent, error: eventError } = await supabase
+            .from("eventos")
+            .select("*")
+            .eq("id", Number(editId))
+            .eq("owner_email", session.user.email)
+            .maybeSingle()
+
+          if (eventError) {
+            setError(`No pudimos cargar el borrador: ${eventError.message}`)
+          } else if (existingEvent) {
+            setEditingEventId(existingEvent.id)
+            setFormData({
+              titulo: existingEvent.titulo || "",
+              categoria: existingEvent.categoria || "Evento",
+              fecha: existingEvent.fecha || "",
+              fechaFin: existingEvent.fecha_fin || "",
+              ubicacion: existingEvent.ubicacion || "",
+              telefono: existingEvent.telefono || "",
+              webUrl: existingEvent.web_url || "",
+              instagramUrl: existingEvent.instagram_url || "",
+              facebookUrl: existingEvent.facebook_url || "",
+              descripcion: existingEvent.descripcion || "",
+              imagen: existingEvent.imagen || "",
+              usaWhatsapp: existingEvent.usa_whatsapp ?? true,
+            })
+          }
+        }
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : "No pudimos preparar tu evento.")
       } finally {
@@ -79,7 +111,7 @@ export default function UsuariosNuevoEventoPage() {
     }
 
     void loadContext()
-  }, [router])
+  }, [router, searchParams])
 
   const handleImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -134,15 +166,23 @@ export default function UsuariosNuevoEventoPage() {
       owner_email: ownerEmail,
     }
 
-    const { error: insertError } = await supabase.from("eventos").insert([payload])
+    const eventMutation = editingEventId
+      ? supabase.from("eventos").update(payload).eq("id", editingEventId).eq("owner_email", ownerEmail)
+      : supabase.from("eventos").insert([payload])
 
-    if (insertError) {
-      setError(`No pudimos guardar el evento: ${insertError.message}`)
+    const { error: saveError } = await eventMutation
+
+    if (saveError) {
+      setError(`No pudimos guardar el evento: ${saveError.message}`)
       setSaving(false)
       return
     }
 
-    setSuccess("Tu evento quedo guardado como borrador.")
+    setSuccess(
+      editingEventId
+        ? "Tu borrador quedo actualizado."
+        : "Tu evento quedo guardado como borrador."
+    )
     setSaving(false)
     window.setTimeout(() => {
       router.push("/usuarios")
@@ -162,12 +202,12 @@ export default function UsuariosNuevoEventoPage() {
             <div className="grid lg:grid-cols-[1.05fr_1.15fr]">
               <div className="bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10">
                 <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-                  Nuevo evento
+                  {editingEventId ? "Editar borrador" : "Nuevo evento"}
                 </div>
 
                 <div className="mt-6 max-w-2xl">
                   <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                    Carga una novedad para tu perfil
+                    {editingEventId ? "Continua tu borrador" : "Carga una novedad para tu perfil"}
                   </h1>
                   <p className="mt-4 text-lg leading-8 text-slate-600">
                     Puedes publicar eventos, promociones, sorteos, beneficios o consultas. Todo entra como borrador para revisarlo antes de mostrarlo.
@@ -403,7 +443,11 @@ export default function UsuariosNuevoEventoPage() {
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70"
                     >
                       <Sparkles className="h-4 w-4" />
-                      {saving ? "Guardando evento..." : "Guardar evento en borrador"}
+                      {saving
+                        ? "Guardando evento..."
+                        : editingEventId
+                          ? "Guardar cambios del borrador"
+                          : "Guardar evento en borrador"}
                     </button>
 
                     <Link
