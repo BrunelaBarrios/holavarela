@@ -250,12 +250,6 @@ export function ComerciosPageClient({
                     </div>
                   )}
 
-                  {comercio.premium_activo ? (
-                    <div className="mb-3 inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
-                      Premium
-                    </div>
-                  ) : null}
-
                   <h2 className="text-lg font-semibold text-gray-900">
                     {comercio.nombre}
                   </h2>

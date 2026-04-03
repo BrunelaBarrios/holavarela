@@ -1394,12 +1394,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   )}
 
                   <div className="p-5">
-                    {business.premium_activo ? (
-                      <div className="mb-3 inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
-                        Premium
-                      </div>
-                    ) : null}
-
                     <h3 className="text-[22px] font-semibold text-slate-900">
                       {business.nombre}
                     </h3>
@@ -1516,12 +1510,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         )}
 
                         <div className="p-5">
-                          {servicio.premium_activo ? (
-                            <div className="mb-3 inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
-                              Premium
-                            </div>
-                          ) : null}
-
                           {servicio.categoria && (
                             <div className="mb-3 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
                               {servicio.categoria}
