@@ -21,6 +21,7 @@ export type Evento = {
   descripcion: string
   fecha: string
   fecha_fin?: string | null
+  fecha_solo_mes?: boolean | null
   ubicacion: string
   telefono?: string | null
   web_url?: string | null
@@ -151,7 +152,8 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 icon: CalendarDays,
                 text: formatEventDateRange(
                   selectedEvento.fecha,
-                  selectedEvento.fecha_fin
+                  selectedEvento.fecha_fin,
+                  selectedEvento.fecha_solo_mes ?? false
                 ),
               }]
             : []),
@@ -294,7 +296,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 </div>
 
                 <p className="mt-2 text-sm text-gray-600">
-                  Fecha: {formatEventDateRange(evento.fecha, evento.fecha_fin)}
+                  Fecha: {formatEventDateRange(evento.fecha, evento.fecha_fin, evento.fecha_solo_mes ?? false)}
                 </p>
 
                 <p className="mt-1 text-sm text-gray-600">

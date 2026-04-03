@@ -14,12 +14,39 @@ const formatLongDate = (value: string, locale = "es-UY") => {
   })
 }
 
+const formatMonthDate = (value: string, locale = "es-UY") => {
+  const date = parseEventDate(value)
+  if (!date) return value
+
+  return date.toLocaleDateString(locale, {
+    year: "numeric",
+    month: "long",
+  })
+}
+
+export const buildMonthEventRange = (monthValue: string) => {
+  if (!/^\d{4}-\d{2}$/.test(monthValue)) return null
+
+  const [yearRaw, monthRaw] = monthValue.split("-")
+  const year = Number(yearRaw)
+  const month = Number(monthRaw)
+
+  if (!year || !month || month < 1 || month > 12) return null
+
+  const startDate = `${yearRaw}-${monthRaw}-01`
+  const endDate = new Date(year, month, 0).toISOString().slice(0, 10)
+
+  return { startDate, endDate }
+}
+
 export const formatEventDateRange = (
   startDate: string,
   endDate?: string | null,
+  monthOnly = false,
   locale = "es-UY"
 ) => {
   if (!startDate) return "Sin fecha"
+  if (monthOnly) return formatMonthDate(startDate, locale)
   if (!endDate || endDate === startDate) return formatLongDate(startDate, locale)
 
   const start = parseEventDate(startDate)

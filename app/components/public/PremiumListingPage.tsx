@@ -14,6 +14,7 @@ type RelatedEvent = {
   categoria?: string | null
   fecha: string
   fecha_fin?: string | null
+  fecha_solo_mes?: boolean | null
   descripcion?: string | null
   imagen?: string | null
 }
@@ -274,7 +275,7 @@ export function PremiumListingPage({
                     <h3 className="text-xl font-semibold text-slate-900">{event.titulo}</h3>
                     <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
                       <CalendarDays className="h-4 w-4 text-slate-400" />
-                      <span>{formatEventDateRange(event.fecha, event.fecha_fin)}</span>
+                      <span>{formatEventDateRange(event.fecha, event.fecha_fin, event.fecha_solo_mes ?? false)}</span>
                     </div>
                     {event.descripcion ? (
                       <p className="mt-4 line-clamp-4 whitespace-pre-line text-sm leading-7 text-slate-500">

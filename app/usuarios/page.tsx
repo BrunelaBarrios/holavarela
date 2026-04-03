@@ -6,6 +6,7 @@ import type { User } from "@supabase/supabase-js"
 import { CalendarDays, CircleCheckBig, Clock3, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, PlusCircle, Send, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../components/AuthFormStatus"
+import { formatEventDateRange } from "../lib/eventDates"
 import { getSubscriptionPlan, subscriptionPlans, type SubscriptionPlanKey } from "../lib/subscriptionPlans"
 import { getSubscriptionStatusBadge, getSubscriptionStatusLabel } from "../lib/subscriptionStatus"
 import { buildUserProfileFields, fetchUserOwnedEvents, findUserOwnedEntity, getUserProfileImageSrc, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, userEntityStatusCopy, type UserEntityType, type UserOwnedEntity, type UserOwnedEvent } from "../lib/userProfiles"
@@ -618,7 +619,7 @@ function EventGroup({
                 <div className="mt-4 space-y-2 text-sm text-slate-600">
                   <div className="flex items-center gap-2">
                     <CalendarDays className="h-4 w-4 text-slate-400" />
-                    <span>{new Date(event.fecha).toLocaleDateString("es-UY")}</span>
+                    <span>{formatEventDateRange(event.fecha, event.fecha_fin, event.fecha_solo_mes ?? false)}</span>
                   </div>
                 </div>
                 <p className="mt-4 line-clamp-4 text-sm leading-7 text-slate-500">{event.descripcion}</p>

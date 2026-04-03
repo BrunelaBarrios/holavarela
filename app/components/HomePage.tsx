@@ -55,6 +55,7 @@ type Evento = {
   descripcion: string
   fecha: string
   fecha_fin?: string | null
+  fecha_solo_mes?: boolean | null
   ubicacion: string
   telefono?: string | null
   web_url?: string | null
@@ -981,7 +982,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 icon: CalendarDays,
                 text: formatEventDateRange(
                   selectedEvento.fecha,
-                  selectedEvento.fecha_fin
+                  selectedEvento.fecha_fin,
+                  selectedEvento.fecha_solo_mes ?? false
                 ),
               }]
             : []),
@@ -1651,7 +1653,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 <div className="p-5">
                   <div className="mb-4 flex items-center gap-2 text-lg text-blue-500">
                     <CalendarDays className="h-5 w-5" />
-                    <span>{formatEventDateRange(event.fecha, event.fecha_fin)}</span>
+                    <span>{formatEventDateRange(event.fecha, event.fecha_fin, event.fecha_solo_mes ?? false)}</span>
                   </div>
 
                   <div className="mb-3 inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">

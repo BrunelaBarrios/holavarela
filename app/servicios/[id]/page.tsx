@@ -31,7 +31,7 @@ export default async function ServicioSharePage({
   const { data: relatedEvents } = data.owner_email
     ? await supabaseServer
         .from("eventos")
-        .select("id, titulo, categoria, fecha, fecha_fin, descripcion, imagen")
+        .select("id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, descripcion, imagen")
         .eq("owner_email", data.owner_email)
         .eq("estado", "activo")
         .or(buildActiveEventsFilter(today))

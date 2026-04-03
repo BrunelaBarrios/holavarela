@@ -38,6 +38,7 @@ type EventoResumen = {
   titulo: string
   fecha: string
   fecha_fin?: string | null
+  fecha_solo_mes?: boolean | null
 }
 
 export default function AdminDashboardPage() {
@@ -161,7 +162,7 @@ export default function AdminDashboardPage() {
           .eq("estado_suscripcion", "cancelada"),
         supabase
           .from("eventos")
-          .select("id, titulo, fecha, fecha_fin")
+          .select("id, titulo, fecha, fecha_fin, fecha_solo_mes")
           .eq("estado", "activo")
           .or(buildActiveEventsFilter(today))
           .order("fecha", { ascending: true })
@@ -583,7 +584,7 @@ export default function AdminDashboardPage() {
                     <div className="flex-1">
                       <h4 className="font-medium text-slate-900">{event.titulo}</h4>
                       <p className="text-sm text-slate-500">
-                        {formatEventDateRange(event.fecha, event.fecha_fin)}
+                        {formatEventDateRange(event.fecha, event.fecha_fin, event.fecha_solo_mes ?? false)}
                       </p>
                     </div>
                   </div>

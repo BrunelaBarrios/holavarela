@@ -24,6 +24,8 @@ export type UserEntityRecord = {
   premium_activo?: boolean | null
   plan_suscripcion?: SubscriptionPlanKey | null
   estado_suscripcion?: string | null
+  suscripcion_actualizada_at?: string | null
+  created_at?: string | null
   direccion?: string | null
   telefono?: string | null
   imagen?: string | null
@@ -51,6 +53,7 @@ export type UserOwnedEvent = {
   categoria?: string | null
   fecha: string
   fecha_fin?: string | null
+  fecha_solo_mes?: boolean | null
   ubicacion: string
   telefono?: string | null
   descripcion: string

@@ -6,7 +6,7 @@ import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { buildShareCountMap } from "../../lib/shareTracking"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
-import { formatEventDateRange } from "../../lib/eventDates"
+import { buildMonthEventRange, formatEventDateRange } from "../../lib/eventDates"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 
 type Evento = {
@@ -15,6 +15,7 @@ type Evento = {
   categoria?: string | null
   fecha: string
   fecha_fin?: string | null
+  fecha_solo_mes?: boolean | null
   ubicacion: string
   telefono?: string | null
   web_url?: string | null
@@ -32,6 +33,8 @@ type EventoForm = {
   categoria: string
   fecha: string
   fechaFin: string
+  fechaSoloMes: boolean
+  mesReferencia: string
   ubicacion: string
   telefono: string
   web_url: string
@@ -47,6 +50,8 @@ const initialForm: EventoForm = {
   categoria: "Evento",
   fecha: "",
   fechaFin: "",
+  fechaSoloMes: false,
+  mesReferencia: "",
   ubicacion: "",
   telefono: "",
   web_url: "",
@@ -128,6 +133,9 @@ export default function AdminEventosPage() {
       categoria: normalizeAdminEventCategory(evento.categoria),
       fecha: evento.fecha || "",
       fechaFin: evento.fecha_fin || "",
+      fechaSoloMes: evento.fecha_solo_mes ?? false,
+      mesReferencia:
+        evento.fecha_solo_mes && evento.fecha ? String(evento.fecha).slice(0, 7) : "",
       ubicacion: evento.ubicacion || "",
       telefono: evento.telefono || "",
       web_url: evento.web_url || "",
@@ -220,13 +228,32 @@ export default function AdminEventosPage() {
       return
     }
 
-    if (!isDraft && formData.fecha < today) {
+    const monthRange = formData.fechaSoloMes
+      ? buildMonthEventRange(formData.mesReferencia)
+      : null
+
+    if (formData.fechaSoloMes && !monthRange) {
+      setSaveError("Selecciona el mes en el que quieres mostrar el evento.")
+      setLoading(false)
+      return
+    }
+
+    const startDate = monthRange?.startDate || formData.fecha
+    const endDate = monthRange?.endDate || formData.fechaFin || null
+
+    if (!isDraft && formData.fechaSoloMes && endDate && endDate < today) {
+      setSaveError("El mes del evento no puede ser anterior al mes actual.")
+      setLoading(false)
+      return
+    }
+
+    if (!isDraft && !formData.fechaSoloMes && startDate < today) {
       setSaveError("La fecha del evento no puede ser anterior a hoy.")
       setLoading(false)
       return
     }
 
-    if (!isDraft && formData.fechaFin && formData.fechaFin < formData.fecha) {
+    if (!isDraft && !formData.fechaSoloMes && endDate && endDate < startDate) {
       setSaveError("La fecha final no puede ser anterior a la fecha inicial.")
       setLoading(false)
       return
@@ -235,8 +262,9 @@ export default function AdminEventosPage() {
     const payload = {
       titulo: formData.titulo,
       categoria: formData.categoria,
-      fecha: formData.fecha,
-      fecha_fin: formData.fechaFin || null,
+      fecha: startDate,
+      fecha_fin: endDate,
+      fecha_solo_mes: formData.fechaSoloMes,
       ubicacion: formData.ubicacion,
       telefono: formData.telefono || null,
       web_url: formData.web_url.trim() || null,
@@ -390,57 +418,99 @@ export default function AdminEventosPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Fecha desde *
-                  </label>
+              <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
                   <input
-                    type="date"
-                    value={formData.fecha}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, fecha: e.target.value }))
-                    }
-                    min={today}
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Fecha hasta
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.fechaFin}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, fechaFin: e.target.value }))
-                    }
-                    min={formData.fecha || today}
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
-                  />
-                  <p className="mt-2 text-sm text-slate-500">
-                    Opcional. Ejemplo: del 12 al 14 de mayo.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Ubicacion *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.ubicacion}
+                    type="checkbox"
+                    checked={formData.fechaSoloMes}
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
-                        ubicacion: e.target.value,
+                        fechaSoloMes: e.target.checked,
+                        mesReferencia: e.target.checked ? prev.mesReferencia : "",
+                        fecha: e.target.checked ? "" : prev.fecha,
+                        fechaFin: e.target.checked ? "" : prev.fechaFin,
                       }))
                     }
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
-                    required
+                    className="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
                   />
+                  <span>Todavia no tengo el dia exacto, mostrar solo el mes</span>
+                </label>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  {formData.fechaSoloMes ? (
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-900">
+                        Mes del evento *
+                      </label>
+                      <input
+                        type="month"
+                        value={formData.mesReferencia}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, mesReferencia: e.target.value }))
+                        }
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
+                        required
+                      />
+                      <p className="mt-2 text-sm text-slate-500">
+                        En la web se mostrara como “abril de 2026”.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-900">
+                          Fecha desde *
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.fecha}
+                          onChange={(e) =>
+                            setFormData((prev) => ({ ...prev, fecha: e.target.value }))
+                          }
+                          min={today}
+                          className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-900">
+                          Fecha hasta
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.fechaFin}
+                          onChange={(e) =>
+                            setFormData((prev) => ({ ...prev, fechaFin: e.target.value }))
+                          }
+                          min={formData.fecha || today}
+                          className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
+                        />
+                        <p className="mt-2 text-sm text-slate-500">
+                          Opcional. Ejemplo: del 12 al 14 de mayo.
+                        </p>
+                      </div>
+                    </>
+                  )}
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Ubicacion *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.ubicacion}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          ubicacion: e.target.value,
+                        }))
+                      }
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -632,7 +702,7 @@ export default function AdminEventosPage() {
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm text-emerald-600">
                   <Calendar className="h-4 w-4" />
-                  <span>{formatEventDateRange(evento.fecha, evento.fecha_fin)}</span>
+                  <span>{formatEventDateRange(evento.fecha, evento.fecha_fin, evento.fecha_solo_mes ?? false)}</span>
                 </div>
 
                 <div

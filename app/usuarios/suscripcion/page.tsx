@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { CreditCard, ExternalLink } from "lucide-react"
+import { CreditCard, ExternalLink, ShieldOff } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
 import { getSubscriptionPlan, subscriptionPlans, type SubscriptionPlanKey } from "../../lib/subscriptionPlans"
@@ -13,9 +13,11 @@ import { supabase } from "../../supabase"
 export default function UsuariosSuscripcionPage() {
   const router = useRouter()
   const [ownedEntity, setOwnedEntity] = useState<UserOwnedEntity | null>(null)
+  const [userEmail, setUserEmail] = useState("")
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>("presencia")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
@@ -28,10 +30,11 @@ export default function UsuariosSuscripcionPage() {
       if (!session?.user?.email) {
         router.replace("/usuarios/login")
         return
-      }
+        }
 
-      try {
-        const entity = await findUserOwnedEntity(session.user.email)
+        try {
+        setUserEmail(session.user.email)
+          const entity = await findUserOwnedEntity(session.user.email)
 
         if (!entity) {
           router.replace("/usuarios")
@@ -55,16 +58,20 @@ export default function UsuariosSuscripcionPage() {
     void loadSubscription()
   }, [router])
 
-  const handleSavePlan = async () => {
+  const handleSavePlan = async (planToSave = selectedPlan) => {
     if (!ownedEntity) return
 
     setSaving(true)
     setError("")
     setSuccess("")
+    const changedAt = new Date().toISOString()
 
     const { error: updateError } = await supabase
       .from(getUserProfileTable(ownedEntity.type))
-      .update({ plan_suscripcion: selectedPlan })
+      .update({
+        plan_suscripcion: planToSave,
+        suscripcion_actualizada_at: changedAt,
+      })
       .eq("id", ownedEntity.record.id)
 
     if (updateError) {
@@ -79,38 +86,118 @@ export default function UsuariosSuscripcionPage() {
             ...current,
             record: {
               ...current.record,
-              plan_suscripcion: selectedPlan,
+              plan_suscripcion: planToSave,
+              suscripcion_actualizada_at: changedAt,
             },
           }
         : current
     )
-    setSuccess("Tu plan quedo actualizado. Si quieres, ya puedes continuar al pago.")
+    setSuccess("Tu plan quedo actualizado. Cuando quieras, continua el pago en Mercado Pago.")
     setSaving(false)
+  }
+
+  const handleCancelSubscription = async () => {
+    if (!ownedEntity || !userEmail) return
+
+    const confirmed = window.confirm(
+      "Si cancelas la suscripcion, tu ficha y sus eventos visibles pasaran a oculto. ¿Quieres continuar?"
+    )
+
+    if (!confirmed) return
+
+    setCancelling(true)
+    setError("")
+    setSuccess("")
+    const changedAt = new Date().toISOString()
+
+    const { error: profileError } = await supabase
+      .from(getUserProfileTable(ownedEntity.type))
+      .update({
+        estado_suscripcion: "cancelada",
+        estado: "oculto",
+        suscripcion_actualizada_at: changedAt,
+      })
+      .eq("id", ownedEntity.record.id)
+
+    if (profileError) {
+      setError(`No pudimos cancelar tu suscripcion: ${profileError.message}`)
+      setCancelling(false)
+      return
+    }
+
+    const { error: eventsError } = await supabase
+      .from("eventos")
+      .update({ estado: "oculto" })
+      .eq("owner_email", userEmail)
+      .neq("estado", "cancelado")
+
+    if (eventsError) {
+      setError(`Cancelamos tu suscripcion, pero no pudimos ocultar todos los eventos: ${eventsError.message}`)
+      setCancelling(false)
+      return
+    }
+
+    setOwnedEntity((current) =>
+      current
+        ? {
+            ...current,
+            record: {
+              ...current.record,
+              estado_suscripcion: "cancelada",
+              estado: "oculto",
+              suscripcion_actualizada_at: changedAt,
+            },
+          }
+        : current
+    )
+    setSuccess("Tu suscripcion quedo cancelada y la ficha paso a oculto.")
+    setCancelling(false)
   }
 
   const currentPlan = getSubscriptionPlan(ownedEntity?.record.plan_suscripcion)
   const nextPlan = subscriptionPlans[selectedPlan]
   const statusLabel = getSubscriptionStatusLabel(ownedEntity?.record.estado_suscripcion)
   const statusBadge = getSubscriptionStatusBadge(ownedEntity?.record.estado_suscripcion)
+  const subscriptionUpdatedAt = ownedEntity?.record.suscripcion_actualizada_at
+    ? new Date(ownedEntity.record.suscripcion_actualizada_at).toLocaleDateString("es-UY", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : null
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6">
-      <div className="mx-auto max-w-7xl space-y-6">
+      <div className="mx-auto max-w-[1440px] space-y-6">
         <section className="overflow-hidden rounded-[36px] border border-slate-200 bg-white shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
           <div className="bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10 lg:px-10">
-            <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-              Suscripcion
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                Suscripcion
+              </div>
+              {!loading && ownedEntity ? (
+                <button
+                  type="button"
+                  onClick={() => void handleCancelSubscription()}
+                  disabled={saving || cancelling}
+                  className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-medium text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 disabled:opacity-60"
+                >
+                  <ShieldOff className="h-4 w-4" />
+                  {cancelling ? "Cancelando..." : "Cancelar mi suscripcion"}
+                </button>
+              ) : null}
             </div>
-            <div className="mt-6 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
-              <div>
+
+            <div className="mt-6 grid gap-8 xl:grid-cols-[1.05fr_1.2fr] xl:items-end">
+              <div className="max-w-3xl">
                 <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl xl:text-6xl">
                   Gestiona tu plan
                 </h1>
                 <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-600">
-                  Elige el plan que mejor acompana tu ficha y continua el pago desde Mercado Pago cuando quieras.
+                  Elige el plan que mejor acompana tu ficha, guardalo y despues continua el pago desde Mercado Pago cuando lo necesites.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-3 lg:justify-end">
+              <div className="flex flex-wrap gap-3 xl:justify-end">
                 <Link
                   href="/usuarios"
                   className="inline-flex items-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
@@ -121,18 +208,29 @@ export default function UsuariosSuscripcionPage() {
                   <button
                     type="button"
                     onClick={() => void handleSavePlan()}
-                    disabled={saving}
+                    disabled={saving || cancelling}
                     className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70"
                   >
                     <CreditCard className="h-4 w-4" />
                     {saving ? "Guardando..." : "Guardar plan"}
                   </button>
                 ) : null}
+                {!loading && ownedEntity ? (
+                  <a
+                    href={nextPlan.checkoutUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Continuar pago en Mercado Pago
+                  </a>
+                ) : null}
               </div>
             </div>
 
             {!loading && ownedEntity ? (
-              <div className="mt-8 grid gap-4 lg:grid-cols-3">
+              <div className="mt-8 grid gap-4 xl:grid-cols-4">
                 <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                     Ficha vinculada
@@ -161,7 +259,23 @@ export default function UsuariosSuscripcionPage() {
 
                 <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Plan seleccionado
+                    Suscripcion registrada
+                  </div>
+                  <div className="mt-3 text-2xl font-semibold text-slate-950">
+                    {subscriptionUpdatedAt || "Sin fecha registrada"}
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    {subscriptionUpdatedAt
+                      ? ownedEntity.record.estado_suscripcion === "activa"
+                        ? "Fecha registrada de la ultima activacion o cambio de plan."
+                        : "Fecha del ultimo cambio guardado en tu suscripcion."
+                      : "Todavia no hay una fecha guardada para esta suscripcion."}
+                  </p>
+                </div>
+
+                <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Plan seleccionado ahora
                   </div>
                   <div className="mt-3 text-2xl font-semibold text-slate-950">{nextPlan.name}</div>
                   <p className="mt-2 text-sm leading-6 text-slate-600">{nextPlan.price}</p>
@@ -222,20 +336,21 @@ export default function UsuariosSuscripcionPage() {
                     </button>
 
                     <div className="mt-6 flex flex-wrap gap-3">
-                      <a
-                        href={plan.checkoutUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPlan(planKey)
+                          void handleSavePlan(planKey)
+                        }}
+                        disabled={saving || cancelling}
+                        className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition ${
+                          selectedPlan === planKey
+                            ? "bg-slate-900 text-white hover:bg-blue-600"
+                            : "border border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-600"
+                        } disabled:opacity-60`}
                       >
-                        <ExternalLink className="h-4 w-4" />
-                        Abrir Mercado Pago
-                      </a>
-                      {selectedPlan === planKey ? (
-                        <span className="inline-flex items-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-                          Plan elegido
-                        </span>
-                      ) : null}
+                        {selectedPlan === planKey ? "Guardar este plan" : "Cambiar a este plan y guardar"}
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -246,7 +361,7 @@ export default function UsuariosSuscripcionPage() {
                   Siguiente paso
                 </div>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
-                  Primero guarda el plan que quieres usar en tu ficha y despues abre Mercado Pago para completar la suscripcion.
+                  Guarda el plan que quieres usar en tu ficha y despues continua el pago desde el boton superior. El cambio de plan queda registrado en Hola Varela, pero Mercado Pago no se entera solo: para sincronizarlo automatico habria que integrar webhooks o la API de suscripciones.
                 </p>
               </div>
             </div>

@@ -28,6 +28,9 @@ add column if not exists plan_suscripcion text;
 alter table public.comercios
 add column if not exists estado_suscripcion text default 'pendiente';
 
+alter table public.comercios
+add column if not exists suscripcion_actualizada_at timestamp with time zone;
+
 alter table public.servicios
 add column if not exists destacado boolean default false;
 
@@ -58,6 +61,9 @@ add column if not exists plan_suscripcion text;
 alter table public.servicios
 add column if not exists estado_suscripcion text default 'pendiente';
 
+alter table public.servicios
+add column if not exists suscripcion_actualizada_at timestamp with time zone;
+
 alter table public.cursos
 add column if not exists destacado boolean default false;
 
@@ -81,6 +87,12 @@ add column if not exists estado_suscripcion text default 'pendiente';
 
 alter table public.eventos
 add column if not exists fecha_fin date;
+
+alter table public.cursos
+add column if not exists suscripcion_actualizada_at timestamp with time zone;
+
+alter table public.eventos
+add column if not exists fecha_solo_mes boolean default false;
 
 alter table public.eventos
 add column if not exists telefono text;
