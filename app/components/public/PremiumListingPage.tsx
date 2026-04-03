@@ -186,16 +186,6 @@ export function PremiumListingPage({
                   Acciones
                 </div>
                 <div className="flex flex-wrap gap-3">
-                  {relatedEvents.length > 0 ? (
-                    <a
-                      href="#eventos-del-local"
-                      className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3 font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
-                    >
-                      <CalendarDays className="h-4 w-4" />
-                      Ver eventos de este local
-                    </a>
-                  ) : null}
-
                   {contactHref ? (
                     <ContactActionLink
                       href={contactHref}
@@ -241,9 +231,6 @@ export function PremiumListingPage({
               <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
                 Eventos de este perfil
               </h2>
-              <p className="mt-2 text-sm leading-7 text-slate-600">
-                Si este comercio o servicio publica eventos activos, los vas a ver aca mismo.
-              </p>
             </div>
             <Link
               href="/eventos"
