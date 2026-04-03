@@ -29,17 +29,12 @@ export default function UsuariosSuscripcionPage() {
       if (!session?.user?.email) {
         router.replace("/usuarios/login")
         return
-        }
+      }
 
-        try {
+      try {
         const entity = await findUserOwnedEntity(session.user.email)
 
-        if (!entity) {
-          router.replace("/usuarios")
-          return
-        }
-
-        if (entity.type === "institucion") {
+        if (!entity || entity.type === "institucion") {
           router.replace("/usuarios")
           return
         }
@@ -47,7 +42,7 @@ export default function UsuariosSuscripcionPage() {
         setOwnedEntity(entity)
         setSelectedPlan((entity.record.plan_suscripcion as SubscriptionPlanKey) || "presencia")
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "No pudimos cargar tu suscripcion.")
+        setError(loadError instanceof Error ? loadError.message : "No pudimos cargar tu suscripción.")
       } finally {
         setLoading(false)
       }
@@ -67,7 +62,7 @@ export default function UsuariosSuscripcionPage() {
     } = await supabase.auth.getSession()
 
     if (!session?.access_token) {
-      setError("Tu sesion vencio. Vuelve a entrar para gestionar la suscripcion.")
+      setError("Tu sesión venció. Vuelve a entrar para gestionar la suscripción.")
       setSaving(false)
       return
     }
@@ -96,20 +91,18 @@ export default function UsuariosSuscripcionPage() {
       return
     }
 
-    const updatedRecord = result.record
-
     setOwnedEntity((current) =>
       current
         ? {
             ...current,
-            record: updatedRecord,
+            record: result.record!,
           }
         : current
     )
     setSuccess(
       result.syncedWithMercadoPago
-        ? "Tu plan quedo actualizado y tambien se sincronizo con Mercado Pago."
-        : "Tu plan quedo actualizado. Cuando quieras, continua el pago en Mercado Pago."
+        ? "Tu plan quedó actualizado y también se sincronizó con Mercado Pago."
+        : "Tu plan quedó actualizado. Cuando quieras, continúa el pago en Mercado Pago."
     )
     setSaving(false)
   }
@@ -118,7 +111,7 @@ export default function UsuariosSuscripcionPage() {
     if (!ownedEntity) return
 
     const confirmed = window.confirm(
-      "Si cancelas la suscripcion, tu ficha y sus eventos visibles pasaran a oculto. ¿Quieres continuar?"
+      "Si cancelas la suscripción, tu ficha y sus eventos visibles pasarán a oculto. ¿Quieres continuar?"
     )
 
     if (!confirmed) return
@@ -131,7 +124,7 @@ export default function UsuariosSuscripcionPage() {
     } = await supabase.auth.getSession()
 
     if (!session?.access_token) {
-      setError("Tu sesion vencio. Vuelve a entrar para gestionar la suscripcion.")
+      setError("Tu sesión venció. Vuelve a entrar para gestionar la suscripción.")
       setCancelling(false)
       return
     }
@@ -154,25 +147,23 @@ export default function UsuariosSuscripcionPage() {
     }
 
     if (!response.ok || !result.record) {
-      setError(result.error || "No pudimos cancelar tu suscripcion.")
+      setError(result.error || "No pudimos cancelar tu suscripción.")
       setCancelling(false)
       return
     }
-
-    const updatedRecord = result.record
 
     setOwnedEntity((current) =>
       current
         ? {
             ...current,
-            record: updatedRecord,
+            record: result.record!,
           }
         : current
     )
     setSuccess(
       result.syncedWithMercadoPago
-        ? "Tu suscripcion quedo cancelada y tambien se sincronizo con Mercado Pago."
-        : "Tu suscripcion quedo cancelada y la ficha paso a oculto."
+        ? "Tu suscripción quedó cancelada y también se sincronizó con Mercado Pago."
+        : "Tu suscripción quedó cancelada y la ficha pasó a oculto."
     )
     setCancelling(false)
   }
@@ -191,118 +182,111 @@ export default function UsuariosSuscripcionPage() {
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6">
-      <div className="mx-auto max-w-[1440px] space-y-6">
+      <div className="mx-auto max-w-[1480px] space-y-6">
         <section className="overflow-hidden rounded-[36px] border border-slate-200 bg-white shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
           <div className="bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10 lg:px-10">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-                Suscripcion
-              </div>
-              {!loading && ownedEntity ? (
-                <button
-                  type="button"
-                  onClick={() => void handleCancelSubscription()}
-                  disabled={saving || cancelling}
-                  className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-medium text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 disabled:opacity-60"
-                >
-                  <ShieldOff className="h-4 w-4" />
-                  {cancelling ? "Cancelando..." : "Cancelar mi suscripcion"}
-                </button>
-              ) : null}
+            <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+              Suscripción
             </div>
 
-            <div className="mt-6 grid gap-8 xl:grid-cols-[1.05fr_1.2fr] xl:items-end">
-              <div className="max-w-3xl">
-                <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl xl:text-6xl">
-                  Gestiona tu plan
-                </h1>
-                <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-600">
-                  Elige el plan que mejor acompana tu ficha, guardalo y despues continua el pago desde Mercado Pago cuando lo necesites.
-                </p>
+            <div className="mt-6 grid gap-8 xl:grid-cols-[1.05fr_1.15fr] xl:items-start">
+              <div className="space-y-5">
+                <div>
+                  <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl xl:text-6xl">
+                    Gestiona tu plan
+                  </h1>
+                  <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-600">
+                    Elige el plan que mejor acompaña tu ficha, guarda el cambio y después continúa el pago desde Mercado Pago cuando quieras.
+                  </p>
+                </div>
+
+                <div className="rounded-[28px] border border-white/70 bg-white/80 p-5 backdrop-blur">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Cómo funciona
+                  </div>
+                  <div className="mt-4 grid gap-3 text-sm leading-7 text-slate-600 sm:grid-cols-3">
+                    <p>1. Selecciona el plan que quieres usar.</p>
+                    <p>2. Guarda el cambio en tu ficha.</p>
+                    <p>3. Continúa el pago cuando quieras.</p>
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-3 xl:justify-end">
-                <Link
-                  href="/usuarios"
-                  className="inline-flex items-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                >
-                  Volver al panel
-                </Link>
+
+              <div className="space-y-4 xl:justify-self-end xl:text-right">
+                <div className="flex flex-wrap gap-3 xl:justify-end">
+                  <Link
+                    href="/usuarios"
+                    className="inline-flex items-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                  >
+                    Volver al panel
+                  </Link>
+                  {!loading && ownedEntity ? (
+                    <button
+                      type="button"
+                      onClick={() => void handleSavePlan()}
+                      disabled={saving || cancelling}
+                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600 disabled:opacity-70"
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      {saving ? "Guardando..." : "Guardar cambio"}
+                    </button>
+                  ) : null}
+                  {!loading && ownedEntity ? (
+                    <a
+                      href={nextPlan.checkoutUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Continuar pago
+                    </a>
+                  ) : null}
+                </div>
+
                 {!loading && ownedEntity ? (
                   <button
                     type="button"
-                    onClick={() => void handleSavePlan()}
+                    onClick={() => void handleCancelSubscription()}
                     disabled={saving || cancelling}
-                    className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-rose-700 transition hover:text-rose-800 disabled:opacity-60 xl:ml-auto"
                   >
-                    <CreditCard className="h-4 w-4" />
-                    {saving ? "Guardando..." : "Guardar plan"}
+                    <ShieldOff className="h-4 w-4" />
+                    {cancelling ? "Cancelando..." : "Cancelar mi suscripción"}
                   </button>
-                ) : null}
-                {!loading && ownedEntity ? (
-                  <a
-                    href={nextPlan.checkoutUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Continuar pago en Mercado Pago
-                  </a>
                 ) : null}
               </div>
             </div>
 
             {!loading && ownedEntity ? (
-              <div className="mt-8 grid gap-4 xl:grid-cols-4">
-                <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Ficha vinculada
-                  </div>
-                  <div className="mt-3 text-2xl font-semibold text-slate-950">
-                    {ownedEntity.record.nombre}
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    {userEntityLabels[ownedEntity.type]}
-                  </p>
-                </div>
-
-                <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Estado de la suscripcion
-                  </div>
-                  <div className="mt-3">
-                    <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${statusBadge}`}>
-                      {statusLabel}
-                    </span>
-                  </div>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">
-                    Plan actual: <span className="font-semibold text-slate-900">{currentPlan.name}</span>
-                  </p>
-                </div>
-
-                <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Suscripcion registrada
-                  </div>
-                  <div className="mt-3 text-2xl font-semibold text-slate-950">
-                    {subscriptionUpdatedAt || "Sin fecha registrada"}
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    {subscriptionUpdatedAt
+              <div className="mt-8 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+                <SummaryCard
+                  label="Ficha vinculada"
+                  title={ownedEntity.record.nombre}
+                  description={userEntityLabels[ownedEntity.type]}
+                />
+                <SummaryCard
+                  label="Estado actual"
+                  title={statusLabel}
+                  description={`Plan actual: ${currentPlan.name}`}
+                  badge={<span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${statusBadge}`}>{statusLabel}</span>}
+                />
+                <SummaryCard
+                  label="Último cambio guardado"
+                  title={subscriptionUpdatedAt || "Sin fecha registrada"}
+                  description={
+                    subscriptionUpdatedAt
                       ? ownedEntity.record.estado_suscripcion === "activa"
-                        ? "Fecha registrada de la ultima activacion o cambio de plan."
-                        : "Fecha del ultimo cambio guardado en tu suscripcion."
-                      : "Todavia no hay una fecha guardada para esta suscripcion."}
-                  </p>
-                </div>
-
-                <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Plan seleccionado ahora
-                  </div>
-                  <div className="mt-3 text-2xl font-semibold text-slate-950">{nextPlan.name}</div>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{nextPlan.price}</p>
-                </div>
+                        ? "Fecha registrada de la última activación o cambio de plan."
+                        : "Fecha del último cambio guardado en tu suscripción."
+                      : "Todavía no hay una fecha guardada para esta suscripción."
+                  }
+                />
+                <SummaryCard
+                  label="Próximo plan"
+                  title={nextPlan.name}
+                  description={nextPlan.price}
+                />
               </div>
             ) : null}
           </div>
@@ -311,7 +295,7 @@ export default function UsuariosSuscripcionPage() {
         <section className="rounded-[36px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.2)] sm:p-8 lg:p-10">
           {loading ? (
             <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
-              Cargando suscripcion...
+              Cargando suscripción...
             </div>
           ) : ownedEntity ? (
             <div className="space-y-6">
@@ -361,18 +345,15 @@ export default function UsuariosSuscripcionPage() {
                     <div className="mt-6 flex flex-wrap gap-3">
                       <button
                         type="button"
-                        onClick={() => {
-                          setSelectedPlan(planKey)
-                          void handleSavePlan(planKey)
-                        }}
-                        disabled={saving || cancelling}
+                        onClick={() => setSelectedPlan(planKey)}
+                        disabled={cancelling}
                         className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold transition ${
                           selectedPlan === planKey
                             ? "bg-slate-900 text-white hover:bg-blue-600"
                             : "border border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-600"
                         } disabled:opacity-60`}
                       >
-                        {selectedPlan === planKey ? "Guardar este plan" : "Cambiar a este plan y guardar"}
+                        {selectedPlan === planKey ? "Plan seleccionado" : "Elegir este plan"}
                       </button>
                     </div>
                   </div>
@@ -380,17 +361,49 @@ export default function UsuariosSuscripcionPage() {
               </div>
 
               <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
-                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                  Siguiente paso
+                <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                      Siguiente paso
+                    </div>
+                    <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
+                      Cuando ya tengas elegido tu plan, guárdalo y continúa el pago. Si todavía no quieres pagar, puedes dejar el cambio guardado y volver más tarde.
+                    </p>
+                  </div>
+                  <div className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+                    Seleccionado: {nextPlan.name}
+                  </div>
                 </div>
-                <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
-                  Guarda el plan que quieres usar en tu ficha y despues continua el pago desde el boton superior. El cambio de plan queda registrado en Hola Varela, pero Mercado Pago no se entera solo: para sincronizarlo automatico habria que integrar webhooks o la API de suscripciones.
-                </p>
               </div>
             </div>
           ) : null}
         </section>
       </div>
     </main>
+  )
+}
+
+function SummaryCard({
+  label,
+  title,
+  description,
+  badge,
+}: {
+  label: string
+  title: string
+  description: string
+  badge?: React.ReactNode
+}) {
+  return (
+    <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
+      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+        {label}
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <div className="text-2xl font-semibold text-slate-950">{title}</div>
+        {badge}
+      </div>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+    </div>
   )
 }

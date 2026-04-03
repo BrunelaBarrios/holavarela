@@ -81,7 +81,7 @@ export function PremiumListingPage({
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)]">
       <PublicHeader items={buildPublicNav(kind === "comercio" ? "comercios" : "servicios")} />
 
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1520px] px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <Link
             href={basePath}
@@ -91,21 +91,18 @@ export function PremiumListingPage({
             Volver a {kind === "comercio" ? "comercios" : "servicios"}
           </Link>
 
-          <div className="inline-flex rounded-full bg-violet-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-violet-700">
-            Perfil premium
-          </div>
         </div>
 
         <section className="overflow-hidden rounded-[36px] border border-slate-200 bg-white shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
-          <div className="grid xl:grid-cols-[1.1fr_0.9fr]">
-            <div className="bg-[radial-gradient(circle_at_top_left,#e8f6ec_0%,#f4f9ff_38%,#eef4ff_100%)] p-5 sm:p-7 lg:p-8">
+          <div className="grid xl:grid-cols-[1.18fr_0.82fr]">
+            <div className="bg-[radial-gradient(circle_at_top_left,#e8f6ec_0%,#f4f9ff_38%,#eef4ff_100%)] p-5 sm:p-7 lg:p-10">
               <div className="overflow-hidden rounded-[30px] border border-white/80 bg-white/90 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.45)]">
                 {imageSrc ? (
-                  <div className="relative aspect-[5/4] w-full">
+                  <div className="relative aspect-[16/10] w-full">
                     <OptimizedImage
                       src={imageSrc}
                       alt={title}
-                      sizes="(max-width: 1280px) 100vw, 60vw"
+                      sizes="(max-width: 1280px) 100vw, 65vw"
                       priority
                       className="object-contain bg-white"
                     />
@@ -118,11 +115,11 @@ export function PremiumListingPage({
               </div>
 
               {premiumGallery?.length ? (
-                <div className="mt-5">
+                <div className="mt-6">
                   <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                    Galeria
+                    Más imágenes
                   </div>
-                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
                     {premiumGallery.map((image, index) => (
                       <div
                         key={`${image}-${index}`}
@@ -141,21 +138,69 @@ export function PremiumListingPage({
               ) : null}
             </div>
 
-            <div className="bg-white p-6 sm:p-8">
-              {category ? (
-                <div className="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
-                  {category}
-                </div>
-              ) : null}
+            <div className="bg-white p-6 sm:p-8 lg:p-10">
+              <div className="rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6">
+                {category ? (
+                  <div className="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
+                    {category}
+                  </div>
+                ) : null}
 
-              <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                {title}
-              </h1>
+                <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+                  {title}
+                </h1>
+
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {address ? <InfoPill icon={<MapPin className="h-4 w-4" />} text={address} /> : null}
+                  {phone ? <InfoPill icon={<Phone className="h-4 w-4" />} text={phone} /> : null}
+                  {contactName ? (
+                    <InfoPill icon={<UserRound className="h-4 w-4" />} text={contactName} />
+                  ) : null}
+                </div>
+
+                <div className="mt-8">
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                    Acciones
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {contactHref ? (
+                      <ContactActionLink
+                        href={contactHref}
+                        mode={usesWhatsapp === false ? "phone" : "whatsapp"}
+                        section={kind === "comercio" ? "comercios" : "servicios"}
+                        itemId={String(id)}
+                        itemTitle={title}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
+                      >
+                        <Phone className="h-4 w-4" />
+                        {usesWhatsapp === false ? "Llamar" : "WhatsApp"}
+                      </ContactActionLink>
+                    ) : null}
+
+                    <ShareButton
+                      title={title}
+                      text={description || premiumDetail || undefined}
+                      url={shareUrl}
+                      section={kind === "comercio" ? "comercios" : "servicios"}
+                      itemId={String(id)}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                    />
+
+                    <ExternalLinksButtons
+                      webUrl={webUrl}
+                      instagramUrl={instagramUrl}
+                      facebookUrl={facebookUrl}
+                    />
+                  </div>
+                </div>
+              </div>
 
               {description ? (
-                <div className="mt-6 rounded-[24px] border border-slate-100 bg-slate-50/80 p-5">
+                <div className="mt-6 rounded-[24px] border border-slate-100 bg-slate-50/80 p-6">
                   <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                    Descripcion
+                    Sobre este perfil
                   </div>
                   <p className="whitespace-pre-line text-base leading-8 text-slate-700">
                     {description}
@@ -164,61 +209,15 @@ export function PremiumListingPage({
               ) : null}
 
               {premiumDetail ? (
-                <div className="mt-5 rounded-[24px] border border-violet-100 bg-violet-50/70 p-5">
+                <div className="mt-5 rounded-[24px] border border-violet-100 bg-violet-50/70 p-6">
                   <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-violet-600">
-                    Perfil ampliado
+                    Información ampliada
                   </div>
                   <p className="whitespace-pre-line text-base leading-8 text-slate-700">
                     {premiumDetail}
                   </p>
                 </div>
               ) : null}
-
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                {contactName ? (
-                  <InfoPill icon={<UserRound className="h-4 w-4" />} text={contactName} />
-                ) : null}
-                {address ? <InfoPill icon={<MapPin className="h-4 w-4" />} text={address} /> : null}
-                {phone ? <InfoPill icon={<Phone className="h-4 w-4" />} text={phone} /> : null}
-              </div>
-
-              <div className="mt-8">
-                <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                  Acciones
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  {contactHref ? (
-                    <ContactActionLink
-                      href={contactHref}
-                      mode={usesWhatsapp === false ? "phone" : "whatsapp"}
-                      section={kind === "comercio" ? "comercios" : "servicios"}
-                      itemId={String(id)}
-                      itemTitle={title}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
-                    >
-                      <Phone className="h-4 w-4" />
-                      {usesWhatsapp === false ? "Llamar" : "WhatsApp"}
-                    </ContactActionLink>
-                  ) : null}
-
-                  <ShareButton
-                    title={title}
-                    text={description || premiumDetail || undefined}
-                    url={shareUrl}
-                    section={kind === "comercio" ? "comercios" : "servicios"}
-                    itemId={String(id)}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                  />
-
-                  <ExternalLinksButtons
-                    webUrl={webUrl}
-                    instagramUrl={instagramUrl}
-                    facebookUrl={facebookUrl}
-                  />
-                </div>
-              </div>
             </div>
           </div>
         </section>
@@ -230,7 +229,7 @@ export function PremiumListingPage({
                 Actividad del local
               </div>
               <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-                Eventos de este perfil
+                Próximos eventos de {title}
               </h2>
             </div>
             <Link
@@ -243,7 +242,7 @@ export function PremiumListingPage({
 
           {relatedEvents.length === 0 ? (
             <div className="mt-6 rounded-[28px] border border-dashed border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#f4faf6_100%)] p-8">
-              <h3 className="text-lg font-semibold text-slate-900">Todavia no tiene eventos activos</h3>
+                <h3 className="text-lg font-semibold text-slate-900">Todavía no tiene eventos activos</h3>
               <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
                 Cuando este perfil publique eventos y queden activos en Hola Varela, van a aparecer en esta seccion.
               </p>

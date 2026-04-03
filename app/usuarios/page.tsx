@@ -338,38 +338,40 @@ export default function UsuariosHomePage() {
                 <div className="max-w-2xl">
                   <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">{userEntityLabels[ownedEntity.type]}</p>
                   <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">{ownedEntity.record.nombre}</h1>
-                  <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">Desde aqui puedes revisar tu perfil, mantenerlo actualizado, ver tus eventos y gestionar el acceso de tu cuenta.</p>
+                  <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">Desde aquí puedes revisar tu perfil, mantenerlo actualizado, ver tus eventos y gestionar tu suscripción sin perderte entre opciones.</p>
                   <p className="mt-4 text-sm text-slate-500">{user?.email}</p>
                 </div>
                 <div className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${statusStyles.badge}`}>{statusMeta.label}</div>
               </div>
-              <div className="mt-8 grid gap-4 md:grid-cols-3">
-                <DashboardMetric label="Perfil" value={userEntityLabels[ownedEntity.type]} description="Tu ficha principal ya quedo vinculada a esta cuenta." />
-                <DashboardMetric label="Premium" value={hasPremium ? "Activo" : "Base"} description={hasPremium ? "Tienes contenido ampliado disponible para destacar tu ficha." : "Puedes sumar una ficha ampliada cuando se active desde admin."} />
-                {!isInstitution ? <DashboardMetric label="Plan" value={currentPlan.shortLabel} description={currentPlan.price} /> : null}
-                <DashboardMetric label="Eventos activos" value={String(activeEvents.length)} description="Se estan mostrando publicamente en Hola Varela." />
-                <DashboardMetric label="En borrador" value={String(draftEvents.length)} description="Puedes seguir editandolos antes de publicarlos." />
-                <DashboardMetric label="Ocultos" value={String(hiddenEvents.length)} description="No se muestran publicamente hasta que vuelvas a activarlos." />
-                <DashboardMetric label="Cancelados" value={String(cancelledEvents.length)} description="Quedan guardados como referencia y puedes volver a publicarlos." />
+              <div className="mt-8 grid gap-4 lg:grid-cols-4">
+                <DashboardMetric label="Perfil" value={userEntityLabels[ownedEntity.type]} description="Tu ficha principal ya quedó vinculada a esta cuenta." />
+                {!isInstitution ? <DashboardMetric label="Plan" value={currentPlan.shortLabel} description={`${currentPlan.price} · ${subscriptionStatusLabel}`} /> : <DashboardMetric label="Visibilidad" value={statusMeta.label} description="Controla cómo se muestra tu institución en la web." />}
+                <DashboardMetric label="Eventos activos" value={String(activeEvents.length)} description="Los que hoy se muestran públicamente." />
+                <DashboardMetric label="Pendientes" value={String(draftEvents.length + hiddenEvents.length)} description="Borradores u ocultos listos para revisar." />
               </div>
             </div>
             <div className="space-y-4 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-6 py-8 sm:px-8 sm:py-10">
               {imageSrc ? <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"><img src={imageSrc} alt={ownedEntity.record.nombre} className="h-60 w-full object-cover" /></div> : <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-8 shadow-sm"><div className="flex items-start gap-4"><div className="rounded-[20px] bg-slate-100 p-4"><ImageIcon className="h-6 w-6 text-slate-400" /></div><div><h3 className="text-lg font-semibold text-slate-900">Agrega una imagen</h3><p className="mt-2 text-sm leading-7 text-slate-500">Tu perfil se ve mucho mejor cuando tiene una foto o imagen principal.</p></div></div></div>}
-              <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description={hasPremium ? "Actualiza datos, imagen y el contenido premium de tu ficha." : "Actualiza descripcion, imagen y datos de contacto."} />
-              {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripcion" description="Revisa tu plan, cambia la opcion elegida y abre el pago desde Mercado Pago." /> : null}
-              <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
-              <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contrasena" description="Hazlo de forma segura validando tu clave actual." />
-              <QuickLink href="/" icon={<ExternalLink className="h-5 w-5 text-slate-400 transition group-hover:text-slate-700" />} title="Ver sitio publico" description="Revisa como aparece Hola Varela para las visitas." />
+              <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones rápidas</div>
+                <div className="mt-4 space-y-3">
+                  <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description={hasPremium ? "Actualiza datos, imagen y el contenido ampliado de tu ficha." : "Actualiza descripción, imagen y datos de contacto."} />
+                  {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
+                  <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
+                  <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contraseña" description="Hazlo de forma segura validando tu clave actual." />
+                  <QuickLink href="/" icon={<ExternalLink className="h-5 w-5 text-slate-400 transition group-hover:text-slate-700" />} title="Ver sitio público" description="Revisa cómo aparece Hola Varela para las visitas." />
+                </div>
+              </div>
               <button type="button" onClick={() => void handleLogout()} className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"><LogOut className="h-4 w-4" />Cerrar sesion</button>
             </div>
           </div>
         </section>
 
-        <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <section className="space-y-6">
             <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
               <div className="flex flex-wrap items-start justify-between gap-4">
-                <div><h2 className="text-2xl font-semibold text-slate-950">Tus datos</h2><p className="mt-2 text-sm leading-6 text-slate-500">La informacion principal del negocio o institucion vinculada a tu cuenta.</p></div>
+                <div><h2 className="text-2xl font-semibold text-slate-950">Tu ficha</h2><p className="mt-2 text-sm leading-6 text-slate-500">La información principal del negocio o institución vinculada a tu cuenta.</p></div>
                 <div className={`rounded-full px-4 py-2 text-sm font-semibold ${statusStyles.badge}`}>{userEntityLabels[ownedEntity.type]}</div>
               </div>
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -378,7 +380,7 @@ export default function UsuariosHomePage() {
                   return <div key={field.label} className="rounded-[24px] border border-slate-200 bg-slate-50 p-5"><div className="flex items-center gap-3"><div className="rounded-2xl bg-white p-3 shadow-sm"><Icon className="h-4 w-4 text-slate-500" /></div><div><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{field.label}</div><div className="mt-1 text-sm leading-6 text-slate-700">{field.value}</div></div></div></div>
                 })}
               </div>
-              <div className="mt-5 rounded-[24px] border border-slate-200 bg-slate-50 p-5"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Descripcion</div><div className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">{ownedEntity.record.descripcion?.trim() ? ownedEntity.record.descripcion : "Aun no agregaste una descripcion. Puedes completarla desde editar mis datos."}</div></div>
+              <div className="mt-5 rounded-[24px] border border-slate-200 bg-slate-50 p-5"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Descripción</div><div className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">{ownedEntity.record.descripcion?.trim() ? ownedEntity.record.descripcion : "Aún no agregaste una descripción. Puedes completarla desde editar mis datos."}</div></div>
             </div>
             <UnifiedEventsSection
               activeEvents={activeEvents}
@@ -393,44 +395,30 @@ export default function UsuariosHomePage() {
             <div className={`rounded-[32px] border p-6 shadow-sm ${statusStyles.panel}`}>
               <div className="flex items-start gap-4"><div className="rounded-[22px] bg-white/80 p-4">{statusKey === "activo" ? <CircleCheckBig className={`h-6 w-6 ${statusStyles.accent}`} /> : <Clock3 className={`h-6 w-6 ${statusStyles.accent}`} />}</div><div><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Estado del perfil</div><div className="mt-2 text-2xl font-semibold text-slate-950">{statusMeta.label}</div><p className="mt-3 text-sm leading-7 text-slate-600">{statusMeta.description}</p></div></div>
             </div>
-            {supportsPremiumProfile(ownedEntity.type) ? <div className={`rounded-[32px] border p-6 shadow-sm ${hasPremium ? "border-violet-200 bg-violet-50/70" : "border-slate-200 bg-white"}`}><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Premium</div><div className="mt-3 text-2xl font-semibold text-slate-950">{hasPremium ? "Perfil ampliado activo" : "Plan base"}</div><p className="mt-3 text-sm leading-7 text-slate-600">{hasPremium ? "Tu ficha puede mostrar descripcion extendida, galeria y un destaque visual especial." : "Cuando activen premium desde admin, vas a poder editar una galeria extra y una descripcion ampliada desde tu perfil."}</p></div> : null}
             {!isInstitution ? (
               <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Suscripcion</div>
+                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Suscripción</div>
                 <div className="mt-4 space-y-4">
                   <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                    <div className="text-sm font-medium text-slate-500">Plan elegido</div>
-                    <div className="mt-1 text-xl font-semibold text-slate-950">{currentPlan.name}</div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{currentPlan.description}</p>
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="text-sm font-medium text-slate-500">Plan actual</div>
+                        <div className="mt-1 text-xl font-semibold text-slate-950">{currentPlan.name}</div>
+                      </div>
+                      <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${subscriptionStatusBadge}`}>{subscriptionStatusLabel}</span>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-slate-600">{currentPlan.description}</p>
                     <div className="mt-3 inline-flex rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">{currentPlan.price}</div>
                     <div className="mt-4">
                       <Link href="/usuarios/suscripcion" className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100">
-                        Gestionar suscripcion
+                        Gestionar suscripción
                       </Link>
-                    </div>
-                  </div>
-                  <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                    <div className="text-sm font-medium text-slate-500">Estado actual</div>
-                    <div className="mt-2">
-                      <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${subscriptionStatusBadge}`}>{subscriptionStatusLabel}</span>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">Desde el boton de suscripcion puedes revisar el plan, cambiar tu eleccion y abrir el pago cuando lo necesites.</p>
-                  </div>
-                  <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                    <div className="text-sm font-medium text-slate-500">Incluye</div>
-                    <div className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
-                      {currentPlan.features.map((feature) => (
-                        <div key={feature} className="flex gap-2">
-                          <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500" />
-                          <span>{feature}</span>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>
               </div>
             ) : null}
-            <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Siguientes pasos</div><div className="mt-5 space-y-4 text-sm leading-6 text-slate-600"><p>Revisa que nombre, imagen y descripcion representen bien tu espacio.</p><p>Sube eventos para mantener el perfil activo y actualizado.</p><p>Cambia tu contrasena desde el panel cuando quieras reforzar la seguridad.</p></div></div>
+            <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Siguientes pasos</div><div className="mt-5 space-y-4 text-sm leading-6 text-slate-600"><p>Revisa que nombre, imagen y descripción representen bien tu espacio.</p><p>Sube eventos para mantener el perfil activo y actualizado.</p>{supportsPremiumProfile(ownedEntity.type) ? <p>{hasPremium ? "Tu ficha ampliada ya está activa: aprovecha la galería y la descripción extendida." : "Si activan premium desde admin, aquí vas a poder destacar más tu ficha."}</p> : null}</div></div>
           </aside>
         </div>
       </div>
