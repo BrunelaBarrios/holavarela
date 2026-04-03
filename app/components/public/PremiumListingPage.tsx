@@ -186,6 +186,16 @@ export function PremiumListingPage({
                   Acciones
                 </div>
                 <div className="flex flex-wrap gap-3">
+                  {relatedEvents.length > 0 ? (
+                    <a
+                      href="#eventos-del-local"
+                      className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3 font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
+                    >
+                      <CalendarDays className="h-4 w-4" />
+                      Ver eventos de este local
+                    </a>
+                  ) : null}
+
                   {contactHref ? (
                     <ContactActionLink
                       href={contactHref}
@@ -222,7 +232,7 @@ export function PremiumListingPage({
           </div>
         </section>
 
-        <section className="mt-8 rounded-[36px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.2)] sm:p-8">
+        <section id="eventos-del-local" className="mt-8 rounded-[36px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.2)] sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
