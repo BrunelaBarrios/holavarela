@@ -1,5 +1,6 @@
 'use client'
 
+import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
@@ -177,6 +178,15 @@ export function ComerciosPageClient({
                 instagramUrl={selectedComercio.instagram_url}
                 facebookUrl={selectedComercio.facebook_url}
               />
+              {selectedComercio.premium_activo ? (
+                <Link
+                  href={`/comercios/${selectedComercio.id}`}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3 font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
+                >
+                  Ver perfil completo
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              ) : null}
             </>
           ) : null
         }
@@ -252,14 +262,24 @@ export function ComerciosPageClient({
                   </p>
 
                   <div className="mt-4 flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedComercioId(String(comercio.id))}
-                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                    >
-                      {comercio.premium_activo ? "Ver perfil ampliado" : "Ver mas"}
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
+                    {comercio.premium_activo ? (
+                      <Link
+                        href={`/comercios/${comercio.id}`}
+                        className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
+                      >
+                        Ver perfil completo
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedComercioId(String(comercio.id))}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                      >
+                        Ver mas
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    )}
 
                     <ContactActionLink
                       href={getContactHref(comercio.telefono, comercio.usa_whatsapp)}

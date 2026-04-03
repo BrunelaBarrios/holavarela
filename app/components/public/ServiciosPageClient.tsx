@@ -1,5 +1,6 @@
 'use client'
 
+import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, MapPin, Phone, Search, UserRound } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
@@ -190,6 +191,15 @@ export function ServiciosPageClient({
                 instagramUrl={selectedServicio.instagram_url}
                 facebookUrl={selectedServicio.facebook_url}
               />
+              {selectedServicio.premium_activo ? (
+                <Link
+                  href={`/servicios/${selectedServicio.id}`}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3 font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
+                >
+                  Ver perfil completo
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              ) : null}
             </>
           ) : null
         }
@@ -294,14 +304,24 @@ export function ServiciosPageClient({
                         </div>
 
                         <div className="mt-5 flex flex-wrap gap-3">
-                          <button
-                            type="button"
-                          onClick={() => setSelectedServicioId(String(servicio.id))}
-                          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                        >
-                          {servicio.premium_activo ? "Ver perfil ampliado" : "Ver mas"}
-                          <ArrowRight className="h-4 w-4" />
-                        </button>
+                          {servicio.premium_activo ? (
+                            <Link
+                              href={`/servicios/${servicio.id}`}
+                              className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
+                            >
+                              Ver perfil completo
+                              <ArrowRight className="h-4 w-4" />
+                            </Link>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedServicioId(String(servicio.id))}
+                              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                            >
+                              Ver mas
+                              <ArrowRight className="h-4 w-4" />
+                            </button>
+                          )}
 
                           {servicio.contacto && (
                             <ContactActionLink

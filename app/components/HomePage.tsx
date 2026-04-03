@@ -851,6 +851,15 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 facebookUrl={selectedComercio.facebook_url}
               />
             ) : null}
+            {selectedComercio?.premium_activo ? (
+              <Link
+                href={`/comercios/${selectedComercio.id}`}
+                className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3 font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
+              >
+                Ver perfil completo
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : null}
           </>
         }
       />
@@ -930,6 +939,15 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 instagramUrl={selectedServicio.instagram_url}
                 facebookUrl={selectedServicio.facebook_url}
               />
+            ) : null}
+            {selectedServicio?.premium_activo ? (
+              <Link
+                href={`/servicios/${selectedServicio.id}`}
+                className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3 font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
+              >
+                Ver perfil completo
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             ) : null}
           </>
         }
@@ -1401,21 +1419,31 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       </ContactActionLink>
                     )}
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleViewMoreClick(
-                          "comercios",
-                          String(business.id),
-                          business.nombre,
-                          () => setSelectedComercio(business)
-                        )
-                      }
-                      className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
-                    >
-                            {business.premium_activo ? "Ver perfil ampliado" : "Ver mas"}
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
+                    {business.premium_activo ? (
+                      <Link
+                        href={`/comercios/${business.id}`}
+                        className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-violet-700 transition hover:text-violet-800"
+                      >
+                        Ver perfil completo
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleViewMoreClick(
+                            "comercios",
+                            String(business.id),
+                            business.nombre,
+                            () => setSelectedComercio(business)
+                          )
+                        }
+                        className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
+                      >
+                        Ver mas
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               )
@@ -1531,21 +1559,31 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             </ContactActionLink>
                           ) : null}
 
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleViewMoreClick(
-                                "servicios",
-                                String(servicio.id),
-                                servicio.nombre,
-                                () => setSelectedServicio(servicio)
-                              )
-                            }
-                            className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
-                          >
-                            Ver más
-                            <ArrowRight className="h-4 w-4" />
-                          </button>
+                          {servicio.premium_activo ? (
+                            <Link
+                              href={`/servicios/${servicio.id}`}
+                              className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-violet-700 transition hover:text-violet-800"
+                            >
+                              Ver perfil completo
+                              <ArrowRight className="h-4 w-4" />
+                            </Link>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleViewMoreClick(
+                                  "servicios",
+                                  String(servicio.id),
+                                  servicio.nombre,
+                                  () => setSelectedServicio(servicio)
+                                )
+                              }
+                              className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
+                            >
+                              Ver más
+                              <ArrowRight className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
               ))}
