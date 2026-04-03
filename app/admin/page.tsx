@@ -7,6 +7,7 @@ import {
   BarChart3,
   Building2,
   Calendar,
+  CreditCard,
   FileText,
   GraduationCap,
   Mail,
@@ -51,6 +52,10 @@ export default function AdminDashboardPage() {
   const [newComerciosCount, setNewComerciosCount] = useState(0)
   const [newEventosCount, setNewEventosCount] = useState(0)
   const [newContactosCount, setNewContactosCount] = useState(0)
+  const [pendingSubscriptionsCount, setPendingSubscriptionsCount] = useState(0)
+  const [activeSubscriptionsCount, setActiveSubscriptionsCount] = useState(0)
+  const [pausedSubscriptionsCount, setPausedSubscriptionsCount] = useState(0)
+  const [cancelledSubscriptionsCount, setCancelledSubscriptionsCount] = useState(0)
   const [proximosEventos, setProximosEventos] = useState<EventoResumen[]>([])
   const [shareTotals, setShareTotals] = useState<ShareTotals>(emptyShareTotals())
   const [whatsappTotals, setWhatsappTotals] = useState<WhatsappTotals>(emptyWhatsappTotals())
@@ -70,6 +75,18 @@ export default function AdminDashboardPage() {
         { count: newComercios },
         { count: newEventos },
         { count: newContactos },
+        { count: pendingComercios },
+        { count: pendingServicios },
+        { count: pendingCursos },
+        { count: activeComercios },
+        { count: activeServicios },
+        { count: activeCursos },
+        { count: pausedComercios },
+        { count: pausedServicios },
+        { count: pausedCursos },
+        { count: cancelledComercios },
+        { count: cancelledServicios },
+        { count: cancelledCursos },
         { data: eventosData },
         { data: shareRows },
         { data: whatsappRows },
@@ -95,6 +112,54 @@ export default function AdminDashboardPage() {
           .select("*", { count: "exact", head: true })
           .or("visto.is.null,visto.eq.false"),
         supabase
+          .from("comercios")
+          .select("*", { count: "exact", head: true })
+          .eq("estado_suscripcion", "pendiente"),
+        supabase
+          .from("servicios")
+          .select("*", { count: "exact", head: true })
+          .eq("estado_suscripcion", "pendiente"),
+        supabase
+          .from("cursos")
+          .select("*", { count: "exact", head: true })
+          .eq("estado_suscripcion", "pendiente"),
+        supabase
+          .from("comercios")
+          .select("*", { count: "exact", head: true })
+          .eq("estado_suscripcion", "activa"),
+        supabase
+          .from("servicios")
+          .select("*", { count: "exact", head: true })
+          .eq("estado_suscripcion", "activa"),
+        supabase
+          .from("cursos")
+          .select("*", { count: "exact", head: true })
+          .eq("estado_suscripcion", "activa"),
+        supabase
+          .from("comercios")
+          .select("*", { count: "exact", head: true })
+          .eq("estado_suscripcion", "pausada"),
+        supabase
+          .from("servicios")
+          .select("*", { count: "exact", head: true })
+          .eq("estado_suscripcion", "pausada"),
+        supabase
+          .from("cursos")
+          .select("*", { count: "exact", head: true })
+          .eq("estado_suscripcion", "pausada"),
+        supabase
+          .from("comercios")
+          .select("*", { count: "exact", head: true })
+          .eq("estado_suscripcion", "cancelada"),
+        supabase
+          .from("servicios")
+          .select("*", { count: "exact", head: true })
+          .eq("estado_suscripcion", "cancelada"),
+        supabase
+          .from("cursos")
+          .select("*", { count: "exact", head: true })
+          .eq("estado_suscripcion", "cancelada"),
+        supabase
           .from("eventos")
           .select("id, titulo, fecha, fecha_fin")
           .eq("estado", "activo")
@@ -116,6 +181,10 @@ export default function AdminDashboardPage() {
       setNewComerciosCount(newComercios || 0)
       setNewEventosCount(newEventos || 0)
       setNewContactosCount(newContactos || 0)
+      setPendingSubscriptionsCount((pendingComercios || 0) + (pendingServicios || 0) + (pendingCursos || 0))
+      setActiveSubscriptionsCount((activeComercios || 0) + (activeServicios || 0) + (activeCursos || 0))
+      setPausedSubscriptionsCount((pausedComercios || 0) + (pausedServicios || 0) + (pausedCursos || 0))
+      setCancelledSubscriptionsCount((cancelledComercios || 0) + (cancelledServicios || 0) + (cancelledCursos || 0))
       setProximosEventos(eventosData || [])
       setShareTotals(buildShareTotals(shareRows || []))
       setWhatsappTotals(buildWhatsappTotals(whatsappRows || []))
@@ -337,6 +406,64 @@ export default function AdminDashboardPage() {
           <h3 className="text-lg font-semibold text-white">Interacciones</h3>
           <p className="mt-2 text-sm text-slate-300">WhatsApp, compartir y ver más del sitio.</p>
         </button>
+      </div>
+
+      <div className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Suscripciones
+            </p>
+            <h2 className="text-2xl font-semibold text-slate-900">
+              Estado de planes
+            </h2>
+            <p className="text-sm text-slate-500">
+              Comercios, servicios y cursos agrupados por estado de pago.
+            </p>
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+            <CreditCard className="h-4 w-4" />
+            {pendingSubscriptionsCount + activeSubscriptionsCount + pausedSubscriptionsCount + cancelledSubscriptionsCount} fichas con suscripción
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <button
+            onClick={() => router.push("/admin/comercios")}
+            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:border-blue-300 hover:bg-blue-50/40"
+          >
+            <div className="text-sm font-medium text-slate-500">Pendientes</div>
+            <div className="mt-2 text-3xl font-semibold text-slate-900">{pendingSubscriptionsCount}</div>
+            <p className="mt-2 text-sm text-slate-500">Esperando confirmación o revisión.</p>
+          </button>
+
+          <button
+            onClick={() => router.push("/admin/comercios")}
+            className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 text-left transition hover:border-emerald-300 hover:bg-emerald-50"
+          >
+            <div className="text-sm font-medium text-emerald-700">Activas</div>
+            <div className="mt-2 text-3xl font-semibold text-slate-900">{activeSubscriptionsCount}</div>
+            <p className="mt-2 text-sm text-slate-500">Planes en curso y visibles para seguimiento.</p>
+          </button>
+
+          <button
+            onClick={() => router.push("/admin/comercios")}
+            className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 text-left transition hover:border-amber-300 hover:bg-amber-50"
+          >
+            <div className="text-sm font-medium text-amber-700">Pausadas</div>
+            <div className="mt-2 text-3xl font-semibold text-slate-900">{pausedSubscriptionsCount}</div>
+            <p className="mt-2 text-sm text-slate-500">Fichas que conservan plan pero están en pausa.</p>
+          </button>
+
+          <button
+            onClick={() => router.push("/admin/comercios")}
+            className="rounded-2xl border border-rose-200 bg-rose-50/70 p-5 text-left transition hover:border-rose-300 hover:bg-rose-50"
+          >
+            <div className="text-sm font-medium text-rose-700">Canceladas</div>
+            <div className="mt-2 text-3xl font-semibold text-slate-900">{cancelledSubscriptionsCount}</div>
+            <p className="mt-2 text-sm text-slate-500">Planes que ya no están activos actualmente.</p>
+          </button>
+        </div>
       </div>
 
       {reviewItems.length > 0 ? (
