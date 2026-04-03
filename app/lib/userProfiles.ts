@@ -10,6 +10,7 @@ import {
   Phone,
   Sparkles,
 } from "lucide-react"
+import type { SubscriptionPlanKey } from "./subscriptionPlans"
 import { supabase } from "../supabase"
 
 export type UserEntityType = "comercio" | "servicio" | "curso" | "institucion"
@@ -21,6 +22,7 @@ export type UserEntityRecord = {
   premium_detalle?: string | null
   premium_galeria?: string[] | null
   premium_activo?: boolean | null
+  plan_suscripcion?: SubscriptionPlanKey | null
   direccion?: string | null
   telefono?: string | null
   imagen?: string | null

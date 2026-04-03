@@ -6,6 +6,7 @@ import type { User } from "@supabase/supabase-js"
 import { CalendarDays, CircleCheckBig, Clock3, ExternalLink, FilePenLine, ImageIcon, KeyRound, LogOut, PlusCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../components/AuthFormStatus"
+import { getSubscriptionPlan, subscriptionPlans, type SubscriptionPlanKey } from "../lib/subscriptionPlans"
 import { buildUserProfileFields, fetchUserOwnedEvents, findUserOwnedEntity, getUserProfileImageSrc, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, userEntityStatusCopy, type UserEntityType, type UserOwnedEntity, type UserOwnedEvent } from "../lib/userProfiles"
 import { supabase } from "../supabase"
 
@@ -59,6 +60,7 @@ export default function UsuariosHomePage() {
   const [servicio, setServicio] = useState<ServicioForm>(initialServicio)
   const [curso, setCurso] = useState<CursoForm>(initialCurso)
   const [institucion, setInstitucion] = useState<InstitucionForm>(initialInstitucion)
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>("presencia")
   const [savingOnboarding, setSavingOnboarding] = useState(false)
 
   useEffect(() => {
@@ -118,7 +120,14 @@ export default function UsuariosHomePage() {
     }
     setSavingOnboarding(true)
     const { table, payload } = buildOnboardingPayload({ type: entityType, email: user.email, comercio, servicio, curso, institucion })
-    const { error: insertError } = await supabase.from(table).insert([payload])
+    const payloadWithPlan =
+      entityType === "institucion"
+        ? payload
+        : {
+            ...payload,
+            plan_suscripcion: selectedPlan,
+          }
+    const { error: insertError } = await supabase.from(table).insert([payloadWithPlan])
     if (insertError) {
       setError(`No pudimos guardar tus datos: ${insertError.message}`)
       setSavingOnboarding(false)
@@ -144,6 +153,7 @@ export default function UsuariosHomePage() {
   const activeEvents = useMemo(() => events.filter((item) => normalizeUserEntityStatus(item.estado) === "activo"), [events])
   const draftEvents = useMemo(() => events.filter((item) => normalizeUserEntityStatus(item.estado) === "borrador"), [events])
   const hasPremium = Boolean(ownedEntity?.record.premium_activo && ownedEntity && supportsPremiumProfile(ownedEntity.type))
+  const currentPlan = getSubscriptionPlan(ownedEntity?.record.plan_suscripcion)
 
   if (loading) {
     return <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6"><div className="mx-auto max-w-5xl rounded-[32px] border border-slate-200 bg-white p-12 text-center text-slate-500 shadow-[0_20px_60px_-30px_rgba(15,23,42,0.3)]">Cargando cuenta...</div></main>
@@ -157,11 +167,22 @@ export default function UsuariosHomePage() {
             <div className="inline-flex rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Primer ingreso</div>
             <h1 className="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl">Completa tu espacio</h1>
             <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">Esta es la primera vez que entras con tu cuenta. Completa los datos de tu negocio y elige el tipo para activar tu panel.</p>
-            <div className="mt-8 space-y-4">
+              <div className="mt-8 space-y-4">
               <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
                 <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Cuenta conectada</div>
                 <div className="mt-3 text-lg font-semibold text-slate-950">{user?.email}</div>
               </div>
+
+              {entityType !== "institucion" ? (
+                <div className="mt-8 rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Suscripcion</div>
+                  <div className="mt-3 text-xl font-semibold text-slate-950">{subscriptionPlans[selectedPlan].name}</div>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{subscriptionPlans[selectedPlan].tagline}</p>
+                  <div className="mt-4 inline-flex rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+                    {subscriptionPlans[selectedPlan].price}
+                  </div>
+                </div>
+              ) : null}
               <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
                 <div className="text-sm font-medium text-slate-900">Que vas a poder hacer despues</div>
                 <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
@@ -190,6 +211,43 @@ export default function UsuariosHomePage() {
                   ))}
                 </div>
               </div>
+
+              {entityType !== "institucion" ? (
+                <div className="space-y-3">
+                  <div className="text-sm font-medium text-slate-700">Plan de suscripcion</div>
+                  <div className="grid gap-4 xl:grid-cols-3">
+                    {(Object.entries(subscriptionPlans) as Array<[SubscriptionPlanKey, (typeof subscriptionPlans)[SubscriptionPlanKey]]>).map(([planKey, plan]) => (
+                      <button
+                        key={planKey}
+                        type="button"
+                        onClick={() => setSelectedPlan(planKey)}
+                        className={`rounded-[24px] border p-5 text-left transition ${
+                          selectedPlan === planKey
+                            ? "border-blue-500 bg-blue-50 shadow-[0_16px_40px_-24px_rgba(37,99,235,0.45)]"
+                            : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{plan.shortLabel}</div>
+                            <div className="mt-2 text-xl font-semibold text-slate-950">{plan.name}</div>
+                          </div>
+                          <div className="rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">{plan.price}</div>
+                        </div>
+                        <p className="mt-3 text-sm leading-6 text-slate-600">{plan.tagline}</p>
+                        <div className="mt-4 space-y-2 text-sm leading-6 text-slate-600">
+                          {plan.features.map((feature) => (
+                            <div key={feature} className="flex gap-2">
+                              <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500" />
+                              <span>{feature}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
 
               {entityType === "comercio" ? <div className="space-y-4 rounded-[24px] border border-slate-200 bg-slate-50 p-5"><Field label="Nombre del comercio" value={comercio.nombre} onChange={(value) => setComercio((current) => ({ ...current, nombre: value }))} required /><div className="grid gap-4 md:grid-cols-2"><Field label="Direccion" value={comercio.direccion} onChange={(value) => setComercio((current) => ({ ...current, direccion: value }))} /><Field label="Telefono" value={comercio.telefono} onChange={(value) => setComercio((current) => ({ ...current, telefono: value }))} /></div><TextAreaField label="Descripcion" value={comercio.descripcion} onChange={(value) => setComercio((current) => ({ ...current, descripcion: value }))} /><ExternalLinksFields webUrl={comercio.webUrl} instagramUrl={comercio.instagramUrl} facebookUrl={comercio.facebookUrl} onWebChange={(value) => setComercio((current) => ({ ...current, webUrl: value }))} onInstagramChange={(value) => setComercio((current) => ({ ...current, instagramUrl: value }))} onFacebookChange={(value) => setComercio((current) => ({ ...current, facebookUrl: value }))} /><CheckboxField label="Este telefono tiene WhatsApp" checked={comercio.usaWhatsapp} onChange={(checked) => setComercio((current) => ({ ...current, usaWhatsapp: checked }))} /></div> : null}
 
@@ -227,6 +285,7 @@ export default function UsuariosHomePage() {
               <div className="mt-8 grid gap-4 md:grid-cols-3">
                 <DashboardMetric label="Perfil" value={userEntityLabels[ownedEntity.type]} description="Tu ficha principal ya quedo vinculada a esta cuenta." />
                 <DashboardMetric label="Premium" value={hasPremium ? "Activo" : "Base"} description={hasPremium ? "Tienes contenido ampliado disponible para destacar tu ficha." : "Puedes sumar una ficha ampliada cuando se active desde admin."} />
+                {!isInstitution ? <DashboardMetric label="Plan" value={currentPlan.shortLabel} description={currentPlan.price} /> : null}
                 <DashboardMetric label="Eventos activos" value={String(activeEvents.length)} description="Se estan mostrando publicamente en Hola Varela." />
                 <DashboardMetric label="Eventos en borrador" value={String(draftEvents.length)} description="Aun no estan publicados o siguen en revision." />
               </div>
@@ -265,7 +324,35 @@ export default function UsuariosHomePage() {
               <div className="flex items-start gap-4"><div className="rounded-[22px] bg-white/80 p-4">{statusKey === "activo" ? <CircleCheckBig className={`h-6 w-6 ${statusStyles.accent}`} /> : <Clock3 className={`h-6 w-6 ${statusStyles.accent}`} />}</div><div><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Estado del perfil</div><div className="mt-2 text-2xl font-semibold text-slate-950">{statusMeta.label}</div><p className="mt-3 text-sm leading-7 text-slate-600">{statusMeta.description}</p></div></div>
             </div>
             {supportsPremiumProfile(ownedEntity.type) ? <div className={`rounded-[32px] border p-6 shadow-sm ${hasPremium ? "border-violet-200 bg-violet-50/70" : "border-slate-200 bg-white"}`}><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Premium</div><div className="mt-3 text-2xl font-semibold text-slate-950">{hasPremium ? "Perfil ampliado activo" : "Plan base"}</div><p className="mt-3 text-sm leading-7 text-slate-600">{hasPremium ? "Tu ficha puede mostrar descripcion extendida, galeria y un destaque visual especial." : "Cuando activen premium desde admin, vas a poder editar una galeria extra y una descripcion ampliada desde tu perfil."}</p></div> : null}
-            {!isInstitution ? <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Suscripcion</div><div className="mt-4 space-y-4"><div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4"><div className="text-sm font-medium text-slate-500">Tipo de cuenta</div><div className="mt-1 text-xl font-semibold text-slate-950">{userEntityLabels[ownedEntity.type]}</div></div><div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4"><div className="text-sm font-medium text-slate-500">Estado actual</div><div className={`mt-1 text-xl font-semibold ${statusStyles.accent}`}>{statusMeta.label}</div><p className="mt-2 text-sm leading-6 text-slate-600">Este bloque resume el estado visible de tu suscripcion o publicacion en Hola Varela.</p></div></div></div> : null}
+            {!isInstitution ? (
+              <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Suscripcion</div>
+                <div className="mt-4 space-y-4">
+                  <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                    <div className="text-sm font-medium text-slate-500">Plan elegido</div>
+                    <div className="mt-1 text-xl font-semibold text-slate-950">{currentPlan.name}</div>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{currentPlan.description}</p>
+                    <div className="mt-3 inline-flex rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">{currentPlan.price}</div>
+                  </div>
+                  <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                    <div className="text-sm font-medium text-slate-500">Estado actual</div>
+                    <div className={`mt-1 text-xl font-semibold ${statusStyles.accent}`}>{statusMeta.label}</div>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">Tu plan ya quedo asociado a esta ficha. Si necesitas cambiarlo o activarlo, lo revisamos desde administracion.</p>
+                  </div>
+                  <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                    <div className="text-sm font-medium text-slate-500">Incluye</div>
+                    <div className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+                      {currentPlan.features.map((feature) => (
+                        <div key={feature} className="flex gap-2">
+                          <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
             <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Siguientes pasos</div><div className="mt-5 space-y-4 text-sm leading-6 text-slate-600"><p>Revisa que nombre, imagen y descripcion representen bien tu espacio.</p><p>Sube eventos para mantener el perfil activo y actualizado.</p><p>Cambia tu contrasena desde el panel cuando quieras reforzar la seguridad.</p></div></div>
           </aside>
         </div>
