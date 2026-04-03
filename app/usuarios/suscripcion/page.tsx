@@ -95,30 +95,53 @@ export default function UsuariosSuscripcionPage() {
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6">
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="mx-auto max-w-7xl space-y-6">
         <section className="overflow-hidden rounded-[36px] border border-slate-200 bg-white shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
-          <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10">
-              <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-                Suscripcion
+          <div className="bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10 lg:px-10">
+            <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+              Suscripcion
+            </div>
+            <div className="mt-6 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+              <div>
+                <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl xl:text-6xl">
+                  Gestiona tu plan
+                </h1>
+                <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-600">
+                  Elige el plan que mejor acompana tu ficha y continua el pago desde Mercado Pago cuando quieras.
+                </p>
               </div>
-              <h1 className="mt-6 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                Gestiona tu plan
-              </h1>
-              <p className="mt-4 text-lg leading-8 text-slate-600">
-                Elige el plan que mejor acompana tu ficha y continua el pago desde Mercado Pago cuando quieras.
-              </p>
+              <div className="flex flex-wrap gap-3 lg:justify-end">
+                <Link
+                  href="/usuarios"
+                  className="inline-flex items-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                >
+                  Volver al panel
+                </Link>
+                {!loading && ownedEntity ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleSavePlan()}
+                    disabled={saving}
+                    className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70"
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    {saving ? "Guardando..." : "Guardar plan"}
+                  </button>
+                ) : null}
+              </div>
+            </div>
 
-              <div className="mt-8 space-y-4">
+            {!loading && ownedEntity ? (
+              <div className="mt-8 grid gap-4 lg:grid-cols-3">
                 <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                     Ficha vinculada
                   </div>
-                  <div className="mt-3 text-xl font-semibold text-slate-950">
-                    {ownedEntity ? ownedEntity.record.nombre : "Cargando"}
+                  <div className="mt-3 text-2xl font-semibold text-slate-950">
+                    {ownedEntity.record.nombre}
                   </div>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
-                    {ownedEntity ? userEntityLabels[ownedEntity.type] : "Perfil"}
+                    {userEntityLabels[ownedEntity.type]}
                   </p>
                 </div>
 
@@ -138,110 +161,96 @@ export default function UsuariosSuscripcionPage() {
 
                 <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Siguiente paso
+                    Plan seleccionado
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">
-                    Primero guarda el plan que quieres usar en tu ficha y despues abre Mercado Pago para completar la suscripcion.
-                  </p>
+                  <div className="mt-3 text-2xl font-semibold text-slate-950">{nextPlan.name}</div>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{nextPlan.price}</p>
                 </div>
               </div>
+            ) : null}
+          </div>
+        </section>
 
-              <div className="mt-10 flex flex-wrap gap-4">
-                <Link
-                  href="/usuarios"
-                  className="inline-flex items-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                >
-                  Volver al panel
-                </Link>
-              </div>
+        <section className="rounded-[36px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.2)] sm:p-8 lg:p-10">
+          {loading ? (
+            <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
+              Cargando suscripcion...
             </div>
+          ) : ownedEntity ? (
+            <div className="space-y-6">
+              {error ? <AuthFormStatus tone="error" message={error} /> : null}
+              {success ? <AuthFormStatus tone="success" message={success} /> : null}
 
-            <div className="p-6 sm:p-8 lg:p-10">
-              {loading ? (
-                <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
-                  Cargando suscripcion...
-                </div>
-              ) : ownedEntity ? (
-                <div className="space-y-6">
-                  {error ? <AuthFormStatus tone="error" message={error} /> : null}
-                  {success ? <AuthFormStatus tone="success" message={success} /> : null}
-
-                  <div className="grid gap-4 xl:grid-cols-3">
-                    {(Object.entries(subscriptionPlans) as Array<[SubscriptionPlanKey, (typeof subscriptionPlans)[SubscriptionPlanKey]]>).map(([planKey, plan]) => (
-                      <div
-                        key={planKey}
-                        className={`rounded-[28px] border p-5 transition ${
-                          selectedPlan === planKey
-                            ? "border-blue-500 bg-blue-50 shadow-[0_18px_40px_-24px_rgba(37,99,235,0.45)]"
-                            : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/30"
-                        }`}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => setSelectedPlan(planKey)}
-                          className="block w-full text-left"
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                                {plan.shortLabel}
-                              </div>
-                              <div className="mt-2 text-2xl font-semibold text-slate-950">
-                                {plan.name}
-                              </div>
-                            </div>
-                            <div className="rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">
-                              {plan.price}
-                            </div>
+              <div className="grid gap-6 xl:grid-cols-3">
+                {(Object.entries(subscriptionPlans) as Array<[SubscriptionPlanKey, (typeof subscriptionPlans)[SubscriptionPlanKey]]>).map(([planKey, plan]) => (
+                  <div
+                    key={planKey}
+                    className={`flex h-full flex-col rounded-[30px] border p-6 transition ${
+                      selectedPlan === planKey
+                        ? "border-blue-500 bg-blue-50 shadow-[0_18px_40px_-24px_rgba(37,99,235,0.45)]"
+                        : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/30"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPlan(planKey)}
+                      className="block w-full text-left"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                            {plan.shortLabel}
                           </div>
-                          <p className="mt-4 text-sm leading-6 text-slate-600">{plan.tagline}</p>
-                          <p className="mt-3 text-sm leading-6 text-slate-500">{plan.description}</p>
-                          <div className="mt-5 space-y-2 text-sm leading-6 text-slate-600">
-                            {plan.features.map((feature) => (
-                              <div key={feature} className="flex gap-2">
-                                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-blue-500" />
-                                <span>{feature}</span>
-                              </div>
-                            ))}
+                          <div className="mt-2 text-[2rem] font-semibold leading-[1.05] text-slate-950">
+                            {plan.name}
                           </div>
-                        </button>
-                        <a
-                          href={plan.checkoutUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mt-5 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                          Abrir Mercado Pago
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
-                    <div className="flex flex-wrap items-center justify-between gap-4">
-                      <div>
-                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                          Plan seleccionado
                         </div>
-                        <div className="mt-2 text-2xl font-semibold text-slate-950">{nextPlan.name}</div>
-                        <p className="mt-2 text-sm leading-6 text-slate-600">{nextPlan.price}</p>
+                        <div className="shrink-0 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+                          {plan.price}
+                        </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => void handleSavePlan()}
-                        disabled={saving}
-                        className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70"
+                      <p className="mt-5 text-base leading-7 text-slate-600">{plan.tagline}</p>
+                      <p className="mt-4 text-sm leading-7 text-slate-500">{plan.description}</p>
+                      <div className="mt-6 space-y-3 text-sm leading-7 text-slate-600">
+                        {plan.features.map((feature) => (
+                          <div key={feature} className="flex gap-3">
+                            <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-500" />
+                            <span>{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </button>
+
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <a
+                        href={plan.checkoutUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                       >
-                        <CreditCard className="h-4 w-4" />
-                        {saving ? "Guardando..." : "Guardar plan"}
-                      </button>
+                        <ExternalLink className="h-4 w-4" />
+                        Abrir Mercado Pago
+                      </a>
+                      {selectedPlan === planKey ? (
+                        <span className="inline-flex items-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+                          Plan elegido
+                        </span>
+                      ) : null}
                     </div>
                   </div>
+                ))}
+              </div>
+
+              <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  Siguiente paso
                 </div>
-              ) : null}
+                <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
+                  Primero guarda el plan que quieres usar en tu ficha y despues abre Mercado Pago para completar la suscripcion.
+                </p>
+              </div>
             </div>
-          </div>
+          ) : null}
         </section>
       </div>
     </main>
