@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
+import { subscriptionPlans, type SubscriptionPlanKey } from "../../lib/subscriptionPlans"
 import { findUserOwnedEntity, getUserProfileTable, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, type UserOwnedEntity } from "../../lib/userProfiles"
 import { parsePremiumGallery, serializePremiumGallery } from "../../lib/premiumProfiles"
 import { supabase } from "../../supabase"
@@ -23,6 +24,7 @@ type ProfileForm = {
   facebookUrl: string
   premiumDetalle: string
   premiumGaleria: string
+  planSuscripcion: SubscriptionPlanKey
   usaWhatsapp: boolean
   image: string
 }
@@ -42,6 +44,7 @@ const initialForm: ProfileForm = {
   facebookUrl: "",
   premiumDetalle: "",
   premiumGaleria: "",
+  planSuscripcion: "presencia",
   usaWhatsapp: true,
   image: "",
 }
@@ -88,6 +91,7 @@ export default function UsuariosPerfilPage() {
           facebookUrl: entity.record.facebook_url || "",
           premiumDetalle: entity.record.premium_detalle || "",
           premiumGaleria: serializePremiumGallery(entity.record.premium_galeria || []),
+          planSuscripcion: (entity.record.plan_suscripcion as SubscriptionPlanKey) || "presencia",
           usaWhatsapp: entity.record.usa_whatsapp ?? true,
           image: entity.record.imagen_url || entity.record.imagen || entity.record.foto || "",
         })
@@ -136,6 +140,7 @@ export default function UsuariosPerfilPage() {
       web_url: formData.webUrl.trim() || null,
       instagram_url: formData.instagramUrl.trim() || null,
       facebook_url: formData.facebookUrl.trim() || null,
+      plan_suscripcion: ownedEntity.type === "institucion" ? null : formData.planSuscripcion,
       premium_detalle: formData.premiumDetalle.trim() || null,
       premium_galeria: parsePremiumGallery(formData.premiumGaleria),
       [imageColumn]: formData.image || null,
@@ -352,6 +357,54 @@ export default function UsuariosPerfilPage() {
                       }
                     />
                   </div>
+
+                  {ownedEntity.type !== "institucion" ? (
+                    <div className="space-y-3 rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                          Plan de suscripcion
+                        </div>
+                        <h3 className="mt-2 text-xl font-semibold text-slate-950">
+                          Elige el plan de tu ficha
+                        </h3>
+                        <p className="mt-2 text-sm leading-6 text-slate-600">
+                          Puedes cambiarlo cuando quieras desde tu perfil y lo dejamos reflejado en tu panel.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-4 xl:grid-cols-3">
+                        {(Object.entries(subscriptionPlans) as Array<[SubscriptionPlanKey, (typeof subscriptionPlans)[SubscriptionPlanKey]]>).map(([planKey, plan]) => (
+                          <button
+                            key={planKey}
+                            type="button"
+                            onClick={() =>
+                              setFormData((current) => ({ ...current, planSuscripcion: planKey }))
+                            }
+                            className={`rounded-[24px] border p-5 text-left transition ${
+                              formData.planSuscripcion === planKey
+                                ? "border-blue-500 bg-blue-50 shadow-[0_16px_40px_-24px_rgba(37,99,235,0.45)]"
+                                : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                  {plan.shortLabel}
+                                </div>
+                                <div className="mt-2 text-lg font-semibold text-slate-950">
+                                  {plan.name}
+                                </div>
+                              </div>
+                              <div className="rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">
+                                {plan.price}
+                              </div>
+                            </div>
+                            <p className="mt-3 text-sm leading-6 text-slate-600">{plan.tagline}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
 
                   {ownedEntity && supportsPremiumProfile(ownedEntity.type) ? (
                     ownedEntity.record.premium_activo ? (
