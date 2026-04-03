@@ -1,8 +1,8 @@
 import { HomePage, type HomePageData, type WeatherData } from "./components/HomePage"
 import { buildActiveEventsFilter } from "./lib/eventDates"
-import { supabase } from "./supabase"
+import { supabaseServer } from "./lib/supabaseServer"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 300
 
 const defaultSobreVarela = {
   titulo: "Jose Pedro Varela",
@@ -47,39 +47,58 @@ export default async function Page() {
     { data: eventosData },
     { data: cursos },
     { data: servicios },
+    { data: highlightedServicios },
+    { data: highlightedCursos },
     { data: instituciones },
     { data: sobreVarelaData },
     weather,
   ] = await Promise.all([
-    supabase
+    supabaseServer
       .from("comercios")
-      .select("*")
+      .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, imagen, imagen_url, destacado, usa_whatsapp")
       .or("estado.is.null,estado.eq.activo")
       .eq("destacado", true)
       .order("id", { ascending: false })
       .limit(8),
-    supabase
+    supabaseServer
       .from("eventos")
-      .select("*")
+      .select("id, titulo, categoria, descripcion, fecha, fecha_fin, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp")
       .or("estado.is.null,estado.eq.activo")
       .or(buildActiveEventsFilter(today))
       .order("fecha", { ascending: true }),
-    supabase
+    supabaseServer
       .from("cursos")
-      .select("*")
+      .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, destacado, usa_whatsapp")
       .or("estado.is.null,estado.eq.activo")
-      .order("id", { ascending: false }),
-    supabase
+      .order("id", { ascending: false })
+      .limit(8),
+    supabaseServer
       .from("servicios")
-      .select("*")
+      .select("id, nombre, categoria, descripcion, premium_detalle, premium_galeria, premium_activo, responsable, contacto, direccion, web_url, instagram_url, facebook_url, imagen, destacado, usa_whatsapp")
       .or("estado.is.null,estado.eq.activo")
-      .order("id", { ascending: false }),
-    supabase
+      .order("id", { ascending: false })
+      .limit(8),
+    supabaseServer
+      .from("servicios")
+      .select("id, nombre, categoria, descripcion, premium_detalle, premium_galeria, premium_activo, responsable, contacto, direccion, web_url, instagram_url, facebook_url, imagen, destacado, usa_whatsapp")
+      .or("estado.is.null,estado.eq.activo")
+      .eq("destacado", true)
+      .order("id", { ascending: false })
+      .limit(12),
+    supabaseServer
+      .from("cursos")
+      .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, destacado, usa_whatsapp")
+      .or("estado.is.null,estado.eq.activo")
+      .eq("destacado", true)
+      .order("id", { ascending: false })
+      .limit(12),
+    supabaseServer
       .from("instituciones")
-      .select("*")
+      .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp")
       .or("estado.is.null,estado.eq.activo")
-      .order("id", { ascending: false }),
-    supabase
+      .order("id", { ascending: false })
+      .limit(10),
+    supabaseServer
       .from("sitio")
       .select("titulo, texto_1, texto_2, texto_3, imagen_url")
       .eq("id", 1)
@@ -91,10 +110,10 @@ export default async function Page() {
     featuredBusinesses: featuredBusinesses || [],
     eventos: (eventosData || []).slice(0, 6),
     cursos: cursos || [],
-    servicios: (servicios || []).slice(0, 8),
-    instituciones: (instituciones || []).slice(0, 10),
-    allCursos: cursos || [],
-    allServicios: servicios || [],
+    servicios: servicios || [],
+    instituciones: instituciones || [],
+    allCursos: highlightedCursos || cursos || [],
+    allServicios: highlightedServicios || servicios || [],
     sobreVarela: sobreVarelaData
       ? { ...defaultSobreVarela, ...sobreVarelaData }
       : defaultSobreVarela,
