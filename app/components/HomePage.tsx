@@ -854,6 +854,13 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             {selectedComercio?.premium_activo ? (
               <Link
                 href={`/comercios/${selectedComercio.id}`}
+                onClick={() =>
+                  void recordViewMore(
+                    "comercios",
+                    String(selectedComercio.id),
+                    selectedComercio.nombre
+                  )
+                }
                 className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3 font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
               >
                 Ver perfil completo
@@ -943,6 +950,13 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             {selectedServicio?.premium_activo ? (
               <Link
                 href={`/servicios/${selectedServicio.id}`}
+                onClick={() =>
+                  void recordViewMore(
+                    "servicios",
+                    String(selectedServicio.id),
+                    selectedServicio.nombre
+                  )
+                }
                 className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3 font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
               >
                 Ver perfil completo
@@ -1422,6 +1436,13 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     {business.premium_activo ? (
                       <Link
                         href={`/comercios/${business.id}`}
+                        onClick={() =>
+                          void recordViewMore(
+                            "comercios",
+                            String(business.id),
+                            business.nombre
+                          )
+                        }
                         className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-violet-700 transition hover:text-violet-800"
                       >
                         Ver perfil completo
@@ -1562,6 +1583,13 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           {servicio.premium_activo ? (
                             <Link
                               href={`/servicios/${servicio.id}`}
+                              onClick={() =>
+                                void recordViewMore(
+                                  "servicios",
+                                  String(servicio.id),
+                                  servicio.nombre
+                                )
+                              }
                               className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-violet-700 transition hover:text-violet-800"
                             >
                               Ver perfil completo

@@ -10,6 +10,7 @@ import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
 import { buildPublicNav } from "../../lib/publicNav"
+import { recordViewMore } from "../../lib/viewMoreTracking"
 
 export type Servicio = {
   id: number
@@ -100,6 +101,15 @@ export function ServiciosPageClient({
       return acc
     }, {})
   }, [serviciosFiltrados])
+
+  const handleOpenServicio = (servicio: Servicio) => {
+    void recordViewMore("servicios", String(servicio.id), servicio.nombre)
+    setSelectedServicioId(String(servicio.id))
+  }
+
+  const handleOpenPremiumProfile = (servicio: Servicio) => {
+    void recordViewMore("servicios", String(servicio.id), servicio.nombre)
+  }
 
   return (
     <main className="min-h-screen bg-white">
@@ -194,6 +204,7 @@ export function ServiciosPageClient({
               {selectedServicio.premium_activo ? (
                 <Link
                   href={`/servicios/${selectedServicio.id}`}
+                  onClick={() => handleOpenPremiumProfile(selectedServicio)}
                   className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3 font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
                 >
                   Ver perfil completo
@@ -307,6 +318,7 @@ export function ServiciosPageClient({
                           {servicio.premium_activo ? (
                             <Link
                               href={`/servicios/${servicio.id}`}
+                              onClick={() => handleOpenPremiumProfile(servicio)}
                               className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
                             >
                               Ver perfil completo
@@ -315,7 +327,7 @@ export function ServiciosPageClient({
                           ) : (
                             <button
                               type="button"
-                              onClick={() => setSelectedServicioId(String(servicio.id))}
+                              onClick={() => handleOpenServicio(servicio)}
                               className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                             >
                               Ver mas

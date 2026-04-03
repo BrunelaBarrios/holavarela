@@ -10,6 +10,7 @@ import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
 import { buildPublicNav } from "../../lib/publicNav"
+import { recordViewMore } from "../../lib/viewMoreTracking"
 
 export type Comercio = {
   id: number
@@ -75,6 +76,15 @@ export function ComerciosPageClient({
 
   const getContactLabel = (usaWhatsapp?: boolean | null) =>
     usaWhatsapp === false ? "Llamar por telefono" : "Contactar por WhatsApp"
+
+  const handleOpenComercio = (comercio: Comercio) => {
+    void recordViewMore("comercios", String(comercio.id), comercio.nombre)
+    setSelectedComercioId(String(comercio.id))
+  }
+
+  const handleOpenPremiumProfile = (comercio: Comercio) => {
+    void recordViewMore("comercios", String(comercio.id), comercio.nombre)
+  }
 
   const comerciosFiltrados = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -181,6 +191,7 @@ export function ComerciosPageClient({
               {selectedComercio.premium_activo ? (
                 <Link
                   href={`/comercios/${selectedComercio.id}`}
+                  onClick={() => handleOpenPremiumProfile(selectedComercio)}
                   className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3 font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
                 >
                   Ver perfil completo
@@ -265,6 +276,7 @@ export function ComerciosPageClient({
                     {comercio.premium_activo ? (
                       <Link
                         href={`/comercios/${comercio.id}`}
+                        onClick={() => handleOpenPremiumProfile(comercio)}
                         className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
                       >
                         Ver perfil completo
@@ -273,7 +285,7 @@ export function ComerciosPageClient({
                     ) : (
                       <button
                         type="button"
-                        onClick={() => setSelectedComercioId(String(comercio.id))}
+                        onClick={() => handleOpenComercio(comercio)}
                         className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                       >
                         Ver mas
