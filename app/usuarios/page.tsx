@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
-import { CalendarDays, CircleCheckBig, Clock3, ExternalLink, FilePenLine, ImageIcon, KeyRound, LogOut, PlusCircle } from "lucide-react"
+import { CalendarDays, CircleCheckBig, Clock3, CreditCard, ExternalLink, FilePenLine, ImageIcon, KeyRound, LogOut, PlusCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../components/AuthFormStatus"
 import { getSubscriptionPlan, subscriptionPlans, type SubscriptionPlanKey } from "../lib/subscriptionPlans"
+import { getSubscriptionStatusBadge, getSubscriptionStatusLabel } from "../lib/subscriptionStatus"
 import { buildUserProfileFields, fetchUserOwnedEvents, findUserOwnedEntity, getUserProfileImageSrc, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, userEntityStatusCopy, type UserEntityType, type UserOwnedEntity, type UserOwnedEvent } from "../lib/userProfiles"
 import { supabase } from "../supabase"
 
@@ -154,6 +155,8 @@ export default function UsuariosHomePage() {
   const draftEvents = useMemo(() => events.filter((item) => normalizeUserEntityStatus(item.estado) === "borrador"), [events])
   const hasPremium = Boolean(ownedEntity?.record.premium_activo && ownedEntity && supportsPremiumProfile(ownedEntity.type))
   const currentPlan = getSubscriptionPlan(ownedEntity?.record.plan_suscripcion)
+  const subscriptionStatusLabel = getSubscriptionStatusLabel(ownedEntity?.record.estado_suscripcion)
+  const subscriptionStatusBadge = getSubscriptionStatusBadge(ownedEntity?.record.estado_suscripcion)
 
   if (loading) {
     return <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6"><div className="mx-auto max-w-5xl rounded-[32px] border border-slate-200 bg-white p-12 text-center text-slate-500 shadow-[0_20px_60px_-30px_rgba(15,23,42,0.3)]">Cargando cuenta...</div></main>
@@ -301,6 +304,7 @@ export default function UsuariosHomePage() {
             <div className="space-y-4 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-6 py-8 sm:px-8 sm:py-10">
               {imageSrc ? <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"><img src={imageSrc} alt={ownedEntity.record.nombre} className="h-60 w-full object-cover" /></div> : <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-8 shadow-sm"><div className="flex items-start gap-4"><div className="rounded-[20px] bg-slate-100 p-4"><ImageIcon className="h-6 w-6 text-slate-400" /></div><div><h3 className="text-lg font-semibold text-slate-900">Agrega una imagen</h3><p className="mt-2 text-sm leading-7 text-slate-500">Tu perfil se ve mucho mejor cuando tiene una foto o imagen principal.</p></div></div></div>}
               <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description={hasPremium ? "Actualiza datos, imagen y el contenido premium de tu ficha." : "Actualiza descripcion, imagen y datos de contacto."} />
+              {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripcion" description="Revisa tu plan, cambia la opcion elegida y abre el pago desde Mercado Pago." /> : null}
               <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
               <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contrasena" description="Hazlo de forma segura validando tu clave actual." />
               <QuickLink href="/" icon={<ExternalLink className="h-5 w-5 text-slate-400 transition group-hover:text-slate-700" />} title="Ver sitio publico" description="Revisa como aparece Hola Varela para las visitas." />
@@ -342,20 +346,17 @@ export default function UsuariosHomePage() {
                     <p className="mt-2 text-sm leading-6 text-slate-600">{currentPlan.description}</p>
                     <div className="mt-3 inline-flex rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">{currentPlan.price}</div>
                     <div className="mt-4">
-                      <a
-                        href={currentPlan.checkoutUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
-                      >
-                        Ir al pago
-                      </a>
+                      <Link href="/usuarios/suscripcion" className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100">
+                        Gestionar suscripcion
+                      </Link>
                     </div>
                   </div>
                   <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
                     <div className="text-sm font-medium text-slate-500">Estado actual</div>
-                    <div className={`mt-1 text-xl font-semibold ${statusStyles.accent}`}>{statusMeta.label}</div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">Tu plan ya quedo asociado a esta ficha. Si necesitas cambiarlo o activarlo, lo revisamos desde administracion.</p>
+                    <div className="mt-2">
+                      <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${subscriptionStatusBadge}`}>{subscriptionStatusLabel}</span>
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">Desde el boton de suscripcion puedes revisar el plan, cambiar tu eleccion y abrir el pago cuando lo necesites.</p>
                   </div>
                   <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
                     <div className="text-sm font-medium text-slate-500">Incluye</div>

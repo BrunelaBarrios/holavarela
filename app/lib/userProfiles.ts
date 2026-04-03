@@ -23,6 +23,7 @@ export type UserEntityRecord = {
   premium_galeria?: string[] | null
   premium_activo?: boolean | null
   plan_suscripcion?: SubscriptionPlanKey | null
+  estado_suscripcion?: string | null
   direccion?: string | null
   telefono?: string | null
   imagen?: string | null
