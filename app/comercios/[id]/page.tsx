@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation"
 import { PremiumListingPage } from "../../components/public/PremiumListingPage"
+import { buildActiveEventsFilter } from "../../lib/eventDates"
 import { supabaseServer } from "../../lib/supabaseServer"
 
 export default async function ComercioSharePage({
@@ -10,7 +11,7 @@ export default async function ComercioSharePage({
   const { id } = await params
   const { data } = await supabaseServer
     .from("comercios")
-    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, imagen, imagen_url, usa_whatsapp, estado")
+    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, imagen, imagen_url, usa_whatsapp, estado, owner_email")
     .eq("id", Number(id))
     .maybeSingle()
 
@@ -25,6 +26,17 @@ export default async function ComercioSharePage({
   if (!data.premium_activo) {
     redirect(`/comercios?item=${encodeURIComponent(id)}`)
   }
+
+  const today = new Date().toISOString().slice(0, 10)
+  const { data: relatedEvents } = data.owner_email
+    ? await supabaseServer
+        .from("eventos")
+        .select("id, titulo, categoria, fecha, fecha_fin, descripcion, imagen")
+        .eq("owner_email", data.owner_email)
+        .eq("estado", "activo")
+        .or(buildActiveEventsFilter(today))
+        .order("fecha", { ascending: true })
+    : { data: [] }
 
   return (
     <PremiumListingPage
@@ -41,6 +53,7 @@ export default async function ComercioSharePage({
       instagramUrl={data.instagram_url}
       facebookUrl={data.facebook_url}
       usesWhatsapp={data.usa_whatsapp}
+      relatedEvents={relatedEvents || []}
     />
   )
 }
