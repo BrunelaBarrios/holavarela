@@ -4,7 +4,7 @@ import type { ChangeEvent, FormEvent } from "react"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { CheckCircle2, ImageIcon, MapPin, MessageSquareText, Phone, Sparkles } from "lucide-react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../../../components/AuthFormStatus"
 import { fileToDataUrl } from "../../../lib/fileToDataUrl"
 import { findUserOwnedEntity } from "../../../lib/userProfiles"
@@ -44,7 +44,6 @@ const initialForm: EventForm = {
 
 export default function UsuariosNuevoEventoPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [formData, setFormData] = useState<EventForm>(initialForm)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -74,7 +73,10 @@ export default function UsuariosNuevoEventoPage() {
 
         setOwnerEmail(session.user.email)
 
-        const editId = searchParams.get("edit")
+        const editId =
+          typeof window === "undefined"
+            ? null
+            : new URLSearchParams(window.location.search).get("edit")
         if (editId) {
           const { data: existingEvent, error: eventError } = await supabase
             .from("eventos")
@@ -111,7 +113,7 @@ export default function UsuariosNuevoEventoPage() {
     }
 
     void loadContext()
-  }, [router, searchParams])
+  }, [router])
 
   const handleImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
