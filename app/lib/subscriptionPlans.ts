@@ -9,6 +9,7 @@ export const subscriptionPlans: Record<
     tagline: string
     description: string
     checkoutUrl: string
+    preapprovalPlanId: string
     features: string[]
   }
 > = {
@@ -20,6 +21,7 @@ export const subscriptionPlans: Record<
     description: "Una ficha clara y completa para aparecer en Hola Varela desde el inicio.",
     checkoutUrl:
       "https://www.mercadopago.com.uy/subscriptions/checkout?preapproval_plan_id=da243ed097c7494ebb8b6214020a986d",
+    preapprovalPlanId: "da243ed097c7494ebb8b6214020a986d",
     features: [
       "Presencia del comercio en la web",
       "Informacion basica: nombre, descripcion y direccion",
@@ -36,6 +38,7 @@ export const subscriptionPlans: Record<
     description: "Suma destaque visual y espacio para moverte mejor durante el ano.",
     checkoutUrl:
       "https://www.mercadopago.com.uy/subscriptions/checkout?preapproval_plan_id=895598aa88e34099ac7e6126dcbba360",
+    preapprovalPlanId: "895598aa88e34099ac7e6126dcbba360",
     features: [
       "Incluye todo lo del plan Presencia",
       "Aparicion en seccion Destacados",
@@ -52,6 +55,7 @@ export const subscriptionPlans: Record<
     description: "Pensado para comercios activos que trabajan con varias promos, sorteos y eventos.",
     checkoutUrl:
       "https://www.mercadopago.com.uy/subscriptions/checkout?preapproval_plan_id=9b4fefe771e54cc59f40e86212da4434",
+    preapprovalPlanId: "9b4fefe771e54cc59f40e86212da4434",
     features: [
       "Incluye todo lo del plan Destacado",
       "Publicacion de eventos, promociones o sorteos ilimitados",
