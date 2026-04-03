@@ -25,6 +25,9 @@ add column if not exists premium_activo boolean default false;
 alter table public.comercios
 add column if not exists plan_suscripcion text;
 
+alter table public.comercios
+add column if not exists estado_suscripcion text default 'pendiente';
+
 alter table public.servicios
 add column if not exists destacado boolean default false;
 
@@ -52,6 +55,9 @@ add column if not exists premium_activo boolean default false;
 alter table public.servicios
 add column if not exists plan_suscripcion text;
 
+alter table public.servicios
+add column if not exists estado_suscripcion text default 'pendiente';
+
 alter table public.cursos
 add column if not exists destacado boolean default false;
 
@@ -69,6 +75,9 @@ add column if not exists facebook_url text;
 
 alter table public.cursos
 add column if not exists plan_suscripcion text;
+
+alter table public.cursos
+add column if not exists estado_suscripcion text default 'pendiente';
 
 alter table public.eventos
 add column if not exists fecha_fin date;
@@ -116,6 +125,7 @@ create table if not exists public.cursos (
   responsable text not null,
   contacto text not null,
   plan_suscripcion text,
+  estado_suscripcion text default 'pendiente',
   web_url text,
   instagram_url text,
   facebook_url text,
@@ -130,6 +140,7 @@ create table if not exists public.servicios (
   categoria text not null,
   descripcion text,
   plan_suscripcion text,
+  estado_suscripcion text default 'pendiente',
   premium_detalle text,
   premium_galeria text[],
   premium_activo boolean default false,

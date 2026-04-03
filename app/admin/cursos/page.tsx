@@ -7,12 +7,16 @@ import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { buildShareCountMap } from "../../lib/shareTracking"
+import { subscriptionPlans, type SubscriptionPlanKey } from "../../lib/subscriptionPlans"
+import { getSubscriptionStatusBadge, getSubscriptionStatusLabel, subscriptionStatusOptions, type SubscriptionStatusKey } from "../../lib/subscriptionStatus"
 import { buildWhatsappCountMap } from "../../lib/whatsappTracking"
 
 type Curso = {
   id: number
   nombre: string
   descripcion: string
+  plan_suscripcion?: SubscriptionPlanKey | null
+  estado_suscripcion?: SubscriptionStatusKey | null
   responsable: string
   contacto: string
   web_url?: string | null
@@ -31,6 +35,8 @@ type CursoForm = Omit<Curso, "id">
 const initialForm: CursoForm = {
   nombre: "",
   descripcion: "",
+  plan_suscripcion: "presencia",
+  estado_suscripcion: "pendiente",
   responsable: "",
   contacto: "",
   web_url: "",
@@ -179,6 +185,8 @@ export default function AdminCursosPage() {
     const payload = {
       nombre: formData.nombre,
       descripcion: formData.descripcion,
+      plan_suscripcion: formData.plan_suscripcion,
+      estado_suscripcion: formData.estado_suscripcion,
       responsable: formData.responsable,
       contacto: formData.contacto,
       web_url: formData.web_url?.trim() || null,
@@ -237,6 +245,8 @@ export default function AdminCursosPage() {
     setFormData({
       nombre: curso.nombre,
       descripcion: curso.descripcion,
+      plan_suscripcion: curso.plan_suscripcion || "presencia",
+      estado_suscripcion: curso.estado_suscripcion || "pendiente",
       responsable: curso.responsable,
       contacto: curso.contacto,
       web_url: curso.web_url || "",
@@ -373,6 +383,50 @@ export default function AdminCursosPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Plan de suscripcion
+                  </label>
+                  <select
+                    value={formData.plan_suscripcion || "presencia"}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        plan_suscripcion: e.target.value as SubscriptionPlanKey,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500"
+                  >
+                    {(Object.entries(subscriptionPlans) as Array<[SubscriptionPlanKey, (typeof subscriptionPlans)[SubscriptionPlanKey]]>).map(([planKey, plan]) => (
+                      <option key={planKey} value={planKey}>
+                        {plan.name} - {plan.price}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Estado del pago
+                  </label>
+                  <select
+                    value={formData.estado_suscripcion || "pendiente"}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        estado_suscripcion: e.target.value as SubscriptionStatusKey,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500"
+                  >
+                    {subscriptionStatusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-900">
                     Responsable *
@@ -595,6 +649,15 @@ export default function AdminCursosPage() {
                   Destacado
                 </div>
               )}
+
+              <div className="mt-4 flex flex-wrap gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                  <span>{subscriptionPlans[curso.plan_suscripcion || "presencia"].shortLabel}</span>
+                </div>
+                <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${getSubscriptionStatusBadge(curso.estado_suscripcion)}`}>
+                  <span>{getSubscriptionStatusLabel(curso.estado_suscripcion)}</span>
+                </div>
+              </div>
 
               <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                 <Share2 className="h-3.5 w-3.5" />

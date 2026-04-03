@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react"
 import { Eye, EyeOff, MessageCircle, Pencil, Plus, Share2, Star, Store, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { buildShareCountMap } from "../../lib/shareTracking"
+import { subscriptionPlans, type SubscriptionPlanKey } from "../../lib/subscriptionPlans"
+import { getSubscriptionStatusBadge, getSubscriptionStatusLabel, subscriptionStatusOptions, type SubscriptionStatusKey } from "../../lib/subscriptionStatus"
 import { buildWhatsappCountMap } from "../../lib/whatsappTracking"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
@@ -16,6 +18,8 @@ type Comercio = {
   premium_detalle?: string | null
   premium_galeria?: string[] | null
   premium_activo?: boolean | null
+  plan_suscripcion?: SubscriptionPlanKey | null
+  estado_suscripcion?: SubscriptionStatusKey | null
   direccion: string | null
   telefono: string | null
   web_url?: string | null
@@ -38,6 +42,8 @@ type ComercioForm = {
   premium_detalle: string
   premium_galeria: string
   premium_activo: boolean
+  plan_suscripcion: SubscriptionPlanKey
+  estado_suscripcion: SubscriptionStatusKey
   web_url: string
   instagram_url: string
   facebook_url: string
@@ -53,6 +59,8 @@ const initialForm: ComercioForm = {
   premium_detalle: "",
   premium_galeria: "",
   premium_activo: false,
+  plan_suscripcion: "presencia",
+  estado_suscripcion: "pendiente",
   web_url: "",
   instagram_url: "",
   facebook_url: "",
@@ -144,6 +152,8 @@ export default function AdminComerciosPage() {
       premium_detalle: comercio.premium_detalle || "",
       premium_galeria: (comercio.premium_galeria || []).join("\n"),
       premium_activo: comercio.premium_activo ?? false,
+      plan_suscripcion: comercio.plan_suscripcion || "presencia",
+      estado_suscripcion: comercio.estado_suscripcion || "pendiente",
       web_url: comercio.web_url || "",
       instagram_url: comercio.instagram_url || "",
       facebook_url: comercio.facebook_url || "",
@@ -183,6 +193,32 @@ export default function AdminComerciosPage() {
     } catch (error) {
       setSaveError(
         error instanceof Error ? error.message : "No se pudo cargar la imagen."
+      )
+    }
+  }
+
+  const handlePremiumGalleryChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    try {
+      const nextImages = await Promise.all(files.map((file) => fileToDataUrl(file)))
+      setFormData((prev) => {
+        const currentImages = prev.premium_galeria
+          .split(/\r?\n/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+
+        return {
+          ...prev,
+          premium_galeria: [...currentImages, ...nextImages].join("\n"),
+        }
+      })
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudieron cargar las imagenes premium."
       )
     }
   }
@@ -278,6 +314,8 @@ export default function AdminComerciosPage() {
         .map((item) => item.trim())
         .filter(Boolean),
       premium_activo: formData.premium_activo,
+      plan_suscripcion: formData.plan_suscripcion,
+      estado_suscripcion: formData.estado_suscripcion,
       web_url: formData.web_url.trim() || null,
       instagram_url: formData.instagram_url.trim() || null,
       facebook_url: formData.facebook_url.trim() || null,
@@ -515,7 +553,90 @@ export default function AdminComerciosPage() {
                     <p className="mt-2 text-xs text-slate-500">
                       Cuando el premium esta activo, estas imagenes se muestran como galeria extra.
                     </p>
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={!formData.premium_activo}
+                      onChange={handlePremiumGalleryChange}
+                      className="mt-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-amber-100 file:px-4 file:py-2 file:font-medium file:text-amber-700 hover:file:bg-amber-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+                    />
+
+                    {formData.premium_galeria.trim() ? (
+                      <div className="mt-4 space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          {formData.premium_galeria
+                            .split(/\r?\n/)
+                            .map((item) => item.trim())
+                            .filter(Boolean)
+                            .map((image, index) => (
+                              <img
+                                key={`${image}-${index}`}
+                                src={image}
+                                alt={`Galeria premium ${index + 1}`}
+                                className="h-28 w-full rounded-2xl object-cover"
+                              />
+                            ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData((prev) => ({ ...prev, premium_galeria: "" }))
+                          }
+                          className="text-sm font-medium text-red-600 transition hover:text-red-500"
+                        >
+                          Limpiar galeria premium
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Plan de suscripcion
+                  </label>
+                  <select
+                    value={formData.plan_suscripcion}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        plan_suscripcion: e.target.value as SubscriptionPlanKey,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
+                  >
+                    {(Object.entries(subscriptionPlans) as Array<[SubscriptionPlanKey, (typeof subscriptionPlans)[SubscriptionPlanKey]]>).map(([planKey, plan]) => (
+                      <option key={planKey} value={planKey}>
+                        {plan.name} - {plan.price}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Estado del pago
+                  </label>
+                  <select
+                    value={formData.estado_suscripcion}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        estado_suscripcion: e.target.value as SubscriptionStatusKey,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
+                  >
+                    {subscriptionStatusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -697,6 +818,15 @@ export default function AdminComerciosPage() {
                     Premium activo
                   </div>
                 )}
+
+                <div className="mb-3 flex flex-wrap gap-2">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                    <span>{subscriptionPlans[comercio.plan_suscripcion || "presencia"].shortLabel}</span>
+                  </div>
+                  <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${getSubscriptionStatusBadge(comercio.estado_suscripcion)}`}>
+                    <span>{getSubscriptionStatusLabel(comercio.estado_suscripcion)}</span>
+                  </div>
+                </div>
 
                 {comercio.telefono && (
                   <p className="mb-2 text-sm text-slate-500">{comercio.telefono}</p>
