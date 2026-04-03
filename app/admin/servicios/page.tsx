@@ -14,6 +14,9 @@ type Servicio = {
   nombre: string
   categoria: string
   descripcion: string | null
+  premium_detalle?: string | null
+  premium_galeria?: string[] | null
+  premium_activo?: boolean | null
   responsable: string | null
   contacto: string | null
   direccion: string | null
@@ -32,6 +35,9 @@ type ServicioForm = {
   nombre: string
   categoria: string
   descripcion: string
+  premium_detalle: string
+  premium_galeria: string
+  premium_activo: boolean
   responsable: string
   contacto: string
   direccion: string
@@ -46,6 +52,9 @@ const initialForm: ServicioForm = {
   nombre: "",
   categoria: "Profesionales",
   descripcion: "",
+  premium_detalle: "",
+  premium_galeria: "",
+  premium_activo: false,
   responsable: "",
   contacto: "",
   direccion: "",
@@ -135,6 +144,9 @@ export default function AdminServiciosPage() {
       nombre: servicio.nombre || "",
       categoria: servicio.categoria || "",
       descripcion: servicio.descripcion || "",
+      premium_detalle: servicio.premium_detalle || "",
+      premium_galeria: (servicio.premium_galeria || []).join("\n"),
+      premium_activo: servicio.premium_activo ?? false,
       responsable: servicio.responsable || "",
       contacto: servicio.contacto || "",
       direccion: servicio.direccion || "",
@@ -257,6 +269,12 @@ export default function AdminServiciosPage() {
       nombre: formData.nombre,
       categoria: formData.categoria,
       descripcion: formData.descripcion || null,
+      premium_detalle: formData.premium_detalle.trim() || null,
+      premium_galeria: formData.premium_galeria
+        .split(/\r?\n/)
+        .map((item) => item.trim())
+        .filter(Boolean),
+      premium_activo: formData.premium_activo,
       responsable: formData.responsable || null,
       contacto: formData.contacto || null,
       direccion: formData.direccion || null,
@@ -430,6 +448,63 @@ export default function AdminServiciosPage() {
                   }
                   className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-amber-500"
                 />
+              </div>
+
+              <div className="rounded-2xl border border-violet-200 bg-violet-50/60 p-4">
+                <label className="flex items-center gap-3 text-sm font-medium text-slate-800">
+                  <input
+                    type="checkbox"
+                    checked={formData.premium_activo}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        premium_activo: e.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                  />
+                  <span>Activar perfil premium para este servicio</span>
+                </label>
+
+                <div className="mt-4 grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Descripcion ampliada
+                    </label>
+                    <textarea
+                      value={formData.premium_detalle}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          premium_detalle: e.target.value,
+                        }))
+                      }
+                      disabled={!formData.premium_activo}
+                      className="h-32 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Galeria premium
+                    </label>
+                    <textarea
+                      value={formData.premium_galeria}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          premium_galeria: e.target.value,
+                        }))
+                      }
+                      disabled={!formData.premium_activo}
+                      placeholder={"Una URL por linea\nhttps://..."}
+                      className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                    />
+                    <p className="mt-2 text-xs text-slate-500">
+                      Puedes cargar varias imagenes del perfil ampliado, una por linea.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -682,6 +757,13 @@ export default function AdminServiciosPage() {
                 <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
                   <Star className="h-3.5 w-3.5 fill-current" />
                   Destacado
+                </div>
+              )}
+
+              {servicio.premium_activo && (
+                <div className="mt-4 ml-2 inline-flex items-center gap-2 rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
+                  <Star className="h-3.5 w-3.5" />
+                  Premium activo
                 </div>
               )}
 

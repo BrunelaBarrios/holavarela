@@ -14,6 +14,9 @@ export type Comercio = {
   id: number
   nombre: string
   descripcion: string
+  premium_detalle?: string | null
+  premium_galeria?: string[] | null
+  premium_activo?: boolean | null
   direccion: string
   telefono: string
   web_url?: string | null
@@ -96,6 +99,42 @@ export function ComerciosPageClient({
         }
         imageAlt={selectedComercio?.nombre || "Comercio"}
         description={selectedComercio?.descripcion || null}
+        extraContent={
+          selectedComercio?.premium_activo ? (
+            <div className="space-y-4">
+              {selectedComercio.premium_detalle ? (
+                <div className="rounded-[24px] border border-violet-100 bg-violet-50/70 p-5">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-violet-600">
+                    Perfil ampliado
+                  </div>
+                  <p className="whitespace-pre-line text-sm leading-7 text-slate-700">
+                    {selectedComercio.premium_detalle}
+                  </p>
+                </div>
+              ) : null}
+
+              {selectedComercio.premium_galeria?.length ? (
+                <div>
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    Galeria
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {selectedComercio.premium_galeria.map((image, index) => (
+                      <div key={`${image}-${index}`} className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                        <OptimizedImage
+                          src={image}
+                          alt={`${selectedComercio.nombre} ${index + 1}`}
+                          sizes="(max-width: 768px) 50vw, 25vw"
+                          className="object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null
+        }
         meta={[
           ...(selectedComercio?.direccion
             ? [{ icon: MapPin, text: selectedComercio.direccion }]
@@ -177,7 +216,7 @@ export function ComerciosPageClient({
               return (
                 <div
                   key={comercio.id}
-                  className="rounded-xl border border-gray-200 p-5 shadow-sm"
+                  className={`rounded-xl border p-5 shadow-sm ${comercio.premium_activo ? "border-violet-200 bg-violet-50/20" : "border-gray-200"}`}
                 >
                   {imagenSrc && (
                     <div className="relative mb-3 h-40 w-full overflow-hidden rounded-lg">
@@ -189,6 +228,12 @@ export function ComerciosPageClient({
                       />
                     </div>
                   )}
+
+                  {comercio.premium_activo ? (
+                    <div className="mb-3 inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
+                      Premium
+                    </div>
+                  ) : null}
 
                   <h2 className="text-lg font-semibold text-gray-900">
                     {comercio.nombre}
@@ -212,7 +257,7 @@ export function ComerciosPageClient({
                       onClick={() => setSelectedComercioId(String(comercio.id))}
                       className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                     >
-                      Ver mas
+                      {comercio.premium_activo ? "Ver perfil ampliado" : "Ver mas"}
                       <ArrowRight className="h-4 w-4" />
                     </button>
 

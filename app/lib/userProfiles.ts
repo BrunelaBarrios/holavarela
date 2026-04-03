@@ -18,6 +18,9 @@ export type UserEntityRecord = {
   id: number
   nombre: string
   descripcion?: string | null
+  premium_detalle?: string | null
+  premium_galeria?: string[] | null
+  premium_activo?: boolean | null
   direccion?: string | null
   telefono?: string | null
   imagen?: string | null
@@ -94,6 +97,10 @@ export const userEntityStatusCopy = {
     description: "Tu perfil esta guardado, pero no se muestra publicamente.",
   },
 } as const
+
+export function supportsPremiumProfile(type: UserEntityType) {
+  return type === "comercio" || type === "servicio"
+}
 
 export function normalizeUserEntityStatus(status?: string | null) {
   if (status === "oculto") return "oculto"

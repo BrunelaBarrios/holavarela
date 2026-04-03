@@ -34,6 +34,9 @@ type Comercio = {
   id: number
   nombre: string
   descripcion: string | null
+  premium_detalle?: string | null
+  premium_galeria?: string[] | null
+  premium_activo?: boolean | null
   direccion: string | null
   telefono: string | null
   web_url?: string | null
@@ -88,6 +91,9 @@ type Servicio = {
   nombre: string
   categoria: string
   descripcion: string | null
+  premium_detalle?: string | null
+  premium_galeria?: string[] | null
+  premium_activo?: boolean | null
   responsable: string | null
   contacto: string | null
   direccion: string | null
@@ -770,230 +776,164 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       )}
 
-      {selectedComercio && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4">
-          <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
-            <button
-              type="button"
-              onClick={() => setSelectedComercio(null)}
-              className="absolute right-4 top-4 z-10 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white"
-              aria-label="Cerrar detalle"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_0.55fr]">
-                <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
-                  {selectedComercio.imagen_url || selectedComercio.imagen ? (
-                    <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-3 md:min-h-[420px] md:p-4">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setZoomedImage({
-                            src: selectedComercio.imagen_url || selectedComercio.imagen || "",
-                            alt: selectedComercio.nombre,
-                          })
-                        }
-                        className="relative aspect-[4/5] h-[390px] w-full max-w-[720px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[580px]"
-                        aria-label="Ver imagen mas grande"
-                      >
+      <PublicDetailModal
+        open={Boolean(selectedComercio)}
+        onClose={() => setSelectedComercio(null)}
+        title={selectedComercio?.nombre || ""}
+        imageSrc={selectedComercio ? selectedComercio.imagen_url || selectedComercio.imagen || null : null}
+        imageAlt={selectedComercio?.nombre || "Comercio"}
+        badge={selectedComercio?.premium_activo ? "Premium" : null}
+        description={selectedComercio?.descripcion || null}
+        extraContent={
+          selectedComercio?.premium_activo ? (
+            <div className="space-y-4">
+              {selectedComercio.premium_detalle ? (
+                <div className="rounded-[24px] border border-violet-100 bg-violet-50/70 p-5">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-violet-600">
+                    Perfil ampliado
+                  </div>
+                  <p className="whitespace-pre-line text-sm leading-7 text-slate-700">
+                    {selectedComercio.premium_detalle}
+                  </p>
+                </div>
+              ) : null}
+              {selectedComercio.premium_galeria?.length ? (
+                <div>
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    Galeria
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {selectedComercio.premium_galeria.map((image, index) => (
+                      <div key={`${image}-${index}`} className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
                         <OptimizedImage
-                          src={selectedComercio.imagen_url || selectedComercio.imagen || ""}
-                          alt={selectedComercio.nombre}
-                          sizes="(max-width: 1024px) 100vw, 60vw"
+                          src={image}
+                          alt={`${selectedComercio.nombre} ${index + 1}`}
+                          sizes="(max-width: 768px) 50vw, 25vw"
                           className="object-cover"
                         />
-                      </button>
-                    </div>
-                  ) : (
-                  <div className="flex min-h-[320px] items-center justify-center text-slate-400">
-                    Sin imagen
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
-
-              <div className="p-6 md:p-8">
-                <h3 className="text-3xl font-semibold leading-tight text-slate-900">
-                  {selectedComercio.nombre}
-                </h3>
-
-                {selectedComercio.direccion && (
-                  <div className="mt-4 flex items-center gap-2 text-slate-500">
-                    <MapPin className="h-4 w-4" />
-                    <span>{selectedComercio.direccion}</span>
-                  </div>
-                )}
-
-                {selectedComercio.telefono && (
-                  <div className="mt-3 flex items-center gap-2 text-slate-500">
-                    <Phone className="h-4 w-4" />
-                    <span>{selectedComercio.telefono}</span>
-                  </div>
-                )}
-
-                {selectedComercio.descripcion && (
-                    <p className="mt-6 whitespace-pre-line text-lg leading-8 text-slate-600">
-                      {selectedComercio.descripcion}
-                    </p>
-                  )}
-
-                <div className="mt-8 flex flex-wrap gap-3">
-                  {selectedComercio.telefono && (
-                    <ContactActionLink
-                      href={getContactHref(
-                        selectedComercio.telefono,
-                        selectedComercio.usa_whatsapp
-                      )}
-                      mode={selectedComercio.usa_whatsapp === false ? "phone" : "whatsapp"}
-                      section="comercios"
-                      itemId={String(selectedComercio.id)}
-                      itemTitle={selectedComercio.nombre}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
-                    >
-                      <Phone className="h-4 w-4" />
-                      {getContactLabel(selectedComercio.usa_whatsapp)}
-                    </ContactActionLink>
-                  )}
-
-                  <ExternalLinksButtons
-                    webUrl={selectedComercio.web_url}
-                    instagramUrl={selectedComercio.instagram_url}
-                    facebookUrl={selectedComercio.facebook_url}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedComercio(null)}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
-                  >
-                    Cerrar
-                  </button>
                 </div>
-              </div>
+              ) : null}
             </div>
-          </div>
-        </div>
-      )}
+          ) : null
+        }
+        meta={[
+          ...(selectedComercio?.direccion ? [{ icon: MapPin, text: selectedComercio.direccion }] : []),
+          ...(selectedComercio?.telefono ? [{ icon: Phone, text: selectedComercio.telefono }] : []),
+        ]}
+        actions={
+          <>
+            {selectedComercio?.telefono ? (
+              <ContactActionLink
+                href={getContactHref(
+                  selectedComercio.telefono,
+                  selectedComercio.usa_whatsapp
+                )}
+                mode={selectedComercio.usa_whatsapp === false ? "phone" : "whatsapp"}
+                section="comercios"
+                itemId={String(selectedComercio.id)}
+                itemTitle={selectedComercio.nombre}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
+              >
+                <Phone className="h-4 w-4" />
+                {getContactLabel(selectedComercio.usa_whatsapp)}
+              </ContactActionLink>
+            ) : null}
 
-      {selectedServicio && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4">
-          <div className="relative max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
-            <button
-              type="button"
-              onClick={() => setSelectedServicio(null)}
-              className="absolute right-4 top-4 z-10 rounded-full bg-white/90 p-2 text-slate-700 shadow-sm transition hover:bg-white"
-              aria-label="Cerrar detalle"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            {selectedComercio ? (
+              <ExternalLinksButtons
+                webUrl={selectedComercio.web_url}
+                instagramUrl={selectedComercio.instagram_url}
+                facebookUrl={selectedComercio.facebook_url}
+              />
+            ) : null}
+          </>
+        }
+      />
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_0.55fr]">
-                <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
-                  {selectedServicio.imagen ? (
-                    <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setZoomedImage({
-                            src: selectedServicio.imagen!,
-                            alt: selectedServicio.nombre,
-                          })
-                        }
-                        className="relative aspect-[4/5] h-[380px] w-full max-w-[680px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[560px]"
-                        aria-label="Ver imagen mas grande"
-                      >
+      <PublicDetailModal
+        open={Boolean(selectedServicio)}
+        onClose={() => setSelectedServicio(null)}
+        title={selectedServicio?.nombre || ""}
+        imageSrc={selectedServicio?.imagen || null}
+        imageAlt={selectedServicio?.nombre || "Servicio"}
+        badge={selectedServicio?.premium_activo ? "Premium" : selectedServicio?.categoria || null}
+        description={selectedServicio?.descripcion || null}
+        extraContent={
+          selectedServicio?.premium_activo ? (
+            <div className="space-y-4">
+              {selectedServicio.premium_detalle ? (
+                <div className="rounded-[24px] border border-violet-100 bg-violet-50/70 p-5">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-violet-600">
+                    Perfil ampliado
+                  </div>
+                  <p className="whitespace-pre-line text-sm leading-7 text-slate-700">
+                    {selectedServicio.premium_detalle}
+                  </p>
+                </div>
+              ) : null}
+              {selectedServicio.premium_galeria?.length ? (
+                <div>
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    Galeria
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {selectedServicio.premium_galeria.map((image, index) => (
+                      <div key={`${image}-${index}`} className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
                         <OptimizedImage
-                          src={selectedServicio.imagen}
-                          alt={selectedServicio.nombre}
-                          sizes="(max-width: 1024px) 100vw, 60vw"
-                          className="object-contain p-1 sm:p-2"
+                          src={image}
+                          alt={`${selectedServicio.nombre} ${index + 1}`}
+                          sizes="(max-width: 768px) 50vw, 25vw"
+                          className="object-cover"
                         />
-                      </button>
-                    </div>
-                  ) : (
-                  <div className="flex min-h-[320px] items-center justify-center text-slate-400">
-                    Sin imagen
+                      </div>
+                    ))}
                   </div>
-                )}
-              </div>
-
-              <div className="p-6 md:p-8">
-                <div className="mb-4 inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-700">
-                  {selectedServicio.categoria}
                 </div>
-
-                <h3 className="text-3xl font-semibold leading-tight text-slate-900">
-                  {selectedServicio.nombre}
-                </h3>
-
-                {selectedServicio.descripcion && (
-                    <p className="mt-6 whitespace-pre-line text-lg leading-8 text-slate-600">
-                      {selectedServicio.descripcion}
-                    </p>
-                  )}
-
-                <div className="mt-6 space-y-3 text-slate-600">
-                  {selectedServicio.responsable && (
-                    <div className="flex items-center gap-2">
-                      <UserRound className="h-4 w-4" />
-                      <span>{selectedServicio.responsable}</span>
-                    </div>
-                  )}
-                  {selectedServicio.contacto && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      <span>{selectedServicio.contacto}</span>
-                    </div>
-                  )}
-                  {selectedServicio.direccion && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      <span>{selectedServicio.direccion}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-8 flex flex-wrap gap-3">
-                  {selectedServicio.contacto && (
-                    <ContactActionLink
-                      href={getContactHref(
-                        selectedServicio.contacto,
-                        selectedServicio.usa_whatsapp
-                      )}
-                      mode={selectedServicio.usa_whatsapp === false ? "phone" : "whatsapp"}
-                      section="servicios"
-                      itemId={String(selectedServicio.id)}
-                      itemTitle={selectedServicio.nombre}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
-                    >
-                      <Phone className="h-4 w-4" />
-                      {getContactLabel(selectedServicio.usa_whatsapp)}
-                    </ContactActionLink>
-                  )}
-
-                  <ExternalLinksButtons
-                    webUrl={selectedServicio.web_url}
-                    instagramUrl={selectedServicio.instagram_url}
-                    facebookUrl={selectedServicio.facebook_url}
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedServicio(null)}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-50"
-                  >
-                    Cerrar
-                  </button>
-                </div>
-              </div>
+              ) : null}
             </div>
-          </div>
-        </div>
-      )}
+          ) : null
+        }
+        meta={[
+          ...(selectedServicio?.responsable ? [{ icon: UserRound, text: selectedServicio.responsable }] : []),
+          ...(selectedServicio?.contacto ? [{ icon: Phone, text: selectedServicio.contacto }] : []),
+          ...(selectedServicio?.direccion ? [{ icon: MapPin, text: selectedServicio.direccion }] : []),
+        ]}
+        actions={
+          <>
+            {selectedServicio?.contacto ? (
+              <ContactActionLink
+                href={getContactHref(
+                  selectedServicio.contacto,
+                  selectedServicio.usa_whatsapp
+                )}
+                mode={selectedServicio.usa_whatsapp === false ? "phone" : "whatsapp"}
+                section="servicios"
+                itemId={String(selectedServicio.id)}
+                itemTitle={selectedServicio.nombre}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+              >
+                <Phone className="h-4 w-4" />
+                {getContactLabel(selectedServicio.usa_whatsapp)}
+              </ContactActionLink>
+            ) : null}
+
+            {selectedServicio ? (
+              <ExternalLinksButtons
+                webUrl={selectedServicio.web_url}
+                instagramUrl={selectedServicio.instagram_url}
+                facebookUrl={selectedServicio.facebook_url}
+              />
+            ) : null}
+          </>
+        }
+      />
 
       <PublicDetailModal
         open={Boolean(selectedEvento)}
@@ -1408,7 +1348,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               return (
                 <div
                   key={business.id}
-                  className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.5)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(59,130,246,0.35)]"
+                  className={`overflow-hidden rounded-[28px] border bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.5)] transition hover:-translate-y-1.5 ${business.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(59,130,246,0.35)]"}`}
                 >
                   {imageSrc && (
                     <div className="relative h-52 w-full">
@@ -1422,6 +1362,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   )}
 
                   <div className="p-5">
+                    {business.premium_activo ? (
+                      <div className="mb-3 inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
+                        Premium
+                      </div>
+                    ) : null}
+
                     <h3 className="text-[22px] font-semibold text-slate-900">
                       {business.nombre}
                     </h3>
@@ -1467,7 +1413,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       }
                       className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
                     >
-                            Ver mas
+                            {business.premium_activo ? "Ver perfil ampliado" : "Ver mas"}
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
@@ -1507,7 +1453,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               {visibleServicios.map((servicio) => (
                 <div
                         key={servicio.id}
-                        className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"
+                        className={`overflow-hidden rounded-[28px] border bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 ${servicio.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"}`}
                       >
                         {servicio.imagen && (
                           <div className="relative h-48 w-full">
@@ -1521,6 +1467,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         )}
 
                         <div className="p-5">
+                          {servicio.premium_activo ? (
+                            <div className="mb-3 inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
+                              Premium
+                            </div>
+                          ) : null}
+
                           {servicio.categoria && (
                             <div className="mb-3 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
                               {servicio.categoria}

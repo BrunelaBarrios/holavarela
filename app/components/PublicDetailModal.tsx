@@ -19,6 +19,7 @@ type PublicDetailModalProps = {
   badge?: string | null
   description?: string | null
   meta?: DetailMetaItem[]
+  extraContent?: ReactNode
   actions?: ReactNode
 }
 
@@ -31,6 +32,7 @@ export function PublicDetailModal({
   badge,
   description,
   meta = [],
+  extraContent,
   actions,
 }: PublicDetailModalProps) {
   const [isImageZoomed, setIsImageZoomed] = useState(false)
@@ -145,6 +147,12 @@ export function PublicDetailModal({
                     {description}
                   </p>
                 </div>
+              </div>
+            ) : null}
+
+            {extraContent ? (
+              <div className="px-6 pb-6 md:px-8">
+                {extraContent}
               </div>
             ) : null}
 

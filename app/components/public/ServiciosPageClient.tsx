@@ -15,6 +15,9 @@ export type Servicio = {
   nombre: string
   categoria: string
   descripcion: string | null
+  premium_detalle?: string | null
+  premium_galeria?: string[] | null
+  premium_activo?: boolean | null
   responsable: string | null
   contacto: string | null
   direccion: string | null
@@ -107,6 +110,41 @@ export function ServiciosPageClient({
         imageAlt={selectedServicio?.nombre || "Servicio"}
         badge={selectedServicio?.categoria || null}
         description={selectedServicio?.descripcion || null}
+        extraContent={
+          selectedServicio?.premium_activo ? (
+            <div className="space-y-4">
+              {selectedServicio.premium_detalle ? (
+                <div className="rounded-[24px] border border-violet-100 bg-violet-50/70 p-5">
+                  <div className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-violet-600">
+                    Perfil ampliado
+                  </div>
+                  <p className="whitespace-pre-line text-sm leading-7 text-slate-700">
+                    {selectedServicio.premium_detalle}
+                  </p>
+                </div>
+              ) : null}
+              {selectedServicio.premium_galeria?.length ? (
+                <div>
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    Galeria
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {selectedServicio.premium_galeria.map((image, index) => (
+                      <div key={`${image}-${index}`} className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                        <OptimizedImage
+                          src={image}
+                          alt={`${selectedServicio.nombre} ${index + 1}`}
+                          sizes="(max-width: 768px) 50vw, 25vw"
+                          className="object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null
+        }
         meta={[
           ...(selectedServicio?.responsable
             ? [{ icon: UserRound, text: selectedServicio.responsable }]
@@ -202,7 +240,7 @@ export function ServiciosPageClient({
                   {items.map((servicio) => (
                     <div
                       key={servicio.id}
-                      className="overflow-hidden rounded-xl border border-gray-200 shadow-sm"
+                      className={`overflow-hidden rounded-xl border shadow-sm ${servicio.premium_activo ? "border-violet-200 bg-violet-50/20" : "border-gray-200"}`}
                     >
                       {servicio.imagen && (
                         <div className="relative h-56 w-full">
@@ -216,6 +254,12 @@ export function ServiciosPageClient({
                       )}
 
                       <div className="p-5">
+                        {servicio.premium_activo ? (
+                          <div className="mb-3 inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
+                            Premium
+                          </div>
+                        ) : null}
+
                         <h3 className="text-xl font-semibold text-gray-900">
                           {servicio.nombre}
                         </h3>
@@ -252,12 +296,12 @@ export function ServiciosPageClient({
                         <div className="mt-5 flex flex-wrap gap-3">
                           <button
                             type="button"
-                            onClick={() => setSelectedServicioId(String(servicio.id))}
-                            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                          >
-                            Ver mas
-                            <ArrowRight className="h-4 w-4" />
-                          </button>
+                          onClick={() => setSelectedServicioId(String(servicio.id))}
+                          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                        >
+                          {servicio.premium_activo ? "Ver perfil ampliado" : "Ver mas"}
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
 
                           {servicio.contacto && (
                             <ContactActionLink

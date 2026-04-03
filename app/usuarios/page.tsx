@@ -6,7 +6,7 @@ import type { User } from "@supabase/supabase-js"
 import { CalendarDays, CircleCheckBig, Clock3, ExternalLink, FilePenLine, ImageIcon, KeyRound, LogOut, PlusCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../components/AuthFormStatus"
-import { buildUserProfileFields, fetchUserOwnedEvents, findUserOwnedEntity, getUserProfileImageSrc, normalizeUserEntityStatus, userEntityLabels, userEntityStatusCopy, type UserEntityType, type UserOwnedEntity, type UserOwnedEvent } from "../lib/userProfiles"
+import { buildUserProfileFields, fetchUserOwnedEvents, findUserOwnedEntity, getUserProfileImageSrc, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, userEntityStatusCopy, type UserEntityType, type UserOwnedEntity, type UserOwnedEvent } from "../lib/userProfiles"
 import { supabase } from "../supabase"
 
 type ExternalLinksForm = { webUrl: string; instagramUrl: string; facebookUrl: string }
@@ -143,6 +143,7 @@ export default function UsuariosHomePage() {
   const profileFields = useMemo(() => buildUserProfileFields(ownedEntity), [ownedEntity])
   const activeEvents = useMemo(() => events.filter((item) => normalizeUserEntityStatus(item.estado) === "activo"), [events])
   const draftEvents = useMemo(() => events.filter((item) => normalizeUserEntityStatus(item.estado) === "borrador"), [events])
+  const hasPremium = Boolean(ownedEntity?.record.premium_activo && ownedEntity && supportsPremiumProfile(ownedEntity.type))
 
   if (loading) {
     return <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6"><div className="mx-auto max-w-5xl rounded-[32px] border border-slate-200 bg-white p-12 text-center text-slate-500 shadow-[0_20px_60px_-30px_rgba(15,23,42,0.3)]">Cargando cuenta...</div></main>
@@ -225,13 +226,14 @@ export default function UsuariosHomePage() {
               </div>
               <div className="mt-8 grid gap-4 md:grid-cols-3">
                 <DashboardMetric label="Perfil" value={userEntityLabels[ownedEntity.type]} description="Tu ficha principal ya quedo vinculada a esta cuenta." />
+                <DashboardMetric label="Premium" value={hasPremium ? "Activo" : "Base"} description={hasPremium ? "Tienes contenido ampliado disponible para destacar tu ficha." : "Puedes sumar una ficha ampliada cuando se active desde admin."} />
                 <DashboardMetric label="Eventos activos" value={String(activeEvents.length)} description="Se estan mostrando publicamente en Hola Varela." />
                 <DashboardMetric label="Eventos en borrador" value={String(draftEvents.length)} description="Aun no estan publicados o siguen en revision." />
               </div>
             </div>
             <div className="space-y-4 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-6 py-8 sm:px-8 sm:py-10">
               {imageSrc ? <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"><img src={imageSrc} alt={ownedEntity.record.nombre} className="h-60 w-full object-cover" /></div> : <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-8 shadow-sm"><div className="flex items-start gap-4"><div className="rounded-[20px] bg-slate-100 p-4"><ImageIcon className="h-6 w-6 text-slate-400" /></div><div><h3 className="text-lg font-semibold text-slate-900">Agrega una imagen</h3><p className="mt-2 text-sm leading-7 text-slate-500">Tu perfil se ve mucho mejor cuando tiene una foto o imagen principal.</p></div></div></div>}
-              <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description="Actualiza descripcion, imagen y datos de contacto." />
+              <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description={hasPremium ? "Actualiza datos, imagen y el contenido premium de tu ficha." : "Actualiza descripcion, imagen y datos de contacto."} />
               <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
               <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contrasena" description="Hazlo de forma segura validando tu clave actual." />
               <QuickLink href="/" icon={<ExternalLink className="h-5 w-5 text-slate-400 transition group-hover:text-slate-700" />} title="Ver sitio publico" description="Revisa como aparece Hola Varela para las visitas." />
@@ -262,6 +264,7 @@ export default function UsuariosHomePage() {
             <div className={`rounded-[32px] border p-6 shadow-sm ${statusStyles.panel}`}>
               <div className="flex items-start gap-4"><div className="rounded-[22px] bg-white/80 p-4">{statusKey === "activo" ? <CircleCheckBig className={`h-6 w-6 ${statusStyles.accent}`} /> : <Clock3 className={`h-6 w-6 ${statusStyles.accent}`} />}</div><div><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Estado del perfil</div><div className="mt-2 text-2xl font-semibold text-slate-950">{statusMeta.label}</div><p className="mt-3 text-sm leading-7 text-slate-600">{statusMeta.description}</p></div></div>
             </div>
+            {supportsPremiumProfile(ownedEntity.type) ? <div className={`rounded-[32px] border p-6 shadow-sm ${hasPremium ? "border-violet-200 bg-violet-50/70" : "border-slate-200 bg-white"}`}><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Premium</div><div className="mt-3 text-2xl font-semibold text-slate-950">{hasPremium ? "Perfil ampliado activo" : "Plan base"}</div><p className="mt-3 text-sm leading-7 text-slate-600">{hasPremium ? "Tu ficha puede mostrar descripcion extendida, galeria y un destaque visual especial." : "Cuando activen premium desde admin, vas a poder editar una galeria extra y una descripcion ampliada desde tu perfil."}</p></div> : null}
             {!isInstitution ? <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Suscripcion</div><div className="mt-4 space-y-4"><div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4"><div className="text-sm font-medium text-slate-500">Tipo de cuenta</div><div className="mt-1 text-xl font-semibold text-slate-950">{userEntityLabels[ownedEntity.type]}</div></div><div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4"><div className="text-sm font-medium text-slate-500">Estado actual</div><div className={`mt-1 text-xl font-semibold ${statusStyles.accent}`}>{statusMeta.label}</div><p className="mt-2 text-sm leading-6 text-slate-600">Este bloque resume el estado visible de tu suscripcion o publicacion en Hola Varela.</p></div></div></div> : null}
             <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Siguientes pasos</div><div className="mt-5 space-y-4 text-sm leading-6 text-slate-600"><p>Revisa que nombre, imagen y descripcion representen bien tu espacio.</p><p>Sube eventos para mantener el perfil activo y actualizado.</p><p>Cambia tu contrasena desde el panel cuando quieras reforzar la seguridad.</p></div></div>
           </aside>

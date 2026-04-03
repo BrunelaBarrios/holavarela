@@ -13,6 +13,9 @@ type Comercio = {
   id: number
   nombre: string
   descripcion: string | null
+  premium_detalle?: string | null
+  premium_galeria?: string[] | null
+  premium_activo?: boolean | null
   direccion: string | null
   telefono: string | null
   web_url?: string | null
@@ -32,6 +35,9 @@ type ComercioForm = {
   direccion: string
   telefono: string
   descripcion: string
+  premium_detalle: string
+  premium_galeria: string
+  premium_activo: boolean
   web_url: string
   instagram_url: string
   facebook_url: string
@@ -44,6 +50,9 @@ const initialForm: ComercioForm = {
   direccion: "",
   telefono: "",
   descripcion: "",
+  premium_detalle: "",
+  premium_galeria: "",
+  premium_activo: false,
   web_url: "",
   instagram_url: "",
   facebook_url: "",
@@ -132,6 +141,9 @@ export default function AdminComerciosPage() {
       direccion: comercio.direccion || "",
       telefono: comercio.telefono || "",
       descripcion: comercio.descripcion || "",
+      premium_detalle: comercio.premium_detalle || "",
+      premium_galeria: (comercio.premium_galeria || []).join("\n"),
+      premium_activo: comercio.premium_activo ?? false,
       web_url: comercio.web_url || "",
       instagram_url: comercio.instagram_url || "",
       facebook_url: comercio.facebook_url || "",
@@ -260,6 +272,12 @@ export default function AdminComerciosPage() {
       direccion: formData.direccion || null,
       telefono: formData.telefono || null,
       descripcion: formData.descripcion || null,
+      premium_detalle: formData.premium_detalle.trim() || null,
+      premium_galeria: formData.premium_galeria
+        .split(/\r?\n/)
+        .map((item) => item.trim())
+        .filter(Boolean),
+      premium_activo: formData.premium_activo,
       web_url: formData.web_url.trim() || null,
       instagram_url: formData.instagram_url.trim() || null,
       facebook_url: formData.facebook_url.trim() || null,
@@ -444,6 +462,63 @@ export default function AdminComerciosPage() {
                 />
               </div>
 
+              <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4">
+                <label className="flex items-center gap-3 text-sm font-medium text-slate-800">
+                  <input
+                    type="checkbox"
+                    checked={formData.premium_activo}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        premium_activo: e.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                  />
+                  <span>Activar perfil premium para este comercio</span>
+                </label>
+
+                <div className="mt-4 grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Descripcion ampliada
+                    </label>
+                    <textarea
+                      value={formData.premium_detalle}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          premium_detalle: e.target.value,
+                        }))
+                      }
+                      disabled={!formData.premium_activo}
+                      className="h-32 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-amber-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Galeria premium
+                    </label>
+                    <textarea
+                      value={formData.premium_galeria}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          premium_galeria: e.target.value,
+                        }))
+                      }
+                      disabled={!formData.premium_activo}
+                      placeholder={"Una URL por linea\nhttps://..."}
+                      className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-amber-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                    />
+                    <p className="mt-2 text-xs text-slate-500">
+                      Cuando el premium esta activo, estas imagenes se muestran como galeria extra.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-900">
@@ -613,6 +688,13 @@ export default function AdminComerciosPage() {
                   <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">
                     <Star className="h-3.5 w-3.5 fill-current" />
                     Destacado en home
+                  </div>
+                )}
+
+                {comercio.premium_activo && (
+                  <div className="mb-3 ml-2 inline-flex items-center gap-2 rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
+                    <Star className="h-3.5 w-3.5" />
+                    Premium activo
                   </div>
                 )}
 

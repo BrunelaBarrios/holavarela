@@ -13,6 +13,15 @@ add column if not exists instagram_url text;
 alter table public.comercios
 add column if not exists facebook_url text;
 
+alter table public.comercios
+add column if not exists premium_detalle text;
+
+alter table public.comercios
+add column if not exists premium_galeria text[];
+
+alter table public.comercios
+add column if not exists premium_activo boolean default false;
+
 alter table public.servicios
 add column if not exists destacado boolean default false;
 
@@ -27,6 +36,15 @@ add column if not exists instagram_url text;
 
 alter table public.servicios
 add column if not exists facebook_url text;
+
+alter table public.servicios
+add column if not exists premium_detalle text;
+
+alter table public.servicios
+add column if not exists premium_galeria text[];
+
+alter table public.servicios
+add column if not exists premium_activo boolean default false;
 
 alter table public.cursos
 add column if not exists destacado boolean default false;
@@ -101,6 +119,9 @@ create table if not exists public.servicios (
   nombre text not null,
   categoria text not null,
   descripcion text,
+  premium_detalle text,
+  premium_galeria text[],
+  premium_activo boolean default false,
   responsable text,
   contacto text,
   direccion text,

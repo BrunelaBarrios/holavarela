@@ -6,7 +6,8 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
-import { findUserOwnedEntity, getUserProfileTable, normalizeUserEntityStatus, userEntityLabels, type UserOwnedEntity } from "../../lib/userProfiles"
+import { findUserOwnedEntity, getUserProfileTable, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, type UserOwnedEntity } from "../../lib/userProfiles"
+import { parsePremiumGallery, serializePremiumGallery } from "../../lib/premiumProfiles"
 import { supabase } from "../../supabase"
 
 type ProfileForm = {
@@ -20,6 +21,8 @@ type ProfileForm = {
   webUrl: string
   instagramUrl: string
   facebookUrl: string
+  premiumDetalle: string
+  premiumGaleria: string
   usaWhatsapp: boolean
   image: string
 }
@@ -37,6 +40,8 @@ const initialForm: ProfileForm = {
   webUrl: "",
   instagramUrl: "",
   facebookUrl: "",
+  premiumDetalle: "",
+  premiumGaleria: "",
   usaWhatsapp: true,
   image: "",
 }
@@ -81,6 +86,8 @@ export default function UsuariosPerfilPage() {
           webUrl: entity.record.web_url || "",
           instagramUrl: entity.record.instagram_url || "",
           facebookUrl: entity.record.facebook_url || "",
+          premiumDetalle: entity.record.premium_detalle || "",
+          premiumGaleria: serializePremiumGallery(entity.record.premium_galeria || []),
           usaWhatsapp: entity.record.usa_whatsapp ?? true,
           image: entity.record.imagen_url || entity.record.imagen || entity.record.foto || "",
         })
@@ -129,10 +136,12 @@ export default function UsuariosPerfilPage() {
       web_url: formData.webUrl.trim() || null,
       instagram_url: formData.instagramUrl.trim() || null,
       facebook_url: formData.facebookUrl.trim() || null,
+      premium_detalle: formData.premiumDetalle.trim() || null,
+      premium_galeria: parsePremiumGallery(formData.premiumGaleria),
       [imageColumn]: formData.image || null,
     }
 
-    let payload: Record<string, string | boolean | null>
+    let payload: Record<string, string | boolean | string[] | null>
 
     if (ownedEntity.type === "comercio") {
       payload = {
@@ -343,6 +352,47 @@ export default function UsuariosPerfilPage() {
                       }
                     />
                   </div>
+
+                  {ownedEntity && supportsPremiumProfile(ownedEntity.type) ? (
+                    ownedEntity.record.premium_activo ? (
+                      <div className="space-y-4 rounded-[28px] border border-violet-200 bg-violet-50/60 p-5">
+                        <div>
+                          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-500">
+                            Perfil premium
+                          </div>
+                          <h3 className="mt-2 text-xl font-semibold text-slate-950">
+                            Contenido ampliado
+                          </h3>
+                          <p className="mt-2 text-sm leading-6 text-slate-600">
+                            Este bloque se usa para destacar tu ficha con mas informacion y una galeria extra.
+                          </p>
+                        </div>
+
+                        <TextAreaField
+                          label="Descripcion premium"
+                          value={formData.premiumDetalle}
+                          onChange={(value) =>
+                            setFormData((current) => ({ ...current, premiumDetalle: value }))
+                          }
+                        />
+
+                        <TextAreaField
+                          label="Galeria premium"
+                          value={formData.premiumGaleria}
+                          onChange={(value) =>
+                            setFormData((current) => ({ ...current, premiumGaleria: value }))
+                          }
+                        />
+                        <p className="-mt-2 text-xs text-slate-500">
+                          Agrega una URL de imagen por linea para mostrar mas fotos.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-600">
+                        El perfil premium aun no esta activo para esta ficha. Cuando lo activen desde admin, vas a poder editar aqui el contenido ampliado.
+                      </div>
+                    )
+                  ) : null}
 
                   <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
                     <input
