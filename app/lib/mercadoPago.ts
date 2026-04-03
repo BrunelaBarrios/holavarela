@@ -51,6 +51,19 @@ export async function getMercadoPagoPreapproval(preapprovalId: string) {
   return mercadoPagoRequest<MercadoPagoPreapproval>(`/preapproval/${preapprovalId}`)
 }
 
+export async function updateMercadoPagoPreapproval(
+  preapprovalId: string,
+  payload: {
+    status?: "authorized" | "paused" | "cancelled"
+    preapproval_plan_id?: string
+  }
+) {
+  return mercadoPagoRequest<MercadoPagoPreapproval>(`/preapproval/${preapprovalId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  })
+}
+
 export function mapMercadoPagoStatus(status?: string | null) {
   switch (status) {
     case "authorized":

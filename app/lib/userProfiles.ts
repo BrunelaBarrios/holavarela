@@ -25,6 +25,7 @@ export type UserEntityRecord = {
   plan_suscripcion?: SubscriptionPlanKey | null
   estado_suscripcion?: string | null
   suscripcion_actualizada_at?: string | null
+  mp_preapproval_id?: string | null
   created_at?: string | null
   direccion?: string | null
   telefono?: string | null

@@ -7,13 +7,12 @@ import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
 import { getSubscriptionPlan, subscriptionPlans, type SubscriptionPlanKey } from "../../lib/subscriptionPlans"
 import { getSubscriptionStatusBadge, getSubscriptionStatusLabel } from "../../lib/subscriptionStatus"
-import { findUserOwnedEntity, getUserProfileTable, userEntityLabels, type UserOwnedEntity } from "../../lib/userProfiles"
+import { findUserOwnedEntity, userEntityLabels, type UserOwnedEntity } from "../../lib/userProfiles"
 import { supabase } from "../../supabase"
 
 export default function UsuariosSuscripcionPage() {
   const router = useRouter()
   const [ownedEntity, setOwnedEntity] = useState<UserOwnedEntity | null>(null)
-  const [userEmail, setUserEmail] = useState("")
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>("presencia")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -33,8 +32,7 @@ export default function UsuariosSuscripcionPage() {
         }
 
         try {
-        setUserEmail(session.user.email)
-          const entity = await findUserOwnedEntity(session.user.email)
+        const entity = await findUserOwnedEntity(session.user.email)
 
         if (!entity) {
           router.replace("/usuarios")
@@ -64,40 +62,60 @@ export default function UsuariosSuscripcionPage() {
     setSaving(true)
     setError("")
     setSuccess("")
-    const changedAt = new Date().toISOString()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
-    const { error: updateError } = await supabase
-      .from(getUserProfileTable(ownedEntity.type))
-      .update({
-        plan_suscripcion: planToSave,
-        suscripcion_actualizada_at: changedAt,
-      })
-      .eq("id", ownedEntity.record.id)
-
-    if (updateError) {
-      setError(`No pudimos actualizar tu plan: ${updateError.message}`)
+    if (!session?.access_token) {
+      setError("Tu sesion vencio. Vuelve a entrar para gestionar la suscripcion.")
       setSaving(false)
       return
     }
+
+    const response = await fetch("/api/usuarios/suscripcion", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        action: "save_plan",
+        planKey: planToSave,
+      }),
+    })
+
+    const result = (await response.json()) as {
+      error?: string
+      syncedWithMercadoPago?: boolean
+      record?: UserOwnedEntity["record"]
+    }
+
+    if (!response.ok || !result.record) {
+      setError(result.error || "No pudimos actualizar tu plan.")
+      setSaving(false)
+      return
+    }
+
+    const updatedRecord = result.record
 
     setOwnedEntity((current) =>
       current
         ? {
             ...current,
-            record: {
-              ...current.record,
-              plan_suscripcion: planToSave,
-              suscripcion_actualizada_at: changedAt,
-            },
+            record: updatedRecord,
           }
         : current
     )
-    setSuccess("Tu plan quedo actualizado. Cuando quieras, continua el pago en Mercado Pago.")
+    setSuccess(
+      result.syncedWithMercadoPago
+        ? "Tu plan quedo actualizado y tambien se sincronizo con Mercado Pago."
+        : "Tu plan quedo actualizado. Cuando quieras, continua el pago en Mercado Pago."
+    )
     setSaving(false)
   }
 
   const handleCancelSubscription = async () => {
-    if (!ownedEntity || !userEmail) return
+    if (!ownedEntity) return
 
     const confirmed = window.confirm(
       "Si cancelas la suscripcion, tu ficha y sus eventos visibles pasaran a oculto. ¿Quieres continuar?"
@@ -108,49 +126,54 @@ export default function UsuariosSuscripcionPage() {
     setCancelling(true)
     setError("")
     setSuccess("")
-    const changedAt = new Date().toISOString()
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
 
-    const { error: profileError } = await supabase
-      .from(getUserProfileTable(ownedEntity.type))
-      .update({
-        estado_suscripcion: "cancelada",
-        estado: "oculto",
-        suscripcion_actualizada_at: changedAt,
-      })
-      .eq("id", ownedEntity.record.id)
-
-    if (profileError) {
-      setError(`No pudimos cancelar tu suscripcion: ${profileError.message}`)
+    if (!session?.access_token) {
+      setError("Tu sesion vencio. Vuelve a entrar para gestionar la suscripcion.")
       setCancelling(false)
       return
     }
 
-    const { error: eventsError } = await supabase
-      .from("eventos")
-      .update({ estado: "oculto" })
-      .eq("owner_email", userEmail)
-      .neq("estado", "cancelado")
+    const response = await fetch("/api/usuarios/suscripcion", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        action: "cancel_subscription",
+      }),
+    })
 
-    if (eventsError) {
-      setError(`Cancelamos tu suscripcion, pero no pudimos ocultar todos los eventos: ${eventsError.message}`)
+    const result = (await response.json()) as {
+      error?: string
+      syncedWithMercadoPago?: boolean
+      record?: UserOwnedEntity["record"]
+    }
+
+    if (!response.ok || !result.record) {
+      setError(result.error || "No pudimos cancelar tu suscripcion.")
       setCancelling(false)
       return
     }
+
+    const updatedRecord = result.record
 
     setOwnedEntity((current) =>
       current
         ? {
             ...current,
-            record: {
-              ...current.record,
-              estado_suscripcion: "cancelada",
-              estado: "oculto",
-              suscripcion_actualizada_at: changedAt,
-            },
+            record: updatedRecord,
           }
         : current
     )
-    setSuccess("Tu suscripcion quedo cancelada y la ficha paso a oculto.")
+    setSuccess(
+      result.syncedWithMercadoPago
+        ? "Tu suscripcion quedo cancelada y tambien se sincronizo con Mercado Pago."
+        : "Tu suscripcion quedo cancelada y la ficha paso a oculto."
+    )
     setCancelling(false)
   }
 
