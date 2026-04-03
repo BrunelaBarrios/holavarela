@@ -5,6 +5,10 @@ type SubscriptionStatusPageProps = {
   title: string
   description: string
   tone: "success" | "pending" | "error"
+  primaryHref?: string
+  primaryLabel?: string
+  secondaryHref?: string
+  secondaryLabel?: string
 }
 
 const toneStyles = {
@@ -30,6 +34,10 @@ export function SubscriptionStatusPage({
   title,
   description,
   tone,
+  primaryHref = "/",
+  primaryLabel = "Volver a Hola Varela",
+  secondaryHref = "/eventos",
+  secondaryLabel = "Seguir explorando",
 }: SubscriptionStatusPageProps) {
   const styles = toneStyles[tone]
 
@@ -51,18 +59,20 @@ export function SubscriptionStatusPage({
 
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Link
-              href="/"
+              href={primaryHref}
               className={`inline-flex items-center rounded-full px-6 py-3 text-sm font-semibold text-white transition ${styles.button}`}
             >
-              Volver a Hola Varela
+              {primaryLabel}
             </Link>
 
-            <Link
-              href="/eventos"
-              className="inline-flex items-center rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-            >
-              Seguir explorando
-            </Link>
+            {secondaryHref ? (
+              <Link
+                href={secondaryHref}
+                className="inline-flex items-center rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+              >
+                {secondaryLabel}
+              </Link>
+            ) : null}
           </div>
         </div>
       </div>

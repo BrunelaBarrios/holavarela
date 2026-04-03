@@ -217,33 +217,41 @@ export default function UsuariosHomePage() {
                   <div className="text-sm font-medium text-slate-700">Plan de suscripcion</div>
                   <div className="grid gap-4 xl:grid-cols-3">
                     {(Object.entries(subscriptionPlans) as Array<[SubscriptionPlanKey, (typeof subscriptionPlans)[SubscriptionPlanKey]]>).map(([planKey, plan]) => (
-                      <button
+                      <div
                         key={planKey}
-                        type="button"
-                        onClick={() => setSelectedPlan(planKey)}
                         className={`rounded-[24px] border p-5 text-left transition ${
                           selectedPlan === planKey
                             ? "border-blue-500 bg-blue-50 shadow-[0_16px_40px_-24px_rgba(37,99,235,0.45)]"
                             : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40"
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{plan.shortLabel}</div>
-                            <div className="mt-2 text-xl font-semibold text-slate-950">{plan.name}</div>
-                          </div>
-                          <div className="rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">{plan.price}</div>
-                        </div>
-                        <p className="mt-3 text-sm leading-6 text-slate-600">{plan.tagline}</p>
-                        <div className="mt-4 space-y-2 text-sm leading-6 text-slate-600">
-                          {plan.features.map((feature) => (
-                            <div key={feature} className="flex gap-2">
-                              <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500" />
-                              <span>{feature}</span>
+                        <button type="button" onClick={() => setSelectedPlan(planKey)} className="block w-full text-left">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{plan.shortLabel}</div>
+                              <div className="mt-2 text-xl font-semibold text-slate-950">{plan.name}</div>
                             </div>
-                          ))}
-                        </div>
-                      </button>
+                            <div className="rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">{plan.price}</div>
+                          </div>
+                          <p className="mt-3 text-sm leading-6 text-slate-600">{plan.tagline}</p>
+                          <div className="mt-4 space-y-2 text-sm leading-6 text-slate-600">
+                            {plan.features.map((feature) => (
+                              <div key={feature} className="flex gap-2">
+                                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                <span>{feature}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </button>
+                        <a
+                          href={plan.checkoutUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-5 inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                        >
+                          Ver pago en Mercado Pago
+                        </a>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -333,6 +341,16 @@ export default function UsuariosHomePage() {
                     <div className="mt-1 text-xl font-semibold text-slate-950">{currentPlan.name}</div>
                     <p className="mt-2 text-sm leading-6 text-slate-600">{currentPlan.description}</p>
                     <div className="mt-3 inline-flex rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">{currentPlan.price}</div>
+                    <div className="mt-4">
+                      <a
+                        href={currentPlan.checkoutUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+                      >
+                        Ir al pago
+                      </a>
+                    </div>
                   </div>
                   <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
                     <div className="text-sm font-medium text-slate-500">Estado actual</div>

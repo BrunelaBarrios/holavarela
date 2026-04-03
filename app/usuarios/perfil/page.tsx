@@ -374,33 +374,45 @@ export default function UsuariosPerfilPage() {
 
                       <div className="grid gap-4 xl:grid-cols-3">
                         {(Object.entries(subscriptionPlans) as Array<[SubscriptionPlanKey, (typeof subscriptionPlans)[SubscriptionPlanKey]]>).map(([planKey, plan]) => (
-                          <button
+                          <div
                             key={planKey}
-                            type="button"
-                            onClick={() =>
-                              setFormData((current) => ({ ...current, planSuscripcion: planKey }))
-                            }
                             className={`rounded-[24px] border p-5 text-left transition ${
                               formData.planSuscripcion === planKey
                                 ? "border-blue-500 bg-blue-50 shadow-[0_16px_40px_-24px_rgba(37,99,235,0.45)]"
                                 : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40"
                             }`}
                           >
-                            <div className="flex items-start justify-between gap-4">
-                              <div>
-                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                                  {plan.shortLabel}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setFormData((current) => ({ ...current, planSuscripcion: planKey }))
+                              }
+                              className="block w-full text-left"
+                            >
+                              <div className="flex items-start justify-between gap-4">
+                                <div>
+                                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                    {plan.shortLabel}
+                                  </div>
+                                  <div className="mt-2 text-lg font-semibold text-slate-950">
+                                    {plan.name}
+                                  </div>
                                 </div>
-                                <div className="mt-2 text-lg font-semibold text-slate-950">
-                                  {plan.name}
+                                <div className="rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">
+                                  {plan.price}
                                 </div>
                               </div>
-                              <div className="rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">
-                                {plan.price}
-                              </div>
-                            </div>
-                            <p className="mt-3 text-sm leading-6 text-slate-600">{plan.tagline}</p>
-                          </button>
+                              <p className="mt-3 text-sm leading-6 text-slate-600">{plan.tagline}</p>
+                            </button>
+                            <a
+                              href={plan.checkoutUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="mt-4 inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                            >
+                              Abrir Mercado Pago
+                            </a>
+                          </div>
                         ))}
                       </div>
                     </div>
