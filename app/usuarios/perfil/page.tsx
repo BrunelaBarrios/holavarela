@@ -4,10 +4,10 @@ import type { ChangeEvent, FormEvent } from "react"
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { Trash2 } from "lucide-react"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 import { findUserOwnedEntity, getUserProfileTable, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, type UserOwnedEntity } from "../../lib/userProfiles"
-import { parsePremiumGallery, serializePremiumGallery } from "../../lib/premiumProfiles"
 import { supabase } from "../../supabase"
 
 type ProfileForm = {
@@ -22,7 +22,10 @@ type ProfileForm = {
   instagramUrl: string
   facebookUrl: string
   premiumDetalle: string
-  premiumGaleria: string
+  premiumGaleria: string[]
+  premiumExtraTitulo: string
+  premiumExtraDetalle: string
+  premiumExtraGaleria: string[]
   usaWhatsapp: boolean
   image: string
 }
@@ -41,7 +44,10 @@ const initialForm: ProfileForm = {
   instagramUrl: "",
   facebookUrl: "",
   premiumDetalle: "",
-  premiumGaleria: "",
+  premiumGaleria: [],
+  premiumExtraTitulo: "",
+  premiumExtraDetalle: "",
+  premiumExtraGaleria: [],
   usaWhatsapp: true,
   image: "",
 }
@@ -87,7 +93,10 @@ export default function UsuariosPerfilPage() {
           instagramUrl: entity.record.instagram_url || "",
           facebookUrl: entity.record.facebook_url || "",
           premiumDetalle: entity.record.premium_detalle || "",
-          premiumGaleria: serializePremiumGallery(entity.record.premium_galeria || []),
+          premiumGaleria: entity.record.premium_galeria || [],
+          premiumExtraTitulo: entity.record.premium_extra_titulo || "",
+          premiumExtraDetalle: entity.record.premium_extra_detalle || "",
+          premiumExtraGaleria: entity.record.premium_extra_galeria || [],
           usaWhatsapp: entity.record.usa_whatsapp ?? true,
           image: entity.record.imagen_url || entity.record.imagen || entity.record.foto || "",
         })
@@ -120,6 +129,36 @@ export default function UsuariosPerfilPage() {
     }
   }
 
+  const handleGalleryUpload = async (
+    event: ChangeEvent<HTMLInputElement>,
+    key: "premiumGaleria" | "premiumExtraGaleria"
+  ) => {
+    const files = Array.from(event.target.files || [])
+    if (!files.length) return
+
+    try {
+      const nextImages = await Promise.all(files.map((file) => fileToDataUrl(file)))
+      setFormData((current) => ({
+        ...current,
+        [key]: [...current[key], ...nextImages],
+      }))
+    } catch (imageError) {
+      setError(imageError instanceof Error ? imageError.message : "No pudimos cargar las imagenes.")
+    } finally {
+      event.target.value = ""
+    }
+  }
+
+  const removeGalleryImage = (
+    key: "premiumGaleria" | "premiumExtraGaleria",
+    index: number
+  ) => {
+    setFormData((current) => ({
+      ...current,
+      [key]: current[key].filter((_, itemIndex) => itemIndex !== index),
+    }))
+  }
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!ownedEntity) return
@@ -137,7 +176,10 @@ export default function UsuariosPerfilPage() {
       instagram_url: formData.instagramUrl.trim() || null,
       facebook_url: formData.facebookUrl.trim() || null,
       premium_detalle: formData.premiumDetalle.trim() || null,
-      premium_galeria: parsePremiumGallery(formData.premiumGaleria),
+      premium_galeria: formData.premiumGaleria,
+      premium_extra_titulo: formData.premiumExtraTitulo.trim() || null,
+      premium_extra_detalle: formData.premiumExtraDetalle.trim() || null,
+      premium_extra_galeria: formData.premiumExtraGaleria,
       [imageColumn]: formData.image || null,
     }
 
@@ -386,7 +428,7 @@ export default function UsuariosPerfilPage() {
                             Contenido ampliado
                           </h3>
                           <p className="mt-2 text-sm leading-6 text-slate-600">
-                            Este bloque se usa para destacar tu ficha con mas informacion y una galeria extra.
+                            Edita la parte extendida de tu ficha con imagenes grandes y un bloque extra de contenido.
                           </p>
                         </div>
 
@@ -398,16 +440,42 @@ export default function UsuariosPerfilPage() {
                           }
                         />
 
-                        <TextAreaField
-                          label="Galeria premium"
-                          value={formData.premiumGaleria}
-                          onChange={(value) =>
-                            setFormData((current) => ({ ...current, premiumGaleria: value }))
-                          }
+                        <ImageUploadField
+                          label="Imagenes del perfil ampliado"
+                          helper="Estas imagenes se veran grandes y se podran recorrer una a una."
+                          images={formData.premiumGaleria}
+                          onUpload={(event) => void handleGalleryUpload(event, "premiumGaleria")}
+                          onRemove={(index) => removeGalleryImage("premiumGaleria", index)}
                         />
-                        <p className="-mt-2 text-xs text-slate-500">
-                          Agrega una URL de imagen por linea para mostrar mas fotos.
-                        </p>
+
+                        <div className="rounded-[24px] border border-slate-200 bg-white/80 p-5">
+                          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                            Bloque extra
+                          </div>
+                          <div className="mt-4 space-y-4">
+                            <Field
+                              label="Titulo del bloque extra"
+                              value={formData.premiumExtraTitulo}
+                              onChange={(value) =>
+                                setFormData((current) => ({ ...current, premiumExtraTitulo: value }))
+                              }
+                            />
+                            <TextAreaField
+                              label="Descripcion del bloque extra"
+                              value={formData.premiumExtraDetalle}
+                              onChange={(value) =>
+                                setFormData((current) => ({ ...current, premiumExtraDetalle: value }))
+                              }
+                            />
+                            <ImageUploadField
+                              label="Imagenes del bloque extra"
+                              helper="Puedes usar este espacio para mostrar otra coleccion, promo o contenido destacado."
+                              images={formData.premiumExtraGaleria}
+                              onUpload={(event) => void handleGalleryUpload(event, "premiumExtraGaleria")}
+                              onRemove={(index) => removeGalleryImage("premiumExtraGaleria", index)}
+                            />
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-600">
@@ -510,6 +578,58 @@ function TextAreaField({
         rows={5}
         className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-400"
       />
+    </div>
+  )
+}
+
+function ImageUploadField({
+  label,
+  helper,
+  images,
+  onUpload,
+  onRemove,
+}: {
+  label: string
+  helper?: string
+  images: string[]
+  onUpload: (event: ChangeEvent<HTMLInputElement>) => void
+  onRemove: (index: number) => void
+}) {
+  return (
+    <div className="space-y-3">
+      <label className="text-sm font-medium text-slate-700">{label}</label>
+      <input
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={onUpload}
+        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:font-medium file:text-blue-600 hover:file:bg-blue-100"
+      />
+      {helper ? <p className="text-xs text-slate-500">{helper}</p> : null}
+      {images.length ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {images.map((image, index) => (
+            <div key={`${index}-${image.slice(0, 24)}`} className="overflow-hidden rounded-[22px] border border-slate-200 bg-white">
+              <img
+                src={image}
+                alt={`Vista previa ${index + 1}`}
+                className="h-40 w-full object-cover"
+              />
+              <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-4 py-3">
+                <span className="text-sm text-slate-500">Imagen {index + 1}</span>
+                <button
+                  type="button"
+                  onClick={() => onRemove(index)}
+                  className="inline-flex items-center gap-2 rounded-full border border-rose-200 px-3 py-1.5 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Quitar
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }

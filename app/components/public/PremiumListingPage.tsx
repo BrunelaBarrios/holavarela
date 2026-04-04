@@ -1,5 +1,8 @@
+'use client'
+
 import Link from "next/link"
-import { ArrowLeft, CalendarDays, MapPin, Phone, UserRound } from "lucide-react"
+import { useMemo, useState, type ReactNode } from "react"
+import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, MapPin, Phone, UserRound } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
@@ -27,6 +30,9 @@ type PremiumListingPageProps = {
   description?: string | null
   premiumDetail?: string | null
   premiumGallery?: string[] | null
+  premiumExtraTitle?: string | null
+  premiumExtraDetail?: string | null
+  premiumExtraGallery?: string[] | null
   address?: string | null
   phone?: string | null
   contactName?: string | null
@@ -46,6 +52,9 @@ export function PremiumListingPage({
   description,
   premiumDetail,
   premiumGallery,
+  premiumExtraTitle,
+  premiumExtraDetail,
+  premiumExtraGallery,
   address,
   phone,
   contactName,
@@ -77,6 +86,28 @@ export function PremiumListingPage({
       : whatsappLink(phone)
     : null
 
+  const galleryImages = useMemo(
+    () =>
+      [imageSrc, ...(premiumGallery || []), ...(premiumExtraGallery || [])].filter(
+        Boolean
+      ) as string[],
+    [imageSrc, premiumGallery, premiumExtraGallery]
+  )
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const selectedImage = galleryImages[selectedImageIndex] || imageSrc || null
+
+  const goToPrevious = () => {
+    setSelectedImageIndex((current) =>
+      current === 0 ? Math.max(galleryImages.length - 1, 0) : current - 1
+    )
+  }
+
+  const goToNext = () => {
+    setSelectedImageIndex((current) =>
+      current >= galleryImages.length - 1 ? 0 : current + 1
+    )
+  }
+
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)]">
       <PublicHeader items={buildPublicNav(kind === "comercio" ? "comercios" : "servicios")} />
@@ -90,17 +121,16 @@ export function PremiumListingPage({
             <ArrowLeft className="h-4 w-4" />
             Volver a {kind === "comercio" ? "comercios" : "servicios"}
           </Link>
-
         </div>
 
         <section className="overflow-hidden rounded-[36px] border border-slate-200 bg-white shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
           <div className="grid xl:grid-cols-[1.18fr_0.82fr]">
             <div className="bg-[radial-gradient(circle_at_top_left,#e8f6ec_0%,#f4f9ff_38%,#eef4ff_100%)] p-5 sm:p-7 lg:p-10">
               <div className="overflow-hidden rounded-[30px] border border-white/80 bg-white/90 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.45)]">
-                {imageSrc ? (
+                {selectedImage ? (
                   <div className="relative aspect-[16/10] w-full">
                     <OptimizedImage
-                      src={imageSrc}
+                      src={selectedImage}
                       alt={title}
                       sizes="(max-width: 1280px) 100vw, 65vw"
                       priority
@@ -114,16 +144,47 @@ export function PremiumListingPage({
                 )}
               </div>
 
-              {premiumGallery?.length ? (
+              {galleryImages.length > 1 ? (
                 <div className="mt-6">
-                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                    Más imágenes
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                        Imágenes
+                      </div>
+                      <p className="mt-2 text-sm text-slate-500">
+                        Toca una miniatura para verla grande y pasa de una a otra.
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={goToPrevious}
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Anterior
+                      </button>
+                      <button
+                        type="button"
+                        onClick={goToNext}
+                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                      >
+                        Siguiente
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-                    {premiumGallery.map((image, index) => (
-                      <div
+                  <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+                    {galleryImages.map((image, index) => (
+                      <button
+                        type="button"
                         key={`${image}-${index}`}
-                        className="relative aspect-[4/3] overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm"
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={`relative aspect-[4/3] overflow-hidden rounded-[24px] border bg-white shadow-sm transition ${
+                          selectedImageIndex === index
+                            ? "border-blue-400 ring-2 ring-blue-100"
+                            : "border-slate-200 hover:border-blue-300"
+                        }`}
                       >
                         <OptimizedImage
                           src={image}
@@ -131,7 +192,7 @@ export function PremiumListingPage({
                           sizes="(max-width: 768px) 50vw, 25vw"
                           className="object-cover"
                         />
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -218,6 +279,43 @@ export function PremiumListingPage({
                   </p>
                 </div>
               ) : null}
+
+              {premiumExtraTitle || premiumExtraDetail || premiumExtraGallery?.length ? (
+                <div className="mt-5 rounded-[24px] border border-amber-100 bg-amber-50/70 p-6">
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">
+                    Bloque extra
+                  </div>
+                  {premiumExtraTitle ? (
+                    <h3 className="text-2xl font-semibold tracking-tight text-slate-950">
+                      {premiumExtraTitle}
+                    </h3>
+                  ) : null}
+                  {premiumExtraDetail ? (
+                    <p className="mt-3 whitespace-pre-line text-base leading-8 text-slate-700">
+                      {premiumExtraDetail}
+                    </p>
+                  ) : null}
+                  {premiumExtraGallery?.length ? (
+                    <div className="mt-5 grid grid-cols-2 gap-4">
+                      {premiumExtraGallery.map((image, index) => (
+                        <button
+                          type="button"
+                          key={`${image}-${index}`}
+                          onClick={() => setSelectedImageIndex(galleryImages.indexOf(image))}
+                          className="relative aspect-[4/3] overflow-hidden rounded-[22px] border border-amber-200 bg-white"
+                        >
+                          <OptimizedImage
+                            src={image}
+                            alt={`${premiumExtraTitle || title} ${index + 1}`}
+                            sizes="(max-width: 768px) 50vw, 33vw"
+                            className="object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </div>
         </section>
@@ -242,9 +340,9 @@ export function PremiumListingPage({
 
           {relatedEvents.length === 0 ? (
             <div className="mt-6 rounded-[28px] border border-dashed border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#f4faf6_100%)] p-8">
-                <h3 className="text-lg font-semibold text-slate-900">Todavía no tiene eventos activos</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Todavía no tiene eventos activos</h3>
               <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
-                Cuando este perfil publique eventos y queden activos en Hola Varela, van a aparecer en esta seccion.
+                Cuando este perfil publique eventos y queden activos en Hola Varela, van a aparecer en esta sección.
               </p>
             </div>
           ) : (
@@ -300,7 +398,7 @@ export function PremiumListingPage({
   )
 }
 
-function InfoPill({ icon, text }: { icon: React.ReactNode; text: string }) {
+function InfoPill({ icon, text }: { icon: ReactNode; text: string }) {
   return (
     <div className="flex min-h-[68px] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-sm text-slate-700">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-sm">
