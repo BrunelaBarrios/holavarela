@@ -324,28 +324,29 @@ export default function UsuariosHomePage() {
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+      <div className="mx-auto max-w-[1500px] space-y-6">
         {error ? <AuthFormStatus tone="error" message={error} /> : null}
-        <section className="overflow-hidden rounded-[36px] border border-slate-200 bg-white shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
-          <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10">
+        <section className="rounded-[36px] border border-slate-200 bg-white p-4 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)] sm:p-5">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
+            <div className="flex-1 rounded-[32px] bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10">
               <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Mi panel</div>
               <div className="mt-6 flex flex-wrap items-start justify-between gap-5">
-                <div className="max-w-2xl">
+                <div className="max-w-4xl">
                   <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">{userEntityLabels[ownedEntity.type]}</p>
-                  <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">{ownedEntity.record.nombre}</h1>
+                  <h1 className="mt-3 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl xl:text-6xl">{ownedEntity.record.nombre}</h1>
                   <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">Desde aquí puedes revisar tu perfil, mantenerlo actualizado, ver tus eventos y gestionar tu suscripción sin perderte entre opciones.</p>
-                  <p className="mt-4 text-sm text-slate-500">{user?.email}</p>
+                  <div className="mt-5 inline-flex rounded-full border border-white/70 bg-white/80 px-4 py-2 text-sm text-slate-600 shadow-sm">{user?.email}</div>
                 </div>
                 <div className="flex flex-col items-end gap-3">
                   <button
                     type="button"
                     onClick={() => setActionsOpen((current) => !current)}
-                    className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 shadow-sm transition hover:border-blue-300 hover:text-blue-600"
+                    className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white/90 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-300 hover:text-blue-600"
                     aria-expanded={actionsOpen}
                     aria-label="Abrir acciones"
                   >
                     <Menu className="h-5 w-5" />
+                    Menú
                   </button>
                   {actionsOpen ? (
                     <div className="w-full min-w-[300px] max-w-[360px] rounded-[28px] border border-white/80 bg-white/95 p-4 shadow-[0_20px_50px_-26px_rgba(15,23,42,0.35)] backdrop-blur">
@@ -366,8 +367,8 @@ export default function UsuariosHomePage() {
                 <DashboardMetric label="Eventos" value={String(events.length)} description={`${activeEvents.length} activos · ${draftEvents.length + hiddenEvents.length} pendientes`} />
               </div>
             </div>
-            <div className="space-y-4 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-6 py-8 sm:px-8 sm:py-10">
-              {imageSrc ? <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"><img src={imageSrc} alt={ownedEntity.record.nombre} className="h-60 w-full object-cover" /></div> : <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-8 shadow-sm"><div className="flex items-start gap-4"><div className="rounded-[20px] bg-slate-100 p-4"><ImageIcon className="h-6 w-6 text-slate-400" /></div><div><h3 className="text-lg font-semibold text-slate-900">Agrega una imagen</h3><p className="mt-2 text-sm leading-7 text-slate-500">Tu perfil se ve mucho mejor cuando tiene una foto o imagen principal.</p></div></div></div>}
+            <div className="w-full rounded-[32px] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-6 py-8 sm:px-8 sm:py-10 lg:w-[420px]">
+              {imageSrc ? <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"><img src={imageSrc} alt={ownedEntity.record.nombre} className="h-72 w-full object-cover" /></div> : <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-8 shadow-sm"><div className="flex items-start gap-4"><div className="rounded-[20px] bg-slate-100 p-4"><ImageIcon className="h-6 w-6 text-slate-400" /></div><div><h3 className="text-lg font-semibold text-slate-900">Agrega una imagen</h3><p className="mt-2 text-sm leading-7 text-slate-500">Tu perfil se ve mucho mejor cuando tiene una foto o imagen principal.</p></div></div></div>}
               <ProfileSummaryCard
                 title={ownedEntity.record.nombre}
                 typeLabel={userEntityLabels[ownedEntity.type]}
@@ -421,7 +422,7 @@ export default function UsuariosHomePage() {
 }
 
 function DashboardMetric({ label, value, description }: { label: string; value: string; description: string }) {
-  return <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</div><div className="mt-3 text-3xl font-semibold text-slate-950">{value}</div><p className="mt-2 text-sm leading-6 text-slate-600">{description}</p></div>
+  return <div className="rounded-[28px] border border-white/80 bg-white/85 p-6 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.25)] backdrop-blur"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</div><div className="mt-4 text-3xl font-semibold text-slate-950">{value}</div><p className="mt-3 text-sm leading-6 text-slate-600">{description}</p></div>
 }
 
 function ProfileSummaryCard({
@@ -438,7 +439,7 @@ function ProfileSummaryCard({
   description: string
 }) {
   return (
-    <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.25)]">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold text-slate-950">Tu ficha</h2>
@@ -446,7 +447,7 @@ function ProfileSummaryCard({
         </div>
         <div className={`rounded-full px-4 py-2 text-sm font-semibold ${badgeClassName}`}>{typeLabel}</div>
       </div>
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {fields.map((field) => {
           const Icon = field.icon
           return <div key={field.label} className="rounded-[24px] border border-slate-200 bg-slate-50 p-5"><div className="flex items-center gap-3"><div className="rounded-2xl bg-white p-3 shadow-sm"><Icon className="h-4 w-4 text-slate-500" /></div><div><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{field.label}</div><div className="mt-1 text-sm leading-6 text-slate-700">{field.value}</div></div></div></div>
