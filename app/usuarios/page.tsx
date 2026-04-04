@@ -337,7 +337,7 @@ export default function UsuariosHomePage() {
                   <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">Desde aquí puedes revisar tu perfil, mantenerlo actualizado, ver tus eventos y gestionar tu suscripción sin perderte entre opciones.</p>
                   <div className="mt-5 inline-flex rounded-full border border-white/70 bg-white/80 px-4 py-2 text-sm text-slate-600 shadow-sm">{user?.email}</div>
                 </div>
-                <div className="absolute right-6 top-8 flex flex-col items-end gap-3 sm:right-8 sm:top-10">
+                <div className="absolute right-6 top-6 z-20 sm:right-8 sm:top-8">
                   <button
                     type="button"
                     onClick={() => setActionsOpen((current) => !current)}
@@ -349,7 +349,7 @@ export default function UsuariosHomePage() {
                     Menú
                   </button>
                   {actionsOpen ? (
-                    <div className="w-full min-w-[300px] max-w-[360px] rounded-[28px] border border-white/80 bg-white/95 p-4 shadow-[0_20px_50px_-26px_rgba(15,23,42,0.35)] backdrop-blur">
+                    <div className="absolute right-0 top-full mt-3 w-[320px] rounded-[28px] border border-white/80 bg-white/95 p-4 shadow-[0_20px_50px_-26px_rgba(15,23,42,0.35)] backdrop-blur">
                       <div className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones</div>
                       <div className="space-y-3">
                         <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description={hasPremium ? "Actualiza datos, imagen y el contenido ampliado de tu ficha." : "Actualiza descripción, imagen y datos de contacto."} />
