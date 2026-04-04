@@ -7,9 +7,8 @@ import { CalendarDays, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon,
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../components/AuthFormStatus"
 import { formatEventDateRange } from "../lib/eventDates"
-import { getSubscriptionPlan, subscriptionPlans, type SubscriptionPlanKey } from "../lib/subscriptionPlans"
-import { getSubscriptionStatusBadge, getSubscriptionStatusLabel } from "../lib/subscriptionStatus"
-import { buildUserProfileFields, fetchUserOwnedEvents, findUserOwnedEntity, getUserProfileImageSrc, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, userEntityStatusCopy, type UserEntityType, type UserOwnedEntity, type UserOwnedEvent } from "../lib/userProfiles"
+import { subscriptionPlans, type SubscriptionPlanKey } from "../lib/subscriptionPlans"
+import { buildUserProfileFields, fetchUserOwnedEvents, findUserOwnedEntity, getUserProfileImageSrc, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, type UserEntityType, type UserOwnedEntity, type UserOwnedEvent } from "../lib/userProfiles"
 import { supabase } from "../supabase"
 
 type ExternalLinksForm = { webUrl: string; instagramUrl: string; facebookUrl: string }
@@ -195,7 +194,6 @@ export default function UsuariosHomePage() {
   }
 
   const statusKey = normalizeUserEntityStatus(ownedEntity?.record.estado)
-  const statusMeta = userEntityStatusCopy[statusKey]
   const statusStyles = getStatusStyles(statusKey)
   const isInstitution = ownedEntity?.type === "institucion"
   const imageSrc = getUserProfileImageSrc(ownedEntity)
@@ -205,9 +203,6 @@ export default function UsuariosHomePage() {
   const hiddenEvents = useMemo(() => events.filter((item) => normalizeEventStatus(item.estado) === "oculto"), [events])
   const cancelledEvents = useMemo(() => events.filter((item) => normalizeEventStatus(item.estado) === "cancelado"), [events])
   const hasPremium = Boolean(ownedEntity?.record.premium_activo && ownedEntity && supportsPremiumProfile(ownedEntity.type))
-  const currentPlan = getSubscriptionPlan(ownedEntity?.record.plan_suscripcion)
-  const subscriptionStatusLabel = getSubscriptionStatusLabel(ownedEntity?.record.estado_suscripcion)
-  const subscriptionStatusBadge = getSubscriptionStatusBadge(ownedEntity?.record.estado_suscripcion)
 
   if (loading) {
     return <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6"><div className="mx-auto max-w-5xl rounded-[32px] border border-slate-200 bg-white p-12 text-center text-slate-500 shadow-[0_20px_60px_-30px_rgba(15,23,42,0.3)]">Cargando cuenta...</div></main>
@@ -342,10 +337,32 @@ export default function UsuariosHomePage() {
                   <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">Desde aquí puedes revisar tu perfil, mantenerlo actualizado, ver tus eventos y gestionar tu suscripción sin perderte entre opciones.</p>
                   <p className="mt-4 text-sm text-slate-500">{user?.email}</p>
                 </div>
+                <div className="flex flex-col items-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setActionsOpen((current) => !current)}
+                    className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white/90 text-slate-700 shadow-sm transition hover:border-blue-300 hover:text-blue-600"
+                    aria-expanded={actionsOpen}
+                    aria-label="Abrir acciones"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </button>
+                  {actionsOpen ? (
+                    <div className="w-full min-w-[300px] max-w-[360px] rounded-[28px] border border-white/80 bg-white/95 p-4 shadow-[0_20px_50px_-26px_rgba(15,23,42,0.35)] backdrop-blur">
+                      <div className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones</div>
+                      <div className="space-y-3">
+                        <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description={hasPremium ? "Actualiza datos, imagen y el contenido ampliado de tu ficha." : "Actualiza descripción, imagen y datos de contacto."} />
+                        {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
+                        <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
+                        <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contraseña" description="Hazlo de forma segura validando tu clave actual." />
+                        <QuickLink href="/" icon={<ExternalLink className="h-5 w-5 text-slate-400 transition group-hover:text-slate-700" />} title="Ver sitio público" description="Revisa cómo aparece Hola Varela para las visitas." />
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
               </div>
-              <div className="mt-8 grid gap-4 md:grid-cols-3">
+              <div className="mt-8 grid gap-4 md:grid-cols-2">
                 <DashboardMetric label="Perfil" value={userEntityLabels[ownedEntity.type]} description="Tu ficha principal ya quedo vinculada a esta cuenta." />
-                {!isInstitution ? <DashboardMetric label="Plan" value={currentPlan.shortLabel} description={`${currentPlan.price} · ${subscriptionStatusLabel}`} /> : <DashboardMetric label="Visibilidad" value={statusMeta.label} description="Controla como se muestra tu institucion en la web." />}
                 <DashboardMetric label="Eventos" value={String(events.length)} description={`${activeEvents.length} activos · ${draftEvents.length + hiddenEvents.length} pendientes`} />
               </div>
             </div>
@@ -358,14 +375,7 @@ export default function UsuariosHomePage() {
                 fields={profileFields}
                 description={ownedEntity.record.descripcion?.trim() ? ownedEntity.record.descripcion : "Aún no agregaste una descripción. Puedes completarla desde editar mis datos."}
               />
-              <HamburgerActionsCard actionsOpen={actionsOpen} onToggle={() => setActionsOpen((current) => !current)}>
-                <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description={hasPremium ? "Actualiza datos, imagen y el contenido ampliado de tu ficha." : "Actualiza descripción, imagen y datos de contacto."} />
-                {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
-                <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
-                <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contraseña" description="Hazlo de forma segura validando tu clave actual." />
-                <QuickLink href="/" icon={<ExternalLink className="h-5 w-5 text-slate-400 transition group-hover:text-slate-700" />} title="Ver sitio público" description="Revisa cómo aparece Hola Varela para las visitas." />
-              </HamburgerActionsCard>
-              <div className="hidden rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="hidden">
                 <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones rápidas</div>
                 <div className="mt-4 space-y-3">
                   <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description={hasPremium ? "Actualiza datos, imagen y el contenido ampliado de tu ficha." : "Actualiza descripción, imagen y datos de contacto."} />
@@ -380,7 +390,7 @@ export default function UsuariosHomePage() {
           </div>
         </section>
 
-        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="space-y-6">
           <section className="space-y-6">
             <div className="hidden rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
               <div className="flex flex-wrap items-start justify-between gap-4">
@@ -404,50 +414,6 @@ export default function UsuariosHomePage() {
               onChangeStatus={handleEventStatusChange}
             />
           </section>
-          <aside className="space-y-6">
-            <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Resumen rapido</div>
-              <div className="mt-4 space-y-4">
-                {!isInstitution ? (
-                  <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="text-sm font-medium text-slate-500">Suscripcion</div>
-                        <div className="mt-1 text-xl font-semibold text-slate-950">{currentPlan.name}</div>
-                      </div>
-                      <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${subscriptionStatusBadge}`}>{subscriptionStatusLabel}</span>
-                    </div>
-                    <p className="mt-3 text-sm leading-6 text-slate-600">{currentPlan.description}</p>
-                    <div className="mt-3 flex flex-wrap items-center gap-3">
-                      <div className="inline-flex rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">{currentPlan.price}</div>
-                      <Link href="/usuarios/suscripcion" className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100">
-                        Gestionar suscripcion
-                      </Link>
-                    </div>
-                  </div>
-                ) : null}
-                {supportsPremiumProfile(ownedEntity.type) ? (
-                  <div className={`rounded-[22px] border p-4 ${hasPremium ? "border-violet-200 bg-violet-50/70" : "border-slate-200 bg-slate-50"}`}>
-                    <div className="text-sm font-medium text-slate-500">Perfil ampliado</div>
-                    <div className="mt-1 text-lg font-semibold text-slate-950">{hasPremium ? "Activo" : "No activo"}</div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
-                      {hasPremium
-                        ? "Tu ficha ya puede mostrar galeria, descripcion extendida y mas contenido."
-                        : "Si lo activan desde admin, vas a poder sumar una ficha mas completa desde tu perfil."}
-                    </p>
-                  </div>
-                ) : null}
-                <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-                  <div className="text-sm font-medium text-slate-500">Lo importante ahora</div>
-                  <div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">
-                    <p>Revisa que nombre, imagen y descripcion representen bien tu espacio.</p>
-                    <p>Sube eventos para mantener el perfil activo y actualizado.</p>
-                    <p>Si cambias tu plan, luego continua el pago desde la seccion de suscripcion.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
         </div>
       </div>
     </main>
@@ -487,43 +453,6 @@ function ProfileSummaryCard({
         })}
       </div>
       <div className="mt-5 rounded-[24px] border border-slate-200 bg-slate-50 p-5"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Descripción</div><div className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">{description}</div></div>
-    </div>
-  )
-}
-
-function HamburgerActionsCard({
-  actionsOpen,
-  onToggle,
-  children,
-}: {
-  actionsOpen: boolean
-  onToggle: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones</div>
-          <div className="mt-2 text-lg font-semibold text-slate-900">Menú rápido</div>
-        </div>
-        <button
-          type="button"
-          onClick={onToggle}
-          className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-          aria-expanded={actionsOpen}
-          aria-label="Abrir acciones rápidas"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-      </div>
-      {actionsOpen ? (
-        <div className="mt-4 space-y-3">{children}</div>
-      ) : (
-        <p className="mt-4 text-sm leading-6 text-slate-500">
-          Abre el menú para editar tu perfil, revisar tu suscripción, subir eventos o cambiar tu contraseña.
-        </p>
-      )}
     </div>
   )
 }
