@@ -116,6 +116,8 @@ export async function POST(request: Request) {
         .from(ownedEntity.table)
         .update({
           plan_suscripcion: planKey,
+          premium_activo:
+            ownedEntity.record.estado_suscripcion === "activa" && planKey === "destacado_plus",
           suscripcion_actualizada_at: changedAt,
         })
         .eq("id", ownedEntity.record.id)
@@ -149,6 +151,7 @@ export async function POST(request: Request) {
         .update({
           estado_suscripcion: "cancelada",
           estado: "oculto",
+          premium_activo: false,
           suscripcion_actualizada_at: changedAt,
         })
         .eq("id", ownedEntity.record.id)

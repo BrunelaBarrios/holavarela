@@ -30,6 +30,7 @@ async function updateEntityByReference(params: {
     .update({
       plan_suscripcion: params.planKey,
       estado_suscripcion: params.statusKey,
+      premium_activo: params.planKey === "destacado_plus" && params.statusKey === "activa",
       suscripcion_actualizada_at: new Date().toISOString(),
       owner_email: params.payerEmail || undefined,
       mp_preapproval_id: params.preapprovalId,
@@ -66,6 +67,7 @@ async function updateEntityByEmail(params: {
       .update({
         plan_suscripcion: params.planKey,
         estado_suscripcion: params.statusKey,
+        premium_activo: params.planKey === "destacado_plus" && params.statusKey === "activa",
         suscripcion_actualizada_at: new Date().toISOString(),
         mp_preapproval_id: params.preapprovalId,
       })
