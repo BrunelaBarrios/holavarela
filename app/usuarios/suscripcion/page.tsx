@@ -1,6 +1,5 @@
 'use client'
 
-import Link from "next/link"
 import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, CheckCircle2, CreditCard, ExternalLink, ShieldOff } from "lucide-react"
@@ -36,12 +35,12 @@ const flowSteps: Array<{
   {
     id: 2,
     title: "Confirma el cambio",
-    description: "Revisa lo elegido y guarda el plan antes de seguir.",
+    description: "Revisa lo elegido y deja el plan guardado antes de salir al pago.",
   },
   {
     id: 3,
     title: "Completa la suscripción",
-    description: "Continúa el pago y deja tu plan activo.",
+    description: "Confirma el pago en Mercado Pago para dejar tu plan activo.",
   },
 ]
 
@@ -53,6 +52,7 @@ export default function UsuariosSuscripcionPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [cancelling, setCancelling] = useState(false)
+  const [pendingCheckoutRedirect, setPendingCheckoutRedirect] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
@@ -139,8 +139,9 @@ export default function UsuariosSuscripcionPage() {
     setSuccess(
       result.syncedWithMercadoPago
         ? "Tu plan quedó actualizado y también se sincronizó con Mercado Pago."
-        : "Tu plan quedó guardado. Ahora puedes continuar el pago cuando quieras."
+        : "Tu plan quedó guardado. Ahora te vamos a redirigir para completar el pago."
     )
+    setPendingCheckoutRedirect(true)
     setCurrentStep(3)
     setSaving(false)
   }
@@ -204,6 +205,7 @@ export default function UsuariosSuscripcionPage() {
         ? "Tu suscripción quedó cancelada y también se sincronizó con Mercado Pago."
         : "Tu suscripción quedó cancelada y la ficha pasó a oculto."
     )
+    setPendingCheckoutRedirect(false)
     setCancelling(false)
   }
 
@@ -227,6 +229,16 @@ export default function UsuariosSuscripcionPage() {
     [currentStep]
   )
 
+  useEffect(() => {
+    if (!pendingCheckoutRedirect || currentStep !== 3) return
+
+    const timeoutId = window.setTimeout(() => {
+      window.location.href = nextPlan.checkoutUrl
+    }, 1800)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [currentStep, nextPlan.checkoutUrl, pendingCheckoutRedirect])
+
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6">
       <div className="mx-auto max-w-[1320px] space-y-6">
@@ -240,7 +252,7 @@ export default function UsuariosSuscripcionPage() {
                 Completa tu suscripción
               </h1>
               <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-600">
-                Este proceso ahora está pensado por pasos. Avanza de una pantalla a la otra hasta terminar la suscripción sin perderte entre botones.
+                Avanza por pasos. Primero eliges el plan, después confirmas el cambio y al final te redirigimos a Mercado Pago para completar el pago.
               </p>
 
               <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -248,11 +260,17 @@ export default function UsuariosSuscripcionPage() {
                   <button
                     key={step.id}
                     type="button"
-                    onClick={() => setCurrentStep(step.id)}
+                    onClick={() => {
+                      if (step.id > currentStep) return
+                      if (step.id !== 3) setPendingCheckoutRedirect(false)
+                      setCurrentStep(step.id)
+                    }}
                     className={`rounded-[24px] border p-5 text-left transition ${
                       currentStep === step.id
                         ? "border-blue-500 bg-white shadow-[0_18px_40px_-24px_rgba(37,99,235,0.35)]"
-                        : "border-white/70 bg-white/70 hover:border-blue-300 hover:bg-white/85"
+                        : step.id < currentStep
+                          ? "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/30"
+                          : "border-white/70 bg-white/70"
                     }`}
                   >
                     <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
@@ -413,10 +431,10 @@ export default function UsuariosSuscripcionPage() {
                       Confirmación
                     </div>
                     <h3 className="mt-3 text-2xl font-semibold text-slate-950">
-                      Guarda este plan antes de pagar
+                      Guarda el plan y continúa
                     </h3>
                     <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-                      Este paso deja guardado el plan que usará tu ficha. Después, en el último paso, continúas el pago en Mercado Pago para terminar la suscripción.
+                      Este paso deja guardado el plan que usará tu ficha. En cuanto lo confirmes, pasas al último paso y te avisamos antes de salir a Mercado Pago.
                     </p>
                     <div className="mt-6 flex flex-wrap gap-3">
                       <button
@@ -426,7 +444,18 @@ export default function UsuariosSuscripcionPage() {
                         className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70"
                       >
                         <CreditCard className="h-4 w-4" />
-                        {saving ? "Guardando..." : "Guardar cambio"}
+                        {saving ? "Guardando..." : "Guardar cambio y continuar"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPendingCheckoutRedirect(false)
+                          setCurrentStep(1)
+                        }}
+                        disabled={saving || cancelling}
+                        className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600 disabled:opacity-70"
+                      >
+                        Volver a planes
                       </button>
                     </div>
                   </div>
@@ -440,11 +469,14 @@ export default function UsuariosSuscripcionPage() {
                       Paso final
                     </div>
                     <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
-                      Continúa el pago en Mercado Pago
+                      Te vamos a redirigir a Mercado Pago
                     </h2>
                     <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-                      Ya quedó seleccionado y guardado <span className="font-semibold text-slate-900">{nextPlan.name}</span>. Ahora puedes salir a Mercado Pago para completar la suscripción.
+                      Tu plan <span className="font-semibold text-slate-900">{nextPlan.name}</span> ya quedó guardado. En unos segundos te enviamos a Mercado Pago para completar la suscripción.
                     </p>
+                    <div className="mt-5 rounded-[24px] border border-blue-200 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-900">
+                      Vas a salir momentáneamente de Hola Varela para completar un pago seguro en Mercado Pago.
+                    </div>
                     <div className="mt-6 flex flex-wrap gap-3">
                       <a
                         href={nextPlan.checkoutUrl}
@@ -453,15 +485,19 @@ export default function UsuariosSuscripcionPage() {
                         className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
                       >
                         <ExternalLink className="h-4 w-4" />
-                        Continuar pago en Mercado Pago
+                        Ir ahora a Mercado Pago
                       </a>
-                      <Link
-                        href="/usuarios"
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPendingCheckoutRedirect(false)
+                          setCurrentStep(2)
+                        }}
                         className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                       >
                         <ArrowLeft className="h-4 w-4" />
-                        Volver al panel
-                      </Link>
+                        Volver al paso anterior
+                      </button>
                     </div>
                   </div>
 
@@ -495,14 +531,17 @@ export default function UsuariosSuscripcionPage() {
                   {currentStep === 1
                     ? "Elige un plan para avanzar."
                     : currentStep === 2
-                      ? "Guarda el cambio para pasar al pago."
-                      : "Ya estás en el último paso."}
+                      ? "Confirma el cambio y luego pasa al pago."
+                      : "Estás por salir a Mercado Pago para terminar la suscripción."}
                 </div>
                 <div className="flex flex-wrap gap-3">
                   {canGoBack ? (
                     <button
                       type="button"
-                      onClick={() => setCurrentStep((current) => Math.max(1, current - 1) as FlowStep)}
+                      onClick={() => {
+                        setPendingCheckoutRedirect(false)
+                        setCurrentStep((current) => Math.max(1, current - 1) as FlowStep)
+                      }}
                       className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                     >
                       Volver
@@ -511,7 +550,10 @@ export default function UsuariosSuscripcionPage() {
                   {canGoNext ? (
                     <button
                       type="button"
-                      onClick={() => setCurrentStep((current) => Math.min(3, current + 1) as FlowStep)}
+                      onClick={() => {
+                        setPendingCheckoutRedirect(false)
+                        setCurrentStep((current) => Math.min(3, current + 1) as FlowStep)
+                      }}
                       className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600"
                     >
                       Siguiente
