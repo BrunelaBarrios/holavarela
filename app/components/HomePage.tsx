@@ -12,11 +12,18 @@ import { PublicDetailModal } from "./PublicDetailModal"
 import { PublicHeader } from "./PublicHeader"
 import { formatEventDateRange } from "../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
+import { fileToDataUrl } from "../lib/fileToDataUrl"
+import {
+  getPublicLeadTypeLabel,
+  serializePublicLead,
+  type PublicLeadType,
+} from "../lib/publicLead"
 import { buildHomePublicNav } from "../lib/publicNav"
 import { recordViewMore, type ViewMoreSection } from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
 import {
   ArrowRight,
+  BriefcaseBusiness,
   CalendarDays,
   Cloud,
   CloudDrizzle,
@@ -26,6 +33,8 @@ import {
   Mail,
   MapPin,
   Phone,
+  School,
+  Store,
   UserRound,
   X,
 } from "lucide-react"
@@ -139,8 +148,26 @@ type RadioConfig = {
 
 type ContactLeadForm = {
   nombre: string
+  email: string
   telefono: string
-  mensaje: string
+  tipo: PublicLeadType
+  nombreFicha: string
+  descripcionFicha: string
+  direccionFicha: string
+  telefonoFicha: string
+  imagenFicha: string
+  categoriaServicio: string
+  responsableCurso: string
+  contactoCurso: string
+  notas: string
+  incluirEvento: boolean
+  nombreRemitenteEvento: string
+  tituloEvento: string
+  categoriaEvento: string
+  fechaEvento: string
+  ubicacionEvento: string
+  descripcionEvento: string
+  imagenEvento: string
 }
 
 export type WeatherData = {
@@ -285,9 +312,40 @@ const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
 const initialContactLeadForm: ContactLeadForm = {
   nombre: "",
+  email: "",
   telefono: "",
-  mensaje: "",
+  tipo: "comercio",
+  nombreFicha: "",
+  descripcionFicha: "",
+  direccionFicha: "",
+  telefonoFicha: "",
+  imagenFicha: "",
+  categoriaServicio: "Servicios",
+  responsableCurso: "",
+  contactoCurso: "",
+  notas: "",
+  incluirEvento: false,
+  nombreRemitenteEvento: "",
+  tituloEvento: "",
+  categoriaEvento: "Evento",
+  fechaEvento: "",
+  ubicacionEvento: "",
+  descripcionEvento: "",
+  imagenEvento: "",
 }
+
+const PUBLIC_LEAD_TYPE_OPTIONS: Array<{
+  value: PublicLeadType
+  label: string
+  icon: typeof Store
+}> = [
+  { value: "comercio", label: "Comercio", icon: Store },
+  { value: "servicio", label: "Servicio", icon: BriefcaseBusiness },
+  { value: "curso", label: "Curso o clase", icon: GraduationCap },
+  { value: "institucion", label: "Institución", icon: School },
+]
+
+const EVENT_CATEGORY_OPTIONS = ["Evento", "Promoción", "Sorteo", "Beneficio"]
 
 const SOCIAL_LINKS = [
   {
@@ -521,10 +579,49 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     setContactLeadLoading(true)
     setContactLeadStatus("")
 
+    const trimmedEventSender =
+      contactLeadForm.nombreRemitenteEvento.trim() || contactLeadForm.nombre.trim()
+
     const payload = {
       nombre: contactLeadForm.nombre.trim(),
+      email: contactLeadForm.email.trim(),
       telefono: contactLeadForm.telefono.trim(),
-      mensaje: contactLeadForm.mensaje.trim(),
+      mensaje: serializePublicLead({
+        version: 1,
+        type: contactLeadForm.tipo,
+        senderName: contactLeadForm.nombre.trim(),
+        senderEmail: contactLeadForm.email.trim(),
+        senderPhone: contactLeadForm.telefono.trim(),
+        listingName: contactLeadForm.nombreFicha.trim(),
+        listingDescription: contactLeadForm.descripcionFicha.trim(),
+        listingAddress: contactLeadForm.direccionFicha.trim(),
+        listingPhone: contactLeadForm.telefonoFicha.trim(),
+        listingImage: contactLeadForm.imagenFicha || null,
+        serviceCategory:
+          contactLeadForm.tipo === "servicio"
+            ? contactLeadForm.categoriaServicio.trim()
+            : undefined,
+        courseResponsible:
+          contactLeadForm.tipo === "curso"
+            ? contactLeadForm.responsableCurso.trim()
+            : undefined,
+        courseContact:
+          contactLeadForm.tipo === "curso"
+            ? contactLeadForm.contactoCurso.trim()
+            : undefined,
+        notes: contactLeadForm.notas.trim() || undefined,
+        event: contactLeadForm.incluirEvento
+          ? {
+              senderName: trimmedEventSender,
+              title: contactLeadForm.tituloEvento.trim(),
+              category: contactLeadForm.categoriaEvento.trim(),
+              description: contactLeadForm.descripcionEvento.trim(),
+              date: contactLeadForm.fechaEvento.trim(),
+              location: contactLeadForm.ubicacionEvento.trim(),
+              image: contactLeadForm.imagenEvento || null,
+            }
+          : null,
+      }),
     }
 
     const { error } = await supabase.from("contacto_solicitudes").insert([payload])
@@ -536,8 +633,34 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     }
 
     setContactLeadForm(initialContactLeadForm)
-    setContactLeadStatus("Recibimos tu mensaje. Te vamos a contactar pronto.")
+    setContactLeadStatus(
+      "Recibimos tu propuesta. Te llegará un email con los datos de tu usuario cuando revisemos la solicitud."
+    )
     setContactLeadLoading(false)
+  }
+
+  const handleContactLeadImageChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    key: "imagenFicha" | "imagenEvento"
+  ) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    try {
+      const imageData = await fileToDataUrl(file)
+      setContactLeadForm((prev) => ({
+        ...prev,
+        [key]: imageData,
+      }))
+    } catch (imageError) {
+      setContactLeadStatus(
+        imageError instanceof Error
+          ? imageError.message
+          : "No pudimos cargar la imagen seleccionada."
+      )
+    } finally {
+      event.target.value = ""
+    }
   }
 
   const openWelcomeDetail = () => {
@@ -743,37 +866,90 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 Quiero estar en Hola Varela
               </div>
               <h3 className="mt-4 text-[30px] font-semibold text-slate-900">
-                Contanos tu propuesta
+                Completa tu propuesta
               </h3>
               <p className="mt-3 text-base leading-7 text-slate-500">
-                Dejanos tus datos y te contactamos para sumar tu comercio,
-                servicio, curso o propuesta.
+                Elige qué quieres sumar, completa los datos y después te avisamos por email cómo seguir con tu usuario.
               </p>
             </div>
 
             <form onSubmit={handleContactLeadSubmit} className="mt-8 space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Nombre
-                  </label>
-                  <input
-                    type="text"
-                    value={contactLeadForm.nombre}
-                    onChange={(e) =>
-                      setContactLeadForm((prev) => ({
-                        ...prev,
-                        nombre: e.target.value,
-                      }))
-                    }
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                    required
-                  />
+              <div>
+                <label className="mb-3 block text-sm font-medium text-slate-700">
+                  ¿Qué quieres sumar?
+                </label>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {PUBLIC_LEAD_TYPE_OPTIONS.map((option) => {
+                    const Icon = option.icon
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() =>
+                          setContactLeadForm((prev) => ({
+                            ...prev,
+                            tipo: option.value,
+                          }))
+                        }
+                        className={`rounded-2xl border px-3 py-3 text-left transition ${
+                          contactLeadForm.tipo === option.value
+                            ? "border-sky-400 bg-sky-50 text-sky-800"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50/40"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" />
+                        <div className="mt-2 text-sm font-semibold">{option.label}</div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                <div className="mb-4 text-sm font-semibold text-slate-800">
+                  Tus datos de contacto
+                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Tu nombre
+                    </label>
+                    <input
+                      type="text"
+                      value={contactLeadForm.nombre}
+                      onChange={(e) =>
+                        setContactLeadForm((prev) => ({
+                          ...prev,
+                          nombre: e.target.value,
+                        }))
+                      }
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Tu email
+                    </label>
+                    <input
+                      type="email"
+                      value={contactLeadForm.email}
+                      onChange={(e) =>
+                        setContactLeadForm((prev) => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                      required
+                    />
+                  </div>
                 </div>
 
-                <div>
+                <div className="mt-4">
                   <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Numero
+                    Tu número
                   </label>
                   <input
                     type="tel"
@@ -790,21 +966,337 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 </div>
               </div>
 
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <div className="mb-4 text-sm font-semibold text-slate-800">
+                  Datos de tu {getPublicLeadTypeLabel(contactLeadForm.tipo).toLowerCase()}
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      {contactLeadForm.tipo === "curso"
+                        ? "Nombre del curso o clase"
+                        : contactLeadForm.tipo === "institucion"
+                          ? "Nombre de la institución"
+                          : contactLeadForm.tipo === "servicio"
+                            ? "Nombre del servicio"
+                            : "Nombre del comercio"}
+                    </label>
+                    <input
+                      type="text"
+                      value={contactLeadForm.nombreFicha}
+                      onChange={(e) =>
+                        setContactLeadForm((prev) => ({
+                          ...prev,
+                          nombreFicha: e.target.value,
+                        }))
+                      }
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                      required
+                    />
+                  </div>
+
+                  {contactLeadForm.tipo === "servicio" ? (
+                    <div className="sm:col-span-2">
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        Categoría del servicio
+                      </label>
+                      <input
+                        type="text"
+                        value={contactLeadForm.categoriaServicio}
+                        onChange={(e) =>
+                          setContactLeadForm((prev) => ({
+                            ...prev,
+                            categoriaServicio: e.target.value,
+                          }))
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                        required
+                      />
+                    </div>
+                  ) : null}
+
+                  {contactLeadForm.tipo === "curso" ? (
+                    <>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">
+                          Responsable
+                        </label>
+                        <input
+                          type="text"
+                          value={contactLeadForm.responsableCurso}
+                          onChange={(e) =>
+                            setContactLeadForm((prev) => ({
+                              ...prev,
+                              responsableCurso: e.target.value,
+                            }))
+                          }
+                          className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-700">
+                          Contacto del curso
+                        </label>
+                        <input
+                          type="text"
+                          value={contactLeadForm.contactoCurso}
+                          onChange={(e) =>
+                            setContactLeadForm((prev) => ({
+                              ...prev,
+                              contactoCurso: e.target.value,
+                            }))
+                          }
+                          className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                          required
+                        />
+                      </div>
+                    </>
+                  ) : null}
+
+                  <div className="sm:col-span-2">
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Descripción
+                    </label>
+                    <textarea
+                      value={contactLeadForm.descripcionFicha}
+                      onChange={(e) =>
+                        setContactLeadForm((prev) => ({
+                          ...prev,
+                          descripcionFicha: e.target.value,
+                        }))
+                      }
+                      className="min-h-28 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                      placeholder="Cuéntanos qué hace especial tu propuesta."
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Dirección
+                    </label>
+                    <input
+                      type="text"
+                      value={contactLeadForm.direccionFicha}
+                      onChange={(e) =>
+                        setContactLeadForm((prev) => ({
+                          ...prev,
+                          direccionFicha: e.target.value,
+                        }))
+                      }
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Teléfono del perfil
+                    </label>
+                    <input
+                      type="tel"
+                      value={contactLeadForm.telefonoFicha}
+                      onChange={(e) =>
+                        setContactLeadForm((prev) => ({
+                          ...prev,
+                          telefonoFicha: e.target.value,
+                        }))
+                      }
+                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                      required
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="mb-2 block text-sm font-medium text-slate-700">
+                      Foto principal
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => void handleContactLeadImageChange(e, "imagenFicha")}
+                      className="block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-sky-100 file:px-4 file:py-2 file:font-medium file:text-sky-700 hover:file:bg-sky-200"
+                    />
+                    {contactLeadForm.imagenFicha ? (
+                      <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                        <img src={contactLeadForm.imagenFicha} alt="Vista previa de la ficha" className="h-40 w-full object-cover" />
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <label className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 sm:col-span-2">
+                  <input
+                    type="checkbox"
+                    checked={contactLeadForm.incluirEvento}
+                    onChange={(e) =>
+                      setContactLeadForm((prev) => ({
+                        ...prev,
+                        incluirEvento: e.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  />
+                  También quiero enviar un evento
+                </label>
+              </div>
+
+              {contactLeadForm.incluirEvento ? (
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="mb-4 text-sm font-semibold text-slate-800">
+                    Datos del evento
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        Nombre de quien envía el evento
+                      </label>
+                      <input
+                        type="text"
+                        value={contactLeadForm.nombreRemitenteEvento}
+                        onChange={(e) =>
+                          setContactLeadForm((prev) => ({
+                            ...prev,
+                            nombreRemitenteEvento: e.target.value,
+                          }))
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                        required={contactLeadForm.incluirEvento}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        Categoría del evento
+                      </label>
+                      <select
+                        value={contactLeadForm.categoriaEvento}
+                        onChange={(e) =>
+                          setContactLeadForm((prev) => ({
+                            ...prev,
+                            categoriaEvento: e.target.value,
+                          }))
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                      >
+                        {EVENT_CATEGORY_OPTIONS.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        Título del evento
+                      </label>
+                      <input
+                        type="text"
+                        value={contactLeadForm.tituloEvento}
+                        onChange={(e) =>
+                          setContactLeadForm((prev) => ({
+                            ...prev,
+                            tituloEvento: e.target.value,
+                          }))
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                        required={contactLeadForm.incluirEvento}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        Fecha
+                      </label>
+                      <input
+                        type="date"
+                        value={contactLeadForm.fechaEvento}
+                        onChange={(e) =>
+                          setContactLeadForm((prev) => ({
+                            ...prev,
+                            fechaEvento: e.target.value,
+                          }))
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                        required={contactLeadForm.incluirEvento}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        Ubicación
+                      </label>
+                      <input
+                        type="text"
+                        value={contactLeadForm.ubicacionEvento}
+                        onChange={(e) =>
+                          setContactLeadForm((prev) => ({
+                            ...prev,
+                            ubicacionEvento: e.target.value,
+                          }))
+                        }
+                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                        required={contactLeadForm.incluirEvento}
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        Descripción del evento
+                      </label>
+                      <textarea
+                        value={contactLeadForm.descripcionEvento}
+                        onChange={(e) =>
+                          setContactLeadForm((prev) => ({
+                            ...prev,
+                            descripcionEvento: e.target.value,
+                          }))
+                        }
+                        className="min-h-28 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                        required={contactLeadForm.incluirEvento}
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="mb-2 block text-sm font-medium text-slate-700">
+                        Imagen del evento
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => void handleContactLeadImageChange(e, "imagenEvento")}
+                        className="block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-sky-100 file:px-4 file:py-2 file:font-medium file:text-sky-700 hover:file:bg-sky-200"
+                      />
+                      {contactLeadForm.imagenEvento ? (
+                        <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                          <img src={contactLeadForm.imagenEvento} alt="Vista previa del evento" className="h-40 w-full object-cover" />
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Mensaje
+                  Comentarios extra
                 </label>
                 <textarea
-                  value={contactLeadForm.mensaje}
+                  value={contactLeadForm.notas}
                   onChange={(e) =>
                     setContactLeadForm((prev) => ({
                       ...prev,
-                      mensaje: e.target.value,
+                      notas: e.target.value,
                     }))
                   }
-                  className="min-h-36 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                  placeholder="Contanos que queres publicar y como te gustaria aparecer."
-                  required
+                  className="min-h-28 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
+                  placeholder="Cuéntanos cualquier detalle adicional que quieras sumar."
                 />
               </div>
 
@@ -816,14 +1308,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
               <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-slate-500">
-                  Tambien podes escribir a holajpvarela@gmail.com
+                  Te llegará un email con los datos de tu usuario después de revisar la propuesta.
                 </p>
                 <button
                   type="submit"
                   disabled={contactLeadLoading}
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-600 px-6 py-3 font-semibold text-white transition hover:bg-sky-500 disabled:opacity-60"
                 >
-                  {contactLeadLoading ? "Enviando..." : "Enviar consulta"}
+                  {contactLeadLoading ? "Enviando..." : "Enviar propuesta"}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>

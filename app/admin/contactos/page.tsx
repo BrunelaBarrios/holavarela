@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { CheckCheck, Mail, MessageSquare, Phone, Search, Trash2, UserRound } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
+import { getPublicLeadTypeLabel, parsePublicLead } from "../../lib/publicLead"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 
@@ -253,6 +254,7 @@ export default function AdminContactosPage() {
         <div className="space-y-4">
           {solicitudesFiltradas.map((item) => {
             const isAlta = isAltaSolicitud(item)
+            const parsedLead = parsePublicLead(item.mensaje)
 
             return (
               <article
@@ -291,21 +293,25 @@ export default function AdminContactosPage() {
                     </div>
 
                     <div className="flex flex-col gap-2 text-sm text-slate-600 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-                      <a
-                        href={`mailto:${item.email}`}
-                        className="inline-flex items-center gap-2 transition hover:text-sky-700"
-                      >
-                        <Mail className="h-4 w-4" />
-                        <span>{item.email}</span>
-                      </a>
+                      {item.email ? (
+                        <a
+                          href={`mailto:${item.email}`}
+                          className="inline-flex items-center gap-2 transition hover:text-sky-700"
+                        >
+                          <Mail className="h-4 w-4" />
+                          <span>{item.email}</span>
+                        </a>
+                      ) : null}
 
-                      <a
-                        href={`tel:${item.telefono}`}
-                        className="inline-flex items-center gap-2 transition hover:text-sky-700"
-                      >
-                        <Phone className="h-4 w-4" />
-                        <span>{item.telefono}</span>
-                      </a>
+                      {item.telefono ? (
+                        <a
+                          href={`tel:${item.telefono}`}
+                          className="inline-flex items-center gap-2 transition hover:text-sky-700"
+                        >
+                          <Phone className="h-4 w-4" />
+                          <span>{item.telefono}</span>
+                        </a>
+                      ) : null}
                     </div>
                   </div>
 
@@ -319,9 +325,131 @@ export default function AdminContactosPage() {
                     <MessageSquare className={`h-4 w-4 ${isAlta ? "text-emerald-600" : "text-sky-600"}`} />
                     {isAlta ? "Detalle de alta" : "Mensaje"}
                   </div>
-                  <p className="whitespace-pre-wrap text-sm leading-7 text-slate-600">
-                    {item.mensaje}
-                  </p>
+                  {parsedLead ? (
+                    <div className="space-y-4 text-sm leading-7 text-slate-600">
+                      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+                        <div className="space-y-3">
+                          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                              Tipo de propuesta
+                            </div>
+                            <div className="mt-2 text-base font-semibold text-slate-900">
+                              {getPublicLeadTypeLabel(parsedLead.type)}
+                            </div>
+                          </div>
+
+                          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                              Ficha enviada
+                            </div>
+                            <div className="mt-2 text-base font-semibold text-slate-900">
+                              {parsedLead.listingName}
+                            </div>
+                            <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-600">
+                              {parsedLead.listingDescription}
+                            </p>
+                          </div>
+
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                Dirección
+                              </div>
+                              <div className="mt-2">{parsedLead.listingAddress || "Sin dirección"}</div>
+                            </div>
+                            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                Teléfono de la ficha
+                              </div>
+                              <div className="mt-2">{parsedLead.listingPhone || "Sin teléfono"}</div>
+                            </div>
+                          </div>
+
+                          {parsedLead.serviceCategory ? (
+                            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                Categoría del servicio
+                              </div>
+                              <div className="mt-2">{parsedLead.serviceCategory}</div>
+                            </div>
+                          ) : null}
+
+                          {parsedLead.courseResponsible || parsedLead.courseContact ? (
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                  Responsable
+                                </div>
+                                <div className="mt-2">{parsedLead.courseResponsible || "Sin dato"}</div>
+                              </div>
+                              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                  Contacto del curso
+                                </div>
+                                <div className="mt-2">{parsedLead.courseContact || "Sin dato"}</div>
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {parsedLead.notes ? (
+                            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                Comentarios extra
+                              </div>
+                              <p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-600">
+                                {parsedLead.notes}
+                              </p>
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div className="space-y-3">
+                          {parsedLead.listingImage ? (
+                            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                              <img
+                                src={parsedLead.listingImage}
+                                alt={parsedLead.listingName}
+                                className="h-56 w-full object-cover"
+                              />
+                            </div>
+                          ) : null}
+
+                          {parsedLead.event ? (
+                            <div className="rounded-2xl border border-sky-200 bg-sky-50/70 p-4">
+                              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
+                                Evento enviado
+                              </div>
+                              <div className="mt-2 text-base font-semibold text-slate-900">
+                                {parsedLead.event.title}
+                              </div>
+                              <div className="mt-2 space-y-1 text-sm text-slate-600">
+                                <div><span className="font-medium text-slate-700">Lo envía:</span> {parsedLead.event.senderName}</div>
+                                <div><span className="font-medium text-slate-700">Categoría:</span> {parsedLead.event.category}</div>
+                                <div><span className="font-medium text-slate-700">Fecha:</span> {parsedLead.event.date}</div>
+                                <div><span className="font-medium text-slate-700">Ubicación:</span> {parsedLead.event.location}</div>
+                              </div>
+                              <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">
+                                {parsedLead.event.description}
+                              </p>
+                              {parsedLead.event.image ? (
+                                <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                                  <img
+                                    src={parsedLead.event.image}
+                                    alt={parsedLead.event.title}
+                                    className="h-48 w-full object-cover"
+                                  />
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="whitespace-pre-wrap text-sm leading-7 text-slate-600">
+                      {item.mensaje}
+                    </p>
+                  )}
                 </div>
 
                 <div className="mt-4 flex flex-wrap justify-end gap-3 border-t border-slate-100 pt-4">
