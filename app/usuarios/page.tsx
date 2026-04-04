@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
-import { CalendarDays, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, PlusCircle, Send, XCircle } from "lucide-react"
+import { CalendarDays, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, Menu, PlusCircle, Send, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../components/AuthFormStatus"
 import { formatEventDateRange } from "../lib/eventDates"
@@ -74,6 +74,7 @@ export default function UsuariosHomePage() {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>("presencia")
   const [savingOnboarding, setSavingOnboarding] = useState(false)
   const [updatingEventId, setUpdatingEventId] = useState<number | null>(null)
+  const [actionsOpen, setActionsOpen] = useState(false)
 
   useEffect(() => {
     const loadSession = async () => {
@@ -350,7 +351,21 @@ export default function UsuariosHomePage() {
             </div>
             <div className="space-y-4 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-6 py-8 sm:px-8 sm:py-10">
               {imageSrc ? <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"><img src={imageSrc} alt={ownedEntity.record.nombre} className="h-60 w-full object-cover" /></div> : <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-8 shadow-sm"><div className="flex items-start gap-4"><div className="rounded-[20px] bg-slate-100 p-4"><ImageIcon className="h-6 w-6 text-slate-400" /></div><div><h3 className="text-lg font-semibold text-slate-900">Agrega una imagen</h3><p className="mt-2 text-sm leading-7 text-slate-500">Tu perfil se ve mucho mejor cuando tiene una foto o imagen principal.</p></div></div></div>}
-              <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+              <ProfileSummaryCard
+                title={ownedEntity.record.nombre}
+                typeLabel={userEntityLabels[ownedEntity.type]}
+                badgeClassName={statusStyles.badge}
+                fields={profileFields}
+                description={ownedEntity.record.descripcion?.trim() ? ownedEntity.record.descripcion : "Aún no agregaste una descripción. Puedes completarla desde editar mis datos."}
+              />
+              <HamburgerActionsCard actionsOpen={actionsOpen} onToggle={() => setActionsOpen((current) => !current)}>
+                <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description={hasPremium ? "Actualiza datos, imagen y el contenido ampliado de tu ficha." : "Actualiza descripción, imagen y datos de contacto."} />
+                {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
+                <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
+                <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contraseña" description="Hazlo de forma segura validando tu clave actual." />
+                <QuickLink href="/" icon={<ExternalLink className="h-5 w-5 text-slate-400 transition group-hover:text-slate-700" />} title="Ver sitio público" description="Revisa cómo aparece Hola Varela para las visitas." />
+              </HamburgerActionsCard>
+              <div className="hidden rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones rápidas</div>
                 <div className="mt-4 space-y-3">
                   <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description={hasPremium ? "Actualiza datos, imagen y el contenido ampliado de tu ficha." : "Actualiza descripción, imagen y datos de contacto."} />
@@ -367,7 +382,7 @@ export default function UsuariosHomePage() {
 
         <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <section className="space-y-6">
-            <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
+            <div className="hidden rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div><h2 className="text-2xl font-semibold text-slate-950">Tu ficha</h2><p className="mt-2 text-sm leading-6 text-slate-500">La información principal del negocio o institución vinculada a tu cuenta.</p></div>
                 <div className={`rounded-full px-4 py-2 text-sm font-semibold ${statusStyles.badge}`}>{userEntityLabels[ownedEntity.type]}</div>
@@ -441,6 +456,76 @@ export default function UsuariosHomePage() {
 
 function DashboardMetric({ label, value, description }: { label: string; value: string; description: string }) {
   return <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</div><div className="mt-3 text-3xl font-semibold text-slate-950">{value}</div><p className="mt-2 text-sm leading-6 text-slate-600">{description}</p></div>
+}
+
+function ProfileSummaryCard({
+  title,
+  typeLabel,
+  badgeClassName,
+  fields,
+  description,
+}: {
+  title: string
+  typeLabel: string
+  badgeClassName: string
+  fields: ReturnType<typeof buildUserProfileFields>
+  description: string
+}) {
+  return (
+    <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold text-slate-950">Tu ficha</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-500">{title}</p>
+        </div>
+        <div className={`rounded-full px-4 py-2 text-sm font-semibold ${badgeClassName}`}>{typeLabel}</div>
+      </div>
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        {fields.map((field) => {
+          const Icon = field.icon
+          return <div key={field.label} className="rounded-[24px] border border-slate-200 bg-slate-50 p-5"><div className="flex items-center gap-3"><div className="rounded-2xl bg-white p-3 shadow-sm"><Icon className="h-4 w-4 text-slate-500" /></div><div><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{field.label}</div><div className="mt-1 text-sm leading-6 text-slate-700">{field.value}</div></div></div></div>
+        })}
+      </div>
+      <div className="mt-5 rounded-[24px] border border-slate-200 bg-slate-50 p-5"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Descripción</div><div className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">{description}</div></div>
+    </div>
+  )
+}
+
+function HamburgerActionsCard({
+  actionsOpen,
+  onToggle,
+  children,
+}: {
+  actionsOpen: boolean
+  onToggle: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones</div>
+          <div className="mt-2 text-lg font-semibold text-slate-900">Menú rápido</div>
+        </div>
+        <button
+          type="button"
+          onClick={onToggle}
+          className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+          aria-expanded={actionsOpen}
+          aria-label="Abrir acciones rápidas"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+      </div>
+      {actionsOpen ? (
+        <div className="mt-4 space-y-3">{children}</div>
+      ) : (
+        <p className="mt-4 text-sm leading-6 text-slate-500">
+          Abre el menú para editar tu perfil, revisar tu suscripción, subir eventos o cambiar tu contraseña.
+        </p>
+      )}
+    </div>
+  )
 }
 
 function QuickLink({ href, title, description, icon }: { href: string; title: string; description: string; icon: React.ReactNode }) {
