@@ -329,15 +329,9 @@ export default function UsuariosHomePage() {
         <section className="rounded-[36px] border border-slate-200 bg-white p-4 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)] sm:p-5">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
             <div className="relative flex-1 rounded-[32px] bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10">
-              <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Mi panel</div>
-              <div className="mt-6 flex flex-wrap items-start justify-between gap-5">
-                <div className="max-w-4xl">
-                  <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">{userEntityLabels[ownedEntity.type]}</p>
-                  <h1 className="mt-3 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl xl:text-6xl">{ownedEntity.record.nombre}</h1>
-                  <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">Desde aquí puedes revisar tu perfil, mantenerlo actualizado, ver tus eventos y gestionar tu suscripción sin perderte entre opciones.</p>
-                  <div className="mt-5 inline-flex rounded-full border border-white/70 bg-white/80 px-4 py-2 text-sm text-slate-600 shadow-sm">{user?.email}</div>
-                </div>
-                <div className="absolute right-6 top-6 z-20 sm:right-8 sm:top-8">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Mi panel</div>
+                <div className="relative z-20">
                   <button
                     type="button"
                     onClick={() => setActionsOpen((current) => !current)}
@@ -352,7 +346,8 @@ export default function UsuariosHomePage() {
                     <div className="absolute right-0 top-full mt-3 w-[320px] rounded-[28px] border border-white/80 bg-white/95 p-4 shadow-[0_20px_50px_-26px_rgba(15,23,42,0.35)] backdrop-blur">
                       <div className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones</div>
                       <div className="space-y-3">
-                        <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description={hasPremium ? "Actualiza datos, imagen y el contenido ampliado de tu ficha." : "Actualiza descripción, imagen y datos de contacto."} />
+                        <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description="Actualiza descripción, imagen y datos de contacto." />
+                        {hasPremium ? <QuickLink href="/usuarios/perfil#premium" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-fuchsia-600" />} title="Editar versión extendida" description="Administra el contenido ampliado de tu ficha desde el perfil." /> : null}
                         {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
                         <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
                         <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contraseña" description="Hazlo de forma segura validando tu clave actual." />
@@ -360,6 +355,14 @@ export default function UsuariosHomePage() {
                       </div>
                     </div>
                   ) : null}
+                </div>
+              </div>
+              <div className="mt-6 flex flex-wrap items-start justify-between gap-5">
+                <div className="max-w-4xl">
+                  <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">{userEntityLabels[ownedEntity.type]}</p>
+                  <h1 className="mt-3 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl xl:text-6xl">{ownedEntity.record.nombre}</h1>
+                  <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">Desde aquí puedes revisar tu perfil, mantenerlo actualizado, ver tus eventos y gestionar tu suscripción sin perderte entre opciones.</p>
+                  <div className="mt-5 inline-flex rounded-full border border-white/70 bg-white/80 px-4 py-2 text-sm text-slate-600 shadow-sm">{user?.email}</div>
                 </div>
               </div>
               <div className="mt-8 grid gap-4 md:grid-cols-2">
