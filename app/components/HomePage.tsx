@@ -45,6 +45,7 @@ type Comercio = {
   imagen?: string | null
   imagen_url?: string | null
   destacado?: boolean | null
+  plan_suscripcion?: string | null
   usa_whatsapp?: boolean | null
 }
 
@@ -84,6 +85,7 @@ type Curso = {
   facebook_url?: string | null
   imagen: string | null
   destacado?: boolean | null
+  plan_suscripcion?: string | null
   usa_whatsapp?: boolean | null
 }
 
@@ -103,6 +105,7 @@ type Servicio = {
   facebook_url?: string | null
   imagen: string | null
   destacado?: boolean | null
+  plan_suscripcion?: string | null
   usa_whatsapp?: boolean | null
 }
 
@@ -209,7 +212,7 @@ const buildWelcomeItems = (
     usesWhatsapp: item.usa_whatsapp ?? true,
   })),
   ...(allServicios
-    .filter((item) => item.destacado)
+    .filter((item) => isFeaturedListing(item))
     .map((item) => ({
       key: `servicio-${item.id}`,
       kind: "servicio" as const,
@@ -303,6 +306,24 @@ const SOCIAL_LINKS = [
   },
 ]
 
+const ITEMS_PER_ROTATION = 8
+
+function isFeaturedListing(item: {
+  destacado?: boolean | null
+  plan_suscripcion?: string | null
+}) {
+  return (
+    item.destacado === true ||
+    item.plan_suscripcion === "destacado" ||
+    item.plan_suscripcion === "destacado_plus"
+  )
+}
+
+function sliceRotatingItems<T>(items: T[], page: number, pageSize = ITEMS_PER_ROTATION) {
+  const start = page * pageSize
+  return items.slice(start, start + pageSize)
+}
+
 export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [featuredBusinesses] = useState<Comercio[]>(initialData.featuredBusinesses)
   const [eventos] = useState<Evento[]>(initialData.eventos)
@@ -331,14 +352,48 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [isContactLeadOpen, setIsContactLeadOpen] = useState(false)
   const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(null)
   const [zoomedImage, setZoomedImage] = useState<{ src: string; alt: string } | null>(null)
+  const [featuredBusinessPage, setFeaturedBusinessPage] = useState(0)
+  const [servicePage, setServicePage] = useState(0)
 
-  const visibleServicios = useMemo(() => servicios.slice(0, 8), [servicios])
+  const featuredBusinessPageCount = Math.max(1, Math.ceil(featuredBusinesses.length / ITEMS_PER_ROTATION))
+  const safeFeaturedBusinessPage = featuredBusinessPage % featuredBusinessPageCount
+  const orderedServicios = useMemo(
+    () =>
+      [...servicios].sort((a, b) => Number(isFeaturedListing(b)) - Number(isFeaturedListing(a))),
+    [servicios]
+  )
+  const servicePageCount = Math.max(1, Math.ceil(orderedServicios.length / ITEMS_PER_ROTATION))
+  const safeServicePage = servicePage % servicePageCount
+  const visibleFeaturedBusinesses = useMemo(
+    () => sliceRotatingItems(featuredBusinesses, safeFeaturedBusinessPage),
+    [featuredBusinesses, safeFeaturedBusinessPage]
+  )
+  const visibleServicios = useMemo(
+    () => sliceRotatingItems(orderedServicios, safeServicePage),
+    [orderedServicios, safeServicePage]
+  )
   const visibleEventos = useMemo(() => eventos.slice(0, 8), [eventos])
   const visibleCursos = useMemo(() => cursos.slice(0, 8), [cursos])
   const visibleInstituciones = useMemo(() => instituciones.slice(0, 10), [instituciones])
 
   const weather = initialData.weather
   const weatherLabel = weather ? WEATHER_LABELS[weather.weatherCode] || "Clima actual" : null
+
+  useEffect(() => {
+    if (featuredBusinessPageCount <= 1) return
+    const intervalId = window.setInterval(() => {
+      setFeaturedBusinessPage((current) => (current + 1) % featuredBusinessPageCount)
+    }, 7000)
+    return () => window.clearInterval(intervalId)
+  }, [featuredBusinessPageCount])
+
+  useEffect(() => {
+    if (servicePageCount <= 1) return
+    const intervalId = window.setInterval(() => {
+      setServicePage((current) => (current + 1) % servicePageCount)
+    }, 7500)
+    return () => window.clearInterval(intervalId)
+  }, [servicePageCount])
 
   useEffect(() => {
     const loadEventLikes = async () => {
@@ -1376,7 +1431,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
           </div>
 
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
-            {featuredBusinesses.map((business) => {
+            {visibleFeaturedBusinesses.map((business) => {
               const imageSrc = business.imagen_url || business.imagen
 
               return (
@@ -1466,6 +1521,28 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               )
             })}
           </div>
+          {featuredBusinessPageCount > 1 ? (
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <div className="text-sm text-slate-500">
+                Mostrando {safeFeaturedBusinessPage + 1} de {featuredBusinessPageCount}
+                </div>
+              <div className="flex items-center gap-2">
+                {Array.from({ length: featuredBusinessPageCount }).map((_, index) => (
+                  <button
+                    key={`featured-page-${index}`}
+                    type="button"
+                    onClick={() => setFeaturedBusinessPage(index)}
+                    className={`h-2.5 rounded-full transition ${
+                      safeFeaturedBusinessPage === index
+                        ? "w-8 bg-slate-900"
+                        : "w-2.5 bg-slate-300 hover:bg-slate-400"
+                    }`}
+                    aria-label={`Ver tanda ${index + 1} de comercios destacados`}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -1494,6 +1571,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               Todavia no hay servicios cargados.
             </div>
           ) : (
+            <>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
               {visibleServicios.map((servicio) => (
                 <div
@@ -1606,6 +1684,29 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       </div>
               ))}
             </div>
+            {servicePageCount > 1 ? (
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <div className="text-sm text-slate-500">
+                  Mostrando {safeServicePage + 1} de {servicePageCount}
+                </div>
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: servicePageCount }).map((_, index) => (
+                    <button
+                      key={`service-page-${index}`}
+                      type="button"
+                      onClick={() => setServicePage(index)}
+                      className={`h-2.5 rounded-full transition ${
+                        safeServicePage === index
+                          ? "w-8 bg-slate-900"
+                          : "w-2.5 bg-slate-300 hover:bg-slate-400"
+                      }`}
+                      aria-label={`Ver tanda ${index + 1} de servicios`}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            </>
           )}
         </div>
       </section>

@@ -55,11 +55,11 @@ export default async function Page() {
   ] = await Promise.all([
     supabaseServer
       .from("comercios")
-      .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, imagen, imagen_url, destacado, usa_whatsapp")
+      .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, imagen, imagen_url, destacado, plan_suscripcion, usa_whatsapp")
       .or("estado.is.null,estado.eq.activo")
-      .eq("destacado", true)
+      .or("destacado.eq.true,plan_suscripcion.eq.destacado,plan_suscripcion.eq.destacado_plus")
       .order("id", { ascending: false })
-      .limit(8),
+      .limit(48),
     supabaseServer
       .from("eventos")
       .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp")
@@ -68,26 +68,26 @@ export default async function Page() {
       .order("fecha", { ascending: true }),
     supabaseServer
       .from("cursos")
-      .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, destacado, usa_whatsapp")
+      .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, destacado, plan_suscripcion, usa_whatsapp")
       .or("estado.is.null,estado.eq.activo")
       .order("id", { ascending: false })
       .limit(8),
     supabaseServer
       .from("servicios")
-      .select("id, nombre, categoria, descripcion, premium_detalle, premium_galeria, premium_activo, responsable, contacto, direccion, web_url, instagram_url, facebook_url, imagen, destacado, usa_whatsapp")
+      .select("id, nombre, categoria, descripcion, premium_detalle, premium_galeria, premium_activo, responsable, contacto, direccion, web_url, instagram_url, facebook_url, imagen, destacado, plan_suscripcion, usa_whatsapp")
       .or("estado.is.null,estado.eq.activo")
       .order("id", { ascending: false })
-      .limit(8),
+      .limit(48),
     supabaseServer
       .from("servicios")
-      .select("id, nombre, categoria, descripcion, premium_detalle, premium_galeria, premium_activo, responsable, contacto, direccion, web_url, instagram_url, facebook_url, imagen, destacado, usa_whatsapp")
+      .select("id, nombre, categoria, descripcion, premium_detalle, premium_galeria, premium_activo, responsable, contacto, direccion, web_url, instagram_url, facebook_url, imagen, destacado, plan_suscripcion, usa_whatsapp")
       .or("estado.is.null,estado.eq.activo")
-      .eq("destacado", true)
+      .or("destacado.eq.true,plan_suscripcion.eq.destacado,plan_suscripcion.eq.destacado_plus")
       .order("id", { ascending: false })
-      .limit(12),
+      .limit(24),
     supabaseServer
       .from("cursos")
-      .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, destacado, usa_whatsapp")
+      .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, destacado, plan_suscripcion, usa_whatsapp")
       .or("estado.is.null,estado.eq.activo")
       .eq("destacado", true)
       .order("id", { ascending: false })
