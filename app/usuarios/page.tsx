@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
-import { CalendarDays, CircleCheckBig, Clock3, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, PlusCircle, Send, XCircle } from "lucide-react"
+import { CalendarDays, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, PlusCircle, Send, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../components/AuthFormStatus"
 import { formatEventDateRange } from "../lib/eventDates"
@@ -341,7 +341,6 @@ export default function UsuariosHomePage() {
                   <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">Desde aquí puedes revisar tu perfil, mantenerlo actualizado, ver tus eventos y gestionar tu suscripción sin perderte entre opciones.</p>
                   <p className="mt-4 text-sm text-slate-500">{user?.email}</p>
                 </div>
-                <div className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${statusStyles.badge}`}>{statusMeta.label}</div>
               </div>
               <div className="mt-8 grid gap-4 md:grid-cols-3">
                 <DashboardMetric label="Perfil" value={userEntityLabels[ownedEntity.type]} description="Tu ficha principal ya quedo vinculada a esta cuenta." />
@@ -391,9 +390,6 @@ export default function UsuariosHomePage() {
             />
           </section>
           <aside className="space-y-6">
-            <div className={`rounded-[32px] border p-6 shadow-sm ${statusStyles.panel}`}>
-              <div className="flex items-start gap-4"><div className="rounded-[22px] bg-white/80 p-4">{statusKey === "activo" ? <CircleCheckBig className={`h-6 w-6 ${statusStyles.accent}`} /> : <Clock3 className={`h-6 w-6 ${statusStyles.accent}`} />}</div><div><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Estado del perfil</div><div className="mt-2 text-2xl font-semibold text-slate-950">{statusMeta.label}</div><p className="mt-3 text-sm leading-7 text-slate-600">{statusMeta.description}</p></div></div>
-            </div>
             <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Resumen rapido</div>
               <div className="mt-4 space-y-4">
