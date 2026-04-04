@@ -343,11 +343,10 @@ export default function UsuariosHomePage() {
                 </div>
                 <div className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${statusStyles.badge}`}>{statusMeta.label}</div>
               </div>
-              <div className="mt-8 grid gap-4 lg:grid-cols-4">
-                <DashboardMetric label="Perfil" value={userEntityLabels[ownedEntity.type]} description="Tu ficha principal ya quedó vinculada a esta cuenta." />
-                {!isInstitution ? <DashboardMetric label="Plan" value={currentPlan.shortLabel} description={`${currentPlan.price} · ${subscriptionStatusLabel}`} /> : <DashboardMetric label="Visibilidad" value={statusMeta.label} description="Controla cómo se muestra tu institución en la web." />}
-                <DashboardMetric label="Eventos activos" value={String(activeEvents.length)} description="Los que hoy se muestran públicamente." />
-                <DashboardMetric label="Pendientes" value={String(draftEvents.length + hiddenEvents.length)} description="Borradores u ocultos listos para revisar." />
+              <div className="mt-8 grid gap-4 md:grid-cols-3">
+                <DashboardMetric label="Perfil" value={userEntityLabels[ownedEntity.type]} description="Tu ficha principal ya quedo vinculada a esta cuenta." />
+                {!isInstitution ? <DashboardMetric label="Plan" value={currentPlan.shortLabel} description={`${currentPlan.price} · ${subscriptionStatusLabel}`} /> : <DashboardMetric label="Visibilidad" value={statusMeta.label} description="Controla como se muestra tu institucion en la web." />}
+                <DashboardMetric label="Eventos" value={String(events.length)} description={`${activeEvents.length} activos · ${draftEvents.length + hiddenEvents.length} pendientes`} />
               </div>
             </div>
             <div className="space-y-4 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-6 py-8 sm:px-8 sm:py-10">
@@ -367,7 +366,7 @@ export default function UsuariosHomePage() {
           </div>
         </section>
 
-        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <section className="space-y-6">
             <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
               <div className="flex flex-wrap items-start justify-between gap-4">
@@ -395,30 +394,48 @@ export default function UsuariosHomePage() {
             <div className={`rounded-[32px] border p-6 shadow-sm ${statusStyles.panel}`}>
               <div className="flex items-start gap-4"><div className="rounded-[22px] bg-white/80 p-4">{statusKey === "activo" ? <CircleCheckBig className={`h-6 w-6 ${statusStyles.accent}`} /> : <Clock3 className={`h-6 w-6 ${statusStyles.accent}`} />}</div><div><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Estado del perfil</div><div className="mt-2 text-2xl font-semibold text-slate-950">{statusMeta.label}</div><p className="mt-3 text-sm leading-7 text-slate-600">{statusMeta.description}</p></div></div>
             </div>
-            {!isInstitution ? (
-              <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Suscripción</div>
-                <div className="mt-4 space-y-4">
+            <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Resumen rapido</div>
+              <div className="mt-4 space-y-4">
+                {!isInstitution ? (
                   <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <div className="text-sm font-medium text-slate-500">Plan actual</div>
+                        <div className="text-sm font-medium text-slate-500">Suscripcion</div>
                         <div className="mt-1 text-xl font-semibold text-slate-950">{currentPlan.name}</div>
                       </div>
                       <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${subscriptionStatusBadge}`}>{subscriptionStatusLabel}</span>
                     </div>
                     <p className="mt-3 text-sm leading-6 text-slate-600">{currentPlan.description}</p>
-                    <div className="mt-3 inline-flex rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">{currentPlan.price}</div>
-                    <div className="mt-4">
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <div className="inline-flex rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">{currentPlan.price}</div>
                       <Link href="/usuarios/suscripcion" className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100">
-                        Gestionar suscripción
+                        Gestionar suscripcion
                       </Link>
                     </div>
                   </div>
+                ) : null}
+                {supportsPremiumProfile(ownedEntity.type) ? (
+                  <div className={`rounded-[22px] border p-4 ${hasPremium ? "border-violet-200 bg-violet-50/70" : "border-slate-200 bg-slate-50"}`}>
+                    <div className="text-sm font-medium text-slate-500">Perfil ampliado</div>
+                    <div className="mt-1 text-lg font-semibold text-slate-950">{hasPremium ? "Activo" : "No activo"}</div>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      {hasPremium
+                        ? "Tu ficha ya puede mostrar galeria, descripcion extendida y mas contenido."
+                        : "Si lo activan desde admin, vas a poder sumar una ficha mas completa desde tu perfil."}
+                    </p>
+                  </div>
+                ) : null}
+                <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                  <div className="text-sm font-medium text-slate-500">Lo importante ahora</div>
+                  <div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">
+                    <p>Revisa que nombre, imagen y descripcion representen bien tu espacio.</p>
+                    <p>Sube eventos para mantener el perfil activo y actualizado.</p>
+                    <p>Si cambias tu plan, luego continua el pago desde la seccion de suscripcion.</p>
+                  </div>
                 </div>
               </div>
-            ) : null}
-            <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Siguientes pasos</div><div className="mt-5 space-y-4 text-sm leading-6 text-slate-600"><p>Revisa que nombre, imagen y descripción representen bien tu espacio.</p><p>Sube eventos para mantener el perfil activo y actualizado.</p>{supportsPremiumProfile(ownedEntity.type) ? <p>{hasPremium ? "Tu ficha ampliada ya está activa: aprovecha la galería y la descripción extendida." : "Si activan premium desde admin, aquí vas a poder destacar más tu ficha."}</p> : null}</div></div>
+            </div>
           </aside>
         </div>
       </div>
@@ -455,35 +472,12 @@ function UnifiedEventsSection({
         <div>
           <h2 className="text-2xl font-semibold text-slate-950">Tus eventos</h2>
           <p className="mt-2 text-sm leading-6 text-slate-500">
-            Revisa en un solo lugar lo publicado y lo que todavia sigue en borrador.
+            Revisa, edita y publica tus eventos desde un solo lugar.
           </p>
         </div>
         <Link href="/usuarios/eventos/nuevo" className="inline-flex items-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600">
           Nuevo evento
         </Link>
-      </div>
-
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/60 p-5">
-          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">Activos</div>
-          <div className="mt-3 text-3xl font-semibold text-slate-950">{activeEvents.length}</div>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Los que ya se estan mostrando publicamente en Hola Varela.</p>
-        </div>
-        <div className="rounded-[24px] border border-amber-100 bg-amber-50/70 p-5">
-          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">En borrador</div>
-          <div className="mt-3 text-3xl font-semibold text-slate-950">{draftEvents.length}</div>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Puedes retomarlos, corregirlos y seguir cargando informacion.</p>
-        </div>
-        <div className="rounded-[24px] border border-slate-200 bg-slate-100/80 p-5">
-          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-700">Ocultos</div>
-          <div className="mt-3 text-3xl font-semibold text-slate-950">{hiddenEvents.length}</div>
-          <p className="mt-2 text-sm leading-6 text-slate-600">No se ven en la web, pero puedes reactivarlos cuando quieras.</p>
-        </div>
-        <div className="rounded-[24px] border border-rose-100 bg-rose-50/70 p-5">
-          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-rose-700">Cancelados</div>
-          <div className="mt-3 text-3xl font-semibold text-slate-950">{cancelledEvents.length}</div>
-          <p className="mt-2 text-sm leading-6 text-slate-600">Quedan guardados como cancelados y puedes volver a publicarlos.</p>
-        </div>
       </div>
 
       {activeEvents.length === 0 &&
@@ -499,7 +493,7 @@ function UnifiedEventsSection({
       ) : (
         <div className="mt-6 space-y-8">
           <EventGroup
-            label="Activos"
+            label={`Activos (${activeEvents.length})`}
             tone="active"
             emptyTitle="No tienes eventos activos"
             emptyDescription="Cuando un evento se publica, lo veras aqui."
@@ -508,7 +502,7 @@ function UnifiedEventsSection({
             onChangeStatus={onChangeStatus}
           />
           <EventGroup
-            label="Borradores"
+            label={`Borradores (${draftEvents.length})`}
             tone="draft"
             emptyTitle="No tienes eventos en borrador"
             emptyDescription="Los borradores quedan listos para revisar o completar antes de publicarse."
@@ -518,7 +512,7 @@ function UnifiedEventsSection({
             allowDraftResume
           />
           <EventGroup
-            label="Ocultos"
+            label={`Ocultos (${hiddenEvents.length})`}
             tone="hidden"
             emptyTitle="No tienes eventos ocultos"
             emptyDescription="Si desactivas la visibilidad de un evento, aparecera aqui."
@@ -528,7 +522,7 @@ function UnifiedEventsSection({
             allowDraftResume
           />
           <EventGroup
-            label="Cancelados"
+            label={`Cancelados (${cancelledEvents.length})`}
             tone="cancelled"
             emptyTitle="No tienes eventos cancelados"
             emptyDescription="Los eventos cancelados quedan guardados para que puedas revisarlos o reactivarlos mas adelante."
