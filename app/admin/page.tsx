@@ -41,6 +41,15 @@ type EventoResumen = {
   fecha_solo_mes?: boolean | null
 }
 
+type StatCard = {
+  id: string
+  title: string
+  value: number
+  icon: typeof Store
+  color: string
+  action: () => void
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter()
   const [comerciosCount, setComerciosCount] = useState(0)
@@ -48,7 +57,6 @@ export default function AdminDashboardPage() {
   const [serviciosCount, setServiciosCount] = useState(0)
   const [institucionesCount, setInstitucionesCount] = useState(0)
   const [cursosCount, setCursosCount] = useState(0)
-  const [contactosCount, setContactosCount] = useState(0)
   const [usuariosCount, setUsuariosCount] = useState(0)
   const [newComerciosCount, setNewComerciosCount] = useState(0)
   const [newEventosCount, setNewEventosCount] = useState(0)
@@ -65,13 +73,13 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     const cargarDashboard = async () => {
       const today = new Date().toISOString().slice(0, 10)
+
       const [
         { count: comercios },
         { count: eventos },
         { count: servicios },
         { count: instituciones },
         { count: cursos },
-        { count: contactos },
         { count: usuarios },
         { count: newComercios },
         { count: newEventos },
@@ -98,7 +106,6 @@ export default function AdminDashboardPage() {
         supabase.from("servicios").select("*", { count: "exact", head: true }),
         supabase.from("instituciones").select("*", { count: "exact", head: true }),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
-        supabase.from("contacto_solicitudes").select("*", { count: "exact", head: true }),
         supabase.from("usuarios_registrados").select("*", { count: "exact", head: true }),
         supabase
           .from("comercios")
@@ -177,7 +184,6 @@ export default function AdminDashboardPage() {
       setServiciosCount(servicios || 0)
       setInstitucionesCount(instituciones || 0)
       setCursosCount(cursos || 0)
-      setContactosCount(contactos || 0)
       setUsuariosCount(usuarios || 0)
       setNewComerciosCount(newComercios || 0)
       setNewEventosCount(newEventos || 0)
@@ -195,8 +201,6 @@ export default function AdminDashboardPage() {
     void cargarDashboard()
   }, [])
 
-  const totalContentCount =
-    comerciosCount + eventosCount + serviciosCount + institucionesCount + cursosCount
   const totalInteractions =
     shareTotals.comercios +
     shareTotals.eventos +
@@ -211,7 +215,13 @@ export default function AdminDashboardPage() {
     viewMoreTotals.servicios +
     viewMoreTotals.instituciones
 
-  const stats = [
+  const totalTrackedSubscriptions =
+    pendingSubscriptionsCount +
+    activeSubscriptionsCount +
+    pausedSubscriptionsCount +
+    cancelledSubscriptionsCount
+
+  const stats: StatCard[] = [
     {
       id: "comercios",
       title: "Comercios",
@@ -262,33 +272,6 @@ export default function AdminDashboardPage() {
     },
   ]
 
-  const reviewItems = [
-    {
-      id: "review-contactos",
-      title: "Contactos nuevos",
-      value: newContactosCount,
-      helper: "Mensajes sin visto",
-      actionLabel: "Revisar contactos",
-      action: () => router.push("/admin/contactos"),
-    },
-    {
-      id: "review-eventos",
-      title: "Eventos nuevos",
-      value: newEventosCount,
-      helper: "Borradores pendientes de publicación",
-      actionLabel: "Revisar eventos",
-      action: () => router.push("/admin/eventos"),
-    },
-    {
-      id: "review-comercios",
-      title: "Comercios nuevos",
-      value: newComerciosCount,
-      helper: "Altas nuevas pendientes",
-      actionLabel: "Revisar comercios",
-      action: () => router.push("/admin/comercios"),
-    },
-  ].filter((item) => item.value > 0)
-
   const quickActions = [
     {
       label: "Agregar Comercio",
@@ -333,7 +316,9 @@ export default function AdminDashboardPage() {
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="mb-2 text-3xl font-semibold text-slate-900">Dashboard</h1>
-          <p className="text-slate-500">Panel de administración ordenado por prioridad y actividad.</p>
+          <p className="text-slate-500">
+            Lo importante primero, con una sola lectura por tema.
+          </p>
         </div>
         <button
           type="button"
@@ -358,7 +343,7 @@ export default function AdminDashboardPage() {
               {newContactosCount}
             </span>
           </div>
-          <h3 className="text-lg font-semibold text-slate-900">Pendientes de contacto</h3>
+          <h3 className="text-lg font-semibold text-slate-900">Contactos pendientes</h3>
           <p className="mt-2 text-sm text-slate-500">Mensajes nuevos esperando revisión.</p>
         </button>
 
@@ -415,16 +400,14 @@ export default function AdminDashboardPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
               Suscripciones
             </p>
-            <h2 className="text-2xl font-semibold text-slate-900">
-              Estado de planes
-            </h2>
+            <h2 className="text-2xl font-semibold text-slate-900">Estado de planes</h2>
             <p className="text-sm text-slate-500">
               Comercios, servicios y cursos agrupados por estado de pago.
             </p>
           </div>
           <div className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
             <CreditCard className="h-4 w-4" />
-            {pendingSubscriptionsCount + activeSubscriptionsCount + pausedSubscriptionsCount + cancelledSubscriptionsCount} fichas con suscripción
+            {totalTrackedSubscriptions} fichas con suscripción
           </div>
         </div>
 
@@ -453,7 +436,7 @@ export default function AdminDashboardPage() {
           >
             <div className="text-sm font-medium text-amber-700">Pausadas</div>
             <div className="mt-2 text-3xl font-semibold text-slate-900">{pausedSubscriptionsCount}</div>
-            <p className="mt-2 text-sm text-slate-500">Fichas que conservan plan pero están en pausa.</p>
+            <p className="mt-2 text-sm text-slate-500">Mantienen plan pero hoy no están corriendo.</p>
           </button>
 
           <button
@@ -462,47 +445,10 @@ export default function AdminDashboardPage() {
           >
             <div className="text-sm font-medium text-rose-700">Canceladas</div>
             <div className="mt-2 text-3xl font-semibold text-slate-900">{cancelledSubscriptionsCount}</div>
-            <p className="mt-2 text-sm text-slate-500">Planes que ya no están activos actualmente.</p>
+            <p className="mt-2 text-sm text-slate-500">Planes dados de baja o ya no vigentes.</p>
           </button>
         </div>
       </div>
-
-      {reviewItems.length > 0 ? (
-        <div className="mb-8 rounded-3xl border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-sky-50 p-6 shadow-sm">
-          <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">
-                Prioridad
-              </p>
-              <h2 className="text-2xl font-semibold text-slate-900">
-                Novedades para revisar primero
-              </h2>
-            </div>
-            <div className="inline-flex items-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-              {newComerciosCount + newEventosCount + newContactosCount} pendientes
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {reviewItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={item.action}
-                className="rounded-2xl border border-white bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-500">{item.title}</span>
-                  <span className="inline-flex min-w-10 items-center justify-center rounded-full bg-rose-600 px-3 py-1 text-sm font-semibold text-white">
-                    {item.value}
-                  </span>
-                </div>
-                <p className="mb-4 text-sm text-slate-500">{item.helper}</p>
-                <span className="text-sm font-semibold text-blue-600">{item.actionLabel}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
 
       <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-6">
         {stats.map((stat) => {
@@ -526,33 +472,8 @@ export default function AdminDashboardPage() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_0.9fr]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">Resumen general</h2>
-                <p className="text-sm text-slate-500">
-                  Estado del contenido y de la gestión interna.
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div className="rounded-2xl bg-slate-50 p-5">
-                <div className="text-sm text-slate-500">Contenido cargado</div>
-                <div className="mt-2 text-3xl font-semibold text-slate-900">{totalContentCount}</div>
-              </div>
-              <div className="rounded-2xl bg-slate-50 p-5">
-                <div className="text-sm text-slate-500">Usuarios registrados</div>
-                <div className="mt-2 text-3xl font-semibold text-slate-900">{usuariosCount}</div>
-              </div>
-              <div className="rounded-2xl bg-slate-50 p-5">
-                <div className="text-sm text-slate-500">Contactos totales</div>
-                <div className="mt-2 text-3xl font-semibold text-slate-900">{contactosCount}</div>
-              </div>
-            </div>
-          </div>
-
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between">
               <div>
@@ -592,13 +513,15 @@ export default function AdminDashboardPage() {
               )}
             </div>
           </div>
+        </div>
 
+        <div className="space-y-6">
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">Interacciones rápidas</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Interacciones del sitio</h2>
                 <p className="text-sm text-slate-500">
-                  Resumen simple de lo que hace la gente en el sitio.
+                  Totales y desglose sin repetir la misma información.
                 </p>
               </div>
               <button
@@ -610,7 +533,7 @@ export default function AdminDashboardPage() {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-3">
               <div className="rounded-2xl bg-green-50 p-5">
                 <div className="mb-2 flex items-center gap-2 text-sm text-slate-600">
                   <MessageCircle className="h-4 w-4 text-green-600" />
@@ -639,39 +562,7 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div className="space-y-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-6 text-xl font-semibold text-slate-900">Acciones rápidas</h2>
-            <div className="space-y-3">
-              {quickActions.map((action) => {
-                const Icon = action.icon
-                return (
-                  <button
-                    key={action.label}
-                    onClick={action.action}
-                    className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition ${action.className}`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span>{action.label}</span>
-                  </button>
-                )
-              })}
-
-              <Link
-                href="/"
-                className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 transition hover:bg-slate-100"
-              >
-                <Store className="h-5 w-5" />
-                <span>Ver sitio público</span>
-              </Link>
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-6 text-xl font-semibold text-slate-900">Actividad por canal</h2>
             <div className="space-y-4">
               <div className="rounded-2xl bg-slate-50 p-4">
                 <div className="mb-2 text-sm text-slate-500">WhatsApp por sección</div>
@@ -700,6 +591,33 @@ export default function AdminDashboardPage() {
                   <div>Instituciones: <span className="font-semibold">{viewMoreTotals.instituciones}</span></div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-6 text-xl font-semibold text-slate-900">Acciones rápidas</h2>
+            <div className="space-y-3">
+              {quickActions.map((action) => {
+                const Icon = action.icon
+                return (
+                  <button
+                    key={action.label}
+                    onClick={action.action}
+                    className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition ${action.className}`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{action.label}</span>
+                  </button>
+                )
+              })}
+
+              <Link
+                href="/"
+                className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 transition hover:bg-slate-100"
+              >
+                <Store className="h-5 w-5" />
+                <span>Ver sitio público</span>
+              </Link>
             </div>
           </div>
         </div>
