@@ -535,34 +535,34 @@ export default function UsuariosHomePage() {
               <div className="mt-6 rounded-[28px] border border-white/80 bg-white/85 p-6 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.25)] backdrop-blur">
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                      Tu alcance reciente
+                      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                        Alcance en la web
+                      </div>
+                      <h2 className="mt-2 text-2xl font-semibold text-slate-950">
+                        Totales de tu ficha
+                      </h2>
                     </div>
-                    <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-                      Numeros totales
-                    </h2>
+                    <div className="text-sm text-slate-500">
+                    {analyticsLoading ? "Actualizando..." : "Visitantes e interacciones recientes"}
+                    </div>
                   </div>
-                  <div className="text-sm text-slate-500">
-                    {analyticsLoading ? "Actualizando..." : "Ultimos 14 y 30 dias"}
-                  </div>
-                </div>
-                <div className="mt-5 grid gap-4 md:grid-cols-3">
-                  <DashboardMetric
-                    label="Interacciones"
-                    value={String(analyticsTotals.interactions14Days)}
+                  <div className="mt-5 grid gap-4 md:grid-cols-3">
+                    <DashboardMetric
+                    label="Interacciones en la web"
+                      value={String(analyticsTotals.interactions14Days)}
                     description="Ultimos 14 dias"
-                  />
-                  <DashboardMetric
-                    label="Visitantes"
-                    value={String(analyticsTotals.visitors14Days)}
+                    />
+                    <DashboardMetric
+                    label="Visitantes en la web"
+                      value={String(analyticsTotals.visitors14Days)}
                     description="Ultimos 14 dias"
-                  />
-                  <DashboardMetric
-                    label="Visitantes"
-                    value={String(analyticsTotals.visitors30Days)}
+                    />
+                    <DashboardMetric
+                    label="Visitantes en la web"
+                      value={String(analyticsTotals.visitors30Days)}
                     description="Ultimos 30 dias"
-                  />
-                </div>
+                    />
+                  </div>
               </div>
               <div className="mt-8">
                 <UnifiedEventsSection
