@@ -82,12 +82,12 @@ export default function UsuariosMetricasHolaVarelaPage() {
 
       const [
         { data: visitRows30, error: visits30Error },
-        { data: visitRows7, error: visits7Error },
-        { data: shareRows7, error: shares7Error },
-        { data: whatsappRows7, error: whatsapp7Error },
-        { data: viewMoreRows7, error: viewMore7Error },
-        { data: externalRows7, error: external7Error },
-        { data: likesRows7, error: likes7Error },
+        { data: visitRows15, error: visits15Error },
+        { data: shareRows15, error: shares15Error },
+        { data: whatsappRows15, error: whatsapp15Error },
+        { data: viewMoreRows15, error: viewMore15Error },
+        { data: externalRows15, error: external15Error },
+        { data: likesRows15, error: likes15Error },
       ] = await Promise.all([
         supabase.from("content_visits").select("section, browser_key, created_at").gte("created_at", since30),
         supabase.from("content_visits").select("browser_key, created_at").gte("created_at", since15),
@@ -98,41 +98,49 @@ export default function UsuariosMetricasHolaVarelaPage() {
         supabase.from("event_likes").select("created_at").gte("created_at", since15),
       ])
 
-      if (visits30Error || visits7Error || shares7Error || whatsapp7Error || viewMore7Error || external7Error || likes7Error) {
-        console.error("No se pudieron cargar las metricas de Hola Varela.", {
+      if (
+        visits30Error ||
+        visits15Error ||
+        shares15Error ||
+        whatsapp15Error ||
+        viewMore15Error ||
+        external15Error ||
+        likes15Error
+      ) {
+        console.error("No se pudieron cargar las métricas de Hola Varela.", {
           visits30Error,
-          visits7Error,
-          shares7Error,
-          whatsapp7Error,
-          viewMore7Error,
-          external7Error,
-          likes7Error,
+          visits15Error,
+          shares15Error,
+          whatsapp15Error,
+          viewMore15Error,
+          external15Error,
+          likes15Error,
         })
         setLoading(false)
         return
       }
 
       const safeVisitRows30 = (visitRows30 || []) as VisitRow[]
-      const safeVisitRows7 = (visitRows7 || []) as VisitRow[]
-      const safeShareRows7 = (shareRows7 || []) as InteractionRow[]
-      const safeWhatsappRows7 = (whatsappRows7 || []) as InteractionRow[]
-      const safeViewMoreRows7 = (viewMoreRows7 || []) as InteractionRow[]
-      const safeExternalRows7 = (externalRows7 || []) as InteractionRow[]
-      const safeLikesRows7 = (likesRows7 || []) as InteractionRow[]
+      const safeVisitRows15 = (visitRows15 || []) as VisitRow[]
+      const safeShareRows15 = (shareRows15 || []) as InteractionRow[]
+      const safeWhatsappRows15 = (whatsappRows15 || []) as InteractionRow[]
+      const safeViewMoreRows15 = (viewMoreRows15 || []) as InteractionRow[]
+      const safeExternalRows15 = (externalRows15 || []) as InteractionRow[]
+      const safeLikesRows15 = (likesRows15 || []) as InteractionRow[]
 
       setVisitors30Days(BASELINE_SITE_VISITORS_30D + countUniqueBrowsers(safeVisitRows30))
       setPageViews30Days(BASELINE_SITE_PAGE_VIEWS_30D + safeVisitRows30.length)
       setSectionTotals(buildSectionTotals(safeVisitRows30).slice(0, 5))
       setRecentActivity({
-        visitors15Days: countUniqueBrowsers(safeVisitRows7),
+        visitors15Days: countUniqueBrowsers(safeVisitRows15),
         interactions15Days:
-          safeShareRows7.length +
-          safeWhatsappRows7.length +
-          safeViewMoreRows7.length +
-          safeExternalRows7.length +
-          safeLikesRows7.length,
-        shares15Days: safeShareRows7.length,
-        whatsapp15Days: safeWhatsappRows7.length,
+          safeShareRows15.length +
+          safeWhatsappRows15.length +
+          safeViewMoreRows15.length +
+          safeExternalRows15.length +
+          safeLikesRows15.length,
+        shares15Days: safeShareRows15.length,
+        whatsapp15Days: safeWhatsappRows15.length,
       })
       setLoading(false)
     }
@@ -193,14 +201,14 @@ export default function UsuariosMetricasHolaVarelaPage() {
               <MetricCard
                 label="Actividad reciente"
                 value={recentActivity.interactions15Days}
-                description="Interacciones últimos 7 días"
+                description="Interacciones últimos 15 días"
                 icon={<BarChart3 className="h-5 w-5 text-emerald-700" />}
                 tone="bg-emerald-100"
               />
               <MetricCard
                 label="Contactos rápidos"
                 value={recentActivity.whatsapp15Days}
-                description="WhatsApp últimos 7 días"
+                description="WhatsApp últimos 15 días"
                 icon={<MessageCircle className="h-5 w-5 text-green-700" />}
                 tone="bg-green-100"
               />
@@ -240,7 +248,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                     Actividad reciente
                   </div>
-                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Últimos 7 días</h2>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Últimos 15 días</h2>
                   <p className="mt-2 text-sm leading-7 text-slate-500">
                     Una lectura rápida del movimiento reciente dentro de Hola Varela.
                   </p>
