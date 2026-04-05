@@ -8,6 +8,7 @@ import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
+import { recordContentVisit } from "../../lib/contentVisits"
 import { buildPublicNav } from "../../lib/publicNav"
 import { recordViewMore } from "../../lib/viewMoreTracking"
 
@@ -78,6 +79,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
 
   const handleOpenCurso = (curso: Curso) => {
     void recordViewMore("cursos", String(curso.id), curso.nombre)
+    void recordContentVisit("cursos", String(curso.id), curso.nombre)
     setSelectedCursoId(String(curso.id))
   }
 
@@ -141,6 +143,9 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                 webUrl={selectedCurso.web_url}
                 instagramUrl={selectedCurso.instagram_url}
                 facebookUrl={selectedCurso.facebook_url}
+                section="cursos"
+                itemId={String(selectedCurso.id)}
+                itemTitle={selectedCurso.nombre}
               />
             </>
           ) : null

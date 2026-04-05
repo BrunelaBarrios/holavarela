@@ -10,6 +10,7 @@ import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
+import { recordContentVisit } from "../../lib/contentVisits"
 import { buildPublicNav } from "../../lib/publicNav"
 import { recordViewMore } from "../../lib/viewMoreTracking"
 
@@ -106,11 +107,13 @@ export function ServiciosPageClient({
 
   const handleOpenServicio = (servicio: Servicio) => {
     void recordViewMore("servicios", String(servicio.id), servicio.nombre)
+    void recordContentVisit("servicios", String(servicio.id), servicio.nombre)
     setSelectedServicioId(String(servicio.id))
   }
 
   const handleOpenPremiumProfile = (servicio: Servicio) => {
     void recordViewMore("servicios", String(servicio.id), servicio.nombre)
+    void recordContentVisit("servicios", String(servicio.id), servicio.nombre)
     router.push(`/servicios/${servicio.id}`)
   }
 
@@ -213,6 +216,9 @@ export function ServiciosPageClient({
                 webUrl={selectedServicio.web_url}
                 instagramUrl={selectedServicio.instagram_url}
                 facebookUrl={selectedServicio.facebook_url}
+                section="servicios"
+                itemId={String(selectedServicio.id)}
+                itemTitle={selectedServicio.nombre}
               />
               {selectedServicio.premium_activo ? (
                 <Link

@@ -10,6 +10,7 @@ import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
+import { recordContentVisit } from "../../lib/contentVisits"
 import { formatEventDateRange } from "../../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../../lib/eventLikes"
 import { buildPublicNav } from "../../lib/publicNav"
@@ -123,6 +124,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
 
   const handleOpenEvento = (evento: Evento) => {
     void recordViewMore("eventos", String(evento.id), evento.titulo)
+    void recordContentVisit("eventos", String(evento.id), evento.titulo)
     setSelectedEventoId(String(evento.id))
   }
 
@@ -189,6 +191,9 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                   selectedEvento.usa_whatsapp
                 )}
                 mode={selectedEvento.usa_whatsapp === false ? "phone" : "whatsapp"}
+                section="eventos"
+                itemId={String(selectedEvento.id)}
+                itemTitle={selectedEvento.titulo}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={
@@ -227,6 +232,9 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 webUrl={selectedEvento.web_url}
                 instagramUrl={selectedEvento.instagram_url}
                 facebookUrl={selectedEvento.facebook_url}
+                section="eventos"
+                itemId={String(selectedEvento.id)}
+                itemTitle={selectedEvento.titulo}
               />
             ) : null}
             <Link

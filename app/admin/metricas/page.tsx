@@ -2,8 +2,26 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, BarChart3, FileText, MessageCircle, Share2 } from "lucide-react"
+import {
+  ArrowLeft,
+  BarChart3,
+  FileText,
+  Heart,
+  MessageCircle,
+  MousePointerClick,
+  Share2,
+} from "lucide-react"
 import { supabase } from "../../supabase"
+import { buildEventLikeTotal } from "../../lib/eventLikes"
+import {
+  buildExternalLinkTotals,
+  buildExternalLinkTypeTotals,
+  emptyExternalLinkTotals,
+  emptyExternalLinkTypeTotals,
+  EXTERNAL_LINK_SECTIONS,
+  type ExternalLinkTotals,
+  type ExternalLinkTypeTotals,
+} from "../../lib/externalLinkTracking"
 import { SHARE_SECTIONS, buildShareTotals, emptyShareTotals, type ShareTotals } from "../../lib/shareTracking"
 import {
   WHATSAPP_SECTIONS,
@@ -23,11 +41,21 @@ type MetricRow = {
   created_at: string | null
 }
 
+type ExternalLinkMetricRow = MetricRow & {
+  link_type: string | null
+}
+
+type EventLikeMetricRow = {
+  created_at: string | null
+}
+
 type TrendPoint = {
   day: string
   whatsapp: number
   compartir: number
   verMas: number
+  enlaces: number
+  corazones: number
 }
 
 const SECTION_LABELS: Record<string, string> = {
@@ -36,6 +64,12 @@ const SECTION_LABELS: Record<string, string> = {
   cursos: "Cursos",
   servicios: "Servicios",
   instituciones: "Instituciones",
+}
+
+const LINK_TYPE_LABELS: Record<string, string> = {
+  web: "Sitio web",
+  instagram: "Instagram",
+  facebook: "Facebook",
 }
 
 const formatDayKey = (date: Date) => {
@@ -59,17 +93,26 @@ const buildLast7Days = () => {
 const buildDailyTrend = (
   shareRows: MetricRow[],
   whatsappRows: MetricRow[],
-  viewMoreRows: MetricRow[]
+  viewMoreRows: MetricRow[],
+  externalLinkRows: ExternalLinkMetricRow[],
+  eventLikeRows: EventLikeMetricRow[]
 ): TrendPoint[] => {
   const last7Days = buildLast7Days()
   const seed = last7Days.reduce<Record<string, TrendPoint>>((acc, day) => {
-    acc[day] = { day, whatsapp: 0, compartir: 0, verMas: 0 }
+    acc[day] = {
+      day,
+      whatsapp: 0,
+      compartir: 0,
+      verMas: 0,
+      enlaces: 0,
+      corazones: 0,
+    }
     return acc
   }, {})
 
   const addRows = (
-    rows: MetricRow[],
-    key: "whatsapp" | "compartir" | "verMas"
+    rows: Array<{ created_at: string | null }>,
+    key: "whatsapp" | "compartir" | "verMas" | "enlaces" | "corazones"
   ) => {
     rows.forEach((row) => {
       if (!row.created_at) return
@@ -84,6 +127,8 @@ const buildDailyTrend = (
   addRows(shareRows, "compartir")
   addRows(whatsappRows, "whatsapp")
   addRows(viewMoreRows, "verMas")
+  addRows(externalLinkRows, "enlaces")
+  addRows(eventLikeRows, "corazones")
 
   return last7Days.map((day) => seed[day])
 }
@@ -92,14 +137,18 @@ const maxValue = (values: number[]) => Math.max(...values, 1)
 
 function SectionBars({
   title,
+  subtitle,
   icon,
-  colorClass,
+  barClass,
+  iconClass,
   totals,
   sections,
 }: {
   title: string
+  subtitle: string
   icon: React.ReactNode
-  colorClass: string
+  barClass: string
+  iconClass: string
   totals: Record<string, number>
   sections: readonly string[]
 }) {
@@ -110,9 +159,9 @@ function SectionBars({
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
-          <p className="text-sm text-slate-500">Distribución por sección</p>
+          <p className="text-sm text-slate-500">{subtitle}</p>
         </div>
-        <div className={`rounded-2xl p-3 ${colorClass}`}>{icon}</div>
+        <div className={`rounded-2xl p-3 ${iconClass}`}>{icon}</div>
       </div>
 
       <div className="space-y-4">
@@ -129,10 +178,7 @@ function SectionBars({
                 <span className="text-slate-500">{value}</span>
               </div>
               <div className="h-3 rounded-full bg-slate-100">
-                <div
-                  className={`h-3 rounded-full ${colorClass}`}
-                  style={{ width }}
-                />
+                <div className={`h-3 rounded-full ${barClass}`} style={{ width }} />
               </div>
             </div>
           )
@@ -142,30 +188,97 @@ function SectionBars({
   )
 }
 
+function MetricCard({
+  title,
+  value,
+  helper,
+  icon,
+  tone,
+}: {
+  title: string
+  value: number
+  helper: string
+  icon: React.ReactNode
+  tone: string
+}) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <p className="text-sm text-slate-500">{title}</p>
+          <h2 className="text-3xl font-semibold text-slate-900">{value}</h2>
+        </div>
+        <div className={`rounded-2xl p-3 ${tone}`}>{icon}</div>
+      </div>
+      <p className="text-sm text-slate-500">{helper}</p>
+    </div>
+  )
+}
+
+function LinkTypeCard({
+  label,
+  value,
+}: {
+  label: string
+  value: number
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+      <div className="text-sm text-slate-500">{label}</div>
+      <div className="mt-2 text-2xl font-semibold text-slate-900">{value}</div>
+    </div>
+  )
+}
+
 export default function AdminMetricasPage() {
   const [shareTotals, setShareTotals] = useState<ShareTotals>(emptyShareTotals())
   const [whatsappTotals, setWhatsappTotals] = useState<WhatsappTotals>(emptyWhatsappTotals())
   const [viewMoreTotals, setViewMoreTotals] = useState<ViewMoreTotals>(emptyViewMoreTotals())
+  const [externalLinkTotals, setExternalLinkTotals] = useState<ExternalLinkTotals>(emptyExternalLinkTotals())
+  const [externalLinkTypeTotals, setExternalLinkTypeTotals] = useState<ExternalLinkTypeTotals>(
+    emptyExternalLinkTypeTotals()
+  )
+  const [eventLikeTotal, setEventLikeTotal] = useState(0)
   const [dailyTrend, setDailyTrend] = useState<TrendPoint[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadMetrics = async () => {
-      const [{ data: shareRows }, { data: whatsappRows }, { data: viewMoreRows }] =
-        await Promise.all([
-          supabase.from("share_events").select("section, created_at"),
-          supabase.from("whatsapp_clicks").select("section, created_at"),
-          supabase.from("view_more_clicks").select("section, created_at"),
-        ])
+      const [
+        { data: shareRows },
+        { data: whatsappRows },
+        { data: viewMoreRows },
+        { data: externalLinkRows },
+        { data: eventLikeRows },
+      ] = await Promise.all([
+        supabase.from("share_events").select("section, created_at"),
+        supabase.from("whatsapp_clicks").select("section, created_at"),
+        supabase.from("view_more_clicks").select("section, created_at"),
+        supabase.from("external_link_clicks").select("section, link_type, created_at"),
+        supabase.from("event_likes").select("created_at"),
+      ])
 
       const safeShareRows = (shareRows || []) as MetricRow[]
       const safeWhatsappRows = (whatsappRows || []) as MetricRow[]
       const safeViewMoreRows = (viewMoreRows || []) as MetricRow[]
+      const safeExternalLinkRows = (externalLinkRows || []) as ExternalLinkMetricRow[]
+      const safeEventLikeRows = (eventLikeRows || []) as EventLikeMetricRow[]
 
       setShareTotals(buildShareTotals(safeShareRows))
       setWhatsappTotals(buildWhatsappTotals(safeWhatsappRows))
       setViewMoreTotals(buildViewMoreTotals(safeViewMoreRows))
-      setDailyTrend(buildDailyTrend(safeShareRows, safeWhatsappRows, safeViewMoreRows))
+      setExternalLinkTotals(buildExternalLinkTotals(safeExternalLinkRows))
+      setExternalLinkTypeTotals(buildExternalLinkTypeTotals(safeExternalLinkRows))
+      setEventLikeTotal(buildEventLikeTotal(safeEventLikeRows))
+      setDailyTrend(
+        buildDailyTrend(
+          safeShareRows,
+          safeWhatsappRows,
+          safeViewMoreRows,
+          safeExternalLinkRows,
+          safeEventLikeRows
+        )
+      )
       setLoading(false)
     }
 
@@ -184,9 +297,19 @@ export default function AdminMetricasPage() {
     () => Object.values(viewMoreTotals).reduce((sum, value) => sum + value, 0),
     [viewMoreTotals]
   )
+  const totalExternalLinks = useMemo(
+    () => Object.values(externalLinkTotals).reduce((sum, value) => sum + value, 0),
+    [externalLinkTotals]
+  )
 
   const trendMax = maxValue(
-    dailyTrend.flatMap((item) => [item.whatsapp, item.compartir, item.verMas])
+    dailyTrend.flatMap((item) => [
+      item.whatsapp,
+      item.compartir,
+      item.verMas,
+      item.enlaces,
+      item.corazones,
+    ])
   )
 
   return (
@@ -194,13 +317,13 @@ export default function AdminMetricasPage() {
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="mb-2 text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">
-            Métricas
+            Metricas
           </p>
           <h1 className="text-3xl font-semibold text-slate-900">
             Interacciones del sitio
           </h1>
           <p className="mt-2 text-slate-500">
-            Seguimiento de WhatsApp, compartir y ver más.
+            Seguimiento de WhatsApp, compartir, ver mas, sitios/redes y corazones.
           </p>
         </div>
         <Link
@@ -214,63 +337,60 @@ export default function AdminMetricasPage() {
 
       {loading ? (
         <div className="rounded-3xl border border-slate-200 bg-white p-8 text-slate-500 shadow-sm">
-          Cargando métricas...
+          Cargando metricas...
         </div>
       ) : (
         <>
-          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">WhatsApp</p>
-                  <h2 className="text-3xl font-semibold text-slate-900">{totalWhatsapp}</h2>
-                </div>
-                <div className="rounded-2xl bg-green-100 p-3 text-green-700">
-                  <MessageCircle className="h-5 w-5" />
-                </div>
-              </div>
-              <p className="text-sm text-slate-500">Clics de contacto registrados</p>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">Compartir</p>
-                  <h2 className="text-3xl font-semibold text-slate-900">{totalShare}</h2>
-                </div>
-                <div className="rounded-2xl bg-violet-100 p-3 text-violet-700">
-                  <Share2 className="h-5 w-5" />
-                </div>
-              </div>
-              <p className="text-sm text-slate-500">Veces que compartieron contenido</p>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">Ver más</p>
-                  <h2 className="text-3xl font-semibold text-slate-900">{totalViewMore}</h2>
-                </div>
-                <div className="rounded-2xl bg-sky-100 p-3 text-sky-700">
-                  <FileText className="h-5 w-5" />
-                </div>
-              </div>
-              <p className="text-sm text-slate-500">Aperturas de detalle o ficha</p>
-            </div>
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <MetricCard
+              title="WhatsApp"
+              value={totalWhatsapp}
+              helper="Clics de contacto directos."
+              icon={<MessageCircle className="h-5 w-5 text-green-700" />}
+              tone="bg-green-100 text-green-700"
+            />
+            <MetricCard
+              title="Compartir"
+              value={totalShare}
+              helper="Veces que compartieron contenido."
+              icon={<Share2 className="h-5 w-5 text-violet-700" />}
+              tone="bg-violet-100 text-violet-700"
+            />
+            <MetricCard
+              title="Ver mas"
+              value={totalViewMore}
+              helper="Aperturas de detalle o perfil ampliado."
+              icon={<FileText className="h-5 w-5 text-sky-700" />}
+              tone="bg-sky-100 text-sky-700"
+            />
+            <MetricCard
+              title="Sitio y redes"
+              value={totalExternalLinks}
+              helper="Botones de web, Instagram y Facebook."
+              icon={<MousePointerClick className="h-5 w-5 text-amber-700" />}
+              tone="bg-amber-100 text-amber-700"
+            />
+            <MetricCard
+              title="Corazones"
+              value={eventLikeTotal}
+              helper="Likes recibidos por los eventos."
+              icon={<Heart className="h-5 w-5 text-rose-700" />}
+              tone="bg-rose-100 text-rose-700"
+            />
           </div>
 
           <section className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">Últimos 7 días</h2>
-                <p className="text-sm text-slate-500">Comparación diaria de interacciones</p>
+                <h2 className="text-xl font-semibold text-slate-900">Ultimos 7 dias</h2>
+                <p className="text-sm text-slate-500">Comparacion diaria de interacciones.</p>
               </div>
               <div className="rounded-2xl bg-slate-100 p-3 text-slate-700">
                 <BarChart3 className="h-5 w-5" />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-7">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-7">
               {dailyTrend.map((item) => (
                 <div
                   key={item.day}
@@ -285,21 +405,11 @@ export default function AdminMetricasPage() {
 
                   <div className="space-y-3">
                     {[
-                      {
-                        label: "WhatsApp",
-                        value: item.whatsapp,
-                        color: "bg-green-500",
-                      },
-                      {
-                        label: "Compartir",
-                        value: item.compartir,
-                        color: "bg-violet-500",
-                      },
-                      {
-                        label: "Ver más",
-                        value: item.verMas,
-                        color: "bg-sky-500",
-                      },
+                      { label: "WhatsApp", value: item.whatsapp, color: "bg-green-500" },
+                      { label: "Compartir", value: item.compartir, color: "bg-violet-500" },
+                      { label: "Ver mas", value: item.verMas, color: "bg-sky-500" },
+                      { label: "Sitio/redes", value: item.enlaces, color: "bg-amber-500" },
+                      { label: "Corazones", value: item.corazones, color: "bg-rose-500" },
                     ].map((metric) => (
                       <div key={metric.label}>
                         <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
@@ -320,28 +430,68 @@ export default function AdminMetricasPage() {
             </div>
           </section>
 
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+          <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
             <SectionBars
               title="WhatsApp"
+              subtitle="Desglose por seccion"
               icon={<MessageCircle className="h-5 w-5 text-green-700" />}
-              colorClass="bg-green-500"
+              barClass="bg-green-500"
+              iconClass="bg-green-100"
               totals={whatsappTotals}
               sections={WHATSAPP_SECTIONS}
             />
             <SectionBars
               title="Compartir"
+              subtitle="Contenido compartido por seccion"
               icon={<Share2 className="h-5 w-5 text-violet-700" />}
-              colorClass="bg-violet-500"
+              barClass="bg-violet-500"
+              iconClass="bg-violet-100"
               totals={shareTotals}
               sections={SHARE_SECTIONS}
             />
             <SectionBars
-              title="Ver más"
+              title="Ver mas"
+              subtitle="Aperturas por seccion"
               icon={<FileText className="h-5 w-5 text-sky-700" />}
-              colorClass="bg-sky-500"
+              barClass="bg-sky-500"
+              iconClass="bg-sky-100"
               totals={viewMoreTotals}
               sections={VIEW_MORE_SECTIONS}
             />
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_0.6fr]">
+            <SectionBars
+              title="Sitio y redes"
+              subtitle="Clics en web, Instagram y Facebook"
+              icon={<MousePointerClick className="h-5 w-5 text-amber-700" />}
+              barClass="bg-amber-500"
+              iconClass="bg-amber-100"
+              totals={externalLinkTotals}
+              sections={EXTERNAL_LINK_SECTIONS}
+            />
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-slate-900">Tipos de enlace</h2>
+                <p className="text-sm text-slate-500">Que botones usan mas dentro del sitio.</p>
+              </div>
+
+              <div className="space-y-3">
+                {Object.entries(externalLinkTypeTotals).map(([type, value]) => (
+                  <LinkTypeCard
+                    key={type}
+                    label={LINK_TYPE_LABELS[type] || type}
+                    value={value}
+                  />
+                ))}
+              </div>
+
+              <div className="mt-6 rounded-2xl bg-rose-50 p-4">
+                <div className="mb-1 text-sm text-rose-700">Corazones en eventos</div>
+                <div className="text-2xl font-semibold text-slate-900">{eventLikeTotal}</div>
+              </div>
+            </section>
           </div>
         </>
       )}

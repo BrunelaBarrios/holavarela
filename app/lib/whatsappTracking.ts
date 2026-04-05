@@ -2,8 +2,10 @@ import { supabase } from "../supabase"
 
 export const WHATSAPP_SECTIONS = [
   "comercios",
+  "eventos",
   "cursos",
   "servicios",
+  "instituciones",
 ] as const
 
 export type WhatsappSection = (typeof WHATSAPP_SECTIONS)[number]
@@ -13,8 +15,10 @@ export type WhatsappTotals = Record<WhatsappSection, number>
 
 export const emptyWhatsappTotals = (): WhatsappTotals => ({
   comercios: 0,
+  eventos: 0,
   cursos: 0,
   servicios: 0,
+  instituciones: 0,
 })
 
 export const recordWhatsappClick = async (

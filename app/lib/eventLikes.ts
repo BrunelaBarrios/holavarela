@@ -11,6 +11,10 @@ type EventLikeRow = {
   browser_key: string | null
 }
 
+export type EventLikeMetricRow = {
+  created_at: string | null
+}
+
 const createBrowserKey = () => {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID()
@@ -103,3 +107,5 @@ export const recordEventLike = async (
 
   return { status: "liked" as const }
 }
+
+export const buildEventLikeTotal = (rows: EventLikeMetricRow[]) => rows.length

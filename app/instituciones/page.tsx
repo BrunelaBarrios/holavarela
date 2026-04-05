@@ -8,6 +8,7 @@ import { OptimizedImage } from "../components/OptimizedImage"
 import { PublicDetailModal } from "../components/PublicDetailModal"
 import { PublicHeader } from "../components/PublicHeader"
 import { ShareButton } from "../components/ShareButton"
+import { recordContentVisit } from "../lib/contentVisits"
 import { buildPublicNav } from "../lib/publicNav"
 import { recordViewMore } from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
@@ -63,6 +64,7 @@ export default function InstitucionesPage() {
     if (!institution) return
 
     void recordViewMore("instituciones", String(institution.id), institution.nombre)
+    void recordContentVisit("instituciones", String(institution.id), institution.nombre)
     const timeoutId = window.setTimeout(() => {
       setSelectedInstitucion(institution)
     }, 0)
@@ -106,6 +108,7 @@ export default function InstitucionesPage() {
 
   const handleOpenInstitucion = (institucion: Institucion) => {
     void recordViewMore("instituciones", String(institucion.id), institucion.nombre)
+    void recordContentVisit("instituciones", String(institucion.id), institucion.nombre)
     setSelectedInstitucion(institucion)
   }
 
@@ -146,6 +149,9 @@ export default function InstitucionesPage() {
                   selectedInstitucion.usa_whatsapp
                 )}
                 mode={selectedInstitucion.usa_whatsapp === false ? "phone" : "whatsapp"}
+                section="instituciones"
+                itemId={String(selectedInstitucion.id)}
+                itemTitle={selectedInstitucion.nombre}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={
@@ -162,6 +168,9 @@ export default function InstitucionesPage() {
               webUrl={selectedInstitucion?.web_url}
               instagramUrl={selectedInstitucion?.instagram_url}
               facebookUrl={selectedInstitucion?.facebook_url}
+              section="instituciones"
+              itemId={selectedInstitucion ? String(selectedInstitucion.id) : undefined}
+              itemTitle={selectedInstitucion?.nombre}
             />
             {selectedInstitucion ? (
               <ShareButton

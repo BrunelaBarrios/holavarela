@@ -1,13 +1,14 @@
 'use client'
 
 import Link from "next/link"
-import { useMemo, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useState, type ReactNode } from "react"
 import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, MapPin, Phone, UserRound } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
+import { recordContentVisit } from "../../lib/contentVisits"
 import { formatEventDateRange } from "../../lib/eventDates"
 import { buildPublicNav } from "../../lib/publicNav"
 
@@ -95,6 +96,14 @@ export function PremiumListingPage({
   )
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const selectedImage = galleryImages[selectedImageIndex] || imageSrc || null
+
+  useEffect(() => {
+    void recordContentVisit(
+      kind === "comercio" ? "comercios" : "servicios",
+      String(id),
+      title
+    )
+  }, [id, kind, title])
 
   const goToPrevious = () => {
     setSelectedImageIndex((current) =>
@@ -253,6 +262,9 @@ export function PremiumListingPage({
                       webUrl={webUrl}
                       instagramUrl={instagramUrl}
                       facebookUrl={facebookUrl}
+                      section={kind === "comercio" ? "comercios" : "servicios"}
+                      itemId={String(id)}
+                      itemTitle={title}
                     />
                   </div>
                 </div>

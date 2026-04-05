@@ -19,6 +19,7 @@ import {
   serializePublicLead,
   type PublicLeadType,
 } from "../lib/publicLead"
+import { recordContentVisit } from "../lib/contentVisits"
 import { buildHomePublicNav } from "../lib/publicNav"
 import { recordViewMore, type ViewMoreSection } from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
@@ -544,6 +545,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     open: () => void
   ) => {
     void recordViewMore(section, itemId, itemTitle)
+    void recordContentVisit(section, itemId, itemTitle)
     open()
   }
 
@@ -1410,6 +1412,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 webUrl={selectedComercio.web_url}
                 instagramUrl={selectedComercio.instagram_url}
                 facebookUrl={selectedComercio.facebook_url}
+                section="comercios"
+                itemId={String(selectedComercio.id)}
+                itemTitle={selectedComercio.nombre}
               />
             ) : null}
             {selectedComercio?.premium_activo ? (
@@ -1506,6 +1511,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 webUrl={selectedServicio.web_url}
                 instagramUrl={selectedServicio.instagram_url}
                 facebookUrl={selectedServicio.facebook_url}
+                section="servicios"
+                itemId={String(selectedServicio.id)}
+                itemTitle={selectedServicio.nombre}
               />
             ) : null}
             {selectedServicio?.premium_activo ? (
@@ -1563,6 +1571,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   selectedEvento.usa_whatsapp
                 )}
                 mode={selectedEvento.usa_whatsapp === false ? "phone" : "whatsapp"}
+                section="eventos"
+                itemId={String(selectedEvento.id)}
+                itemTitle={selectedEvento.titulo}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={
@@ -1581,6 +1592,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 webUrl={selectedEvento.web_url}
                 instagramUrl={selectedEvento.instagram_url}
                 facebookUrl={selectedEvento.facebook_url}
+                section="eventos"
+                itemId={String(selectedEvento.id)}
+                itemTitle={selectedEvento.titulo}
               />
             ) : null}
 
@@ -1692,6 +1706,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     webUrl={selectedCurso.web_url}
                     instagramUrl={selectedCurso.instagram_url}
                     facebookUrl={selectedCurso.facebook_url}
+                    section="cursos"
+                    itemId={String(selectedCurso.id)}
+                    itemTitle={selectedCurso.nombre}
                   />
 
                   <button
@@ -1787,6 +1804,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         selectedInstitucion.usa_whatsapp
                       )}
                       mode={selectedInstitucion.usa_whatsapp === false ? "phone" : "whatsapp"}
+                      section="instituciones"
+                      itemId={String(selectedInstitucion.id)}
+                      itemTitle={selectedInstitucion.nombre}
                       target="_blank"
                       rel="noopener noreferrer"
                       className={
@@ -1804,6 +1824,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     webUrl={selectedInstitucion.web_url}
                     instagramUrl={selectedInstitucion.instagram_url}
                     facebookUrl={selectedInstitucion.facebook_url}
+                    section="instituciones"
+                    itemId={String(selectedInstitucion.id)}
+                    itemTitle={selectedInstitucion.nombre}
                   />
 
                   <Link

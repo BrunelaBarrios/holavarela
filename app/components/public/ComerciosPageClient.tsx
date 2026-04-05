@@ -10,6 +10,7 @@ import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
+import { recordContentVisit } from "../../lib/contentVisits"
 import { buildPublicNav } from "../../lib/publicNav"
 import { recordViewMore } from "../../lib/viewMoreTracking"
 
@@ -81,11 +82,13 @@ export function ComerciosPageClient({
 
   const handleOpenComercio = (comercio: Comercio) => {
     void recordViewMore("comercios", String(comercio.id), comercio.nombre)
+    void recordContentVisit("comercios", String(comercio.id), comercio.nombre)
     setSelectedComercioId(String(comercio.id))
   }
 
   const handleOpenPremiumProfile = (comercio: Comercio) => {
     void recordViewMore("comercios", String(comercio.id), comercio.nombre)
+    void recordContentVisit("comercios", String(comercio.id), comercio.nombre)
     router.push(`/comercios/${comercio.id}`)
   }
 
@@ -200,6 +203,9 @@ export function ComerciosPageClient({
                 webUrl={selectedComercio.web_url}
                 instagramUrl={selectedComercio.instagram_url}
                 facebookUrl={selectedComercio.facebook_url}
+                section="comercios"
+                itemId={String(selectedComercio.id)}
+                itemTitle={selectedComercio.nombre}
               />
               {selectedComercio.premium_activo ? (
                 <Link

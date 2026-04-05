@@ -390,3 +390,32 @@ on public.event_likes
 for select
 to anon, authenticated
 using (true);
+
+create table if not exists public.content_visits (
+  id bigint generated always as identity primary key,
+  section text not null,
+  item_id text not null,
+  item_title text,
+  browser_key text not null,
+  created_at timestamp with time zone default now()
+);
+
+alter table public.content_visits enable row level security;
+
+drop policy if exists "Allow public insert on content_visits"
+on public.content_visits;
+
+create policy "Allow public insert on content_visits"
+on public.content_visits
+for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists "Allow public read on content_visits"
+on public.content_visits;
+
+create policy "Allow public read on content_visits"
+on public.content_visits
+for select
+to anon, authenticated
+using (true);

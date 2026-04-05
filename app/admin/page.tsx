@@ -10,8 +10,10 @@ import {
   CreditCard,
   FileText,
   GraduationCap,
+  Heart,
   Mail,
   MessageCircle,
+  MousePointerClick,
   Plus,
   Radio,
   Share2,
@@ -20,17 +22,23 @@ import {
   Users,
 } from "lucide-react"
 import { buildActiveEventsFilter, formatEventDateRange } from "../lib/eventDates"
-import { buildShareTotals, emptyShareTotals, type ShareTotals } from "../lib/shareTracking"
+import { buildEventLikeTotal } from "../lib/eventLikes"
 import {
-  buildWhatsappTotals,
-  emptyWhatsappTotals,
-  type WhatsappTotals,
-} from "../lib/whatsappTracking"
+  buildExternalLinkTotals,
+  emptyExternalLinkTotals,
+  type ExternalLinkTotals,
+} from "../lib/externalLinkTracking"
+import { buildShareTotals, emptyShareTotals, type ShareTotals } from "../lib/shareTracking"
 import {
   buildViewMoreTotals,
   emptyViewMoreTotals,
   type ViewMoreTotals,
 } from "../lib/viewMoreTracking"
+import {
+  buildWhatsappTotals,
+  emptyWhatsappTotals,
+  type WhatsappTotals,
+} from "../lib/whatsappTracking"
 import { supabase } from "../supabase"
 
 type EventoResumen = {
@@ -69,6 +77,8 @@ export default function AdminDashboardPage() {
   const [shareTotals, setShareTotals] = useState<ShareTotals>(emptyShareTotals())
   const [whatsappTotals, setWhatsappTotals] = useState<WhatsappTotals>(emptyWhatsappTotals())
   const [viewMoreTotals, setViewMoreTotals] = useState<ViewMoreTotals>(emptyViewMoreTotals())
+  const [externalLinkTotals, setExternalLinkTotals] = useState<ExternalLinkTotals>(emptyExternalLinkTotals())
+  const [eventLikeTotal, setEventLikeTotal] = useState(0)
 
   useEffect(() => {
     const cargarDashboard = async () => {
@@ -100,6 +110,8 @@ export default function AdminDashboardPage() {
         { data: shareRows },
         { data: whatsappRows },
         { data: viewMoreRows },
+        { data: externalLinkRows },
+        { data: eventLikeRows },
       ] = await Promise.all([
         supabase.from("comercios").select("*", { count: "exact", head: true }),
         supabase.from("eventos").select("*", { count: "exact", head: true }),
@@ -107,66 +119,21 @@ export default function AdminDashboardPage() {
         supabase.from("instituciones").select("*", { count: "exact", head: true }),
         supabase.from("cursos").select("*", { count: "exact", head: true }),
         supabase.from("usuarios_registrados").select("*", { count: "exact", head: true }),
-        supabase
-          .from("comercios")
-          .select("*", { count: "exact", head: true })
-          .eq("estado", "borrador"),
-        supabase
-          .from("eventos")
-          .select("*", { count: "exact", head: true })
-          .eq("estado", "borrador"),
-        supabase
-          .from("contacto_solicitudes")
-          .select("*", { count: "exact", head: true })
-          .or("visto.is.null,visto.eq.false"),
-        supabase
-          .from("comercios")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "pendiente"),
-        supabase
-          .from("servicios")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "pendiente"),
-        supabase
-          .from("cursos")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "pendiente"),
-        supabase
-          .from("comercios")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "activa"),
-        supabase
-          .from("servicios")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "activa"),
-        supabase
-          .from("cursos")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "activa"),
-        supabase
-          .from("comercios")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "pausada"),
-        supabase
-          .from("servicios")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "pausada"),
-        supabase
-          .from("cursos")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "pausada"),
-        supabase
-          .from("comercios")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "cancelada"),
-        supabase
-          .from("servicios")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "cancelada"),
-        supabase
-          .from("cursos")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "cancelada"),
+        supabase.from("comercios").select("*", { count: "exact", head: true }).eq("estado", "borrador"),
+        supabase.from("eventos").select("*", { count: "exact", head: true }).eq("estado", "borrador"),
+        supabase.from("contacto_solicitudes").select("*", { count: "exact", head: true }).or("visto.is.null,visto.eq.false"),
+        supabase.from("comercios").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "pendiente"),
+        supabase.from("servicios").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "pendiente"),
+        supabase.from("cursos").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "pendiente"),
+        supabase.from("comercios").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "activa"),
+        supabase.from("servicios").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "activa"),
+        supabase.from("cursos").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "activa"),
+        supabase.from("comercios").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "pausada"),
+        supabase.from("servicios").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "pausada"),
+        supabase.from("cursos").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "pausada"),
+        supabase.from("comercios").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "cancelada"),
+        supabase.from("servicios").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "cancelada"),
+        supabase.from("cursos").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "cancelada"),
         supabase
           .from("eventos")
           .select("id, titulo, fecha, fecha_fin, fecha_solo_mes")
@@ -177,6 +144,8 @@ export default function AdminDashboardPage() {
         supabase.from("share_events").select("section"),
         supabase.from("whatsapp_clicks").select("section"),
         supabase.from("view_more_clicks").select("section"),
+        supabase.from("external_link_clicks").select("section"),
+        supabase.from("event_likes").select("created_at"),
       ])
 
       setComerciosCount(comercios || 0)
@@ -196,25 +165,47 @@ export default function AdminDashboardPage() {
       setShareTotals(buildShareTotals(shareRows || []))
       setWhatsappTotals(buildWhatsappTotals(whatsappRows || []))
       setViewMoreTotals(buildViewMoreTotals(viewMoreRows || []))
+      setExternalLinkTotals(buildExternalLinkTotals(externalLinkRows || []))
+      setEventLikeTotal(buildEventLikeTotal(eventLikeRows || []))
     }
 
     void cargarDashboard()
   }, [])
 
-  const totalInteractions =
+  const totalWhatsapp =
+    whatsappTotals.comercios +
+    whatsappTotals.eventos +
+    whatsappTotals.cursos +
+    whatsappTotals.servicios +
+    whatsappTotals.instituciones
+
+  const totalShares =
     shareTotals.comercios +
     shareTotals.eventos +
     shareTotals.cursos +
     shareTotals.servicios +
-    shareTotals.instituciones +
-    whatsappTotals.comercios +
-    whatsappTotals.servicios +
-    whatsappTotals.cursos +
+    shareTotals.instituciones
+
+  const totalViewMore =
     viewMoreTotals.comercios +
     viewMoreTotals.eventos +
     viewMoreTotals.cursos +
     viewMoreTotals.servicios +
     viewMoreTotals.instituciones
+
+  const totalExternalLinks =
+    externalLinkTotals.comercios +
+    externalLinkTotals.eventos +
+    externalLinkTotals.cursos +
+    externalLinkTotals.servicios +
+    externalLinkTotals.instituciones
+
+  const totalInteractions =
+    totalWhatsapp +
+    totalShares +
+    totalViewMore +
+    totalExternalLinks +
+    eventLikeTotal
 
   const totalTrackedSubscriptions =
     pendingSubscriptionsCount +
@@ -327,7 +318,7 @@ export default function AdminDashboardPage() {
           className="inline-flex items-center gap-2 self-start rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:text-blue-600"
         >
           <BarChart3 className="h-4 w-4" />
-          Ver métricas
+          Ver metricas
         </button>
       </div>
 
@@ -345,7 +336,7 @@ export default function AdminDashboardPage() {
             </span>
           </div>
           <h3 className="text-lg font-semibold text-slate-900">Contactos pendientes</h3>
-          <p className="mt-2 text-sm text-slate-500">Mensajes nuevos esperando revisión.</p>
+          <p className="mt-2 text-sm text-slate-500">Mensajes nuevos esperando revision.</p>
         </button>
 
         <button
@@ -391,7 +382,7 @@ export default function AdminDashboardPage() {
             <span className="text-3xl font-semibold text-white">{totalInteractions}</span>
           </div>
           <h3 className="text-lg font-semibold text-white">Interacciones</h3>
-          <p className="mt-2 text-sm text-slate-300">WhatsApp, compartir y ver más del sitio.</p>
+          <p className="mt-2 text-sm text-slate-300">WhatsApp, compartir, ver mas, sitio/redes y corazones.</p>
         </button>
       </div>
 
@@ -408,53 +399,57 @@ export default function AdminDashboardPage() {
           </div>
           <div className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
             <CreditCard className="h-4 w-4" />
-            {totalTrackedSubscriptions} fichas con suscripción
+            {totalTrackedSubscriptions} fichas con suscripcion
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <button
-            onClick={() => router.push("/admin/suscripciones")}
-            className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:border-blue-300 hover:bg-blue-50/40"
-          >
-            <div className="text-sm font-medium text-slate-500">Pendientes</div>
-            <div className="mt-2 text-3xl font-semibold text-slate-900">{pendingSubscriptionsCount}</div>
-            <p className="mt-2 text-sm text-slate-500">Esperando confirmación o revisión.</p>
-          </button>
-
-          <button
-            onClick={() => router.push("/admin/suscripciones")}
-            className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 text-left transition hover:border-emerald-300 hover:bg-emerald-50"
-          >
-            <div className="text-sm font-medium text-emerald-700">Activas</div>
-            <div className="mt-2 text-3xl font-semibold text-slate-900">{activeSubscriptionsCount}</div>
-            <p className="mt-2 text-sm text-slate-500">Planes en curso y visibles para seguimiento.</p>
-          </button>
-
-          <button
-            onClick={() => router.push("/admin/suscripciones")}
-            className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 text-left transition hover:border-amber-300 hover:bg-amber-50"
-          >
-            <div className="text-sm font-medium text-amber-700">Pausadas</div>
-            <div className="mt-2 text-3xl font-semibold text-slate-900">{pausedSubscriptionsCount}</div>
-            <p className="mt-2 text-sm text-slate-500">Mantienen plan pero hoy no están corriendo.</p>
-          </button>
-
-          <button
-            onClick={() => router.push("/admin/suscripciones")}
-            className="rounded-2xl border border-rose-200 bg-rose-50/70 p-5 text-left transition hover:border-rose-300 hover:bg-rose-50"
-          >
-            <div className="text-sm font-medium text-rose-700">Canceladas</div>
-            <div className="mt-2 text-3xl font-semibold text-slate-900">{cancelledSubscriptionsCount}</div>
-            <p className="mt-2 text-sm text-slate-500">Planes dados de baja o ya no vigentes.</p>
-          </button>
+          {[
+            {
+              label: "Pendientes",
+              value: pendingSubscriptionsCount,
+              text: "Esperando confirmacion o revision.",
+              className: "rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:border-blue-300 hover:bg-blue-50/40",
+              color: "text-slate-500",
+            },
+            {
+              label: "Activas",
+              value: activeSubscriptionsCount,
+              text: "Planes en curso y visibles para seguimiento.",
+              className: "rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 text-left transition hover:border-emerald-300 hover:bg-emerald-50",
+              color: "text-emerald-700",
+            },
+            {
+              label: "Pausadas",
+              value: pausedSubscriptionsCount,
+              text: "Mantienen plan pero hoy no estan corriendo.",
+              className: "rounded-2xl border border-amber-200 bg-amber-50/70 p-5 text-left transition hover:border-amber-300 hover:bg-amber-50",
+              color: "text-amber-700",
+            },
+            {
+              label: "Canceladas",
+              value: cancelledSubscriptionsCount,
+              text: "Planes dados de baja o ya no vigentes.",
+              className: "rounded-2xl border border-rose-200 bg-rose-50/70 p-5 text-left transition hover:border-rose-300 hover:bg-rose-50",
+              color: "text-rose-700",
+            },
+          ].map((item) => (
+            <button
+              key={item.label}
+              onClick={() => router.push("/admin/suscripciones")}
+              className={item.className}
+            >
+              <div className={`text-sm font-medium ${item.color}`}>{item.label}</div>
+              <div className="mt-2 text-3xl font-semibold text-slate-900">{item.value}</div>
+              <p className="mt-2 text-sm text-slate-500">{item.text}</p>
+            </button>
+          ))}
         </div>
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-6">
         {stats.map((stat) => {
           const Icon = stat.icon
-
           return (
             <button
               key={stat.id}
@@ -478,8 +473,8 @@ export default function AdminDashboardPage() {
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">Próximos eventos</h2>
-                <p className="text-sm text-slate-500">Lo siguiente que ya está activo en el sitio.</p>
+                <h2 className="text-xl font-semibold text-slate-900">Proximos eventos</h2>
+                <p className="text-sm text-slate-500">Lo siguiente que ya esta activo en el sitio.</p>
               </div>
               <Link
                 href="/admin/eventos"
@@ -492,7 +487,7 @@ export default function AdminDashboardPage() {
             <div className="space-y-4">
               {proximosEventos.length === 0 ? (
                 <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
-                  No hay eventos cargados todavía.
+                  No hay eventos cargados todavia.
                 </div>
               ) : (
                 proximosEventos.map((event) => (
@@ -522,7 +517,7 @@ export default function AdminDashboardPage() {
               <div>
                 <h2 className="text-xl font-semibold text-slate-900">Interacciones del sitio</h2>
                 <p className="text-sm text-slate-500">
-                  Totales y desglose sin repetir la misma información.
+                  Totales y desglose con todos los clics que ya cuentan en la web.
                 </p>
               </div>
               <button
@@ -530,74 +525,95 @@ export default function AdminDashboardPage() {
                 onClick={() => router.push("/admin/metricas")}
                 className="text-sm font-medium text-blue-600 transition hover:text-blue-500"
               >
-                Abrir métricas
+                Abrir metricas
               </button>
             </div>
 
-            <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div className="rounded-2xl bg-green-50 p-5">
-                <div className="mb-2 flex items-center gap-2 text-sm text-slate-600">
-                  <MessageCircle className="h-4 w-4 text-green-600" />
-                  WhatsApp
-                </div>
-                <div className="text-3xl font-semibold text-slate-900">
-                  {whatsappTotals.comercios + whatsappTotals.servicios + whatsappTotals.cursos}
-                </div>
-              </div>
-              <div className="rounded-2xl bg-violet-50 p-5">
-                <div className="mb-2 flex items-center gap-2 text-sm text-slate-600">
-                  <Share2 className="h-4 w-4 text-violet-600" />
-                  Compartir
-                </div>
-                <div className="text-3xl font-semibold text-slate-900">
-                  {shareTotals.comercios + shareTotals.eventos + shareTotals.cursos + shareTotals.servicios + shareTotals.instituciones}
-                </div>
-              </div>
-              <div className="rounded-2xl bg-sky-50 p-5">
-                <div className="mb-2 flex items-center gap-2 text-sm text-slate-600">
-                  <FileText className="h-4 w-4 text-sky-600" />
-                  Ver más
-                </div>
-                <div className="text-3xl font-semibold text-slate-900">
-                  {viewMoreTotals.comercios + viewMoreTotals.eventos + viewMoreTotals.cursos + viewMoreTotals.servicios + viewMoreTotals.instituciones}
-                </div>
-              </div>
+            <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+              <MetricCard
+                icon={<MessageCircle className="h-4 w-4 text-green-600" />}
+                title="WhatsApp"
+                value={totalWhatsapp}
+                className="bg-green-50"
+              />
+              <MetricCard
+                icon={<Share2 className="h-4 w-4 text-violet-600" />}
+                title="Compartir"
+                value={totalShares}
+                className="bg-violet-50"
+              />
+              <MetricCard
+                icon={<FileText className="h-4 w-4 text-sky-600" />}
+                title="Ver mas"
+                value={totalViewMore}
+                className="bg-sky-50"
+              />
+              <MetricCard
+                icon={<MousePointerClick className="h-4 w-4 text-amber-600" />}
+                title="Sitio y redes"
+                value={totalExternalLinks}
+                className="bg-amber-50"
+              />
+              <MetricCard
+                icon={<Heart className="h-4 w-4 text-rose-600" />}
+                title="Corazones"
+                value={eventLikeTotal}
+                className="bg-rose-50"
+              />
             </div>
 
             <div className="space-y-4">
+              <MetricBreakdown
+                title="WhatsApp por seccion"
+                items={[
+                  ["Comercios", whatsappTotals.comercios],
+                  ["Eventos", whatsappTotals.eventos],
+                  ["Servicios", whatsappTotals.servicios],
+                  ["Cursos", whatsappTotals.cursos],
+                  ["Instituciones", whatsappTotals.instituciones],
+                ]}
+              />
+              <MetricBreakdown
+                title="Compartidos por seccion"
+                items={[
+                  ["Comercios", shareTotals.comercios],
+                  ["Eventos", shareTotals.eventos],
+                  ["Cursos", shareTotals.cursos],
+                  ["Servicios", shareTotals.servicios],
+                  ["Instituciones", shareTotals.instituciones],
+                ]}
+              />
+              <MetricBreakdown
+                title="Ver mas por seccion"
+                items={[
+                  ["Comercios", viewMoreTotals.comercios],
+                  ["Eventos", viewMoreTotals.eventos],
+                  ["Cursos", viewMoreTotals.cursos],
+                  ["Servicios", viewMoreTotals.servicios],
+                  ["Instituciones", viewMoreTotals.instituciones],
+                ]}
+              />
+              <MetricBreakdown
+                title="Sitio y redes por seccion"
+                items={[
+                  ["Comercios", externalLinkTotals.comercios],
+                  ["Eventos", externalLinkTotals.eventos],
+                  ["Cursos", externalLinkTotals.cursos],
+                  ["Servicios", externalLinkTotals.servicios],
+                  ["Instituciones", externalLinkTotals.instituciones],
+                ]}
+              />
               <div className="rounded-2xl bg-slate-50 p-4">
-                <div className="mb-2 text-sm text-slate-500">WhatsApp por sección</div>
-                <div className="grid grid-cols-3 gap-3 text-sm text-slate-700">
-                  <div>Comercios: <span className="font-semibold">{whatsappTotals.comercios}</span></div>
-                  <div>Servicios: <span className="font-semibold">{whatsappTotals.servicios}</span></div>
-                  <div>Cursos: <span className="font-semibold">{whatsappTotals.cursos}</span></div>
-                </div>
-              </div>
-              <div className="rounded-2xl bg-slate-50 p-4">
-                <div className="mb-2 text-sm text-slate-500">Compartidos por sección</div>
-                <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
-                  <div>Comercios: <span className="font-semibold">{shareTotals.comercios}</span></div>
-                  <div>Eventos: <span className="font-semibold">{shareTotals.eventos}</span></div>
-                  <div>Cursos: <span className="font-semibold">{shareTotals.cursos}</span></div>
-                  <div>Servicios: <span className="font-semibold">{shareTotals.servicios}</span></div>
-                  <div>Instituciones: <span className="font-semibold">{shareTotals.instituciones}</span></div>
-                </div>
-              </div>
-              <div className="rounded-2xl bg-slate-50 p-4">
-                <div className="mb-2 text-sm text-slate-500">Ver más por sección</div>
-                <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
-                  <div>Comercios: <span className="font-semibold">{viewMoreTotals.comercios}</span></div>
-                  <div>Eventos: <span className="font-semibold">{viewMoreTotals.eventos}</span></div>
-                  <div>Cursos: <span className="font-semibold">{viewMoreTotals.cursos}</span></div>
-                  <div>Servicios: <span className="font-semibold">{viewMoreTotals.servicios}</span></div>
-                  <div>Instituciones: <span className="font-semibold">{viewMoreTotals.instituciones}</span></div>
+                <div className="mb-2 text-sm text-slate-500">Corazones en eventos</div>
+                <div className="text-sm text-slate-700">
+                  Total: <span className="font-semibold">{eventLikeTotal}</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-6 text-xl font-semibold text-slate-900">Acciones rápidas</h2>
+            <h2 className="mb-6 text-xl font-semibold text-slate-900">Acciones rapidas</h2>
             <div className="space-y-3">
               {quickActions.map((action) => {
                 const Icon = action.icon
@@ -618,11 +634,54 @@ export default function AdminDashboardPage() {
                 className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 transition hover:bg-slate-100"
               >
                 <Store className="h-5 w-5" />
-                <span>Ver sitio público</span>
+                <span>Ver sitio publico</span>
               </Link>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+function MetricCard({
+  icon,
+  title,
+  value,
+  className,
+}: {
+  icon: React.ReactNode
+  title: string
+  value: number
+  className: string
+}) {
+  return (
+    <div className={`rounded-2xl p-5 ${className}`}>
+      <div className="mb-2 flex items-center gap-2 text-sm text-slate-600">
+        {icon}
+        {title}
+      </div>
+      <div className="text-3xl font-semibold text-slate-900">{value}</div>
+    </div>
+  )
+}
+
+function MetricBreakdown({
+  title,
+  items,
+}: {
+  title: string
+  items: Array<[string, number]>
+}) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4">
+      <div className="mb-2 text-sm text-slate-500">{title}</div>
+      <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
+        {items.map(([label, value]) => (
+          <div key={label}>
+            {label}: <span className="font-semibold">{value}</span>
+          </div>
+        ))}
       </div>
     </div>
   )
