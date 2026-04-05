@@ -21,10 +21,10 @@ type SectionTotal = {
 }
 
 type RecentActivity = {
-  visitors7Days: number
-  interactions7Days: number
-  shares7Days: number
-  whatsapp7Days: number
+  visitors15Days: number
+  interactions15Days: number
+  shares15Days: number
+  whatsapp15Days: number
 }
 
 const SECTION_LABELS: Record<string, string> = {
@@ -69,16 +69,16 @@ export default function UsuariosMetricasHolaVarelaPage() {
   const [pageViews30Days, setPageViews30Days] = useState(0)
   const [sectionTotals, setSectionTotals] = useState<SectionTotal[]>([])
   const [recentActivity, setRecentActivity] = useState<RecentActivity>({
-    visitors7Days: 0,
-    interactions7Days: 0,
-    shares7Days: 0,
-    whatsapp7Days: 0,
+    visitors15Days: 0,
+    interactions15Days: 0,
+    shares15Days: 0,
+    whatsapp15Days: 0,
   })
 
   useEffect(() => {
     const loadMetrics = async () => {
       const since30 = getIsoDaysAgo(30)
-      const since7 = getIsoDaysAgo(7)
+      const since15 = getIsoDaysAgo(15)
 
       const [
         { data: visitRows30, error: visits30Error },
@@ -90,12 +90,12 @@ export default function UsuariosMetricasHolaVarelaPage() {
         { data: likesRows7, error: likes7Error },
       ] = await Promise.all([
         supabase.from("content_visits").select("section, browser_key, created_at").gte("created_at", since30),
-        supabase.from("content_visits").select("browser_key, created_at").gte("created_at", since7),
-        supabase.from("share_events").select("created_at").gte("created_at", since7),
-        supabase.from("whatsapp_clicks").select("created_at").gte("created_at", since7),
-        supabase.from("view_more_clicks").select("created_at").gte("created_at", since7),
-        supabase.from("external_link_clicks").select("created_at").gte("created_at", since7),
-        supabase.from("event_likes").select("created_at").gte("created_at", since7),
+        supabase.from("content_visits").select("browser_key, created_at").gte("created_at", since15),
+        supabase.from("share_events").select("created_at").gte("created_at", since15),
+        supabase.from("whatsapp_clicks").select("created_at").gte("created_at", since15),
+        supabase.from("view_more_clicks").select("created_at").gte("created_at", since15),
+        supabase.from("external_link_clicks").select("created_at").gte("created_at", since15),
+        supabase.from("event_likes").select("created_at").gte("created_at", since15),
       ])
 
       if (visits30Error || visits7Error || shares7Error || whatsapp7Error || viewMore7Error || external7Error || likes7Error) {
@@ -124,15 +124,15 @@ export default function UsuariosMetricasHolaVarelaPage() {
       setPageViews30Days(BASELINE_SITE_PAGE_VIEWS_30D + safeVisitRows30.length)
       setSectionTotals(buildSectionTotals(safeVisitRows30).slice(0, 5))
       setRecentActivity({
-        visitors7Days: countUniqueBrowsers(safeVisitRows7),
-        interactions7Days:
+        visitors15Days: countUniqueBrowsers(safeVisitRows7),
+        interactions15Days:
           safeShareRows7.length +
           safeWhatsappRows7.length +
           safeViewMoreRows7.length +
           safeExternalRows7.length +
           safeLikesRows7.length,
-        shares7Days: safeShareRows7.length,
-        whatsapp7Days: safeWhatsappRows7.length,
+        shares15Days: safeShareRows7.length,
+        whatsapp15Days: safeWhatsappRows7.length,
       })
       setLoading(false)
     }
@@ -192,14 +192,14 @@ export default function UsuariosMetricasHolaVarelaPage() {
               />
               <MetricCard
                 label="Actividad reciente"
-                value={recentActivity.interactions7Days}
+                value={recentActivity.interactions15Days}
                 description="Interacciones últimos 7 días"
                 icon={<BarChart3 className="h-5 w-5 text-emerald-700" />}
                 tone="bg-emerald-100"
               />
               <MetricCard
                 label="Contactos rápidos"
-                value={recentActivity.whatsapp7Days}
+                value={recentActivity.whatsapp15Days}
                 description="WhatsApp últimos 7 días"
                 icon={<MessageCircle className="h-5 w-5 text-green-700" />}
                 tone="bg-green-100"
@@ -246,10 +246,10 @@ export default function UsuariosMetricasHolaVarelaPage() {
                   </p>
                 </div>
                 <div className="space-y-4">
-                  <ActivityRow label="Visitantes únicos" value={recentActivity.visitors7Days} icon={<Eye className="h-4 w-4 text-sky-700" />} />
-                  <ActivityRow label="Interacciones" value={recentActivity.interactions7Days} icon={<BarChart3 className="h-4 w-4 text-emerald-700" />} />
-                  <ActivityRow label="Compartidos" value={recentActivity.shares7Days} icon={<Share2 className="h-4 w-4 text-violet-700" />} />
-                  <ActivityRow label="WhatsApp" value={recentActivity.whatsapp7Days} icon={<MessageCircle className="h-4 w-4 text-green-700" />} />
+                  <ActivityRow label="Visitantes únicos" value={recentActivity.visitors15Days} icon={<Eye className="h-4 w-4 text-sky-700" />} />
+                  <ActivityRow label="Interacciones" value={recentActivity.interactions15Days} icon={<BarChart3 className="h-4 w-4 text-emerald-700" />} />
+                  <ActivityRow label="Compartidos" value={recentActivity.shares15Days} icon={<Share2 className="h-4 w-4 text-violet-700" />} />
+                  <ActivityRow label="WhatsApp" value={recentActivity.whatsapp15Days} icon={<MessageCircle className="h-4 w-4 text-green-700" />} />
                 </div>
               </section>
             </div>
