@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState, type ReactNode } from "react"
+import Link from "next/link"
+import { useEffect, useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, CheckCircle2, CreditCard, ExternalLink, ShieldOff } from "lucide-react"
+import { CheckCircle2, ExternalLink, ShieldOff } from "lucide-react"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
 import {
   getSubscriptionPlan,
@@ -20,35 +21,14 @@ import {
 } from "../../lib/userProfiles"
 import { supabase } from "../../supabase"
 
-type FlowStep = 1 | 2 | 3
-
-const flowSteps: Array<{
-  id: FlowStep
-  title: string
-  description: string
-}> = [
-  {
-    id: 1,
-    title: "Elige tu plan",
-    description: "Selecciona la opción que mejor acompaña tu ficha.",
-  },
-  {
-    id: 2,
-    title: "Confirma el cambio",
-    description: "Revisa lo elegido y deja el plan guardado antes de salir al pago.",
-  },
-  {
-    id: 3,
-    title: "Completa la suscripción",
-    description: "Confirma el pago en Mercado Pago para dejar tu plan activo.",
-  },
-]
+type FlowStep = 1 | 2
 
 export default function UsuariosSuscripcionPage() {
   const router = useRouter()
   const [ownedEntity, setOwnedEntity] = useState<UserOwnedEntity | null>(null)
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>("presencia")
   const [currentStep, setCurrentStep] = useState<FlowStep>(1)
+  const [mode, setMode] = useState<"summary" | "change">("summary")
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [cancelling, setCancelling] = useState(false)
@@ -87,7 +67,45 @@ export default function UsuariosSuscripcionPage() {
     void loadSubscription()
   }, [router])
 
-  const handleSavePlan = async (planToSave = selectedPlan) => {
+  const currentPlan = getSubscriptionPlan(ownedEntity?.record.plan_suscripcion)
+  const currentPlanKey = (ownedEntity?.record.plan_suscripcion as SubscriptionPlanKey) || "presencia"
+  const nextPlan = subscriptionPlans[selectedPlan]
+  const statusLabel = getSubscriptionStatusLabel(ownedEntity?.record.estado_suscripcion)
+  const statusBadge = getSubscriptionStatusBadge(ownedEntity?.record.estado_suscripcion)
+  const subscriptionUpdatedAt = ownedEntity?.record.suscripcion_actualizada_at
+    ? new Date(ownedEntity.record.suscripcion_actualizada_at).toLocaleDateString("es-UY", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "Sin fecha registrada"
+
+  useEffect(() => {
+    if (!pendingCheckoutRedirect || currentStep !== 2 || mode !== "change") return
+
+    const timeoutId = window.setTimeout(() => {
+      window.location.href = nextPlan.checkoutUrl
+    }, 1800)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [currentStep, mode, nextPlan.checkoutUrl, pendingCheckoutRedirect])
+
+  const startPlanChange = () => {
+    setSelectedPlan(currentPlanKey)
+    setCurrentStep(1)
+    setPendingCheckoutRedirect(false)
+    setError("")
+    setSuccess("")
+    setMode("change")
+  }
+
+  const backToSummary = () => {
+    setPendingCheckoutRedirect(false)
+    setCurrentStep(1)
+    setMode("summary")
+  }
+
+  const handleSaveAndContinue = async () => {
     if (!ownedEntity) return
 
     setSaving(true)
@@ -112,13 +130,12 @@ export default function UsuariosSuscripcionPage() {
       },
       body: JSON.stringify({
         action: "save_plan",
-        planKey: planToSave,
+        planKey: selectedPlan,
       }),
     })
 
     const result = (await response.json()) as {
       error?: string
-      syncedWithMercadoPago?: boolean
       record?: UserOwnedEntity["record"]
     }
 
@@ -136,13 +153,9 @@ export default function UsuariosSuscripcionPage() {
           }
         : current
     )
-    setSuccess(
-      result.syncedWithMercadoPago
-        ? "Tu plan quedó actualizado y también se sincronizó con Mercado Pago."
-        : "Tu plan quedó guardado. Ahora te vamos a redirigir para completar el pago."
-    )
+    setSuccess(`Ya quedó seleccionado y guardado ${subscriptionPlans[selectedPlan].name}.`)
     setPendingCheckoutRedirect(true)
-    setCurrentStep(3)
+    setCurrentStep(2)
     setSaving(false)
   }
 
@@ -205,117 +218,13 @@ export default function UsuariosSuscripcionPage() {
         ? "Tu suscripción quedó cancelada y también se sincronizó con Mercado Pago."
         : "Tu suscripción quedó cancelada y la ficha pasó a oculto."
     )
-    setPendingCheckoutRedirect(false)
+    backToSummary()
     setCancelling(false)
   }
 
-  const currentPlan = getSubscriptionPlan(ownedEntity?.record.plan_suscripcion)
-  const currentPlanKey = (ownedEntity?.record.plan_suscripcion as SubscriptionPlanKey) || "presencia"
-  const nextPlan = subscriptionPlans[selectedPlan]
-  const statusLabel = getSubscriptionStatusLabel(ownedEntity?.record.estado_suscripcion)
-  const statusBadge = getSubscriptionStatusBadge(ownedEntity?.record.estado_suscripcion)
-  const subscriptionUpdatedAt = ownedEntity?.record.suscripcion_actualizada_at
-    ? new Date(ownedEntity.record.suscripcion_actualizada_at).toLocaleDateString("es-UY", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : null
-  const canGoBack = currentStep > 1
-  const canGoNext = currentStep < 3 && !loading && Boolean(ownedEntity)
-  const selectedPlanChanged = currentPlanKey !== selectedPlan
-  const stepDescription = useMemo(
-    () => flowSteps.find((step) => step.id === currentStep),
-    [currentStep]
-  )
-
-  useEffect(() => {
-    if (!pendingCheckoutRedirect || currentStep !== 3) return
-
-    const timeoutId = window.setTimeout(() => {
-      window.location.href = nextPlan.checkoutUrl
-    }, 1800)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [currentStep, nextPlan.checkoutUrl, pendingCheckoutRedirect])
-
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6">
-      <div className="mx-auto max-w-[1320px] space-y-6">
-        <section className="overflow-hidden rounded-[36px] border border-slate-200 bg-white shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
-          <div className="grid gap-8 bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10 lg:grid-cols-[1.15fr_0.85fr] lg:px-10">
-            <div>
-              <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-                Suscripción
-              </div>
-              <h1 className="mt-6 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                Completa tu suscripción
-              </h1>
-              <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-600">
-                Avanza por pasos. Primero eliges el plan, después confirmas el cambio y al final te redirigimos a Mercado Pago para completar el pago.
-              </p>
-
-              <div className="mt-8 grid gap-4 md:grid-cols-3">
-                {flowSteps.map((step) => (
-                  <button
-                    key={step.id}
-                    type="button"
-                    onClick={() => {
-                      if (step.id > currentStep) return
-                      if (step.id !== 3) setPendingCheckoutRedirect(false)
-                      setCurrentStep(step.id)
-                    }}
-                    className={`rounded-[24px] border p-5 text-left transition ${
-                      currentStep === step.id
-                        ? "border-blue-500 bg-white shadow-[0_18px_40px_-24px_rgba(37,99,235,0.35)]"
-                        : step.id < currentStep
-                          ? "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/30"
-                          : "border-white/70 bg-white/70"
-                    }`}
-                  >
-                    <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
-                      {step.id}
-                    </div>
-                    <div className="mt-4 text-lg font-semibold text-slate-950">{step.title}</div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{step.description}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid gap-4">
-              {!loading && ownedEntity ? (
-                <>
-                  <SummaryCard
-                    label="Ficha vinculada"
-                    title={ownedEntity.record.nombre}
-                    description={userEntityLabels[ownedEntity.type]}
-                  />
-                  <SummaryCard
-                    label="Estado actual"
-                    title={statusLabel}
-                    description={`Plan actual: ${currentPlan.name}`}
-                    badge={
-                      <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${statusBadge}`}>
-                        {statusLabel}
-                      </span>
-                    }
-                  />
-                  <SummaryCard
-                    label="Último cambio"
-                    title={subscriptionUpdatedAt || "Sin fecha registrada"}
-                    description={
-                      subscriptionUpdatedAt
-                        ? "Fecha guardada del último cambio o actualización."
-                        : "Todavía no hay una fecha guardada para esta suscripción."
-                    }
-                  />
-                </>
-              ) : null}
-            </div>
-          </div>
-        </section>
-
+      <div className="mx-auto max-w-[1320px]">
         <section className="rounded-[36px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.2)] sm:p-8 lg:p-10">
           {loading ? (
             <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
@@ -326,241 +235,210 @@ export default function UsuariosSuscripcionPage() {
               {error ? <AuthFormStatus tone="error" message={error} /> : null}
               {success ? <AuthFormStatus tone="success" message={success} /> : null}
 
-              <div className="flex flex-wrap items-center justify-between gap-4 rounded-[28px] border border-slate-200 bg-slate-50 px-5 py-4">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Paso {currentStep} de 3
-                  </div>
-                  <div className="mt-2 text-2xl font-semibold text-slate-950">{stepDescription?.title}</div>
-                  <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
-                    {stepDescription?.description}
-                  </p>
-                </div>
-                <div className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
-                  Plan elegido: {nextPlan.name}
-                </div>
-              </div>
-
-              {currentStep === 1 ? (
-                <div className="space-y-5">
-                  <div className="grid gap-6 xl:grid-cols-3">
-                    {(Object.entries(subscriptionPlans) as Array<
-                      [SubscriptionPlanKey, (typeof subscriptionPlans)[SubscriptionPlanKey]]
-                    >).map(([planKey, plan]) => (
-                      <button
-                        key={planKey}
-                        type="button"
-                        onClick={() => setSelectedPlan(planKey)}
-                        className={`flex h-full flex-col rounded-[30px] border p-6 text-left transition ${
-                          selectedPlan === planKey
-                            ? "border-blue-500 bg-blue-50 shadow-[0_18px_40px_-24px_rgba(37,99,235,0.45)]"
-                            : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/30"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                              {plan.shortLabel}
-                            </div>
-                            <div className="mt-2 text-[2rem] font-semibold leading-[1.05] text-slate-950">
-                              {plan.name}
-                            </div>
-                          </div>
-                          <div className="shrink-0 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-                            {plan.price}
-                          </div>
-                        </div>
-
-                        <p className="mt-5 text-base leading-7 text-slate-600">{plan.tagline}</p>
-                        <p className="mt-4 text-sm leading-7 text-slate-500">{plan.description}</p>
-
-                        <div className="mt-6 space-y-3 text-sm leading-7 text-slate-600">
-                          {plan.features.map((feature) => (
-                            <div key={feature} className="flex gap-3">
-                              <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-500" />
-                              <span>{feature}</span>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-                          {selectedPlan === planKey ? (
-                            <>
-                              <CheckCircle2 className="h-4 w-4 text-blue-600" />
-                              Seleccionado
-                            </>
-                          ) : (
-                            "Elegir este plan"
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-
-              {currentStep === 2 ? (
-                <div className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
-                  <div className="rounded-[30px] border border-slate-200 bg-slate-50 p-6">
+              {mode === "summary" ? (
+                <div className="space-y-6">
+                  <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-6">
                     <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                      Resumen del cambio
+                      Suscripción actual
                     </div>
-                    <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
-                      {nextPlan.name}
-                    </h2>
-                    <div className="mt-4 inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
-                      {nextPlan.price}
-                    </div>
-                    <p className="mt-5 text-sm leading-7 text-slate-600">
-                      {selectedPlanChanged
-                        ? `Vas a cambiar desde ${currentPlan.name} hacia ${nextPlan.name}.`
-                        : `Mantendrás ${nextPlan.name} como plan de tu ficha.`}
+                    <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-950">
+                      {currentPlan.name}
+                    </h1>
+                    <p className="mt-3 text-base leading-7 text-slate-600">
+                      Aquí puedes ver tu plan actual, revisar la fecha registrada y cambiarlo cuando quieras.
                     </p>
-                    <div className="mt-6 space-y-3 text-sm leading-7 text-slate-600">
-                      {nextPlan.features.map((feature) => (
-                        <div key={feature} className="flex gap-3">
-                          <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-500" />
-                          <span>{feature}</span>
-                        </div>
-                      ))}
-                    </div>
                   </div>
 
-                  <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                      Confirmación
-                    </div>
-                    <h3 className="mt-3 text-2xl font-semibold text-slate-950">
-                      Guarda el plan y continúa
-                    </h3>
-                    <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-                      Este paso deja guardado el plan que usará tu ficha. En cuanto lo confirmes, pasas al último paso y te avisamos antes de salir a Mercado Pago.
-                    </p>
-                    <div className="mt-6 flex flex-wrap gap-3">
-                      <button
-                        type="button"
-                        onClick={() => void handleSavePlan()}
-                        disabled={saving || cancelling}
-                        className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70"
-                      >
-                        <CreditCard className="h-4 w-4" />
-                        {saving ? "Guardando..." : "Guardar cambio y continuar"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPendingCheckoutRedirect(false)
-                          setCurrentStep(1)
-                        }}
-                        disabled={saving || cancelling}
-                        className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600 disabled:opacity-70"
-                      >
-                        Volver a planes
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-
-              {currentStep === 3 ? (
-                <div className="grid gap-6 xl:grid-cols-[1fr_0.72fr]">
-                  <div className="rounded-[30px] border border-slate-200 bg-slate-50 p-6">
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                      Paso final
-                    </div>
-                    <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
-                      Te vamos a redirigir a Mercado Pago
-                    </h2>
-                    <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-                      Tu plan <span className="font-semibold text-slate-900">{nextPlan.name}</span> ya quedó guardado. En unos segundos te enviamos a Mercado Pago para completar la suscripción.
-                    </p>
-                    <div className="mt-5 rounded-[24px] border border-blue-200 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-900">
-                      Vas a salir momentáneamente de Hola Varela para completar un pago seguro en Mercado Pago.
-                    </div>
-                    <div className="mt-6 flex flex-wrap gap-3">
-                      <a
-                        href={nextPlan.checkoutUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        Ir ahora a Mercado Pago
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPendingCheckoutRedirect(false)
-                          setCurrentStep(2)
-                        }}
-                        className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                      >
-                        <ArrowLeft className="h-4 w-4" />
-                        Volver al paso anterior
-                      </button>
-                    </div>
+                  <div className="grid gap-6 lg:grid-cols-3">
+                    <SummaryCard
+                      label="Ficha vinculada"
+                      title={ownedEntity.record.nombre}
+                      description={userEntityLabels[ownedEntity.type]}
+                    />
+                    <SummaryCard
+                      label="Estado"
+                      title={statusLabel}
+                      description={`Plan actual: ${currentPlan.name}`}
+                      badge={
+                        <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${statusBadge}`}>
+                          {statusLabel}
+                        </span>
+                      }
+                    />
+                    <SummaryCard
+                      label="Fecha de débito"
+                      title={subscriptionUpdatedAt}
+                      description="Mostramos la última fecha registrada de esta suscripción."
+                    />
                   </div>
 
-                  <div className="rounded-[30px] border border-rose-200 bg-rose-50/70 p-6">
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-rose-500">
-                      Opción adicional
-                    </div>
-                    <h3 className="mt-3 text-2xl font-semibold text-slate-950">
-                      Cancelar suscripción
-                    </h3>
-                    <p className="mt-3 text-sm leading-7 text-slate-600">
-                      Si cancelas, tu ficha y sus eventos visibles pasarán a oculto hasta que vuelvas a activarla.
-                    </p>
-                    <div className="mt-6">
+                  <div className="rounded-[28px] border border-slate-200 bg-white p-6">
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={startPlanChange}
+                        className="inline-flex items-center justify-center rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+                      >
+                        Cambiar plan
+                      </button>
                       <button
                         type="button"
                         onClick={() => void handleCancelSubscription()}
-                        disabled={saving || cancelling}
-                        className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50 disabled:opacity-60"
+                        disabled={cancelling}
+                        className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-5 py-3 text-sm font-medium text-rose-700 transition hover:bg-rose-50 disabled:opacity-60"
                       >
                         <ShieldOff className="h-4 w-4" />
-                        {cancelling ? "Cancelando..." : "Cancelar mi suscripción"}
+                        {cancelling ? "Cancelando..." : "Dar de baja mi suscripción"}
                       </button>
+                      <Link
+                        href="/usuarios"
+                        className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                      >
+                        Volver al panel
+                      </Link>
                     </div>
                   </div>
                 </div>
               ) : null}
 
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-                <div className="text-sm text-slate-500">
-                  {currentStep === 1
-                    ? "Elige un plan para avanzar."
-                    : currentStep === 2
-                      ? "Confirma el cambio y luego pasa al pago."
-                      : "Estás por salir a Mercado Pago para terminar la suscripción."}
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  {canGoBack ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPendingCheckoutRedirect(false)
-                        setCurrentStep((current) => Math.max(1, current - 1) as FlowStep)
-                      }}
-                      className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                    >
-                      Volver
-                    </button>
+              {mode === "change" ? (
+                <div className="space-y-6">
+                  {currentStep === 1 ? (
+                    <div className="space-y-6">
+                      <div className="rounded-[28px] border border-slate-200 bg-slate-50 px-5 py-4">
+                        <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                          Paso 1 de 2
+                        </div>
+                        <div className="mt-2 text-2xl font-semibold text-slate-950">Elige tu plan</div>
+                        <p className="mt-2 text-sm leading-7 text-slate-600">
+                          Selecciona la opción que mejor acompaña tu ficha.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-6 xl:grid-cols-3">
+                        {(Object.entries(subscriptionPlans) as Array<
+                          [SubscriptionPlanKey, (typeof subscriptionPlans)[SubscriptionPlanKey]]
+                        >).map(([planKey, plan]) => (
+                          <button
+                            key={planKey}
+                            type="button"
+                            onClick={() => setSelectedPlan(planKey)}
+                            className={`flex h-full flex-col rounded-[30px] border p-6 text-left transition ${
+                              selectedPlan === planKey
+                                ? "border-blue-500 bg-blue-50 shadow-[0_18px_40px_-24px_rgba(37,99,235,0.45)]"
+                                : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/30"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div>
+                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                                  {plan.shortLabel}
+                                </div>
+                                <div className="mt-2 text-[2rem] font-semibold leading-[1.05] text-slate-950">
+                                  {plan.name}
+                                </div>
+                              </div>
+                              <div className="shrink-0 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+                                {plan.price}
+                              </div>
+                            </div>
+
+                            <p className="mt-5 text-base leading-7 text-slate-600">{plan.tagline}</p>
+                            <p className="mt-4 text-sm leading-7 text-slate-500">{plan.description}</p>
+
+                            <div className="mt-6 space-y-3 text-sm leading-7 text-slate-600">
+                              {plan.features.map((feature) => (
+                                <div key={feature} className="flex gap-3">
+                                  <span className="mt-2 h-1.5 w-1.5 rounded-full bg-blue-500" />
+                                  <span>{feature}</span>
+                                </div>
+                              ))}
+                            </div>
+
+                            <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+                              {selectedPlan === planKey ? (
+                                <>
+                                  <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                                  Seleccionado
+                                </>
+                              ) : (
+                                "Elegir este plan"
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                        <div className="text-sm text-slate-500">Elige un plan para avanzar.</div>
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            onClick={backToSummary}
+                            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                          >
+                            Volver
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void handleSaveAndContinue()}
+                            disabled={saving}
+                            className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70"
+                          >
+                            {saving ? "Guardando..." : "Siguiente"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   ) : null}
-                  {canGoNext ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPendingCheckoutRedirect(false)
-                        setCurrentStep((current) => Math.min(3, current + 1) as FlowStep)
-                      }}
-                      className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600"
-                    >
-                      Siguiente
-                    </button>
+
+                  {currentStep === 2 ? (
+                    <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
+                      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                        Paso 2 de 2
+                      </div>
+                      <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
+                        Continúa el pago en Mercado Pago
+                      </h2>
+                      <p className="mt-4 max-w-3xl text-base leading-8 text-slate-600">
+                        Ya quedó seleccionado y guardado {nextPlan.name}. Ahora puedes completar Mercado Pago para completar la suscripción.
+                      </p>
+                      <p className="mt-4 text-sm leading-7 text-slate-500">
+                        Podes cancelar desde tu perfil cuando quieras tu suscripción.
+                      </p>
+                      <div className="mt-5 rounded-[24px] border border-blue-200 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-900">
+                        En unos segundos te vamos a redirigir automáticamente a Mercado Pago.
+                      </div>
+
+                      <div className="mt-6 flex flex-wrap gap-3">
+                        <a
+                          href={nextPlan.checkoutUrl}
+                          className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          Continúa el pago en Mercado Pago
+                        </a>
+                      </div>
+
+                      <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                        <div className="text-sm text-slate-500">
+                          Si todavía quieres revisar algo, puedes volver al paso anterior.
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPendingCheckoutRedirect(false)
+                            setCurrentStep(1)
+                          }}
+                          className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                        >
+                          Volver
+                        </button>
+                      </div>
+                    </div>
                   ) : null}
                 </div>
-              </div>
+              ) : null}
             </div>
           ) : null}
         </section>
@@ -581,7 +459,7 @@ function SummaryCard({
   badge?: ReactNode
 }) {
   return (
-    <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
+    <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
       <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
         {label}
       </div>
