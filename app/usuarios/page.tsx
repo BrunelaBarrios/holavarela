@@ -3,13 +3,12 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
-import { CalendarDays, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, Menu, PlusCircle, Send, XCircle } from "lucide-react"
+import { BarChart3, CalendarDays, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, Menu, PlusCircle, Send, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../components/AuthFormStatus"
 import { formatEventDateRange } from "../lib/eventDates"
 import { subscriptionPlans, type SubscriptionPlanKey } from "../lib/subscriptionPlans"
 import { buildUserProfileFields, fetchUserOwnedEvents, findUserOwnedEntity, getUserProfileImageSrc, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, type UserEntityType, type UserOwnedEntity, type UserOwnedEvent } from "../lib/userProfiles"
-import type { ViewMoreSection } from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
 
 type ExternalLinksForm = { webUrl: string; instagramUrl: string; facebookUrl: string }
@@ -23,15 +22,6 @@ const initialComercio: ComercioForm = { nombre: "", direccion: "", telefono: "",
 const initialServicio: ServicioForm = { nombre: "", categoria: "Profesionales", descripcion: "", responsable: "", contacto: "", direccion: "", webUrl: "", instagramUrl: "", facebookUrl: "", usaWhatsapp: true }
 const initialCurso: CursoForm = { nombre: "", descripcion: "", responsable: "", contacto: "", webUrl: "", instagramUrl: "", facebookUrl: "", usaWhatsapp: true }
 const initialInstitucion: InstitucionForm = { nombre: "", descripcion: "", direccion: "", telefono: "", webUrl: "", instagramUrl: "", facebookUrl: "", usaWhatsapp: true }
-const INTERACTION_WINDOW_DAYS = 14
-const VISITOR_WINDOW_DAYS = 30
-
-type AnalyticsTotals = {
-  interactions14Days: number
-  visitors14Days: number
-  visitors30Days: number
-}
-
 function formatEventState(status?: string | null) {
   const normalized = normalizeEventStatus(status)
   if (normalized === "borrador") return "Borrador"
@@ -67,25 +57,6 @@ function buildOnboardingPayload(params: { type: UserEntityType; email: string; c
   return { table: "instituciones" as const, payload: { nombre: params.institucion.nombre.trim(), descripcion: params.institucion.descripcion.trim() || null, direccion: params.institucion.direccion.trim() || null, telefono: params.institucion.telefono.trim() || null, web_url: params.institucion.webUrl.trim() || null, instagram_url: params.institucion.instagramUrl.trim() || null, facebook_url: params.institucion.facebookUrl.trim() || null, foto: null, estado: "borrador", owner_email: params.email, usa_whatsapp: params.institucion.usaWhatsapp } }
 }
 
-function getEntitySection(type: UserEntityType): ViewMoreSection {
-  if (type === "comercio") return "comercios"
-  if (type === "servicio") return "servicios"
-  if (type === "curso") return "cursos"
-  return "instituciones"
-}
-
-function getIsoDaysAgo(days: number) {
-  const date = new Date()
-  date.setDate(date.getDate() - days)
-  return date.toISOString()
-}
-
-function countUniqueBrowsers(rows: Array<{ browser_key: string | null }>) {
-  return new Set(
-    rows.map((row) => row.browser_key).filter((browserKey): browserKey is string => Boolean(browserKey))
-  ).size
-}
-
 export default function UsuariosHomePage() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
@@ -102,12 +73,6 @@ export default function UsuariosHomePage() {
   const [savingOnboarding, setSavingOnboarding] = useState(false)
   const [updatingEventId, setUpdatingEventId] = useState<number | null>(null)
   const [actionsOpen, setActionsOpen] = useState(false)
-  const [analyticsLoading, setAnalyticsLoading] = useState(false)
-  const [analyticsTotals, setAnalyticsTotals] = useState<AnalyticsTotals>({
-    interactions14Days: 0,
-    visitors14Days: 0,
-    visitors30Days: 0,
-  })
 
   useEffect(() => {
     const loadSession = async () => {
@@ -130,135 +95,6 @@ export default function UsuariosHomePage() {
     }
     void loadSession()
   }, [router])
-
-  useEffect(() => {
-    const loadAnalytics = async () => {
-      if (!ownedEntity) {
-        setAnalyticsTotals({
-          interactions14Days: 0,
-          visitors14Days: 0,
-          visitors30Days: 0,
-        })
-        return
-      }
-
-      const entitySection = getEntitySection(ownedEntity.type)
-      const entityId = String(ownedEntity.record.id)
-      const eventIds = events.map((item) => String(item.id))
-      const since14 = getIsoDaysAgo(INTERACTION_WINDOW_DAYS)
-      const since30 = getIsoDaysAgo(VISITOR_WINDOW_DAYS)
-
-      const fetchInteractionRows = async (
-        table: "whatsapp_clicks" | "share_events" | "view_more_clicks" | "external_link_clicks",
-        section: ViewMoreSection,
-        itemIds: string[],
-        since: string
-      ) => {
-        if (itemIds.length === 0) return [] as Array<{ item_id: string | null }>
-
-        const { data, error: fetchError } = await supabase
-          .from(table)
-          .select("item_id")
-          .eq("section", section)
-          .in("item_id", itemIds)
-          .gte("created_at", since)
-
-        if (fetchError) throw fetchError
-        return data || []
-      }
-
-      const fetchEventLikeRows = async (itemIds: string[], since: string) => {
-        if (itemIds.length === 0) return [] as Array<{ created_at: string | null }>
-
-        const { data, error: fetchError } = await supabase
-          .from("event_likes")
-          .select("created_at")
-          .in("event_id", itemIds)
-          .gte("created_at", since)
-
-        if (fetchError) throw fetchError
-        return data || []
-      }
-
-      const fetchVisitorRows = async (
-        section: ViewMoreSection,
-        itemIds: string[],
-        since: string
-      ) => {
-        if (itemIds.length === 0) return [] as Array<{ browser_key: string | null }>
-
-        const { data, error: fetchError } = await supabase
-          .from("content_visits")
-          .select("browser_key")
-          .eq("section", section)
-          .in("item_id", itemIds)
-          .gte("created_at", since)
-
-        if (fetchError) throw fetchError
-        return data || []
-      }
-
-      setAnalyticsLoading(true)
-      try {
-        const [
-          entityWhatsappRows,
-          entityShareRows,
-          entityViewRows,
-          entityExternalRows,
-          eventWhatsappRows,
-          eventShareRows,
-          eventViewRows,
-          eventExternalRows,
-          eventLikeRows,
-          entityVisitorRows14,
-          eventVisitorRows14,
-          entityVisitorRows30,
-          eventVisitorRows30,
-        ] = await Promise.all([
-          fetchInteractionRows("whatsapp_clicks", entitySection, [entityId], since14),
-          fetchInteractionRows("share_events", entitySection, [entityId], since14),
-          fetchInteractionRows("view_more_clicks", entitySection, [entityId], since14),
-          fetchInteractionRows("external_link_clicks", entitySection, [entityId], since14),
-          fetchInteractionRows("whatsapp_clicks", "eventos", eventIds, since14),
-          fetchInteractionRows("share_events", "eventos", eventIds, since14),
-          fetchInteractionRows("view_more_clicks", "eventos", eventIds, since14),
-          fetchInteractionRows("external_link_clicks", "eventos", eventIds, since14),
-          fetchEventLikeRows(eventIds, since14),
-          fetchVisitorRows(entitySection, [entityId], since14),
-          fetchVisitorRows("eventos", eventIds, since14),
-          fetchVisitorRows(entitySection, [entityId], since30),
-          fetchVisitorRows("eventos", eventIds, since30),
-        ])
-
-        setAnalyticsTotals({
-          interactions14Days:
-            entityWhatsappRows.length +
-            entityShareRows.length +
-            entityViewRows.length +
-            entityExternalRows.length +
-            eventWhatsappRows.length +
-            eventShareRows.length +
-            eventViewRows.length +
-            eventExternalRows.length +
-            eventLikeRows.length,
-          visitors14Days: countUniqueBrowsers([
-            ...entityVisitorRows14,
-            ...eventVisitorRows14,
-          ]),
-          visitors30Days: countUniqueBrowsers([
-            ...entityVisitorRows30,
-            ...eventVisitorRows30,
-          ]),
-        })
-      } catch (analyticsError) {
-        console.error("No se pudieron cargar las metricas del perfil:", analyticsError)
-      } finally {
-        setAnalyticsLoading(false)
-      }
-    }
-
-    void loadAnalytics()
-  }, [events, ownedEntity])
 
   const handleLogout = async () => {
     const { error: signOutError } = await supabase.auth.signOut()
@@ -532,38 +368,6 @@ export default function UsuariosHomePage() {
                 <DashboardMetric label="Perfil" value={userEntityLabels[ownedEntity.type]} description="Tu ficha principal ya quedo vinculada a esta cuenta." />
                 <DashboardMetric label="Eventos" value={String(events.length)} description={`${activeEvents.length} activos · ${draftEvents.length + hiddenEvents.length} pendientes`} />
               </div>
-              <div className="mt-6 rounded-[28px] border border-white/80 bg-white/85 p-6 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.25)] backdrop-blur">
-                <div className="flex flex-wrap items-end justify-between gap-3">
-                  <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                        Alcance en la web
-                      </div>
-                      <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-                        Totales de tu ficha
-                      </h2>
-                    </div>
-                    <div className="text-sm text-slate-500">
-                    {analyticsLoading ? "Actualizando..." : "Visitantes e interacciones recientes"}
-                    </div>
-                  </div>
-                  <div className="mt-5 grid gap-4 md:grid-cols-3">
-                    <DashboardMetric
-                    label="Interacciones en la web"
-                      value={String(analyticsTotals.interactions14Days)}
-                    description="Ultimos 14 dias"
-                    />
-                    <DashboardMetric
-                    label="Visitantes en la web"
-                      value={String(analyticsTotals.visitors14Days)}
-                    description="Ultimos 14 dias"
-                    />
-                    <DashboardMetric
-                    label="Visitantes en la web"
-                      value={String(analyticsTotals.visitors30Days)}
-                    description="Ultimos 30 dias"
-                    />
-                  </div>
-              </div>
               <div className="mt-8">
                 <UnifiedEventsSection
                   activeEvents={activeEvents}
@@ -588,8 +392,9 @@ export default function UsuariosHomePage() {
                 <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones rápidas</div>
                 <div className="mt-4 space-y-3">
                   <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description={hasPremium ? "Actualiza datos, imagen y el contenido ampliado de tu ficha." : "Actualiza descripción, imagen y datos de contacto."} />
-                  {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
-                  <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
+                        {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
+                        <QuickLink href="/usuarios/metricas-holavarela" icon={<BarChart3 className="h-5 w-5 text-slate-400 transition group-hover:text-indigo-600" />} title="Métricas de Hola Varela" description="Conoce visitantes, vistas y actividad general de la plataforma." />
+                        <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
                   <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contraseña" description="Hazlo de forma segura validando tu clave actual." />
                   <QuickLink href="/" icon={<ExternalLink className="h-5 w-5 text-slate-400 transition group-hover:text-slate-700" />} title="Ver sitio público" description="Revisa cómo aparece Hola Varela para las visitas." />
                 </div>
