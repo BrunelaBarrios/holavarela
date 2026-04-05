@@ -161,7 +161,6 @@ type ContactLeadForm = {
   responsableCurso: string
   contactoCurso: string
   notas: string
-  incluirEvento: boolean
   nombreRemitenteEvento: string
   tituloEvento: string
   categoriaEvento: string
@@ -325,7 +324,6 @@ const initialContactLeadForm: ContactLeadForm = {
   responsableCurso: "",
   contactoCurso: "",
   notas: "",
-  incluirEvento: false,
   nombreRemitenteEvento: "",
   tituloEvento: "",
   categoriaEvento: "Evento",
@@ -654,6 +652,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         ? "Recibimos tu evento. Lo revisaremos y te contactaremos si hace falta completar algún dato."
         : "Recibimos tu propuesta. La revisaremos y te contactaremos si hace falta completar algún dato."
     )
+    setContactLeadStatus(contactLeadSuccessMessage)
     setContactLeadLoading(false)
   }
 
@@ -719,6 +718,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const isEventOnlyLead = contactLeadForm.tipo === "evento"
   const showListingFields = !isEventOnlyLead
   const showEventFields = isEventOnlyLead
+  const contactLeadIntro =
+    "Elige que quieres sumar y completa los datos para que podamos revisarlo."
+  const contactLeadSubmitHint = isEventOnlyLead
+    ? "Revisaremos tu evento y te escribiremos si hace falta completar algun dato."
+    : "Si aprobamos la propuesta, te enviaremos por email un usuario y una contrasena para entrar."
+  const contactLeadSuccessMessage = isEventOnlyLead
+    ? "Recibimos tu evento. Lo revisaremos y te contactaremos si hace falta completar algun dato."
+    : "Recibimos tu propuesta. Te asignaremos un usuario y una contrasena por email cuando la revisemos."
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#f2f7f5_48%,#ffffff_100%)] text-slate-900">
@@ -890,9 +897,10 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               <h3 className="mt-4 text-[30px] font-semibold text-slate-900">
                 Completa tu propuesta
               </h3>
-              <p className="mt-3 text-base leading-7 text-slate-500">
+              <p className="hidden mt-3 text-base leading-7 text-slate-500">
                 Elige qué quieres sumar, completa los datos y después te avisamos por email cómo seguir con tu usuario.
               </p>
+              <p className="mt-3 text-base leading-7 text-slate-500">{contactLeadIntro}</p>
             </div>
 
             <form onSubmit={handleContactLeadSubmit} className="mt-8 space-y-4">
@@ -911,8 +919,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           setContactLeadForm((prev) => ({
                             ...prev,
                             tipo: option.value,
-                            incluirEvento:
-                              option.value === "evento" ? false : prev.incluirEvento,
                           }))
                         }
                         className={`rounded-2xl border px-3 py-3 text-left transition ${
@@ -1316,11 +1322,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               )}
 
               <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-slate-500">
-                  {isEventOnlyLead
-                    ? "Revisaremos tu evento y te escribiremos si hace falta completar algun dato."
-                    : "Revisaremos tu propuesta y te escribiremos si hace falta completar algun dato."}
-                </p>
+                <p className="text-sm text-slate-500">{contactLeadSubmitHint}</p>
                 <button
                   type="submit"
                   disabled={contactLeadLoading}
