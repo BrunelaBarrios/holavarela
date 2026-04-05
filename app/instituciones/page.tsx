@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../components/ContactActionLink"
 import { ExternalLinksButtons } from "../components/ExternalLinksButtons"
 import { OptimizedImage } from "../components/OptimizedImage"
 import { PublicDetailModal } from "../components/PublicDetailModal"
 import { PublicHeader } from "../components/PublicHeader"
+import { ShareButton } from "../components/ShareButton"
 import { buildPublicNav } from "../lib/publicNav"
 import { recordViewMore } from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
@@ -26,6 +28,7 @@ type Institucion = {
 }
 
 export default function InstitucionesPage() {
+  const searchParams = useSearchParams()
   const [instituciones, setInstituciones] = useState<Institucion[]>([])
   const [search, setSearch] = useState("")
   const [selectedInstitucion, setSelectedInstitucion] = useState<Institucion | null>(null)
@@ -48,6 +51,24 @@ export default function InstitucionesPage() {
 
     void cargarInstituciones()
   }, [])
+
+  useEffect(() => {
+    const selectedId = searchParams.get("item")
+    if (!selectedId || instituciones.length === 0) return
+
+    const institution = instituciones.find(
+      (item) => String(item.id) === selectedId
+    )
+
+    if (!institution) return
+
+    void recordViewMore("instituciones", String(institution.id), institution.nombre)
+    const timeoutId = window.setTimeout(() => {
+      setSelectedInstitucion(institution)
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [instituciones, searchParams])
 
   const institucionesFiltradas = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -76,6 +97,11 @@ export default function InstitucionesPage() {
   ) => {
     if (!telefono) return "#"
     return usaWhatsapp === false ? `tel:${telefono}` : whatsappLink(telefono)
+  }
+
+  const getShareUrl = (id: number) => {
+    if (typeof window === "undefined") return ""
+    return `${window.location.origin}/instituciones/${id}`
   }
 
   return (
@@ -122,6 +148,16 @@ export default function InstitucionesPage() {
               instagramUrl={selectedInstitucion?.instagram_url}
               facebookUrl={selectedInstitucion?.facebook_url}
             />
+            {selectedInstitucion ? (
+              <ShareButton
+                title={selectedInstitucion.nombre}
+                text={selectedInstitucion.descripcion || "Conoce esta institución en Hola Varela."}
+                url={getShareUrl(selectedInstitucion.id)}
+                section="instituciones"
+                itemId={String(selectedInstitucion.id)}
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-sky-300 hover:text-sky-600"
+              />
+            ) : null}
           </>
         }
       />

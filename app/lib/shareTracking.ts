@@ -5,6 +5,7 @@ export const SHARE_SECTIONS = [
   "eventos",
   "cursos",
   "servicios",
+  "instituciones",
 ] as const
 
 export type ShareSection = (typeof SHARE_SECTIONS)[number]
@@ -17,6 +18,7 @@ export const emptyShareTotals = (): ShareTotals => ({
   eventos: 0,
   cursos: 0,
   servicios: 0,
+  instituciones: 0,
 })
 
 export const recordShare = async (

@@ -206,6 +206,7 @@ export default function AdminDashboardPage() {
     shareTotals.eventos +
     shareTotals.cursos +
     shareTotals.servicios +
+    shareTotals.instituciones +
     whatsappTotals.comercios +
     whatsappTotals.servicios +
     whatsappTotals.cursos +
@@ -549,7 +550,7 @@ export default function AdminDashboardPage() {
                   Compartir
                 </div>
                 <div className="text-3xl font-semibold text-slate-900">
-                  {shareTotals.comercios + shareTotals.eventos + shareTotals.cursos + shareTotals.servicios}
+                  {shareTotals.comercios + shareTotals.eventos + shareTotals.cursos + shareTotals.servicios + shareTotals.instituciones}
                 </div>
               </div>
               <div className="rounded-2xl bg-sky-50 p-5">
@@ -579,6 +580,7 @@ export default function AdminDashboardPage() {
                   <div>Eventos: <span className="font-semibold">{shareTotals.eventos}</span></div>
                   <div>Cursos: <span className="font-semibold">{shareTotals.cursos}</span></div>
                   <div>Servicios: <span className="font-semibold">{shareTotals.servicios}</span></div>
+                  <div>Instituciones: <span className="font-semibold">{shareTotals.instituciones}</span></div>
                 </div>
               </div>
               <div className="rounded-2xl bg-slate-50 p-4">

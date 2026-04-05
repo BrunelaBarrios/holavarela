@@ -343,6 +343,7 @@ const PUBLIC_LEAD_TYPE_OPTIONS: Array<{
   { value: "servicio", label: "Servicio", icon: BriefcaseBusiness },
   { value: "curso", label: "Curso o clase", icon: GraduationCap },
   { value: "institucion", label: "Institución", icon: School },
+  { value: "evento", label: "Evento", icon: CalendarDays },
 ]
 
 const EVENT_CATEGORY_OPTIONS = ["Evento", "Promoción", "Sorteo", "Beneficio"]
@@ -581,6 +582,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
     const trimmedEventSender =
       contactLeadForm.nombreRemitenteEvento.trim() || contactLeadForm.nombre.trim()
+    const isEventOnlyLead = contactLeadForm.tipo === "evento"
 
     const payload = {
       nombre: contactLeadForm.nombre.trim(),
@@ -592,11 +594,13 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         senderName: contactLeadForm.nombre.trim(),
         senderEmail: contactLeadForm.email.trim(),
         senderPhone: contactLeadForm.telefono.trim(),
-        listingName: contactLeadForm.nombreFicha.trim(),
-        listingDescription: contactLeadForm.descripcionFicha.trim(),
-        listingAddress: contactLeadForm.direccionFicha.trim(),
-        listingPhone: contactLeadForm.telefonoFicha.trim(),
-        listingImage: contactLeadForm.imagenFicha || null,
+        listingName: isEventOnlyLead ? contactLeadForm.tituloEvento.trim() : contactLeadForm.nombreFicha.trim(),
+        listingDescription: isEventOnlyLead
+          ? contactLeadForm.descripcionEvento.trim()
+          : contactLeadForm.descripcionFicha.trim(),
+        listingAddress: isEventOnlyLead ? contactLeadForm.ubicacionEvento.trim() : contactLeadForm.direccionFicha.trim(),
+        listingPhone: isEventOnlyLead ? "" : contactLeadForm.telefonoFicha.trim(),
+        listingImage: isEventOnlyLead ? contactLeadForm.imagenEvento || null : contactLeadForm.imagenFicha || null,
         serviceCategory:
           contactLeadForm.tipo === "servicio"
             ? contactLeadForm.categoriaServicio.trim()
@@ -610,7 +614,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             ? contactLeadForm.contactoCurso.trim()
             : undefined,
         notes: contactLeadForm.notas.trim() || undefined,
-        event: contactLeadForm.incluirEvento
+        event: isEventOnlyLead || contactLeadForm.incluirEvento
           ? {
               senderName: trimmedEventSender,
               title: contactLeadForm.tituloEvento.trim(),
@@ -634,7 +638,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
     setContactLeadForm(initialContactLeadForm)
     setContactLeadStatus(
-      "Recibimos tu propuesta. Te llegará un email con los datos de tu usuario cuando revisemos la solicitud."
+      isEventOnlyLead
+        ? "Recibimos tu evento. Lo revisaremos y te contactaremos si hace falta completar algún dato."
+        : "Recibimos tu propuesta. Te asignaremos un usuario y contraseña por email."
     )
     setContactLeadLoading(false)
   }
@@ -697,6 +703,10 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
     closeWelcomeHighlight()
   }
+
+  const isEventOnlyLead = contactLeadForm.tipo === "evento"
+  const showListingFields = !isEventOnlyLead
+  const showEventFields = isEventOnlyLead || contactLeadForm.incluirEvento
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#f2f7f5_48%,#ffffff_100%)] text-slate-900">
@@ -878,7 +888,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 <label className="mb-3 block text-sm font-medium text-slate-700">
                   ¿Qué quieres sumar?
                 </label>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
                   {PUBLIC_LEAD_TYPE_OPTIONS.map((option) => {
                     const Icon = option.icon
                     return (
@@ -889,6 +899,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           setContactLeadForm((prev) => ({
                             ...prev,
                             tipo: option.value,
+                            incluirEvento:
+                              option.value === "evento" ? false : prev.incluirEvento,
                           }))
                         }
                         className={`rounded-2xl border px-3 py-3 text-left transition ${
@@ -966,6 +978,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 </div>
               </div>
 
+              {showListingFields ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="mb-4 text-sm font-semibold text-slate-800">
                   Datos de tu {getPublicLeadTypeLabel(contactLeadForm.tipo).toLowerCase()}
@@ -1069,7 +1082,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         }))
                       }
                       className="min-h-28 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                      placeholder="Cuéntanos qué hace especial tu propuesta."
+                      placeholder="Escribi sobre tu negocio, horario, que ofreces y cualquier detalle util para mostrarlo bien."
                       required
                     />
                   </div>
@@ -1128,7 +1141,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   </div>
                 </div>
               </div>
+              ) : null}
 
+              {!isEventOnlyLead ? (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <label className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 sm:col-span-2">
                   <input
@@ -1145,8 +1160,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   También quiero enviar un evento
                 </label>
               </div>
+              ) : null}
 
-              {contactLeadForm.incluirEvento ? (
+              {showEventFields ? (
                 <div className="rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="mb-4 text-sm font-semibold text-slate-800">
                     Datos del evento
@@ -1166,7 +1182,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           }))
                         }
                         className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                        required={contactLeadForm.incluirEvento}
+                        required={showEventFields}
                       />
                     </div>
 
@@ -1206,7 +1222,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           }))
                         }
                         className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                        required={contactLeadForm.incluirEvento}
+                        required={showEventFields}
                       />
                     </div>
 
@@ -1224,7 +1240,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           }))
                         }
                         className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                        required={contactLeadForm.incluirEvento}
+                        required={showEventFields}
                       />
                     </div>
 
@@ -1242,7 +1258,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           }))
                         }
                         className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                        required={contactLeadForm.incluirEvento}
+                        required={showEventFields}
                       />
                     </div>
 
@@ -1259,7 +1275,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           }))
                         }
                         className="min-h-28 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                        required={contactLeadForm.incluirEvento}
+                        required={showEventFields}
                       />
                     </div>
 
@@ -1308,14 +1324,16 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
               <div className="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-slate-500">
-                  Te llegará un email con los datos de tu usuario después de revisar la propuesta.
+                  {isEventOnlyLead
+                    ? "Revisaremos tu evento y te escribiremos si hace falta completar algun dato."
+                    : "Te asignaremos un usuario y contrasena por email."}
                 </p>
                 <button
                   type="submit"
                   disabled={contactLeadLoading}
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-600 px-6 py-3 font-semibold text-white transition hover:bg-sky-500 disabled:opacity-60"
                 >
-                  {contactLeadLoading ? "Enviando..." : "Enviar propuesta"}
+                  {contactLeadLoading ? "Enviando..." : "Enviar"}
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </div>

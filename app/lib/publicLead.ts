@@ -1,4 +1,4 @@
-export type PublicLeadType = "comercio" | "servicio" | "curso" | "institucion"
+export type PublicLeadType = "comercio" | "servicio" | "curso" | "institucion" | "evento"
 
 export type PublicLeadRecord = {
   version: 1
@@ -54,6 +54,8 @@ export function getPublicLeadTypeLabel(type: PublicLeadType) {
       return "Curso o clase"
     case "institucion":
       return "Institución"
+    case "evento":
+      return "Evento"
     default:
       return type
   }
