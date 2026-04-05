@@ -56,7 +56,7 @@ export default function AdminLayout({
   const session = getAdminSession()
   const adminRole: AdminRole = session?.role || "admin"
   const adminName = session?.name || ""
-  const isLoginPage = pathname === "/admin/loginV"
+  const isLoginPage = pathname === "/admin/login" || pathname === "/admin/loginV"
   const isLoggedIn = Boolean(session)
   const isSuperAdminOnlyRoute = superAdminOnlyPrefixes.some((prefix) =>
     pathname.startsWith(prefix)
@@ -68,7 +68,7 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (shouldRedirectToLogin) {
-      router.replace("/admin/loginV")
+      router.replace("/admin/login")
       return
     }
 
@@ -93,10 +93,6 @@ export default function AdminLayout({
   }
 
   if (pathname === "/admin/login") {
-    return <>{children}</>
-  }
-
-  if (pathname === "/admin/loginV") {
     return <>{children}</>
   }
 
@@ -201,7 +197,7 @@ export default function AdminLayout({
                 onClick={() => {
                   setIsSidebarOpen(false)
                   clearAdminSession()
-                  router.push("/admin/loginV")
+                  router.push("/admin/login")
                 }}
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-red-600 transition hover:bg-red-50"
               >
