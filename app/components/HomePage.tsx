@@ -1975,7 +1975,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.5)] transition hover:-translate-y-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${business.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(59,130,246,0.35)]"}`}
                 >
                   {imageSrc && (
-                    <div className="relative h-52 w-full">
+                    <div className="relative h-36 w-full sm:h-52">
                       <OptimizedImage
                         src={imageSrc}
                         alt={business.nombre}
@@ -1985,17 +1985,17 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     </div>
                   )}
 
-                  <div className="p-5">
-                    <h3 className="text-[22px] font-semibold text-slate-900">
+                  <div className="p-4 sm:p-5">
+                    <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-[22px]">
                       {business.nombre}
                     </h3>
                     {business.descripcion && (
-                        <p className="line-clamp-3 mt-2 whitespace-pre-line text-base text-slate-500">
+                        <p className="mt-2 line-clamp-2 whitespace-pre-line text-sm text-slate-500 sm:line-clamp-3 sm:text-base">
                           {business.descripcion}
                         </p>
                     )}
                     {business.direccion && (
-                      <p className="mt-2 text-sm text-slate-500">
+                      <p className="mt-2 line-clamp-2 text-xs text-slate-500 sm:text-sm">
                         {business.direccion}
                       </p>
                     )}
@@ -2013,7 +2013,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         onClick={(event) => event.stopPropagation()}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-3 text-lg font-semibold text-white transition hover:bg-green-600"
+                        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-600 sm:mt-5 sm:py-3 sm:text-lg"
                       >
                         <Phone className="h-5 w-5" />
                         {business.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
@@ -2031,7 +2031,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             business.nombre
                           )
                         }}
-                        className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-violet-700 transition hover:text-violet-800"
+                        className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-violet-700 transition hover:text-violet-800 sm:text-sm"
                       >
                         Ver perfil completo
                         <ArrowRight className="h-4 w-4" />
@@ -2048,7 +2048,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             () => setSelectedComercio(business)
                           )
                         }}
-                        className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
+                        className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-blue-500 transition hover:text-blue-600 sm:text-sm"
                       >
                         Ver mas
                         <ArrowRight className="h-4 w-4" />
@@ -2149,7 +2149,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${servicio.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"}`}
                       >
                         {servicio.imagen && (
-                          <div className="relative h-48 w-full">
+                          <div className="relative h-36 w-full sm:h-48">
                             <OptimizedImage
                               src={servicio.imagen}
                               alt={servicio.nombre}
@@ -2159,24 +2159,24 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           </div>
                         )}
 
-                        <div className="p-5">
+                        <div className="p-4 sm:p-5">
                           {servicio.categoria && (
                             <div className="mb-3 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
                               {servicio.categoria}
                             </div>
                           )}
 
-                          <h3 className="text-xl font-semibold text-slate-900">
+                          <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-xl">
                             {servicio.nombre}
                           </h3>
 
                           {servicio.descripcion && (
-                              <p className="line-clamp-3 mt-3 whitespace-pre-line text-sm leading-7 text-slate-500">
+                              <p className="mt-2 line-clamp-2 whitespace-pre-line text-xs leading-6 text-slate-500 sm:mt-3 sm:line-clamp-3 sm:text-sm sm:leading-7">
                                 {servicio.descripcion}
                               </p>
                           )}
 
-                          <div className="mt-4 space-y-2 text-sm text-slate-600">
+                          <div className="mt-3 space-y-2 text-xs text-slate-600 sm:mt-4 sm:text-sm">
                             {servicio.responsable && (
                               <div className="flex items-center gap-2">
                                 <UserRound className="h-4 w-4" />
@@ -2212,7 +2212,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                               onClick={(event) => event.stopPropagation()}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-3 text-lg font-semibold text-white transition hover:bg-green-600"
+                              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-600 sm:mt-5 sm:py-3 sm:text-lg"
                             >
                               <Phone className="h-5 w-5" />
                               {servicio.usa_whatsapp === false ? "Llamar" : "WhatsApp"}
@@ -2230,7 +2230,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                                   servicio.nombre
                                 )
                               }}
-                              className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-violet-700 transition hover:text-violet-800"
+                              className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-violet-700 transition hover:text-violet-800 sm:text-sm"
                             >
                               Ver perfil completo
                               <ArrowRight className="h-4 w-4" />
@@ -2247,7 +2247,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                                   () => setSelectedServicio(servicio)
                                 )
                               }}
-                              className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
+                              className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-blue-500 transition hover:text-blue-600 sm:text-sm"
                             >
                               Ver más
                               <ArrowRight className="h-4 w-4" />
@@ -2448,7 +2448,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                 >
                   {curso.imagen && (
-                    <div className="relative h-56 w-full">
+                    <div className="relative h-36 w-full sm:h-56">
                       <OptimizedImage
                         src={curso.imagen}
                         alt={curso.nombre}
@@ -2458,14 +2458,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     </div>
                   )}
 
-                  <div className="p-5">
-                    <h3 className="text-[22px] font-semibold text-slate-900">
+                  <div className="p-4 sm:p-5">
+                    <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-[22px]">
                       {curso.nombre}
                     </h3>
-                      <p className="line-clamp-3 mt-3 whitespace-pre-line text-base leading-7 text-slate-500">
+                      <p className="mt-2 line-clamp-2 whitespace-pre-line text-sm leading-6 text-slate-500 sm:mt-3 sm:line-clamp-3 sm:text-base sm:leading-7">
                         {curso.descripcion}
                       </p>
-                    <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
+                    <div className="mt-3 flex items-center gap-2 text-xs text-slate-600 sm:mt-4 sm:text-sm">
                       <GraduationCap className="h-4 w-4" />
                       <span>{curso.responsable}</span>
                     </div>
@@ -2480,7 +2480,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           () => setSelectedCurso(curso)
                         )
                       }}
-                      className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
+                      className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-blue-500 transition hover:text-blue-600 sm:mt-5 sm:text-sm"
                     >
                       Ver más
                       <ArrowRight className="h-4 w-4" />
@@ -2545,7 +2545,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(6,182,212,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
                 >
                   {institucion.foto && (
-                    <div className="relative h-56 w-full">
+                    <div className="relative h-36 w-full sm:h-56">
                       <OptimizedImage
                         src={institucion.foto}
                         alt={institucion.nombre}
@@ -2555,8 +2555,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     </div>
                   )}
 
-                  <div className="p-5">
-                    <h3 className="text-[22px] font-semibold text-slate-900">
+                  <div className="p-4 sm:p-5">
+                    <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-[22px]">
                       {institucion.nombre}
                     </h3>
 
@@ -2571,7 +2571,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           () => setSelectedInstitucion(institucion)
                         )
                       }}
-                      className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-600 transition hover:text-cyan-700"
+                      className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-cyan-600 transition hover:text-cyan-700 sm:mt-5 sm:text-sm"
                     >
                         Ver más
                       <ArrowRight className="h-4 w-4" />
