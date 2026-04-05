@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { useSearchParams } from "next/navigation"
 import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../components/ContactActionLink"
 import { ExternalLinksButtons } from "../components/ExternalLinksButtons"
@@ -28,7 +27,6 @@ type Institucion = {
 }
 
 export default function InstitucionesPage() {
-  const searchParams = useSearchParams()
   const [instituciones, setInstituciones] = useState<Institucion[]>([])
   const [search, setSearch] = useState("")
   const [selectedInstitucion, setSelectedInstitucion] = useState<Institucion | null>(null)
@@ -53,7 +51,9 @@ export default function InstitucionesPage() {
   }, [])
 
   useEffect(() => {
-    const selectedId = searchParams.get("item")
+    if (typeof window === "undefined") return
+
+    const selectedId = new URLSearchParams(window.location.search).get("item")
     if (!selectedId || instituciones.length === 0) return
 
     const institution = instituciones.find(
@@ -68,7 +68,7 @@ export default function InstitucionesPage() {
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
-  }, [instituciones, searchParams])
+  }, [instituciones])
 
   const institucionesFiltradas = useMemo(() => {
     const term = search.trim().toLowerCase()

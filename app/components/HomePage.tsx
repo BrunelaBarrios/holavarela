@@ -614,7 +614,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             ? contactLeadForm.contactoCurso.trim()
             : undefined,
         notes: contactLeadForm.notas.trim() || undefined,
-        event: isEventOnlyLead || contactLeadForm.incluirEvento
+        event: isEventOnlyLead
           ? {
               senderName: trimmedEventSender,
               title: contactLeadForm.tituloEvento.trim(),
@@ -706,7 +706,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
   const isEventOnlyLead = contactLeadForm.tipo === "evento"
   const showListingFields = !isEventOnlyLead
-  const showEventFields = isEventOnlyLead || contactLeadForm.incluirEvento
+  const showEventFields = isEventOnlyLead
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#f2f7f5_48%,#ffffff_100%)] text-slate-900">
@@ -1140,25 +1140,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     ) : null}
                   </div>
                 </div>
-              </div>
-              ) : null}
-
-              {!isEventOnlyLead ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <label className="inline-flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700 sm:col-span-2">
-                  <input
-                    type="checkbox"
-                    checked={contactLeadForm.incluirEvento}
-                    onChange={(e) =>
-                      setContactLeadForm((prev) => ({
-                        ...prev,
-                        incluirEvento: e.target.checked,
-                      }))
-                    }
-                    className="h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                  />
-                  También quiero enviar un evento
-                </label>
               </div>
               ) : null}
 
