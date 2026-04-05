@@ -341,17 +341,18 @@ export default function UsuariosHomePage() {
                     <Menu className="h-5 w-5" />
                     Menú
                   </button>
-                  {actionsOpen ? (
-                    <div className="absolute right-0 top-full mt-3 w-[320px] rounded-[28px] border border-white/80 bg-white/95 p-4 shadow-[0_20px_50px_-26px_rgba(15,23,42,0.35)] backdrop-blur">
-                      <div className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones</div>
-                      <div className="space-y-3">
-                        <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description="Actualiza descripción, imagen y datos de contacto." />
-                        {hasPremium ? <QuickLink href="/usuarios/perfil#premium" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-fuchsia-600" />} title="Editar versión extendida" description="Administra el contenido ampliado de tu ficha desde el perfil." /> : null}
-                        {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
-                        <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
-                        <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contraseña" description="Hazlo de forma segura validando tu clave actual." />
-                        <QuickLink href="/" icon={<ExternalLink className="h-5 w-5 text-slate-400 transition group-hover:text-slate-700" />} title="Ver sitio público" description="Revisa cómo aparece Hola Varela para las visitas." />
-                      </div>
+                    {actionsOpen ? (
+                      <div className="absolute right-0 top-full z-20 mt-3 w-[340px] max-h-[70vh] overflow-y-auto rounded-[28px] border border-white/80 bg-white/95 p-4 shadow-[0_20px_50px_-26px_rgba(15,23,42,0.35)] backdrop-blur">
+                        <div className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones</div>
+                        <div className="space-y-3">
+                          <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description="Actualiza descripción, imagen y datos de contacto." />
+                          {hasPremium ? <QuickLink href="/usuarios/perfil#premium" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-fuchsia-600" />} title="Editar versión extendida" description="Administra el contenido ampliado de tu ficha desde el perfil." /> : null}
+                          {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
+                          <QuickLink href="/usuarios/metricas-holavarela" icon={<BarChart3 className="h-5 w-5 text-slate-400 transition group-hover:text-indigo-600" />} title="Métricas de Hola Varela" description="Conoce visitantes, vistas y actividad general de la plataforma." />
+                          <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
+                          <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contraseña" description="Hazlo de forma segura validando tu clave actual." />
+                          <QuickLink href="/" icon={<ExternalLink className="h-5 w-5 text-slate-400 transition group-hover:text-slate-700" />} title="Ver sitio público" description="Revisa cómo aparece Hola Varela para las visitas." />
+                        </div>
                     </div>
                   ) : null}
                 </div>
