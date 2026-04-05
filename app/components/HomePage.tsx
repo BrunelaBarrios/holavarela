@@ -722,10 +722,10 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     "Elige que quieres sumar y completa los datos para que podamos revisarlo."
   const contactLeadSubmitHint = isEventOnlyLead
     ? "Revisaremos tu evento y te escribiremos si hace falta completar algun dato."
-    : "Si aprobamos la propuesta, te enviaremos por email un usuario y una contrasena para entrar."
+    : "Revisaremos tu propuesta y te escribiremos si hace falta completar algun dato."
   const contactLeadSuccessMessage = isEventOnlyLead
     ? "Recibimos tu evento. Lo revisaremos y te contactaremos si hace falta completar algun dato."
-    : "Recibimos tu propuesta. Te asignaremos un usuario y una contrasena por email cuando la revisemos."
+    : "Recibimos tu propuesta. La revisaremos y te contactaremos si hace falta completar algun dato."
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#f2f7f5_48%,#ffffff_100%)] text-slate-900">
