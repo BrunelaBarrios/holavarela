@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
 import { ArrowRight, CalendarDays, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
@@ -13,6 +13,7 @@ import { ShareButton } from "../ShareButton"
 import { formatEventDateRange } from "../../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../../lib/eventLikes"
 import { buildPublicNav } from "../../lib/publicNav"
+import { recordViewMore } from "../../lib/viewMoreTracking"
 
 export type Evento = {
   id: string
@@ -118,6 +119,21 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
     }
 
     setLikingEventId(null)
+  }
+
+  const handleOpenEvento = (evento: Evento) => {
+    void recordViewMore("eventos", String(evento.id), evento.titulo)
+    setSelectedEventoId(String(evento.id))
+  }
+
+  const handleCardKeyDown = (
+    event: KeyboardEvent<HTMLElement>,
+    action: () => void
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      action()
+    }
   }
 
   const eventosFiltrados = useMemo(() => {
@@ -275,7 +291,11 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
             {eventosFiltrados.map((evento) => (
               <div
                 key={evento.id}
-                className="rounded-xl border border-gray-200 p-5 shadow-sm"
+                role="button"
+                tabIndex={0}
+                onClick={() => handleOpenEvento(evento)}
+                onKeyDown={(event) => handleCardKeyDown(event, () => handleOpenEvento(evento))}
+                className="cursor-pointer rounded-xl border border-gray-200 p-5 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
                 {evento.imagen && (
                   <div className="relative mb-4 h-48 w-full overflow-hidden rounded-lg">
@@ -313,7 +333,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                   {evento.descripcion}
                 </p>
 
-                <div className="mt-4">
+                <div className="mt-4" onClick={(event) => event.stopPropagation()}>
                   <EventLikeButton
                     count={eventLikeCounts[String(evento.id)] || 0}
                     liked={Boolean(likedEvents[String(evento.id)])}
@@ -325,21 +345,26 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
 
                 <button
                   type="button"
-                  onClick={() => setSelectedEventoId(String(evento.id))}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    handleOpenEvento(evento)
+                  }}
                   className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                 >
                   Ver mas
                   <ArrowRight className="h-4 w-4" />
                 </button>
 
-                <ShareButton
-                  title={evento.titulo}
-                  text={evento.descripcion}
-                  url={getShareUrl(String(evento.id))}
-                  section="eventos"
-                  itemId={String(evento.id)}
-                  className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                />
+                <div onClick={(event) => event.stopPropagation()}>
+                  <ShareButton
+                    title={evento.titulo}
+                    text={evento.descripcion}
+                    url={getShareUrl(String(evento.id))}
+                    section="eventos"
+                    itemId={String(evento.id)}
+                    className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                  />
+                </div>
               </div>
             ))}
           </div>

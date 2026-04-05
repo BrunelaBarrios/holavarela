@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
 import { ArrowRight, GraduationCap, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
@@ -9,6 +9,7 @@ import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
 import { buildPublicNav } from "../../lib/publicNav"
+import { recordViewMore } from "../../lib/viewMoreTracking"
 
 export type Curso = {
   id: number
@@ -74,6 +75,21 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
         .includes(term)
     )
   }, [cursos, search])
+
+  const handleOpenCurso = (curso: Curso) => {
+    void recordViewMore("cursos", String(curso.id), curso.nombre)
+    setSelectedCursoId(String(curso.id))
+  }
+
+  const handleCardKeyDown = (
+    event: KeyboardEvent<HTMLElement>,
+    action: () => void
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      action()
+    }
+  }
 
   return (
     <main className="min-h-screen bg-white">
@@ -165,7 +181,11 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
             {cursosFiltrados.map((curso) => (
               <div
                 key={curso.id}
-                className="overflow-hidden rounded-xl border border-gray-200 shadow-sm"
+                role="button"
+                tabIndex={0}
+                onClick={() => handleOpenCurso(curso)}
+                onKeyDown={(event) => handleCardKeyDown(event, () => handleOpenCurso(curso))}
+                className="cursor-pointer overflow-hidden rounded-xl border border-gray-200 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
                 {curso.imagen && (
                   <div className="relative h-56 w-full">
@@ -195,7 +215,10 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                   <div className="mt-5 flex flex-wrap gap-3">
                     <button
                       type="button"
-                      onClick={() => setSelectedCursoId(String(curso.id))}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        handleOpenCurso(curso)
+                      }}
                       className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                     >
                       Ver mas
@@ -209,6 +232,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                         section="cursos"
                         itemId={String(curso.id)}
                         itemTitle={curso.nombre}
+                        onClick={(event) => event.stopPropagation()}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
@@ -218,14 +242,16 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                       </ContactActionLink>
                     ) : null}
 
-                    <ShareButton
-                      title={curso.nombre}
-                      text={curso.descripcion}
-                      url={getShareUrl(curso.id)}
-                      section="cursos"
-                      itemId={String(curso.id)}
-                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                    />
+                    <div onClick={(event) => event.stopPropagation()}>
+                      <ShareButton
+                        title={curso.nombre}
+                        text={curso.descripcion}
+                        url={getShareUrl(curso.id)}
+                        section="cursos"
+                        itemId={String(curso.id)}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

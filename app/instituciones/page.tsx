@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
 import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../components/ContactActionLink"
 import { ExternalLinksButtons } from "../components/ExternalLinksButtons"
@@ -104,6 +104,21 @@ export default function InstitucionesPage() {
     return `${window.location.origin}/instituciones/${id}`
   }
 
+  const handleOpenInstitucion = (institucion: Institucion) => {
+    void recordViewMore("instituciones", String(institucion.id), institucion.nombre)
+    setSelectedInstitucion(institucion)
+  }
+
+  const handleCardKeyDown = (
+    event: KeyboardEvent<HTMLElement>,
+    action: () => void
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      action()
+    }
+  }
+
   return (
     <main className="min-h-screen bg-white">
       <PublicDetailModal
@@ -196,7 +211,13 @@ export default function InstitucionesPage() {
             {institucionesFiltradas.map((institucion) => (
               <div
                 key={institucion.id}
-                className="overflow-hidden rounded-xl border border-gray-200 shadow-sm"
+                role="button"
+                tabIndex={0}
+                onClick={() => handleOpenInstitucion(institucion)}
+                onKeyDown={(event) =>
+                  handleCardKeyDown(event, () => handleOpenInstitucion(institucion))
+                }
+                className="cursor-pointer overflow-hidden rounded-xl border border-gray-200 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
               >
                 {institucion.foto && (
                   <div className="relative h-56 w-full">
@@ -216,13 +237,9 @@ export default function InstitucionesPage() {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      void recordViewMore(
-                        "instituciones",
-                        String(institucion.id),
-                        institucion.nombre
-                      )
-                      setSelectedInstitucion(institucion)
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      handleOpenInstitucion(institucion)
                     }}
                     className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                   >

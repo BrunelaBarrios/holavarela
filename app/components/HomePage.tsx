@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
+import { useRouter } from "next/navigation"
 import { ContactActionLink } from "./ContactActionLink"
 import { ExternalLinksButtons } from "./ExternalLinksButtons"
 import { EventLikeButton } from "./EventLikeButton"
@@ -384,6 +385,7 @@ function sliceRotatingItems<T>(items: T[], page: number, pageSize = ITEMS_PER_RO
 }
 
 export function HomePage({ initialData }: { initialData: HomePageData }) {
+  const router = useRouter()
   const [featuredBusinesses] = useState<Comercio[]>(initialData.featuredBusinesses)
   const [eventos] = useState<Evento[]>(initialData.eventos)
   const [cursos] = useState<Curso[]>(initialData.cursos)
@@ -545,6 +547,16 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   ) => {
     void recordViewMore(section, itemId, itemTitle)
     open()
+  }
+
+  const handleCardKeyDown = (
+    event: KeyboardEvent<HTMLElement>,
+    action: () => void
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      action()
+    }
   }
 
   const handleEventLike = async (eventId: string, eventTitle: string) => {
@@ -1928,7 +1940,39 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               return (
                 <div
                   key={business.id}
-                  className={`overflow-hidden rounded-[28px] border bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.5)] transition hover:-translate-y-1.5 ${business.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(59,130,246,0.35)]"}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    if (business.premium_activo) {
+                      void recordViewMore("comercios", String(business.id), business.nombre)
+                      router.push(`/comercios/${business.id}`)
+                      return
+                    }
+
+                    handleViewMoreClick(
+                      "comercios",
+                      String(business.id),
+                      business.nombre,
+                      () => setSelectedComercio(business)
+                    )
+                  }}
+                  onKeyDown={(event) =>
+                    handleCardKeyDown(event, () => {
+                      if (business.premium_activo) {
+                        void recordViewMore("comercios", String(business.id), business.nombre)
+                        router.push(`/comercios/${business.id}`)
+                        return
+                      }
+
+                      handleViewMoreClick(
+                        "comercios",
+                        String(business.id),
+                        business.nombre,
+                        () => setSelectedComercio(business)
+                      )
+                    })
+                  }
+                  className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.5)] transition hover:-translate-y-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${business.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(59,130,246,0.35)]"}`}
                 >
                   {imageSrc && (
                     <div className="relative h-52 w-full">
@@ -1966,6 +2010,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         section="comercios"
                         itemId={String(business.id)}
                         itemTitle={business.nombre}
+                        onClick={(event) => event.stopPropagation()}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-3 text-lg font-semibold text-white transition hover:bg-green-600"
@@ -1978,13 +2023,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     {business.premium_activo ? (
                       <Link
                         href={`/comercios/${business.id}`}
-                        onClick={() =>
+                        onClick={(event) => {
+                          event.stopPropagation()
                           void recordViewMore(
                             "comercios",
                             String(business.id),
                             business.nombre
                           )
-                        }
+                        }}
                         className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-violet-700 transition hover:text-violet-800"
                       >
                         Ver perfil completo
@@ -1993,14 +2039,15 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     ) : (
                       <button
                         type="button"
-                        onClick={() =>
+                        onClick={(event) => {
+                          event.stopPropagation()
                           handleViewMoreClick(
                             "comercios",
                             String(business.id),
                             business.nombre,
                             () => setSelectedComercio(business)
                           )
-                        }
+                        }}
                         className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
                       >
                         Ver mas
@@ -2067,7 +2114,39 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               {visibleServicios.map((servicio) => (
                 <div
                         key={servicio.id}
-                        className={`overflow-hidden rounded-[28px] border bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 ${servicio.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"}`}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          if (servicio.premium_activo) {
+                            void recordViewMore("servicios", String(servicio.id), servicio.nombre)
+                            router.push(`/servicios/${servicio.id}`)
+                            return
+                          }
+
+                          handleViewMoreClick(
+                            "servicios",
+                            String(servicio.id),
+                            servicio.nombre,
+                            () => setSelectedServicio(servicio)
+                          )
+                        }}
+                        onKeyDown={(event) =>
+                          handleCardKeyDown(event, () => {
+                            if (servicio.premium_activo) {
+                              void recordViewMore("servicios", String(servicio.id), servicio.nombre)
+                              router.push(`/servicios/${servicio.id}`)
+                              return
+                            }
+
+                            handleViewMoreClick(
+                              "servicios",
+                              String(servicio.id),
+                              servicio.nombre,
+                              () => setSelectedServicio(servicio)
+                            )
+                          })
+                        }
+                        className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${servicio.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"}`}
                       >
                         {servicio.imagen && (
                           <div className="relative h-48 w-full">
@@ -2130,6 +2209,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                               section="servicios"
                               itemId={String(servicio.id)}
                               itemTitle={servicio.nombre}
+                              onClick={(event) => event.stopPropagation()}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-3 text-lg font-semibold text-white transition hover:bg-green-600"
@@ -2142,13 +2222,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           {servicio.premium_activo ? (
                             <Link
                               href={`/servicios/${servicio.id}`}
-                              onClick={() =>
+                              onClick={(event) => {
+                                event.stopPropagation()
                                 void recordViewMore(
                                   "servicios",
                                   String(servicio.id),
                                   servicio.nombre
                                 )
-                              }
+                              }}
                               className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-violet-700 transition hover:text-violet-800"
                             >
                               Ver perfil completo
@@ -2157,14 +2238,15 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           ) : (
                             <button
                               type="button"
-                              onClick={() =>
+                              onClick={(event) => {
+                                event.stopPropagation()
                                 handleViewMoreClick(
                                   "servicios",
                                   String(servicio.id),
                                   servicio.nombre,
                                   () => setSelectedServicio(servicio)
                                 )
-                              }
+                              }}
                               className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
                             >
                               Ver más
@@ -2229,7 +2311,27 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             {visibleEventos.map((event) => (
               <div
                 key={event.id}
-                className="overflow-hidden rounded-[28px] border border-white/80 bg-white/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)]"
+                role="button"
+                tabIndex={0}
+                onClick={() =>
+                  handleViewMoreClick(
+                    "eventos",
+                    String(event.id),
+                    event.titulo,
+                    () => setSelectedEvento(event)
+                  )
+                }
+                onKeyDown={(eventKey) =>
+                  handleCardKeyDown(eventKey, () =>
+                    handleViewMoreClick(
+                      "eventos",
+                      String(event.id),
+                      event.titulo,
+                      () => setSelectedEvento(event)
+                    )
+                  )
+                }
+                className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
                 {event.imagen && (
                   <div className="relative h-64 w-full">
@@ -2261,7 +2363,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       {event.descripcion}
                     </p>
 
-                  <div className="mt-4">
+                  <div className="mt-4" onClick={(eventLikeWrapper) => eventLikeWrapper.stopPropagation()}>
                     <EventLikeButton
                       count={eventLikeCounts[String(event.id)] || 0}
                       liked={Boolean(likedEvents[String(event.id)])}
@@ -2273,14 +2375,15 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={(eventClick) => {
+                      eventClick.stopPropagation()
                       handleViewMoreClick(
                         "eventos",
                         String(event.id),
                         event.titulo,
                         () => setSelectedEvento(event)
                       )
-                    }
+                    }}
                     className="mt-5 inline-flex items-center gap-2 text-lg font-medium text-blue-500 hover:text-blue-600"
                   >
                         Ver más
@@ -2322,7 +2425,27 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               {visibleCursos.map((curso) => (
                 <div
                   key={curso.id}
-                  className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() =>
+                    handleViewMoreClick(
+                      "cursos",
+                      String(curso.id),
+                      curso.nombre,
+                      () => setSelectedCurso(curso)
+                    )
+                  }
+                  onKeyDown={(event) =>
+                    handleCardKeyDown(event, () =>
+                      handleViewMoreClick(
+                        "cursos",
+                        String(curso.id),
+                        curso.nombre,
+                        () => setSelectedCurso(curso)
+                      )
+                    )
+                  }
+                  className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                 >
                   {curso.imagen && (
                     <div className="relative h-56 w-full">
@@ -2348,14 +2471,15 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     </div>
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={(event) => {
+                        event.stopPropagation()
                         handleViewMoreClick(
                           "cursos",
                           String(curso.id),
                           curso.nombre,
                           () => setSelectedCurso(curso)
                         )
-                      }
+                      }}
                       className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-500 transition hover:text-blue-600"
                     >
                       Ver más
@@ -2398,7 +2522,27 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               {visibleInstituciones.map((institucion) => (
                 <div
                   key={institucion.id}
-                  className="overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(6,182,212,0.35)]"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() =>
+                    handleViewMoreClick(
+                      "instituciones",
+                      String(institucion.id),
+                      institucion.nombre,
+                      () => setSelectedInstitucion(institucion)
+                    )
+                  }
+                  onKeyDown={(event) =>
+                    handleCardKeyDown(event, () =>
+                      handleViewMoreClick(
+                        "instituciones",
+                        String(institucion.id),
+                        institucion.nombre,
+                        () => setSelectedInstitucion(institucion)
+                      )
+                    )
+                  }
+                  className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(6,182,212,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
                 >
                   {institucion.foto && (
                     <div className="relative h-56 w-full">
@@ -2418,14 +2562,15 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={(event) => {
+                        event.stopPropagation()
                         handleViewMoreClick(
                           "instituciones",
                           String(institucion.id),
                           institucion.nombre,
                           () => setSelectedInstitucion(institucion)
                         )
-                      }
+                      }}
                       className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-cyan-600 transition hover:text-cyan-700"
                     >
                         Ver más

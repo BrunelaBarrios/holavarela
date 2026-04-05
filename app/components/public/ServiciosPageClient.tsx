@@ -1,7 +1,8 @@
 'use client'
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
+import { useRouter } from "next/navigation"
 import { ArrowRight, MapPin, Phone, Search, UserRound } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
@@ -36,6 +37,7 @@ export function ServiciosPageClient({
 }: {
   initialServicios: Servicio[]
 }) {
+  const router = useRouter()
   const [servicios] = useState<Servicio[]>(initialServicios)
   const [search, setSearch] = useState("")
   const [selectedServicioId, setSelectedServicioId] = useState<string | null>(() =>
@@ -109,6 +111,17 @@ export function ServiciosPageClient({
 
   const handleOpenPremiumProfile = (servicio: Servicio) => {
     void recordViewMore("servicios", String(servicio.id), servicio.nombre)
+    router.push(`/servicios/${servicio.id}`)
+  }
+
+  const handleCardKeyDown = (
+    event: KeyboardEvent<HTMLElement>,
+    action: () => void
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      action()
+    }
   }
 
   return (
@@ -261,7 +274,27 @@ export function ServiciosPageClient({
                   {items.map((servicio) => (
                     <div
                       key={servicio.id}
-                      className={`overflow-hidden rounded-xl border shadow-sm ${servicio.premium_activo ? "border-violet-200 bg-violet-50/20" : "border-gray-200"}`}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => {
+                        if (servicio.premium_activo) {
+                          handleOpenPremiumProfile(servicio)
+                          return
+                        }
+
+                        handleOpenServicio(servicio)
+                      }}
+                      onKeyDown={(event) =>
+                        handleCardKeyDown(event, () => {
+                          if (servicio.premium_activo) {
+                            handleOpenPremiumProfile(servicio)
+                            return
+                          }
+
+                          handleOpenServicio(servicio)
+                        })
+                      }
+                      className={`cursor-pointer overflow-hidden rounded-xl border shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${servicio.premium_activo ? "border-violet-200 bg-violet-50/20" : "border-gray-200"}`}
                     >
                       {servicio.imagen && (
                         <div className="relative h-56 w-full">
@@ -312,7 +345,10 @@ export function ServiciosPageClient({
                           {servicio.premium_activo ? (
                             <Link
                               href={`/servicios/${servicio.id}`}
-                              onClick={() => handleOpenPremiumProfile(servicio)}
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                handleOpenPremiumProfile(servicio)
+                              }}
                               className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
                             >
                               Ver perfil completo
@@ -321,7 +357,10 @@ export function ServiciosPageClient({
                           ) : (
                             <button
                               type="button"
-                              onClick={() => handleOpenServicio(servicio)}
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                handleOpenServicio(servicio)
+                              }}
                               className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                             >
                               Ver mas
@@ -336,6 +375,7 @@ export function ServiciosPageClient({
                               section="servicios"
                               itemId={String(servicio.id)}
                               itemTitle={servicio.nombre}
+                              onClick={(event) => event.stopPropagation()}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
@@ -344,14 +384,16 @@ export function ServiciosPageClient({
                             </ContactActionLink>
                           )}
 
-                          <ShareButton
-                            title={servicio.nombre}
-                            text={servicio.descripcion || undefined}
-                            url={getShareUrl(servicio.id)}
-                            section="servicios"
-                            itemId={String(servicio.id)}
-                            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                          />
+                          <div onClick={(event) => event.stopPropagation()}>
+                            <ShareButton
+                              title={servicio.nombre}
+                              text={servicio.descripcion || undefined}
+                              url={getShareUrl(servicio.id)}
+                              section="servicios"
+                              itemId={String(servicio.id)}
+                              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>

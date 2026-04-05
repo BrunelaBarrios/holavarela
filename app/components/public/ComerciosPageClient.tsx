@@ -1,7 +1,8 @@
 'use client'
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
+import { useRouter } from "next/navigation"
 import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
@@ -34,6 +35,7 @@ export function ComerciosPageClient({
 }: {
   initialComercios: Comercio[]
 }) {
+  const router = useRouter()
   const [comercios] = useState<Comercio[]>(initialComercios)
   const [search, setSearch] = useState("")
   const [selectedComercioId, setSelectedComercioId] = useState<string | null>(() =>
@@ -84,6 +86,17 @@ export function ComerciosPageClient({
 
   const handleOpenPremiumProfile = (comercio: Comercio) => {
     void recordViewMore("comercios", String(comercio.id), comercio.nombre)
+    router.push(`/comercios/${comercio.id}`)
+  }
+
+  const handleCardKeyDown = (
+    event: KeyboardEvent<HTMLElement>,
+    action: () => void
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      action()
+    }
   }
 
   const comerciosFiltrados = useMemo(() => {
@@ -237,7 +250,27 @@ export function ComerciosPageClient({
               return (
                 <div
                   key={comercio.id}
-                  className={`rounded-xl border p-5 shadow-sm ${comercio.premium_activo ? "border-violet-200 bg-violet-50/20" : "border-gray-200"}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    if (comercio.premium_activo) {
+                      handleOpenPremiumProfile(comercio)
+                      return
+                    }
+
+                    handleOpenComercio(comercio)
+                  }}
+                  onKeyDown={(event) =>
+                    handleCardKeyDown(event, () => {
+                      if (comercio.premium_activo) {
+                        handleOpenPremiumProfile(comercio)
+                        return
+                      }
+
+                      handleOpenComercio(comercio)
+                    })
+                  }
+                  className={`cursor-pointer rounded-xl border p-5 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${comercio.premium_activo ? "border-violet-200 bg-violet-50/20" : "border-gray-200"}`}
                 >
                   {imagenSrc && (
                     <div className="relative mb-3 h-40 w-full overflow-hidden rounded-lg">
@@ -270,7 +303,10 @@ export function ComerciosPageClient({
                     {comercio.premium_activo ? (
                       <Link
                         href={`/comercios/${comercio.id}`}
-                        onClick={() => handleOpenPremiumProfile(comercio)}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          handleOpenPremiumProfile(comercio)
+                        }}
                         className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
                       >
                         Ver perfil completo
@@ -279,7 +315,10 @@ export function ComerciosPageClient({
                     ) : (
                       <button
                         type="button"
-                        onClick={() => handleOpenComercio(comercio)}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          handleOpenComercio(comercio)
+                        }}
                         className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                       >
                         Ver mas
@@ -293,6 +332,7 @@ export function ComerciosPageClient({
                       section="comercios"
                       itemId={String(comercio.id)}
                       itemTitle={comercio.nombre}
+                      onClick={(event) => event.stopPropagation()}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-block rounded-lg bg-green-600 px-4 py-2 text-sm text-white"
@@ -300,14 +340,16 @@ export function ComerciosPageClient({
                       {getContactLabel(comercio.usa_whatsapp)}
                     </ContactActionLink>
 
-                    <ShareButton
-                      title={comercio.nombre}
-                      text={comercio.descripcion}
-                      url={getShareUrl(comercio.id)}
-                      section="comercios"
-                      itemId={String(comercio.id)}
-                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                    />
+                    <div onClick={(event) => event.stopPropagation()}>
+                      <ShareButton
+                        title={comercio.nombre}
+                        text={comercio.descripcion}
+                        url={getShareUrl(comercio.id)}
+                        section="comercios"
+                        itemId={String(comercio.id)}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                      />
+                    </div>
                   </div>
                 </div>
               )
