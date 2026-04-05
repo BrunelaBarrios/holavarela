@@ -414,7 +414,7 @@ export default function AdminDashboardPage() {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           <button
-            onClick={() => router.push("/admin/comercios")}
+            onClick={() => router.push("/admin/suscripciones")}
             className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:border-blue-300 hover:bg-blue-50/40"
           >
             <div className="text-sm font-medium text-slate-500">Pendientes</div>
@@ -423,7 +423,7 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
-            onClick={() => router.push("/admin/comercios")}
+            onClick={() => router.push("/admin/suscripciones")}
             className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 text-left transition hover:border-emerald-300 hover:bg-emerald-50"
           >
             <div className="text-sm font-medium text-emerald-700">Activas</div>
@@ -432,7 +432,7 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
-            onClick={() => router.push("/admin/comercios")}
+            onClick={() => router.push("/admin/suscripciones")}
             className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 text-left transition hover:border-amber-300 hover:bg-amber-50"
           >
             <div className="text-sm font-medium text-amber-700">Pausadas</div>
@@ -441,7 +441,7 @@ export default function AdminDashboardPage() {
           </button>
 
           <button
-            onClick={() => router.push("/admin/comercios")}
+            onClick={() => router.push("/admin/suscripciones")}
             className="rounded-2xl border border-rose-200 bg-rose-50/70 p-5 text-left transition hover:border-rose-300 hover:bg-rose-50"
           >
             <div className="text-sm font-medium text-rose-700">Canceladas</div>

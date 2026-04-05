@@ -139,6 +139,51 @@ add column if not exists instagram_url text;
 alter table public.instituciones
 add column if not exists facebook_url text;
 
+alter table public.sitio
+add column if not exists plan_presencia_titulo text;
+
+alter table public.sitio
+add column if not exists plan_presencia_tagline text;
+
+alter table public.sitio
+add column if not exists plan_presencia_descripcion text;
+
+alter table public.sitio
+add column if not exists plan_presencia_precio text;
+
+alter table public.sitio
+add column if not exists plan_presencia_features text;
+
+alter table public.sitio
+add column if not exists plan_destacado_titulo text;
+
+alter table public.sitio
+add column if not exists plan_destacado_tagline text;
+
+alter table public.sitio
+add column if not exists plan_destacado_descripcion text;
+
+alter table public.sitio
+add column if not exists plan_destacado_precio text;
+
+alter table public.sitio
+add column if not exists plan_destacado_features text;
+
+alter table public.sitio
+add column if not exists plan_destacado_plus_titulo text;
+
+alter table public.sitio
+add column if not exists plan_destacado_plus_tagline text;
+
+alter table public.sitio
+add column if not exists plan_destacado_plus_descripcion text;
+
+alter table public.sitio
+add column if not exists plan_destacado_plus_precio text;
+
+alter table public.sitio
+add column if not exists plan_destacado_plus_features text;
+
 create table if not exists public.cursos (
   id bigint generated always as identity primary key,
   nombre text not null,
@@ -183,6 +228,21 @@ create table if not exists public.sitio (
   texto_2 text not null default '',
   texto_3 text not null default '',
   imagen_url text,
+  plan_presencia_titulo text,
+  plan_presencia_tagline text,
+  plan_presencia_descripcion text,
+  plan_presencia_precio text,
+  plan_presencia_features text,
+  plan_destacado_titulo text,
+  plan_destacado_tagline text,
+  plan_destacado_descripcion text,
+  plan_destacado_precio text,
+  plan_destacado_features text,
+  plan_destacado_plus_titulo text,
+  plan_destacado_plus_tagline text,
+  plan_destacado_plus_descripcion text,
+  plan_destacado_plus_precio text,
+  plan_destacado_plus_features text,
   updated_at timestamp with time zone default now()
 );
 

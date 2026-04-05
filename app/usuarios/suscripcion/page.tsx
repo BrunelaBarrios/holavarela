@@ -6,10 +6,9 @@ import { useRouter } from "next/navigation"
 import { CheckCircle2, ExternalLink, ShieldOff } from "lucide-react"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
 import {
-  getSubscriptionPlan,
-  subscriptionPlans,
-  type SubscriptionPlanKey,
-} from "../../lib/subscriptionPlans"
+  buildSubscriptionPlansForUser,
+  type SubscriptionSiteContent,
+} from "../../lib/subscriptionContent"
 import {
   getSubscriptionStatusBadge,
   getSubscriptionStatusLabel,
@@ -19,13 +18,33 @@ import {
   userEntityLabels,
   type UserOwnedEntity,
 } from "../../lib/userProfiles"
+import { type SubscriptionPlanKey } from "../../lib/subscriptionPlans"
 import { supabase } from "../../supabase"
 
 type FlowStep = 1 | 2
 
+const siteFieldSelection = `
+  plan_presencia_titulo,
+  plan_presencia_tagline,
+  plan_presencia_descripcion,
+  plan_presencia_precio,
+  plan_presencia_features,
+  plan_destacado_titulo,
+  plan_destacado_tagline,
+  plan_destacado_descripcion,
+  plan_destacado_precio,
+  plan_destacado_features,
+  plan_destacado_plus_titulo,
+  plan_destacado_plus_tagline,
+  plan_destacado_plus_descripcion,
+  plan_destacado_plus_precio,
+  plan_destacado_plus_features
+`
+
 export default function UsuariosSuscripcionPage() {
   const router = useRouter()
   const [ownedEntity, setOwnedEntity] = useState<UserOwnedEntity | null>(null)
+  const [plans, setPlans] = useState(() => buildSubscriptionPlansForUser())
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>("presencia")
   const [currentStep, setCurrentStep] = useState<FlowStep>(1)
   const [mode, setMode] = useState<"summary" | "change">("summary")
@@ -48,17 +67,34 @@ export default function UsuariosSuscripcionPage() {
       }
 
       try {
-        const entity = await findUserOwnedEntity(session.user.email)
+        const [entity, siteResponse] = await Promise.all([
+          findUserOwnedEntity(session.user.email),
+          supabase.from("sitio").select(siteFieldSelection).eq("id", 1).maybeSingle(),
+        ])
 
         if (!entity || entity.type === "institucion") {
           router.replace("/usuarios")
           return
         }
 
+        if (!siteResponse.error) {
+          setPlans(
+            buildSubscriptionPlansForUser(
+              siteResponse.data as SubscriptionSiteContent | null
+            )
+          )
+        }
+
         setOwnedEntity(entity)
-        setSelectedPlan((entity.record.plan_suscripcion as SubscriptionPlanKey) || "presencia")
+        setSelectedPlan(
+          (entity.record.plan_suscripcion as SubscriptionPlanKey) || "presencia"
+        )
       } catch (loadError) {
-        setError(loadError instanceof Error ? loadError.message : "No pudimos cargar tu suscripción.")
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "No pudimos cargar tu suscripción."
+        )
       } finally {
         setLoading(false)
       }
@@ -67,17 +103,25 @@ export default function UsuariosSuscripcionPage() {
     void loadSubscription()
   }, [router])
 
-  const currentPlan = getSubscriptionPlan(ownedEntity?.record.plan_suscripcion)
-  const currentPlanKey = (ownedEntity?.record.plan_suscripcion as SubscriptionPlanKey) || "presencia"
-  const nextPlan = subscriptionPlans[selectedPlan]
-  const statusLabel = getSubscriptionStatusLabel(ownedEntity?.record.estado_suscripcion)
-  const statusBadge = getSubscriptionStatusBadge(ownedEntity?.record.estado_suscripcion)
+  const currentPlanKey =
+    (ownedEntity?.record.plan_suscripcion as SubscriptionPlanKey) || "presencia"
+  const currentPlan = plans[currentPlanKey]
+  const nextPlan = plans[selectedPlan]
+  const statusLabel = getSubscriptionStatusLabel(
+    ownedEntity?.record.estado_suscripcion
+  )
+  const statusBadge = getSubscriptionStatusBadge(
+    ownedEntity?.record.estado_suscripcion
+  )
   const subscriptionUpdatedAt = ownedEntity?.record.suscripcion_actualizada_at
-    ? new Date(ownedEntity.record.suscripcion_actualizada_at).toLocaleDateString("es-UY", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+    ? new Date(ownedEntity.record.suscripcion_actualizada_at).toLocaleDateString(
+        "es-UY",
+        {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }
+      )
     : "Sin fecha registrada"
 
   useEffect(() => {
@@ -153,7 +197,7 @@ export default function UsuariosSuscripcionPage() {
           }
         : current
     )
-    setSuccess(`Ya quedó seleccionado y guardado ${subscriptionPlans[selectedPlan].name}.`)
+    setSuccess(`Ya quedó seleccionado y guardado ${plans[selectedPlan].name}.`)
     setPendingCheckoutRedirect(true)
     setCurrentStep(2)
     setSaving(false)
@@ -260,7 +304,9 @@ export default function UsuariosSuscripcionPage() {
                       title={statusLabel}
                       description={`Plan actual: ${currentPlan.name}`}
                       badge={
-                        <span className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${statusBadge}`}>
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-sm font-semibold ${statusBadge}`}
+                        >
                           {statusLabel}
                         </span>
                       }
@@ -309,15 +355,17 @@ export default function UsuariosSuscripcionPage() {
                         <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                           Paso 1 de 2
                         </div>
-                        <div className="mt-2 text-2xl font-semibold text-slate-950">Elige tu plan</div>
+                        <div className="mt-2 text-2xl font-semibold text-slate-950">
+                          Elige tu plan
+                        </div>
                         <p className="mt-2 text-sm leading-7 text-slate-600">
                           Selecciona la opción que mejor acompaña tu ficha.
                         </p>
                       </div>
 
                       <div className="grid gap-6 xl:grid-cols-3">
-                        {(Object.entries(subscriptionPlans) as Array<
-                          [SubscriptionPlanKey, (typeof subscriptionPlans)[SubscriptionPlanKey]]
+                        {(Object.entries(plans) as Array<
+                          [SubscriptionPlanKey, (typeof plans)[SubscriptionPlanKey]]
                         >).map(([planKey, plan]) => (
                           <button
                             key={planKey}
@@ -343,8 +391,12 @@ export default function UsuariosSuscripcionPage() {
                               </div>
                             </div>
 
-                            <p className="mt-5 text-base leading-7 text-slate-600">{plan.tagline}</p>
-                            <p className="mt-4 text-sm leading-7 text-slate-500">{plan.description}</p>
+                            <p className="mt-5 text-base leading-7 text-slate-600">
+                              {plan.tagline}
+                            </p>
+                            <p className="mt-4 text-sm leading-7 text-slate-500">
+                              {plan.description}
+                            </p>
 
                             <div className="mt-6 space-y-3 text-sm leading-7 text-slate-600">
                               {plan.features.map((feature) => (
@@ -370,7 +422,9 @@ export default function UsuariosSuscripcionPage() {
                       </div>
 
                       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-                        <div className="text-sm text-slate-500">Elige un plan para avanzar.</div>
+                        <div className="text-sm text-slate-500">
+                          Elige un plan para avanzar.
+                        </div>
                         <div className="flex flex-wrap gap-3">
                           <button
                             type="button"

@@ -8,7 +8,7 @@ import { fileToDataUrl } from "../../lib/fileToDataUrl"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { buildShareCountMap } from "../../lib/shareTracking"
 import { subscriptionPlans, type SubscriptionPlanKey } from "../../lib/subscriptionPlans"
-import { getSubscriptionStatusBadge, getSubscriptionStatusLabel, subscriptionStatusOptions, type SubscriptionStatusKey } from "../../lib/subscriptionStatus"
+import { getSubscriptionStatusBadge, getSubscriptionStatusLabel, type SubscriptionStatusKey } from "../../lib/subscriptionStatus"
 import { buildWhatsappCountMap } from "../../lib/whatsappTracking"
 
 type Curso = {
@@ -30,13 +30,14 @@ type Curso = {
   whatsapp_count?: number
 }
 
-type CursoForm = Omit<Curso, "id">
+type CursoForm = Omit<
+  Curso,
+  "id" | "plan_suscripcion" | "estado_suscripcion" | "share_count" | "whatsapp_count"
+>
 
 const initialForm: CursoForm = {
   nombre: "",
   descripcion: "",
-  plan_suscripcion: "presencia",
-  estado_suscripcion: "pendiente",
   responsable: "",
   contacto: "",
   web_url: "",
@@ -185,8 +186,6 @@ export default function AdminCursosPage() {
     const payload = {
       nombre: formData.nombre,
       descripcion: formData.descripcion,
-      plan_suscripcion: formData.plan_suscripcion,
-      estado_suscripcion: formData.estado_suscripcion,
       responsable: formData.responsable,
       contacto: formData.contacto,
       web_url: formData.web_url?.trim() || null,
@@ -245,8 +244,6 @@ export default function AdminCursosPage() {
     setFormData({
       nombre: curso.nombre,
       descripcion: curso.descripcion,
-      plan_suscripcion: curso.plan_suscripcion || "presencia",
-      estado_suscripcion: curso.estado_suscripcion || "pendiente",
       responsable: curso.responsable,
       contacto: curso.contacto,
       web_url: curso.web_url || "",
@@ -383,50 +380,6 @@ export default function AdminCursosPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Plan de suscripcion
-                  </label>
-                  <select
-                    value={formData.plan_suscripcion || "presencia"}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        plan_suscripcion: e.target.value as SubscriptionPlanKey,
-                      }))
-                    }
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500"
-                  >
-                    {(Object.entries(subscriptionPlans) as Array<[SubscriptionPlanKey, (typeof subscriptionPlans)[SubscriptionPlanKey]]>).map(([planKey, plan]) => (
-                      <option key={planKey} value={planKey}>
-                        {plan.name} - {plan.price}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Estado del pago
-                  </label>
-                  <select
-                    value={formData.estado_suscripcion || "pendiente"}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        estado_suscripcion: e.target.value as SubscriptionStatusKey,
-                      }))
-                    }
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500"
-                  >
-                    {subscriptionStatusOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-900">
                     Responsable *

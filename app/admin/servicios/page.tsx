@@ -5,7 +5,7 @@ import { Eye, EyeOff, MessageCircle, Pencil, Phone, Plus, Share2, ShieldAlert, S
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { buildShareCountMap } from "../../lib/shareTracking"
 import { subscriptionPlans, type SubscriptionPlanKey } from "../../lib/subscriptionPlans"
-import { getSubscriptionStatusBadge, getSubscriptionStatusLabel, subscriptionStatusOptions, type SubscriptionStatusKey } from "../../lib/subscriptionStatus"
+import { getSubscriptionStatusBadge, getSubscriptionStatusLabel, type SubscriptionStatusKey } from "../../lib/subscriptionStatus"
 import { buildWhatsappCountMap } from "../../lib/whatsappTracking"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
@@ -42,8 +42,6 @@ type ServicioForm = {
   premium_detalle: string
   premium_galeria: string
   premium_activo: boolean
-  plan_suscripcion: SubscriptionPlanKey
-  estado_suscripcion: SubscriptionStatusKey
   responsable: string
   contacto: string
   direccion: string
@@ -61,8 +59,6 @@ const initialForm: ServicioForm = {
   premium_detalle: "",
   premium_galeria: "",
   premium_activo: false,
-  plan_suscripcion: "presencia",
-  estado_suscripcion: "pendiente",
   responsable: "",
   contacto: "",
   direccion: "",
@@ -155,8 +151,6 @@ export default function AdminServiciosPage() {
       premium_detalle: servicio.premium_detalle || "",
       premium_galeria: (servicio.premium_galeria || []).join("\n"),
       premium_activo: servicio.premium_activo ?? false,
-      plan_suscripcion: servicio.plan_suscripcion || "presencia",
-      estado_suscripcion: servicio.estado_suscripcion || "pendiente",
       responsable: servicio.responsable || "",
       contacto: servicio.contacto || "",
       direccion: servicio.direccion || "",
@@ -285,8 +279,6 @@ export default function AdminServiciosPage() {
         .map((item) => item.trim())
         .filter(Boolean),
       premium_activo: formData.premium_activo,
-      plan_suscripcion: formData.plan_suscripcion,
-      estado_suscripcion: formData.estado_suscripcion,
       responsable: formData.responsable || null,
       contacto: formData.contacto || null,
       direccion: formData.direccion || null,
@@ -516,52 +508,6 @@ export default function AdminServiciosPage() {
                       Puedes cargar varias imagenes del perfil ampliado, una por linea.
                     </p>
                   </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Plan de suscripcion
-                  </label>
-                  <select
-                    value={formData.plan_suscripcion}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        plan_suscripcion: e.target.value as SubscriptionPlanKey,
-                      }))
-                    }
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-amber-500"
-                  >
-                    {(Object.entries(subscriptionPlans) as Array<[SubscriptionPlanKey, (typeof subscriptionPlans)[SubscriptionPlanKey]]>).map(([planKey, plan]) => (
-                      <option key={planKey} value={planKey}>
-                        {plan.name} - {plan.price}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Estado del pago
-                  </label>
-                  <select
-                    value={formData.estado_suscripcion}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        estado_suscripcion: e.target.value as SubscriptionStatusKey,
-                      }))
-                    }
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-amber-500"
-                  >
-                    {subscriptionStatusOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               </div>
 
