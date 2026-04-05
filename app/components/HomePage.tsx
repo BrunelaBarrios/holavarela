@@ -652,7 +652,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     setContactLeadStatus(
       isEventOnlyLead
         ? "Recibimos tu evento. Lo revisaremos y te contactaremos si hace falta completar algún dato."
-        : "Recibimos tu propuesta. Te asignaremos un usuario y contraseña por email."
+        : "Recibimos tu propuesta. La revisaremos y te contactaremos si hace falta completar algún dato."
     )
     setContactLeadLoading(false)
   }
@@ -1319,7 +1319,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 <p className="text-sm text-slate-500">
                   {isEventOnlyLead
                     ? "Revisaremos tu evento y te escribiremos si hace falta completar algun dato."
-                    : "Te asignaremos un usuario y contrasena por email."}
+                    : "Revisaremos tu propuesta y te escribiremos si hace falta completar algun dato."}
                 </p>
                 <button
                   type="submit"
@@ -1933,7 +1933,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
             {visibleFeaturedBusinesses.map((business) => {
               const imageSrc = business.imagen_url || business.imagen
 
@@ -2110,7 +2110,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </div>
           ) : (
             <>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
               {visibleServicios.map((servicio) => (
                 <div
                         key={servicio.id}
@@ -2421,7 +2421,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               Todavia no hay cursos o clases cargados.
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
               {visibleCursos.map((curso) => (
                 <div
                   key={curso.id}
@@ -2518,7 +2518,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 Todavía no hay instituciones cargadas.
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5">
               {visibleInstituciones.map((institucion) => (
                 <div
                   key={institucion.id}
