@@ -8,9 +8,11 @@ export const CONTENT_VISIT_SECTIONS = [
   "cursos",
   "servicios",
   "instituciones",
+  "site_pages",
 ] as const
 
 const CONTENT_VISITS_BROWSER_KEY = "hola-varela-content-visits-browser"
+const SITE_VISITS_SESSION_PREFIX = "hola-varela-site-visit"
 
 export type ContentVisitSection = (typeof CONTENT_VISIT_SECTIONS)[number]
 
@@ -53,5 +55,30 @@ export const recordContentVisit = async (
 
   if (error) {
     console.error("No se pudo registrar la visita del contenido:", error)
+  }
+}
+
+export const recordSiteVisit = async (pageId: string, pageTitle?: string | null) => {
+  if (typeof window === "undefined") return
+
+  const browserKey = getContentVisitsBrowserKey()
+  if (!browserKey) return
+
+  const sessionKey = `${SITE_VISITS_SESSION_PREFIX}:${pageId}`
+  if (window.sessionStorage.getItem(sessionKey)) return
+
+  window.sessionStorage.setItem(sessionKey, "1")
+
+  const { error } = await supabase.from("content_visits").insert([
+    {
+      section: "site_pages",
+      item_id: pageId,
+      item_title: pageTitle || null,
+      browser_key: browserKey,
+    },
+  ])
+
+  if (error) {
+    console.error("No se pudo registrar la visita de la pagina:", error)
   }
 }

@@ -10,7 +10,7 @@ import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
-import { recordContentVisit } from "../../lib/contentVisits"
+import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { buildPublicNav } from "../../lib/publicNav"
 import { recordViewMore } from "../../lib/viewMoreTracking"
 
@@ -57,6 +57,10 @@ export function ServiciosPageClient({
       null,
     [servicios, selectedServicioId]
   )
+
+  useEffect(() => {
+    void recordSiteVisit("servicios-page", "Listado de servicios")
+  }, [])
 
   useEffect(() => {
     const url = new URL(window.location.href)

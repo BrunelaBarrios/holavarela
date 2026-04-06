@@ -8,7 +8,7 @@ import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
-import { recordContentVisit } from "../../lib/contentVisits"
+import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { buildPublicNav } from "../../lib/publicNav"
 import { recordViewMore } from "../../lib/viewMoreTracking"
 
@@ -43,6 +43,10 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
     () => cursos.find((curso) => String(curso.id) === selectedCursoId) || null,
     [cursos, selectedCursoId]
   )
+
+  useEffect(() => {
+    void recordSiteVisit("cursos-page", "Listado de cursos y clases")
+  }, [])
 
   useEffect(() => {
     const url = new URL(window.location.href)

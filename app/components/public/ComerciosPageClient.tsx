@@ -10,7 +10,7 @@ import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
-import { recordContentVisit } from "../../lib/contentVisits"
+import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { buildPublicNav } from "../../lib/publicNav"
 import { recordViewMore } from "../../lib/viewMoreTracking"
 
@@ -54,6 +54,10 @@ export function ComerciosPageClient({
       comercios.find((comercio) => String(comercio.id) === selectedComercioId) || null,
     [comercios, selectedComercioId]
   )
+
+  useEffect(() => {
+    void recordSiteVisit("comercios-page", "Listado de comercios")
+  }, [])
 
   useEffect(() => {
     const url = new URL(window.location.href)

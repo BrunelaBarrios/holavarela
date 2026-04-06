@@ -10,7 +10,7 @@ import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
-import { recordContentVisit } from "../../lib/contentVisits"
+import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { formatEventDateRange } from "../../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../../lib/eventLikes"
 import { buildPublicNav } from "../../lib/publicNav"
@@ -72,6 +72,10 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
     }
     window.history.replaceState({}, "", url)
   }, [selectedEventoId])
+
+  useEffect(() => {
+    void recordSiteVisit("eventos-page", "Listado de eventos")
+  }, [])
 
   useEffect(() => {
     const loadEventLikes = async () => {

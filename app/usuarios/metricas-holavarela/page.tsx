@@ -7,6 +7,8 @@ import { supabase } from "../../supabase"
 
 type VisitRow = {
   section: string | null
+  item_id: string | null
+  item_title: string | null
   browser_key: string | null
   created_at: string | null
 }
@@ -36,11 +38,12 @@ type RecentMessage = {
 }
 
 const SECTION_LABELS: Record<string, string> = {
-  comercios: "Comercios",
-  eventos: "Eventos",
-  cursos: "Cursos",
-  servicios: "Servicios",
-  instituciones: "Instituciones",
+  home: "Inicio",
+  "comercios-page": "Listado de comercios",
+  "servicios-page": "Listado de servicios",
+  "eventos-page": "Listado de eventos",
+  "cursos-page": "Listado de cursos y clases",
+  "instituciones-page": "Listado de instituciones",
 }
 
 const BASELINE_SITE_VISITORS_30D = 752
@@ -57,9 +60,9 @@ const countUniqueBrowsers = (rows: Array<{ browser_key: string | null }>) =>
 
 const buildSectionTotals = (rows: VisitRow[]): SectionTotal[] => {
   const totals = rows.reduce<Record<string, number>>((acc, row) => {
-    const section = row.section
-    if (!section) return acc
-    acc[section] = (acc[section] || 0) + 1
+    const key = row.item_id || row.item_title
+    if (!key) return acc
+    acc[key] = (acc[key] || 0) + 1
     return acc
   }, {})
 
@@ -117,7 +120,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
         institutionRows48,
       ] = await Promise.all([
         withFallback<VisitRow>(
-          supabase.from("content_visits").select("section, browser_key, created_at").gte("created_at", since30),
+          supabase.from("content_visits").select("section, item_id, item_title, browser_key, created_at").gte("created_at", since30),
           "las visitas de 30 dias"
         ),
         withFallback<InteractionRow>(
@@ -141,7 +144,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
           "los likes de 15 dias"
         ),
         withFallback<BrowserVisitRow>(
-          supabase.from("content_visits").select("browser_key, created_at").gte("created_at", since2),
+          supabase.from("content_visits").select("browser_key, created_at").eq("section", "site_pages").gte("created_at", since2),
           "las visitas de 48 horas"
         ),
         withFallback<InteractionRow>(
@@ -174,9 +177,11 @@ export default function UsuariosMetricasHolaVarelaPage() {
         ),
       ])
 
-      setVisitors30Days(BASELINE_SITE_VISITORS_30D + countUniqueBrowsers(visitRows30))
-      setPageViews30Days(BASELINE_SITE_PAGE_VIEWS_30D + visitRows30.length)
-      setSectionTotals(buildSectionTotals(visitRows30).slice(0, 5))
+      const siteVisitRows30 = visitRows30.filter((row) => row.section === "site_pages")
+
+      setVisitors30Days(BASELINE_SITE_VISITORS_30D + countUniqueBrowsers(siteVisitRows30))
+      setPageViews30Days(BASELINE_SITE_PAGE_VIEWS_30D + siteVisitRows30.length)
+      setSectionTotals(buildSectionTotals(siteVisitRows30).slice(0, 5))
       setRecentActivity({
         interactions15Days:
           shareRows15.length +

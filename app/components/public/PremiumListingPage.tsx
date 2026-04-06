@@ -8,7 +8,7 @@ import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
-import { recordContentVisit } from "../../lib/contentVisits"
+import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { formatEventDateRange } from "../../lib/eventDates"
 import { buildPublicNav } from "../../lib/publicNav"
 
@@ -98,6 +98,10 @@ export function PremiumListingPage({
   const selectedImage = galleryImages[selectedImageIndex] || imageSrc || null
 
   useEffect(() => {
+    void recordSiteVisit(
+      kind === "comercio" ? `comercio-premium-${id}` : `servicio-premium-${id}`,
+      title
+    )
     void recordContentVisit(
       kind === "comercio" ? "comercios" : "servicios",
       String(id),

@@ -19,7 +19,7 @@ import {
   serializePublicLead,
   type PublicLeadType,
 } from "../lib/publicLead"
-import { recordContentVisit } from "../lib/contentVisits"
+import { recordContentVisit, recordSiteVisit } from "../lib/contentVisits"
 import { buildHomePublicNav } from "../lib/publicNav"
 import { recordViewMore, type ViewMoreSection } from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
@@ -408,6 +408,10 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     initialContactLeadForm
   )
   const [contactLeadStatus, setContactLeadStatus] = useState("")
+
+  useEffect(() => {
+    void recordSiteVisit("home", "Inicio")
+  }, [])
   const [contactLeadLoading, setContactLeadLoading] = useState(false)
   const [isContactLeadOpen, setIsContactLeadOpen] = useState(false)
   const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(null)

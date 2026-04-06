@@ -8,7 +8,7 @@ import { OptimizedImage } from "../components/OptimizedImage"
 import { PublicDetailModal } from "../components/PublicDetailModal"
 import { PublicHeader } from "../components/PublicHeader"
 import { ShareButton } from "../components/ShareButton"
-import { recordContentVisit } from "../lib/contentVisits"
+import { recordContentVisit, recordSiteVisit } from "../lib/contentVisits"
 import { buildPublicNav } from "../lib/publicNav"
 import { recordViewMore } from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
@@ -31,6 +31,10 @@ export default function InstitucionesPage() {
   const [instituciones, setInstituciones] = useState<Institucion[]>([])
   const [search, setSearch] = useState("")
   const [selectedInstitucion, setSelectedInstitucion] = useState<Institucion | null>(null)
+
+  useEffect(() => {
+    void recordSiteVisit("instituciones-page", "Listado de instituciones")
+  }, [])
 
   useEffect(() => {
     const cargarInstituciones = async () => {
