@@ -56,7 +56,6 @@ export default function UsuariosNuevoEventoPage() {
   const [success, setSuccess] = useState("")
   const [ownerEmail, setOwnerEmail] = useState("")
   const [editingEventId, setEditingEventId] = useState<number | null>(null)
-  const [isDuplicating, setIsDuplicating] = useState(false)
 
   useEffect(() => {
     const loadContext = async () => {
@@ -79,29 +78,24 @@ export default function UsuariosNuevoEventoPage() {
 
         setOwnerEmail(session.user.email)
 
-        const params =
+        const editId =
           typeof window === "undefined"
             ? null
-            : new URLSearchParams(window.location.search)
-        const editId = params?.get("edit")
-        const duplicateId = params?.get("duplicate")
-        const targetEventId = duplicateId || editId
-
-        if (targetEventId) {
+            : new URLSearchParams(window.location.search).get("edit")
+        if (editId) {
           const { data: existingEvent, error: eventError } = await supabase
             .from("eventos")
             .select("*")
-            .eq("id", Number(targetEventId))
+            .eq("id", Number(editId))
             .eq("owner_email", session.user.email)
             .maybeSingle()
 
           if (eventError) {
             setError(`No pudimos cargar el borrador: ${eventError.message}`)
           } else if (existingEvent) {
-            setIsDuplicating(Boolean(duplicateId))
-            setEditingEventId(duplicateId ? null : existingEvent.id)
+            setEditingEventId(existingEvent.id)
             setFormData({
-              titulo: duplicateId ? `${existingEvent.titulo || ""} (copia)` : existingEvent.titulo || "",
+              titulo: existingEvent.titulo || "",
               categoria: existingEvent.categoria || "Evento",
               fecha: existingEvent.fecha || "",
               fechaFin: existingEvent.fecha_fin || "",
@@ -237,25 +231,15 @@ export default function UsuariosNuevoEventoPage() {
             <div className="grid lg:grid-cols-[1.05fr_1.15fr]">
               <div className="bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10">
                 <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-                  {editingEventId
-                    ? "Editar borrador"
-                    : isDuplicating
-                      ? "Duplicar evento"
-                      : "Nuevo evento"}
+                  {editingEventId ? "Editar borrador" : "Nuevo evento"}
                 </div>
 
                 <div className="mt-6 max-w-2xl">
                   <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                    {editingEventId
-                      ? "Continua tu borrador"
-                      : isDuplicating
-                        ? "Preparamos una copia para ti"
-                        : "Carga una novedad para tu perfil"}
+                    {editingEventId ? "Continua tu borrador" : "Carga una novedad para tu perfil"}
                   </h1>
                   <p className="mt-4 text-lg leading-8 text-slate-600">
-                    {isDuplicating
-                      ? "Esta copia se guardara como un evento nuevo en borrador para que ajustes fechas, texto o imagen antes de publicarlo."
-                      : "Puedes publicar eventos, promociones, sorteos, beneficios o consultas. Todo entra como borrador para revisarlo antes de mostrarlo."}
+                    Puedes publicar eventos, promociones, sorteos, beneficios o consultas. Todo entra como borrador para revisarlo antes de mostrarlo.
                   </p>
                 </div>
 
@@ -530,8 +514,6 @@ export default function UsuariosNuevoEventoPage() {
                         ? "Guardando evento..."
                         : editingEventId
                           ? "Guardar cambios del borrador"
-                          : isDuplicating
-                            ? "Guardar copia en borrador"
                           : "Guardar evento en borrador"}
                     </button>
 

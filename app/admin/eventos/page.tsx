@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { Calendar, Eye, EyeOff, Pencil, Plus, Share2, Trash2, X } from "lucide-react"
+import { Calendar, Copy, Eye, EyeOff, Pencil, Plus, Share2, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { buildShareCountMap } from "../../lib/shareTracking"
 import { supabase } from "../../supabase"
@@ -26,6 +26,7 @@ type Evento = {
   estado?: string | null
   usa_whatsapp?: boolean | null
   share_count?: number
+  owner_email?: string | null
 }
 
 type EventoForm = {
@@ -166,6 +167,46 @@ export default function AdminEventosPage() {
       section: "Eventos",
       target: evento?.titulo || `ID ${id}`,
     })
+  }
+
+  const handleDuplicate = async (evento: Evento) => {
+    setLoading(true)
+    setSaveError("")
+
+    const payload = {
+      titulo: `${evento.titulo} (copia)`,
+      categoria: normalizeAdminEventCategory(evento.categoria),
+      fecha: evento.fecha,
+      fecha_fin: evento.fecha_fin || null,
+      fecha_solo_mes: evento.fecha_solo_mes ?? false,
+      ubicacion: evento.ubicacion,
+      telefono: evento.telefono || null,
+      web_url: evento.web_url?.trim() || null,
+      instagram_url: evento.instagram_url?.trim() || null,
+      facebook_url: evento.facebook_url?.trim() || null,
+      descripcion: evento.descripcion,
+      imagen: evento.imagen || null,
+      estado: "borrador",
+      usa_whatsapp: evento.usa_whatsapp ?? true,
+      owner_email: evento.owner_email || null,
+    }
+
+    const { error } = await supabase.from("eventos").insert([payload])
+
+    if (error) {
+      setSaveError(`Error al duplicar evento: ${error.message}`)
+      setLoading(false)
+      return
+    }
+
+    await logAdminActivity({
+      action: "Duplicar a borrador",
+      section: "Eventos",
+      target: evento.titulo,
+    })
+
+    await cargarEventos()
+    setLoading(false)
   }
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -742,6 +783,15 @@ export default function AdminEventosPage() {
               </div>
 
               <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                <button
+                  onClick={() => void handleDuplicate(evento)}
+                  disabled={loading}
+                  className="rounded-lg p-2 text-sky-600 transition hover:bg-sky-50 disabled:opacity-60"
+                  title="Duplicar en borrador"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+
                   <button
                     onClick={() => toggleVisibility(evento)}
                     className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
