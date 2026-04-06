@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
-import { BarChart3, CalendarDays, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, Menu, PlusCircle, Send, XCircle } from "lucide-react"
+import { BarChart3, CalendarDays, Copy, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, Menu, PlusCircle, Send, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../components/AuthFormStatus"
 import { formatEventDateRange } from "../lib/eventDates"
@@ -610,6 +610,14 @@ function EventGroup({
                       {tone === "draft" ? "Continuar borrador" : "Editar evento"}
                     </Link>
                   ) : null}
+
+                  <Link
+                    href={`/usuarios/eventos/nuevo?duplicate=${event.id}`}
+                    className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-300 hover:bg-sky-100"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Duplicar en borrador
+                  </Link>
 
                   {tone !== "active" ? (
                     <button
