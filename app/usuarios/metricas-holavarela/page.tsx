@@ -35,6 +35,9 @@ const SECTION_LABELS: Record<string, string> = {
   instituciones: "Instituciones",
 }
 
+const BASELINE_SITE_VISITORS_30D = 752
+const BASELINE_SITE_PAGE_VIEWS_30D = 3601
+
 const getIsoDaysAgo = (days: number) => {
   const date = new Date()
   date.setDate(date.getDate() - days)
@@ -125,8 +128,8 @@ export default function UsuariosMetricasHolaVarelaPage() {
       const safeExternalRows15 = (externalRows15 || []) as InteractionRow[]
       const safeLikesRows15 = (likesRows15 || []) as InteractionRow[]
 
-      setVisitors30Days(countUniqueBrowsers(safeVisitRows30))
-      setPageViews30Days(safeVisitRows30.length)
+      setVisitors30Days(BASELINE_SITE_VISITORS_30D + countUniqueBrowsers(safeVisitRows30))
+      setPageViews30Days(BASELINE_SITE_PAGE_VIEWS_30D + safeVisitRows30.length)
       setSectionTotals(buildSectionTotals(safeVisitRows30).slice(0, 5))
       setRecentActivity({
         visitors15Days: countUniqueBrowsers(safeVisitRows15),
