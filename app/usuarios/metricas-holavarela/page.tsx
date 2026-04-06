@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, BarChart3, Eye, FileText, MessageCircle, Share2 } from "lucide-react"
+import { ArrowLeft, BarChart3, Eye, FileText, MessageCircle } from "lucide-react"
 import { supabase } from "../../supabase"
 
 type VisitRow = {
@@ -21,10 +21,13 @@ type SectionTotal = {
 }
 
 type RecentActivity = {
-  visitors15Days: number
   interactions15Days: number
-  shares15Days: number
   whatsapp15Days: number
+}
+
+type RecentMessage = {
+  label: string
+  value: number
 }
 
 const SECTION_LABELS: Record<string, string> = {
@@ -68,10 +71,9 @@ export default function UsuariosMetricasHolaVarelaPage() {
   const [visitors30Days, setVisitors30Days] = useState(0)
   const [pageViews30Days, setPageViews30Days] = useState(0)
   const [sectionTotals, setSectionTotals] = useState<SectionTotal[]>([])
+  const [recentMessages, setRecentMessages] = useState<RecentMessage[]>([])
   const [recentActivity, setRecentActivity] = useState<RecentActivity>({
-    visitors15Days: 0,
     interactions15Days: 0,
-    shares15Days: 0,
     whatsapp15Days: 0,
   })
 
@@ -79,69 +81,135 @@ export default function UsuariosMetricasHolaVarelaPage() {
     const loadMetrics = async () => {
       const since30 = getIsoDaysAgo(30)
       const since15 = getIsoDaysAgo(15)
+      const since2 = getIsoDaysAgo(2)
 
       const [
         { data: visitRows30, error: visits30Error },
-        { data: visitRows15, error: visits15Error },
         { data: shareRows15, error: shares15Error },
         { data: whatsappRows15, error: whatsapp15Error },
         { data: viewMoreRows15, error: viewMore15Error },
         { data: externalRows15, error: external15Error },
         { data: likesRows15, error: likes15Error },
+        { data: visitRows48, error: visits48Error },
+        { data: contactRows48, error: contacts48Error },
+        { data: likesRows48, error: likes48Error },
+        { data: eventRows48, error: events48Error },
+        { data: commerceRows48, error: commerces48Error },
+        { data: serviceRows48, error: services48Error },
+        { data: courseRows48, error: courses48Error },
+        { data: institutionRows48, error: institutions48Error },
       ] = await Promise.all([
         supabase.from("content_visits").select("section, browser_key, created_at").gte("created_at", since30),
-        supabase.from("content_visits").select("browser_key, created_at").gte("created_at", since15),
         supabase.from("share_events").select("created_at").gte("created_at", since15),
         supabase.from("whatsapp_clicks").select("created_at").gte("created_at", since15),
         supabase.from("view_more_clicks").select("created_at").gte("created_at", since15),
         supabase.from("external_link_clicks").select("created_at").gte("created_at", since15),
         supabase.from("event_likes").select("created_at").gte("created_at", since15),
+        supabase.from("content_visits").select("browser_key, created_at").gte("created_at", since2),
+        supabase.from("contacto_solicitudes").select("created_at").gte("created_at", since2),
+        supabase.from("event_likes").select("created_at").gte("created_at", since2),
+        supabase.from("eventos").select("created_at").gte("created_at", since2),
+        supabase.from("comercios").select("created_at").gte("created_at", since2),
+        supabase.from("servicios").select("created_at").gte("created_at", since2),
+        supabase.from("cursos").select("created_at").gte("created_at", since2),
+        supabase.from("instituciones").select("created_at").gte("created_at", since2),
       ])
 
       if (
         visits30Error ||
-        visits15Error ||
         shares15Error ||
         whatsapp15Error ||
         viewMore15Error ||
         external15Error ||
-        likes15Error
+        likes15Error ||
+        visits48Error ||
+        contacts48Error ||
+        likes48Error ||
+        events48Error ||
+        commerces48Error ||
+        services48Error ||
+        courses48Error ||
+        institutions48Error
       ) {
         console.error("No se pudieron cargar las métricas de Hola Varela.", {
           visits30Error,
-          visits15Error,
           shares15Error,
           whatsapp15Error,
           viewMore15Error,
           external15Error,
           likes15Error,
+          visits48Error,
+          contacts48Error,
+          likes48Error,
+          events48Error,
+          commerces48Error,
+          services48Error,
+          courses48Error,
+          institutions48Error,
         })
         setLoading(false)
         return
       }
 
       const safeVisitRows30 = (visitRows30 || []) as VisitRow[]
-      const safeVisitRows15 = (visitRows15 || []) as VisitRow[]
       const safeShareRows15 = (shareRows15 || []) as InteractionRow[]
       const safeWhatsappRows15 = (whatsappRows15 || []) as InteractionRow[]
       const safeViewMoreRows15 = (viewMoreRows15 || []) as InteractionRow[]
       const safeExternalRows15 = (externalRows15 || []) as InteractionRow[]
       const safeLikesRows15 = (likesRows15 || []) as InteractionRow[]
+      const safeVisitRows48 = (visitRows48 || []) as VisitRow[]
+      const safeContactRows48 = (contactRows48 || []) as InteractionRow[]
+      const safeLikesRows48 = (likesRows48 || []) as InteractionRow[]
+      const safeEventRows48 = (eventRows48 || []) as InteractionRow[]
+      const safeCommerceRows48 = (commerceRows48 || []) as InteractionRow[]
+      const safeServiceRows48 = (serviceRows48 || []) as InteractionRow[]
+      const safeCourseRows48 = (courseRows48 || []) as InteractionRow[]
+      const safeInstitutionRows48 = (institutionRows48 || []) as InteractionRow[]
 
       setVisitors30Days(BASELINE_SITE_VISITORS_30D + countUniqueBrowsers(safeVisitRows30))
       setPageViews30Days(BASELINE_SITE_PAGE_VIEWS_30D + safeVisitRows30.length)
       setSectionTotals(buildSectionTotals(safeVisitRows30).slice(0, 5))
       setRecentActivity({
-        visitors15Days: countUniqueBrowsers(safeVisitRows15),
         interactions15Days:
           safeShareRows15.length +
           safeWhatsappRows15.length +
           safeViewMoreRows15.length +
           safeExternalRows15.length +
           safeLikesRows15.length,
-        shares15Days: safeShareRows15.length,
         whatsapp15Days: safeWhatsappRows15.length,
       })
+
+      const visitors48 = countUniqueBrowsers(safeVisitRows48)
+      const listings48 =
+        safeCommerceRows48.length +
+        safeServiceRows48.length +
+        safeCourseRows48.length +
+        safeInstitutionRows48.length
+
+      setRecentMessages(
+        [
+          {
+            label: `${visitors48} ${visitors48 === 1 ? "nueva visita al sitio" : "nuevas visitas al sitio"}`,
+            value: visitors48,
+          },
+          {
+            label: `${safeContactRows48.length} ${safeContactRows48.length === 1 ? "mensaje nuevo" : "mensajes nuevos"}`,
+            value: safeContactRows48.length,
+          },
+          {
+            label: `${safeLikesRows48.length} ${safeLikesRows48.length === 1 ? "nuevo like" : "nuevos likes"}`,
+            value: safeLikesRows48.length,
+          },
+          {
+            label: `${safeEventRows48.length} ${safeEventRows48.length === 1 ? "nuevo evento subido" : "nuevos eventos subidos"}`,
+            value: safeEventRows48.length,
+          },
+          {
+            label: `${listings48} ${listings48 === 1 ? "nueva ficha se sumó" : "nuevas fichas se sumaron"}`,
+            value: listings48,
+          },
+        ].filter((item) => item.value > 0)
+      )
       setLoading(false)
     }
 
@@ -248,16 +316,21 @@ export default function UsuariosMetricasHolaVarelaPage() {
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                     Actividad reciente
                   </div>
-                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Últimos 15 días</h2>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Últimas 48 horas</h2>
                   <p className="mt-2 text-sm leading-7 text-slate-500">
-                    Una lectura rápida del movimiento reciente dentro de Hola Varela.
+                    Un resumen rápido de lo último que pasó dentro de Hola Varela.
                   </p>
                 </div>
                 <div className="space-y-4">
-                  <ActivityRow label="Visitantes únicos" value={recentActivity.visitors15Days} icon={<Eye className="h-4 w-4 text-sky-700" />} />
-                  <ActivityRow label="Interacciones" value={recentActivity.interactions15Days} icon={<BarChart3 className="h-4 w-4 text-emerald-700" />} />
-                  <ActivityRow label="Compartidos" value={recentActivity.shares15Days} icon={<Share2 className="h-4 w-4 text-violet-700" />} />
-                  <ActivityRow label="WhatsApp" value={recentActivity.whatsapp15Days} icon={<MessageCircle className="h-4 w-4 text-green-700" />} />
+                  {recentMessages.length === 0 ? (
+                    <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
+                      Aún no hay novedades registradas en las últimas 48 horas.
+                    </div>
+                  ) : (
+                    recentMessages.map((item) => (
+                      <ActivityMessage key={item.label} label={item.label} />
+                    ))
+                  )}
                 </div>
               </section>
             </div>
@@ -295,22 +368,10 @@ function MetricCard({
   )
 }
 
-function ActivityRow({
-  label,
-  value,
-  icon,
-}: {
-  label: string
-  value: number
-  icon: React.ReactNode
-}) {
+function ActivityMessage({ label }: { label: string }) {
   return (
-    <div className="flex items-center justify-between rounded-[24px] border border-slate-200 bg-slate-50 p-4">
-      <div className="flex items-center gap-3">
-        <div className="rounded-2xl bg-white p-3 shadow-sm">{icon}</div>
-        <div className="text-sm font-medium text-slate-700">{label}</div>
-      </div>
-      <div className="text-2xl font-semibold text-slate-950">{value}</div>
+    <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-4 text-sm font-medium text-slate-700">
+      {label}
     </div>
   )
 }
