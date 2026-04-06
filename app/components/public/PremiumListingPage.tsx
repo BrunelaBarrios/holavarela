@@ -86,6 +86,11 @@ export function PremiumListingPage({
       ? `tel:${phone}`
       : whatsappLink(phone)
     : null
+  const directionsUrl = address
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        `${title} ${address}`.trim()
+      )}`
+    : null
 
   const galleryImages = useMemo(
     () =>
@@ -253,6 +258,18 @@ export function PremiumListingPage({
                       </ContactActionLink>
                     ) : null}
 
+                    {directionsUrl ? (
+                      <a
+                        href={directionsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-5 py-3 font-semibold text-sky-700 transition hover:border-sky-300 hover:bg-sky-100"
+                      >
+                        <MapPin className="h-4 w-4" />
+                        Como llegar
+                      </a>
+                    ) : null}
+
                     <ShareButton
                       title={title}
                       text={description || premiumDetail || undefined}
@@ -286,8 +303,8 @@ export function PremiumListingPage({
               ) : null}
 
               {premiumDetail ? (
-                <div className="mt-5 rounded-[24px] border border-violet-100 bg-violet-50/70 p-6">
-                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-violet-600">
+                <div className="mt-5 rounded-[24px] border border-sky-100 bg-sky-50/70 p-6">
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
                     Información ampliada
                   </div>
                   <p className="whitespace-pre-line text-base leading-8 text-slate-700">

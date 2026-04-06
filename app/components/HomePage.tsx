@@ -1,15 +1,20 @@
 'use client'
 
+import dynamic from "next/dynamic"
 import Link from "next/link"
 import Image from "next/image"
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react"
 import { useRouter } from "next/navigation"
 import { ContactActionLink } from "./ContactActionLink"
 import { ExternalLinksButtons } from "./ExternalLinksButtons"
 import { EventLikeButton } from "./EventLikeButton"
 import { OptimizedImage } from "./OptimizedImage"
-import { MyTunerWidget } from "./MyTunerWidget"
-import { PublicDetailModal } from "./PublicDetailModal"
 import { PublicHeader } from "./PublicHeader"
 import { formatEventDateRange } from "../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
@@ -40,6 +45,14 @@ import {
   UserRound,
   X,
 } from "lucide-react"
+
+const MyTunerWidget = dynamic(
+  () => import("./MyTunerWidget").then((module) => module.MyTunerWidget)
+)
+
+const PublicDetailModal = dynamic(
+  () => import("./PublicDetailModal").then((module) => module.PublicDetailModal)
+)
 
 type Comercio = {
   id: number
@@ -385,16 +398,14 @@ function sliceRotatingItems<T>(items: T[], page: number, pageSize = ITEMS_PER_RO
 
 export function HomePage({ initialData }: { initialData: HomePageData }) {
   const router = useRouter()
-  const [featuredBusinesses] = useState<Comercio[]>(initialData.featuredBusinesses)
-  const [eventos] = useState<Evento[]>(initialData.eventos)
-  const [cursos] = useState<Curso[]>(initialData.cursos)
-  const [servicios] = useState<Servicio[]>(initialData.servicios)
-  const [allCursos] = useState<Curso[]>(initialData.allCursos)
-  const [allServicios] = useState<Servicio[]>(initialData.allServicios)
-  const [instituciones] = useState<Institucion[]>(initialData.instituciones)
-  const [sobreVarela] = useState<SobreVarelaConfig>(
-    initialData.sobreVarela || defaultSobreVarela
-  )
+  const featuredBusinesses = initialData.featuredBusinesses
+  const eventos = initialData.eventos
+  const cursos = initialData.cursos
+  const servicios = initialData.servicios
+  const allCursos = initialData.allCursos
+  const allServicios = initialData.allServicios
+  const instituciones = initialData.instituciones
+  const sobreVarela = initialData.sobreVarela || defaultSobreVarela
   const [radio, setRadio] = useState<RadioConfig>(defaultRadioConfig)
   const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null)
   const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
@@ -418,6 +429,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [zoomedImage, setZoomedImage] = useState<{ src: string; alt: string } | null>(null)
   const [featuredBusinessPage, setFeaturedBusinessPage] = useState(0)
   const [servicePage, setServicePage] = useState(0)
+  const [shouldLoadEventLikes, setShouldLoadEventLikes] = useState(false)
+  const eventsSectionRef = useRef<HTMLElement | null>(null)
 
   const featuredBusinessPageCount = Math.max(1, Math.ceil(featuredBusinesses.length / ITEMS_PER_ROTATION))
   const safeFeaturedBusinessPage = featuredBusinessPage % featuredBusinessPageCount
@@ -460,6 +473,31 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   }, [servicePageCount])
 
   useEffect(() => {
+    if (shouldLoadEventLikes) return
+
+    const section = eventsSectionRef.current
+    if (!section) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShouldLoadEventLikes(true)
+          observer.disconnect()
+        }
+      },
+      {
+        rootMargin: "280px 0px",
+      }
+    )
+
+    observer.observe(section)
+
+    return () => observer.disconnect()
+  }, [shouldLoadEventLikes])
+
+  useEffect(() => {
+    if (!shouldLoadEventLikes || eventos.length === 0) return
+
     const loadEventLikes = async () => {
       const eventIds = eventos.map((evento) => String(evento.id))
       const { countMap, likedMap } = await fetchEventLikes(eventIds)
@@ -468,7 +506,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     }
 
     void loadEventLikes()
-  }, [eventos])
+  }, [eventos, shouldLoadEventLikes])
 
   useEffect(() => {
     const loadRadioConfig = () => {
@@ -2313,7 +2351,11 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       </section>
 
-      <section id="eventos" className="order-2 py-16">
+      <section
+        id="eventos"
+        ref={eventsSectionRef}
+        className="order-2 py-16"
+      >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <div className="mb-4 inline-flex rounded-full bg-sky-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
