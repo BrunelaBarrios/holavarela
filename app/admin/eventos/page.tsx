@@ -74,6 +74,7 @@ const categoriasEvento = ["Evento", "Promocion", "Sorteo", "Beneficio", "Consult
 
 export default function AdminEventosPage() {
   const [eventos, setEventos] = useState<Evento[]>([])
+  const [activeTab, setActiveTab] = useState<"vigentes" | "pasados">("vigentes")
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingEvento, setEditingEvento] = useState<Evento | null>(null)
   const [formData, setFormData] = useState<EventoForm>(initialForm)
@@ -82,6 +83,11 @@ export default function AdminEventosPage() {
   const [deletingEvento, setDeletingEvento] = useState<Evento | null>(null)
   const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
   const today = new Date().toISOString().slice(0, 10)
+
+  const isPastEvent = (evento: Evento) => {
+    const endDate = evento.fecha_fin || evento.fecha
+    return endDate < today
+  }
 
   const cargarEventos = async () => {
     const [{ data, error }, { data: shareRows, error: shareError }] = await Promise.all([
@@ -118,6 +124,12 @@ export default function AdminEventosPage() {
 
     return () => window.clearTimeout(timeoutId)
   }, [])
+
+  const visibleEventos = eventos.filter((evento) =>
+    activeTab === "vigentes" ? !isPastEvent(evento) : isPastEvent(evento)
+  )
+  const vigentesCount = eventos.filter((evento) => !isPastEvent(evento)).length
+  const pasadosCount = eventos.filter((evento) => isPastEvent(evento)).length
 
   const resetForm = () => {
     setFormData(initialForm)
@@ -723,8 +735,28 @@ export default function AdminEventosPage() {
         </div>
       )}
 
+      <div className="mb-6 flex flex-wrap gap-3">
+        {[
+          { id: "vigentes" as const, label: `Vigentes (${vigentesCount})` },
+          { id: "pasados" as const, label: `Pasados (${pasadosCount})` },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              activeTab === tab.id
+                ? "bg-slate-900 text-white"
+                : "border border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-emerald-700"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {eventos.map((evento) => (
+        {visibleEventos.map((evento) => (
           <div
             key={evento.id}
             className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
@@ -831,21 +863,25 @@ export default function AdminEventosPage() {
         ))}
       </div>
 
-      {eventos.length === 0 && (
+      {visibleEventos.length === 0 && (
         <div className="rounded-2xl border border-slate-200 bg-white py-12 text-center shadow-sm">
           <Calendar className="mx-auto mb-3 h-12 w-12 text-slate-300" />
           <h3 className="mb-2 text-lg font-medium text-slate-900">
-            No hay eventos
+            {activeTab === "vigentes" ? "No hay eventos vigentes" : "No hay eventos pasados"}
           </h3>
           <p className="mb-4 text-slate-500">
-            Comienza agregando tu primer evento
+            {activeTab === "vigentes"
+              ? "Comienza agregando tu primer evento"
+              : "Todavía no hay eventos que hayan pasado."}
           </p>
-          <button
-            onClick={() => setIsFormOpen(true)}
-            className="rounded-xl bg-emerald-600 px-6 py-3 font-medium text-white transition hover:bg-emerald-500"
-          >
-            Agregar Evento
-          </button>
+          {activeTab === "vigentes" ? (
+            <button
+              onClick={() => setIsFormOpen(true)}
+              className="rounded-xl bg-emerald-600 px-6 py-3 font-medium text-white transition hover:bg-emerald-500"
+            >
+              Agregar Evento
+            </button>
+          ) : null}
         </div>
       )}
     </div>

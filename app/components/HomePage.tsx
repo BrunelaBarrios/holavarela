@@ -21,7 +21,6 @@ import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
 import { fileToDataUrl } from "../lib/fileToDataUrl"
 import {
   getPublicLeadTypeLabel,
-  serializePublicLead,
   type PublicLeadType,
 } from "../lib/publicLead"
 import { recordContentVisit, recordSiteVisit } from "../lib/contentVisits"
@@ -163,8 +162,9 @@ type RadioConfig = {
 
 type ContactLeadForm = {
   nombre: string
-  email: string
   telefono: string
+  mensaje: string
+  email: string
   tipo: PublicLeadType
   nombreFicha: string
   descripcionFicha: string
@@ -327,8 +327,9 @@ const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
 const initialContactLeadForm: ContactLeadForm = {
   nombre: "",
-  email: "",
   telefono: "",
+  mensaje: "",
+  email: "",
   tipo: "comercio",
   nombreFicha: "",
   descripcionFicha: "",
@@ -637,52 +638,11 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     setContactLeadLoading(true)
     setContactLeadStatus("")
 
-    const trimmedEventSender =
-      contactLeadForm.nombreRemitenteEvento.trim() || contactLeadForm.nombre.trim()
-    const isEventOnlyLead = contactLeadForm.tipo === "evento"
-
     const payload = {
       nombre: contactLeadForm.nombre.trim(),
-      email: contactLeadForm.email.trim(),
+      email: null,
       telefono: contactLeadForm.telefono.trim(),
-      mensaje: serializePublicLead({
-        version: 1,
-        type: contactLeadForm.tipo,
-        senderName: contactLeadForm.nombre.trim(),
-        senderEmail: contactLeadForm.email.trim(),
-        senderPhone: contactLeadForm.telefono.trim(),
-        listingName: isEventOnlyLead ? contactLeadForm.tituloEvento.trim() : contactLeadForm.nombreFicha.trim(),
-        listingDescription: isEventOnlyLead
-          ? contactLeadForm.descripcionEvento.trim()
-          : contactLeadForm.descripcionFicha.trim(),
-        listingAddress: isEventOnlyLead ? contactLeadForm.ubicacionEvento.trim() : contactLeadForm.direccionFicha.trim(),
-        listingPhone: isEventOnlyLead ? "" : contactLeadForm.telefonoFicha.trim(),
-        listingImage: isEventOnlyLead ? contactLeadForm.imagenEvento || null : contactLeadForm.imagenFicha || null,
-        serviceCategory:
-          contactLeadForm.tipo === "servicio"
-            ? contactLeadForm.categoriaServicio.trim()
-            : undefined,
-        courseResponsible:
-          contactLeadForm.tipo === "curso"
-            ? contactLeadForm.responsableCurso.trim()
-            : undefined,
-        courseContact:
-          contactLeadForm.tipo === "curso"
-            ? contactLeadForm.contactoCurso.trim()
-            : undefined,
-        notes: contactLeadForm.notas.trim() || undefined,
-        event: isEventOnlyLead
-          ? {
-              senderName: trimmedEventSender,
-              title: contactLeadForm.tituloEvento.trim(),
-              category: contactLeadForm.categoriaEvento.trim(),
-              description: contactLeadForm.descripcionEvento.trim(),
-              date: contactLeadForm.fechaEvento.trim(),
-              location: contactLeadForm.ubicacionEvento.trim(),
-              image: contactLeadForm.imagenEvento || null,
-            }
-          : null,
-      }),
+      mensaje: contactLeadForm.mensaje.trim(),
     }
 
     const { error } = await supabase.from("contacto_solicitudes").insert([payload])
@@ -762,17 +722,16 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     closeWelcomeHighlight()
   }
 
-  const isEventOnlyLead = contactLeadForm.tipo === "evento"
-  const showListingFields = !isEventOnlyLead
-  const showEventFields = isEventOnlyLead
+  const isEventOnlyLead = false
+  const showListingFields = false
+  const showEventFields = false
   const contactLeadIntro =
-    "Elige que quieres sumar y completa los datos para que podamos revisarlo."
-  const contactLeadSubmitHint = isEventOnlyLead
-    ? "Revisaremos tu evento y te escribiremos si hace falta completar algun dato."
-    : "Revisaremos tu propuesta y te escribiremos si hace falta completar algun dato."
+    "Déjanos tu nombre, teléfono y mensaje para responderte."
+  const contactLeadSubmitHint =
+    "Te vamos a contactar usando el teléfono que nos compartas."
   const contactLeadSuccessMessage = isEventOnlyLead
-    ? "Recibimos tu evento. Lo revisaremos y te contactaremos si hace falta completar algun dato."
-    : "Recibimos tu propuesta. La revisaremos y te contactaremos si hace falta completar algun dato."
+    ? "Recibimos tu mensaje. Te contactaremos a la brevedad."
+    : "Recibimos tu mensaje. Te contactaremos a la brevedad."
 
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#f2f7f5_48%,#ffffff_100%)] text-slate-900">
@@ -951,7 +910,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </div>
 
             <form onSubmit={handleContactLeadSubmit} className="mt-8 space-y-4">
-              <div>
+              <div className="hidden">
                 <label className="mb-3 block text-sm font-medium text-slate-700">
                   ¿Qué quieres sumar?
                 </label>
@@ -987,7 +946,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   Tus datos de contacto
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
+                  <div className="hidden">
                     <label className="mb-2 block text-sm font-medium text-slate-700">
                       Tu nombre
                     </label>
@@ -1005,7 +964,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     />
                   </div>
 
-                  <div>
+                  <div className="hidden">
                     <label className="mb-2 block text-sm font-medium text-slate-700">
                       Tu email
                     </label>
@@ -1019,7 +978,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         }))
                       }
                       className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                      required
                     />
                   </div>
                 </div>
@@ -1347,18 +1305,19 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Comentarios extra
+                  Mensaje
                 </label>
                 <textarea
-                  value={contactLeadForm.notas}
+                  value={contactLeadForm.mensaje}
                   onChange={(e) =>
                     setContactLeadForm((prev) => ({
                       ...prev,
-                      notas: e.target.value,
+                      mensaje: e.target.value,
                     }))
                   }
                   className="min-h-28 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                  placeholder="Cuéntanos cualquier detalle adicional que quieras sumar."
+                  placeholder="Cuéntanos brevemente qué necesitas o cómo quieres estar en Hola Varela."
+                  required
                 />
               </div>
 
