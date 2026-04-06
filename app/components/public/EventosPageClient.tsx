@@ -34,6 +34,8 @@ export type Evento = {
   usa_whatsapp?: boolean | null
 }
 
+type EventTab = "vigentes" | "pasados"
+
 const normalizeEventCategory = (categoria?: string | null) => {
   const value = categoria?.trim()
   if (!value || value.toUpperCase() === "NOT NULL") return "Evento"
@@ -41,10 +43,24 @@ const normalizeEventCategory = (categoria?: string | null) => {
   return value
 }
 
+const getTodayLocalDate = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, "0")
+  const day = String(now.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+const isPastEvent = (evento: Evento, today: string) => {
+  const endDate = evento.fecha_fin || evento.fecha
+  return endDate < today
+}
+
 export function EventosPageClient({ initialEventos }: { initialEventos: Evento[] }) {
   const [eventos] = useState<Evento[]>(initialEventos)
   const [search, setSearch] = useState("")
   const [categoria, setCategoria] = useState("Todos")
+  const [activeTab, setActiveTab] = useState<EventTab>("vigentes")
   const [eventLikeCounts, setEventLikeCounts] = useState<Record<string, number>>({})
   const [likedEvents, setLikedEvents] = useState<Record<string, boolean>>({})
   const [likingEventId, setLikingEventId] = useState<string | null>(null)
@@ -144,7 +160,13 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
 
   const eventosFiltrados = useMemo(() => {
     const term = search.trim().toLowerCase()
-    return eventos.filter((evento) => {
+    const today = getTodayLocalDate()
+
+    const filtered = eventos.filter((evento) => {
+      const matchesTab =
+        activeTab === "vigentes"
+          ? !isPastEvent(evento, today)
+          : isPastEvent(evento, today)
       const matchesCategoria =
         categoria === "Todos" ||
         normalizeEventCategory(evento.categoria) === categoria
@@ -154,9 +176,28 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
           .toLowerCase()
           .includes(term)
 
-      return matchesCategoria && matchesSearch
+      return matchesTab && matchesCategoria && matchesSearch
     })
-  }, [categoria, eventos, search])
+
+    return [...filtered].sort((a, b) => {
+      const firstDate = a.fecha_fin || a.fecha
+      const secondDate = b.fecha_fin || b.fecha
+
+      return activeTab === "vigentes"
+        ? firstDate.localeCompare(secondDate)
+        : secondDate.localeCompare(firstDate)
+    })
+  }, [activeTab, categoria, eventos, search])
+
+  const today = getTodayLocalDate()
+  const vigentesCount = useMemo(
+    () => eventos.filter((evento) => !isPastEvent(evento, today)).length,
+    [eventos, today]
+  )
+  const pasadosCount = useMemo(
+    () => eventos.filter((evento) => isPastEvent(evento, today)).length,
+    [eventos, today]
+  )
 
   return (
     <main className="min-h-screen bg-white">
@@ -188,6 +229,14 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
         ]}
         actions={
           <>
+            <Link
+              href="/usuarios/eventos/nuevo"
+              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+            >
+              Agregar mi evento
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+
             {selectedEvento?.telefono?.trim() ? (
               <ContactActionLink
                 href={getContactHref(
@@ -243,7 +292,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
             ) : null}
             <Link
               href="/eventos"
-              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
             >
               Ver todos los eventos
               <ArrowRight className="h-4 w-4" />
@@ -274,6 +323,26 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
+          {[
+            { id: "vigentes" as const, label: `Vigentes (${vigentesCount})` },
+            { id: "pasados" as const, label: `Pasados (${pasadosCount})` },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                activeTab === tab.id
+                  ? "bg-slate-900 text-white"
+                  : "border border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:text-blue-600"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-3">
           {["Todos", "Evento", "Promocion", "Sorteo", "Beneficio", "Consulta"].map((item) => (
             <button
               key={item}
@@ -295,7 +364,9 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
             <p className="text-gray-600">
               {eventos.length === 0
                 ? "Todavia no hay eventos cargados."
-                : "No se encontraron eventos con esa busqueda."}
+                : activeTab === "vigentes"
+                  ? "No se encontraron eventos vigentes con esos filtros."
+                  : "No se encontraron eventos pasados con esos filtros."}
             </p>
           </div>
         ) : (

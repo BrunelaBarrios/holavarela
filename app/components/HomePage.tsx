@@ -1609,6 +1609,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         ]}
         actions={
           <>
+            <Link
+              href="/usuarios/eventos/nuevo"
+              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+            >
+              Agregar mi evento
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+
             {selectedEvento?.telefono?.trim() ? (
               <ContactActionLink
                 href={getContactHref(
@@ -1657,7 +1665,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
             <Link
               href="/eventos"
-              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
             >
               Ver todos los eventos
               <ArrowRight className="h-4 w-4" />
