@@ -11,6 +11,11 @@ type VisitRow = {
   created_at: string | null
 }
 
+type BrowserVisitRow = {
+  browser_key: string | null
+  created_at: string | null
+}
+
 type InteractionRow = {
   created_at: string | null
 }
@@ -66,10 +71,22 @@ const buildSectionTotals = (rows: VisitRow[]): SectionTotal[] => {
     .sort((a, b) => b.value - a.value)
 }
 
+const withFallback = async <T,>(
+  promiseLike: PromiseLike<{ data: T[] | null; error: unknown }>,
+  label: string
+) => {
+  const { data, error } = await promiseLike
+  if (error) {
+    console.warn(`No se pudo cargar ${label}.`, error)
+    return [] as T[]
+  }
+  return (data || []) as T[]
+}
+
 export default function UsuariosMetricasHolaVarelaPage() {
   const [loading, setLoading] = useState(true)
-  const [visitors30Days, setVisitors30Days] = useState(0)
-  const [pageViews30Days, setPageViews30Days] = useState(0)
+  const [visitors30Days, setVisitors30Days] = useState(BASELINE_SITE_VISITORS_30D)
+  const [pageViews30Days, setPageViews30Days] = useState(BASELINE_SITE_PAGE_VIEWS_30D)
   const [sectionTotals, setSectionTotals] = useState<SectionTotal[]>([])
   const [recentMessages, setRecentMessages] = useState<RecentMessage[]>([])
   const [recentActivity, setRecentActivity] = useState<RecentActivity>({
@@ -84,107 +101,98 @@ export default function UsuariosMetricasHolaVarelaPage() {
       const since2 = getIsoDaysAgo(2)
 
       const [
-        { data: visitRows30, error: visits30Error },
-        { data: shareRows15, error: shares15Error },
-        { data: whatsappRows15, error: whatsapp15Error },
-        { data: viewMoreRows15, error: viewMore15Error },
-        { data: externalRows15, error: external15Error },
-        { data: likesRows15, error: likes15Error },
-        { data: visitRows48, error: visits48Error },
-        { data: contactRows48, error: contacts48Error },
-        { data: likesRows48, error: likes48Error },
-        { data: eventRows48, error: events48Error },
-        { data: commerceRows48, error: commerces48Error },
-        { data: serviceRows48, error: services48Error },
-        { data: courseRows48, error: courses48Error },
-        { data: institutionRows48, error: institutions48Error },
+        visitRows30,
+        shareRows15,
+        whatsappRows15,
+        viewMoreRows15,
+        externalRows15,
+        likesRows15,
+        visitRows48,
+        contactRows48,
+        likesRows48,
+        eventRows48,
+        commerceRows48,
+        serviceRows48,
+        courseRows48,
+        institutionRows48,
       ] = await Promise.all([
-        supabase.from("content_visits").select("section, browser_key, created_at").gte("created_at", since30),
-        supabase.from("share_events").select("created_at").gte("created_at", since15),
-        supabase.from("whatsapp_clicks").select("created_at").gte("created_at", since15),
-        supabase.from("view_more_clicks").select("created_at").gte("created_at", since15),
-        supabase.from("external_link_clicks").select("created_at").gte("created_at", since15),
-        supabase.from("event_likes").select("created_at").gte("created_at", since15),
-        supabase.from("content_visits").select("browser_key, created_at").gte("created_at", since2),
-        supabase.from("contacto_solicitudes").select("created_at").gte("created_at", since2),
-        supabase.from("event_likes").select("created_at").gte("created_at", since2),
-        supabase.from("eventos").select("created_at").gte("created_at", since2),
-        supabase.from("comercios").select("created_at").gte("created_at", since2),
-        supabase.from("servicios").select("created_at").gte("created_at", since2),
-        supabase.from("cursos").select("created_at").gte("created_at", since2),
-        supabase.from("instituciones").select("created_at").gte("created_at", since2),
+        withFallback<VisitRow>(
+          supabase.from("content_visits").select("section, browser_key, created_at").gte("created_at", since30),
+          "las visitas de 30 dias"
+        ),
+        withFallback<InteractionRow>(
+          supabase.from("share_events").select("created_at").gte("created_at", since15),
+          "los compartidos de 15 dias"
+        ),
+        withFallback<InteractionRow>(
+          supabase.from("whatsapp_clicks").select("created_at").gte("created_at", since15),
+          "los clics de WhatsApp de 15 dias"
+        ),
+        withFallback<InteractionRow>(
+          supabase.from("view_more_clicks").select("created_at").gte("created_at", since15),
+          "los clics en ver mas de 15 dias"
+        ),
+        withFallback<InteractionRow>(
+          supabase.from("external_link_clicks").select("created_at").gte("created_at", since15),
+          "los clics externos de 15 dias"
+        ),
+        withFallback<InteractionRow>(
+          supabase.from("event_likes").select("created_at").gte("created_at", since15),
+          "los likes de 15 dias"
+        ),
+        withFallback<BrowserVisitRow>(
+          supabase.from("content_visits").select("browser_key, created_at").gte("created_at", since2),
+          "las visitas de 48 horas"
+        ),
+        withFallback<InteractionRow>(
+          supabase.from("contacto_solicitudes").select("created_at").gte("created_at", since2),
+          "los mensajes de 48 horas"
+        ),
+        withFallback<InteractionRow>(
+          supabase.from("event_likes").select("created_at").gte("created_at", since2),
+          "los likes de 48 horas"
+        ),
+        withFallback<InteractionRow>(
+          supabase.from("eventos").select("created_at").gte("created_at", since2),
+          "los eventos nuevos de 48 horas"
+        ),
+        withFallback<InteractionRow>(
+          supabase.from("comercios").select("created_at").gte("created_at", since2),
+          "los comercios nuevos de 48 horas"
+        ),
+        withFallback<InteractionRow>(
+          supabase.from("servicios").select("created_at").gte("created_at", since2),
+          "los servicios nuevos de 48 horas"
+        ),
+        withFallback<InteractionRow>(
+          supabase.from("cursos").select("created_at").gte("created_at", since2),
+          "los cursos nuevos de 48 horas"
+        ),
+        withFallback<InteractionRow>(
+          supabase.from("instituciones").select("created_at").gte("created_at", since2),
+          "las instituciones nuevas de 48 horas"
+        ),
       ])
 
-      if (
-        visits30Error ||
-        shares15Error ||
-        whatsapp15Error ||
-        viewMore15Error ||
-        external15Error ||
-        likes15Error ||
-        visits48Error ||
-        contacts48Error ||
-        likes48Error ||
-        events48Error ||
-        commerces48Error ||
-        services48Error ||
-        courses48Error ||
-        institutions48Error
-      ) {
-        console.error("No se pudieron cargar las métricas de Hola Varela.", {
-          visits30Error,
-          shares15Error,
-          whatsapp15Error,
-          viewMore15Error,
-          external15Error,
-          likes15Error,
-          visits48Error,
-          contacts48Error,
-          likes48Error,
-          events48Error,
-          commerces48Error,
-          services48Error,
-          courses48Error,
-          institutions48Error,
-        })
-        setLoading(false)
-        return
-      }
-
-      const safeVisitRows30 = (visitRows30 || []) as VisitRow[]
-      const safeShareRows15 = (shareRows15 || []) as InteractionRow[]
-      const safeWhatsappRows15 = (whatsappRows15 || []) as InteractionRow[]
-      const safeViewMoreRows15 = (viewMoreRows15 || []) as InteractionRow[]
-      const safeExternalRows15 = (externalRows15 || []) as InteractionRow[]
-      const safeLikesRows15 = (likesRows15 || []) as InteractionRow[]
-      const safeVisitRows48 = (visitRows48 || []) as VisitRow[]
-      const safeContactRows48 = (contactRows48 || []) as InteractionRow[]
-      const safeLikesRows48 = (likesRows48 || []) as InteractionRow[]
-      const safeEventRows48 = (eventRows48 || []) as InteractionRow[]
-      const safeCommerceRows48 = (commerceRows48 || []) as InteractionRow[]
-      const safeServiceRows48 = (serviceRows48 || []) as InteractionRow[]
-      const safeCourseRows48 = (courseRows48 || []) as InteractionRow[]
-      const safeInstitutionRows48 = (institutionRows48 || []) as InteractionRow[]
-
-      setVisitors30Days(BASELINE_SITE_VISITORS_30D + countUniqueBrowsers(safeVisitRows30))
-      setPageViews30Days(BASELINE_SITE_PAGE_VIEWS_30D + safeVisitRows30.length)
-      setSectionTotals(buildSectionTotals(safeVisitRows30).slice(0, 5))
+      setVisitors30Days(BASELINE_SITE_VISITORS_30D + countUniqueBrowsers(visitRows30))
+      setPageViews30Days(BASELINE_SITE_PAGE_VIEWS_30D + visitRows30.length)
+      setSectionTotals(buildSectionTotals(visitRows30).slice(0, 5))
       setRecentActivity({
         interactions15Days:
-          safeShareRows15.length +
-          safeWhatsappRows15.length +
-          safeViewMoreRows15.length +
-          safeExternalRows15.length +
-          safeLikesRows15.length,
-        whatsapp15Days: safeWhatsappRows15.length,
+          shareRows15.length +
+          whatsappRows15.length +
+          viewMoreRows15.length +
+          externalRows15.length +
+          likesRows15.length,
+        whatsapp15Days: whatsappRows15.length,
       })
 
-      const visitors48 = countUniqueBrowsers(safeVisitRows48)
+      const visitors48 = countUniqueBrowsers(visitRows48)
       const listings48 =
-        safeCommerceRows48.length +
-        safeServiceRows48.length +
-        safeCourseRows48.length +
-        safeInstitutionRows48.length
+        commerceRows48.length +
+        serviceRows48.length +
+        courseRows48.length +
+        institutionRows48.length
 
       setRecentMessages(
         [
@@ -193,23 +201,24 @@ export default function UsuariosMetricasHolaVarelaPage() {
             value: visitors48,
           },
           {
-            label: `${safeContactRows48.length} ${safeContactRows48.length === 1 ? "mensaje nuevo" : "mensajes nuevos"}`,
-            value: safeContactRows48.length,
+            label: `${contactRows48.length} ${contactRows48.length === 1 ? "mensaje nuevo" : "mensajes nuevos"}`,
+            value: contactRows48.length,
           },
           {
-            label: `${safeLikesRows48.length} ${safeLikesRows48.length === 1 ? "nuevo like" : "nuevos likes"}`,
-            value: safeLikesRows48.length,
+            label: `${likesRows48.length} ${likesRows48.length === 1 ? "nuevo like" : "nuevos likes"}`,
+            value: likesRows48.length,
           },
           {
-            label: `${safeEventRows48.length} ${safeEventRows48.length === 1 ? "nuevo evento subido" : "nuevos eventos subidos"}`,
-            value: safeEventRows48.length,
+            label: `${eventRows48.length} ${eventRows48.length === 1 ? "nuevo evento subido" : "nuevos eventos subidos"}`,
+            value: eventRows48.length,
           },
           {
-            label: `${listings48} ${listings48 === 1 ? "nueva ficha se sumó" : "nuevas fichas se sumaron"}`,
+            label: `${listings48} ${listings48 === 1 ? "nueva ficha se sumo" : "nuevas fichas se sumaron"}`,
             value: listings48,
           },
         ].filter((item) => item.value > 0)
       )
+
       setLoading(false)
     }
 
@@ -217,8 +226,10 @@ export default function UsuariosMetricasHolaVarelaPage() {
   }, [])
 
   const sectionSummary = useMemo(() => {
-    if (sectionTotals.length === 0) return "Todavía no hay suficiente actividad para mostrar secciones destacadas."
-    return `${sectionTotals[0]?.label || "Sección principal"} lidera el interés reciente dentro de Hola Varela.`
+    if (sectionTotals.length === 0) {
+      return "Todavia no hay suficiente actividad para mostrar secciones destacadas."
+    }
+    return `${sectionTotals[0]?.label || "Seccion principal"} lidera el interes reciente dentro de Hola Varela.`
   }, [sectionTotals])
 
   return (
@@ -227,13 +238,13 @@ export default function UsuariosMetricasHolaVarelaPage() {
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="inline-flex rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700 shadow-sm">
-              Métricas de Hola Varela
+              Metricas de Hola Varela
             </div>
             <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950">
               Movimiento general de la plataforma
             </h1>
             <p className="mt-3 max-w-3xl text-lg leading-8 text-slate-600">
-              Aquí ves la actividad registrada por Hola Varela dentro de la web, sin mezclarla con métricas externas.
+              Aqui ves la actividad registrada por Hola Varela dentro de la web, sin mezclarla con metricas externas.
             </p>
           </div>
           <Link
@@ -247,7 +258,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
 
         {loading ? (
           <div className="rounded-[32px] border border-slate-200 bg-white p-10 text-slate-500 shadow-sm">
-            Cargando métricas de Hola Varela...
+            Cargando metricas de Hola Varela...
           </div>
         ) : (
           <div className="space-y-8">
@@ -255,28 +266,28 @@ export default function UsuariosMetricasHolaVarelaPage() {
               <MetricCard
                 label="Visitantes del sitio"
                 value={visitors30Days}
-                description="Visitantes únicos últimos 30 días"
+                description="Visitantes unicos ultimos 30 dias"
                 icon={<Eye className="h-5 w-5 text-sky-700" />}
                 tone="bg-sky-100"
               />
               <MetricCard
                 label="Vistas del sitio"
                 value={pageViews30Days}
-                description="Registros de visita últimos 30 días"
+                description="Registros de visita ultimos 30 dias"
                 icon={<FileText className="h-5 w-5 text-violet-700" />}
                 tone="bg-violet-100"
               />
               <MetricCard
                 label="Actividad reciente"
                 value={recentActivity.interactions15Days}
-                description="Interacciones últimos 15 días"
+                description="Interacciones ultimos 15 dias"
                 icon={<BarChart3 className="h-5 w-5 text-emerald-700" />}
                 tone="bg-emerald-100"
               />
               <MetricCard
-                label="Contactos rápidos"
+                label="Contactos rapidos"
                 value={recentActivity.whatsapp15Days}
-                description="WhatsApp últimos 15 días"
+                description="WhatsApp ultimos 15 dias"
                 icon={<MessageCircle className="h-5 w-5 text-green-700" />}
                 tone="bg-green-100"
               />
@@ -286,15 +297,15 @@ export default function UsuariosMetricasHolaVarelaPage() {
               <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="mb-5">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Secciones más visitadas
+                    Secciones mas visitadas
                   </div>
-                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Dónde se mueve más la gente</h2>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Donde se mueve mas la gente</h2>
                   <p className="mt-2 text-sm leading-7 text-slate-500">{sectionSummary}</p>
                 </div>
                 <div className="space-y-4">
                   {sectionTotals.length === 0 ? (
                     <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                      Aún no hay visitas registradas para mostrar.
+                      Aun no hay visitas registradas para mostrar.
                     </div>
                   ) : (
                     sectionTotals.map((section) => (
@@ -316,15 +327,15 @@ export default function UsuariosMetricasHolaVarelaPage() {
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                     Actividad reciente
                   </div>
-                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Últimas 48 horas</h2>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Ultimas 48 horas</h2>
                   <p className="mt-2 text-sm leading-7 text-slate-500">
-                    Un resumen rápido de lo último que pasó dentro de Hola Varela.
+                    Un resumen rapido de lo ultimo que paso dentro de Hola Varela.
                   </p>
                 </div>
                 <div className="space-y-4">
                   {recentMessages.length === 0 ? (
                     <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                      Aún no hay novedades registradas en las últimas 48 horas.
+                      Aun no hay novedades registradas en las ultimas 48 horas.
                     </div>
                   ) : (
                     recentMessages.map((item) => (
