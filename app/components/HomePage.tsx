@@ -322,6 +322,7 @@ const defaultRadioConfig: RadioConfig = {
   isLive: true,
 }
 
+const WELCOME_PROMOTION_ENABLED = false
 const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
 const initialContactLeadForm: ContactLeadForm = {
@@ -541,6 +542,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   }, [])
 
   useEffect(() => {
+    if (!WELCOME_PROMOTION_ENABLED) return
+
     const timeoutId = window.setTimeout(() => {
       setWelcomeHighlight(
         getInitialWelcomeHighlight(
@@ -801,7 +804,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       ) : null}
 
-      {welcomeHighlight && (
+      {WELCOME_PROMOTION_ENABLED && welcomeHighlight && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/70 p-4">
           <div className="relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[28px] bg-white shadow-2xl">
             <button
