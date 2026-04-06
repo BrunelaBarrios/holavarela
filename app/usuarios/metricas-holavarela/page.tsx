@@ -35,10 +35,6 @@ const SECTION_LABELS: Record<string, string> = {
   instituciones: "Instituciones",
 }
 
-const BASELINE_SITE_VISITORS_30D = 742
-const BASELINE_SITE_PAGE_VIEWS_30D = 3537
-const BASELINE_SITE_VISITORS_15D = 371
-
 const getIsoDaysAgo = (days: number) => {
   const date = new Date()
   date.setDate(date.getDate() - days)
@@ -129,11 +125,11 @@ export default function UsuariosMetricasHolaVarelaPage() {
       const safeExternalRows15 = (externalRows15 || []) as InteractionRow[]
       const safeLikesRows15 = (likesRows15 || []) as InteractionRow[]
 
-      setVisitors30Days(BASELINE_SITE_VISITORS_30D + countUniqueBrowsers(safeVisitRows30))
-      setPageViews30Days(BASELINE_SITE_PAGE_VIEWS_30D + safeVisitRows30.length)
+      setVisitors30Days(countUniqueBrowsers(safeVisitRows30))
+      setPageViews30Days(safeVisitRows30.length)
       setSectionTotals(buildSectionTotals(safeVisitRows30).slice(0, 5))
       setRecentActivity({
-        visitors15Days: BASELINE_SITE_VISITORS_15D + countUniqueBrowsers(safeVisitRows15),
+        visitors15Days: countUniqueBrowsers(safeVisitRows15),
         interactions15Days:
           safeShareRows15.length +
           safeWhatsappRows15.length +
@@ -166,7 +162,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
               Movimiento general de la plataforma
             </h1>
             <p className="mt-3 max-w-3xl text-lg leading-8 text-slate-600">
-              Aquí ves cómo se mueve Hola Varela en la web, para entender el alcance general del sitio sin mezclarlo con tu ficha.
+              Aquí ves la actividad registrada por Hola Varela dentro de la web, sin mezclarla con métricas externas.
             </p>
           </div>
           <Link
@@ -188,14 +184,14 @@ export default function UsuariosMetricasHolaVarelaPage() {
               <MetricCard
                 label="Visitantes del sitio"
                 value={visitors30Days}
-                description="Últimos 30 días"
+                description="Visitantes únicos últimos 30 días"
                 icon={<Eye className="h-5 w-5 text-sky-700" />}
                 tone="bg-sky-100"
               />
               <MetricCard
                 label="Vistas del sitio"
                 value={pageViews30Days}
-                description="Últimos 30 días"
+                description="Registros de visita últimos 30 días"
                 icon={<FileText className="h-5 w-5 text-violet-700" />}
                 tone="bg-violet-100"
               />
