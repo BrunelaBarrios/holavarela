@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState, type ReactNode } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { CheckCircle2, ExternalLink, ShieldOff } from "lucide-react"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
 import {
@@ -43,6 +43,8 @@ const siteFieldSelection = `
 
 export default function UsuariosSuscripcionPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isFirstSetup = searchParams.get("setup") === "1"
   const [ownedEntity, setOwnedEntity] = useState<UserOwnedEntity | null>(null)
   const [plans, setPlans] = useState(() => buildSubscriptionPlansForUser())
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>("presencia")
@@ -89,6 +91,11 @@ export default function UsuariosSuscripcionPage() {
         setSelectedPlan(
           (entity.record.plan_suscripcion as SubscriptionPlanKey) || "presencia"
         )
+        if (isFirstSetup) {
+          setMode("change")
+          setCurrentStep(1)
+          setSuccess("Tus datos quedaron guardados. Ahora elige tu plan para continuar.")
+        }
       } catch (loadError) {
         setError(
           loadError instanceof Error
@@ -101,7 +108,7 @@ export default function UsuariosSuscripcionPage() {
     }
 
     void loadSubscription()
-  }, [router])
+  }, [isFirstSetup, router])
 
   const currentPlanKey =
     (ownedEntity?.record.plan_suscripcion as SubscriptionPlanKey) || "presencia"
@@ -429,7 +436,8 @@ export default function UsuariosSuscripcionPage() {
                           <button
                             type="button"
                             onClick={backToSummary}
-                            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                            disabled={isFirstSetup}
+                            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Volver
                           </button>

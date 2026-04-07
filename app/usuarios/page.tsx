@@ -7,7 +7,6 @@ import { BarChart3, CalendarDays, CreditCard, ExternalLink, EyeOff, FilePenLine,
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../components/AuthFormStatus"
 import { formatEventDateRange } from "../lib/eventDates"
-import { subscriptionPlans, type SubscriptionPlanKey } from "../lib/subscriptionPlans"
 import { buildUserProfileFields, fetchUserOwnedEvents, findUserOwnedEntity, getUserProfileImageSrc, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, type UserEntityType, type UserOwnedEntity, type UserOwnedEvent } from "../lib/userProfiles"
 import { supabase } from "../supabase"
 
@@ -69,7 +68,6 @@ export default function UsuariosHomePage() {
   const [servicio, setServicio] = useState<ServicioForm>(initialServicio)
   const [curso, setCurso] = useState<CursoForm>(initialCurso)
   const [institucion, setInstitucion] = useState<InstitucionForm>(initialInstitucion)
-  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>("presencia")
   const [savingOnboarding, setSavingOnboarding] = useState(false)
   const [updatingEventId, setUpdatingEventId] = useState<number | null>(null)
   const [actionsOpen, setActionsOpen] = useState(false)
@@ -131,28 +129,21 @@ export default function UsuariosHomePage() {
     }
     setSavingOnboarding(true)
     const { table, payload } = buildOnboardingPayload({ type: entityType, email: user.email, comercio, servicio, curso, institucion })
-    const payloadWithPlan =
-      entityType === "institucion"
-        ? payload
-        : {
-            ...payload,
-            plan_suscripcion: selectedPlan,
-          }
-    const { error: insertError } = await supabase.from(table).insert([payloadWithPlan])
+    const { error: insertError } = await supabase.from(table).insert([payload])
     if (insertError) {
       setError(`No pudimos guardar tus datos: ${insertError.message}`)
       setSavingOnboarding(false)
       return
     }
-    try {
-      const [entity, ownEvents] = await Promise.all([findUserOwnedEntity(user.email), fetchUserOwnedEvents(user.email)])
-      setOwnedEntity(entity)
-      setEvents(ownEvents)
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Guardamos tus datos, pero no pudimos refrescar el panel.")
-    } finally {
-      setSavingOnboarding(false)
+    setSavingOnboarding(false)
+    if (entityType === "institucion") {
+      router.replace("/usuarios")
+      router.refresh()
+      return
     }
+
+    router.replace("/usuarios/suscripcion?setup=1")
+    router.refresh()
   }
 
   const handleEventStatusChange = async (
@@ -214,29 +205,18 @@ export default function UsuariosHomePage() {
           <section className="bg-[radial-gradient(circle_at_top_left,#d8f3df_0%,#edf8f1_42%,#eef5ff_100%)] p-8 sm:p-10">
             <div className="inline-flex rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Primer ingreso</div>
             <h1 className="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl">Completa tu espacio</h1>
-            <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">Esta es la primera vez que entras con tu cuenta. Completa los datos de tu negocio y elige el tipo para activar tu panel.</p>
+            <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">Esta es la primera vez que entras con tu cuenta. Completa primero los datos de tu perfil y después te llevamos a suscripción para continuar.</p>
               <div className="mt-8 space-y-4">
               <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
                 <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Cuenta conectada</div>
                 <div className="mt-3 text-lg font-semibold text-slate-950">{user?.email}</div>
               </div>
-
-              {entityType !== "institucion" ? (
-                <div className="mt-8 rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Suscripcion</div>
-                  <div className="mt-3 text-xl font-semibold text-slate-950">{subscriptionPlans[selectedPlan].name}</div>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{subscriptionPlans[selectedPlan].tagline}</p>
-                  <div className="mt-4 inline-flex rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-                    {subscriptionPlans[selectedPlan].price}
-                  </div>
-                </div>
-              ) : null}
               <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
                 <div className="text-sm font-medium text-slate-900">Que vas a poder hacer despues</div>
                 <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+                  <p>Completar la suscripcion y continuar con el alta de tu espacio.</p>
                   <p>Ver tu negocio cargado y editar sus datos.</p>
                   <p>Subir eventos y revisar cuales estan activos o en borrador.</p>
-                  <p>Ver tu estado de suscripcion si tu perfil no es institucion.</p>
                 </div>
               </div>
             </div>
@@ -259,52 +239,6 @@ export default function UsuariosHomePage() {
                   ))}
                 </div>
               </div>
-
-              {entityType !== "institucion" ? (
-                <div className="space-y-3">
-                  <div className="text-sm font-medium text-slate-700">Plan de suscripcion</div>
-                  <div className="grid gap-4 xl:grid-cols-3">
-                    {(Object.entries(subscriptionPlans) as Array<[SubscriptionPlanKey, (typeof subscriptionPlans)[SubscriptionPlanKey]]>).map(([planKey, plan]) => (
-                      <div
-                        key={planKey}
-                        className={`rounded-[24px] border p-5 text-left transition ${
-                          selectedPlan === planKey
-                            ? "border-blue-500 bg-blue-50 shadow-[0_16px_40px_-24px_rgba(37,99,235,0.45)]"
-                            : "border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/40"
-                        }`}
-                      >
-                        <button type="button" onClick={() => setSelectedPlan(planKey)} className="block w-full text-left">
-                          <div className="flex items-start justify-between gap-4">
-                            <div>
-                              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{plan.shortLabel}</div>
-                              <div className="mt-2 text-xl font-semibold text-slate-950">{plan.name}</div>
-                            </div>
-                            <div className="rounded-full bg-slate-900 px-3 py-1 text-sm font-semibold text-white">{plan.price}</div>
-                          </div>
-                          <p className="mt-3 text-sm leading-6 text-slate-600">{plan.tagline}</p>
-                          <div className="mt-4 space-y-2 text-sm leading-6 text-slate-600">
-                            {plan.features.map((feature) => (
-                              <div key={feature} className="flex gap-2">
-                                <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500" />
-                                <span>{feature}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </button>
-                        <a
-                          href={plan.checkoutUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="mt-5 inline-flex items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                        >
-                          Ver pago en Mercado Pago
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-
               {entityType === "comercio" ? <div className="space-y-4 rounded-[24px] border border-slate-200 bg-slate-50 p-5"><Field label="Nombre del comercio" value={comercio.nombre} onChange={(value) => setComercio((current) => ({ ...current, nombre: value }))} required /><div className="grid gap-4 md:grid-cols-2"><Field label="Direccion" value={comercio.direccion} onChange={(value) => setComercio((current) => ({ ...current, direccion: value }))} /><Field label="Telefono" value={comercio.telefono} onChange={(value) => setComercio((current) => ({ ...current, telefono: value }))} /></div><TextAreaField label="Descripcion" value={comercio.descripcion} onChange={(value) => setComercio((current) => ({ ...current, descripcion: value }))} /><ExternalLinksFields webUrl={comercio.webUrl} instagramUrl={comercio.instagramUrl} facebookUrl={comercio.facebookUrl} onWebChange={(value) => setComercio((current) => ({ ...current, webUrl: value }))} onInstagramChange={(value) => setComercio((current) => ({ ...current, instagramUrl: value }))} onFacebookChange={(value) => setComercio((current) => ({ ...current, facebookUrl: value }))} /><CheckboxField label="Este telefono tiene WhatsApp" checked={comercio.usaWhatsapp} onChange={(checked) => setComercio((current) => ({ ...current, usaWhatsapp: checked }))} /></div> : null}
 
               {entityType === "servicio" ? <div className="space-y-4 rounded-[24px] border border-slate-200 bg-slate-50 p-5"><Field label="Nombre del servicio" value={servicio.nombre} onChange={(value) => setServicio((current) => ({ ...current, nombre: value }))} required /><div className="space-y-2"><label className="text-sm font-medium text-slate-700">Categoria</label><select value={servicio.categoria} onChange={(event) => setServicio((current) => ({ ...current, categoria: event.target.value }))} className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-400">{serviceCategories.map((category) => <option key={category} value={category}>{category}</option>)}</select></div><div className="grid gap-4 md:grid-cols-2"><Field label="Responsable" value={servicio.responsable} onChange={(value) => setServicio((current) => ({ ...current, responsable: value }))} /><Field label="Contacto" value={servicio.contacto} onChange={(value) => setServicio((current) => ({ ...current, contacto: value }))} /></div><Field label="Direccion" value={servicio.direccion} onChange={(value) => setServicio((current) => ({ ...current, direccion: value }))} /><TextAreaField label="Descripcion" value={servicio.descripcion} onChange={(value) => setServicio((current) => ({ ...current, descripcion: value }))} /><ExternalLinksFields webUrl={servicio.webUrl} instagramUrl={servicio.instagramUrl} facebookUrl={servicio.facebookUrl} onWebChange={(value) => setServicio((current) => ({ ...current, webUrl: value }))} onInstagramChange={(value) => setServicio((current) => ({ ...current, instagramUrl: value }))} onFacebookChange={(value) => setServicio((current) => ({ ...current, facebookUrl: value }))} /><CheckboxField label="Este contacto tiene WhatsApp" checked={servicio.usaWhatsapp} onChange={(checked) => setServicio((current) => ({ ...current, usaWhatsapp: checked }))} /></div> : null}
@@ -313,7 +247,7 @@ export default function UsuariosHomePage() {
 
               {entityType === "institucion" ? <div className="space-y-4 rounded-[24px] border border-slate-200 bg-slate-50 p-5"><Field label="Nombre de la institucion" value={institucion.nombre} onChange={(value) => setInstitucion((current) => ({ ...current, nombre: value }))} required /><div className="grid gap-4 md:grid-cols-2"><Field label="Direccion" value={institucion.direccion} onChange={(value) => setInstitucion((current) => ({ ...current, direccion: value }))} /><Field label="Telefono" value={institucion.telefono} onChange={(value) => setInstitucion((current) => ({ ...current, telefono: value }))} /></div><TextAreaField label="Descripcion" value={institucion.descripcion} onChange={(value) => setInstitucion((current) => ({ ...current, descripcion: value }))} /><ExternalLinksFields webUrl={institucion.webUrl} instagramUrl={institucion.instagramUrl} facebookUrl={institucion.facebookUrl} onWebChange={(value) => setInstitucion((current) => ({ ...current, webUrl: value }))} onInstagramChange={(value) => setInstitucion((current) => ({ ...current, instagramUrl: value }))} onFacebookChange={(value) => setInstitucion((current) => ({ ...current, facebookUrl: value }))} /><CheckboxField label="Este telefono tiene WhatsApp" checked={institucion.usaWhatsapp} onChange={(checked) => setInstitucion((current) => ({ ...current, usaWhatsapp: checked }))} /></div> : null}
 
-              <button type="submit" disabled={savingOnboarding} className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70">{savingOnboarding ? "Guardando..." : "Guardar y entrar al panel"}</button>
+              <button type="submit" disabled={savingOnboarding} className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70">{savingOnboarding ? "Guardando..." : entityType === "institucion" ? "Guardar y entrar al panel" : "Guardar y continuar a suscripcion"}</button>
             </form>
           </section>
         </div>
