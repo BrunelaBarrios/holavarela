@@ -39,11 +39,20 @@ import {
 } from "lucide-react"
 
 const MyTunerWidget = dynamic(
-  () => import("./MyTunerWidget").then((module) => module.MyTunerWidget)
+  () => import("./MyTunerWidget").then((module) => module.MyTunerWidget),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[236px] w-full animate-pulse rounded-[28px] border border-blue-100/35 bg-[linear-gradient(135deg,#dbeafe_0%,#eff6ff_55%,#f8fbff_100%)]" />
+    ),
+  }
 )
 
 const PublicDetailModal = dynamic(
-  () => import("./PublicDetailModal").then((module) => module.PublicDetailModal)
+  () => import("./PublicDetailModal").then((module) => module.PublicDetailModal),
+  {
+    ssr: false,
+  }
 )
 
 type Comercio = {
@@ -375,7 +384,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [featuredBusinessPage, setFeaturedBusinessPage] = useState(0)
   const [servicePage, setServicePage] = useState(0)
   const [shouldLoadEventLikes, setShouldLoadEventLikes] = useState(false)
+  const [shouldLoadRadioWidget, setShouldLoadRadioWidget] = useState(false)
   const eventsSectionRef = useRef<HTMLElement | null>(null)
+  const radioSectionRef = useRef<HTMLElement | null>(null)
 
   const featuredBusinessPageCount = Math.max(1, Math.ceil(featuredBusinesses.length / ITEMS_PER_ROTATION))
   const safeFeaturedBusinessPage = featuredBusinessPage % featuredBusinessPageCount
@@ -452,6 +463,29 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
     void loadEventLikes()
   }, [eventos, shouldLoadEventLikes])
+
+  useEffect(() => {
+    if (shouldLoadRadioWidget || !radio.isLive) return
+
+    const section = radioSectionRef.current
+    if (!section) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShouldLoadRadioWidget(true)
+          observer.disconnect()
+        }
+      },
+      {
+        rootMargin: "220px 0px",
+      }
+    )
+
+    observer.observe(section)
+
+    return () => observer.disconnect()
+  }, [radio.isLive, shouldLoadRadioWidget])
 
   useEffect(() => {
     const loadRadioConfig = () => {
@@ -900,6 +934,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       )}
 
+      {selectedComercio ? (
       <PublicDetailModal
         open={Boolean(selectedComercio)}
         onClose={() => setSelectedComercio(null)}
@@ -997,7 +1032,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
           </>
         }
       />
+      ) : null}
 
+      {selectedServicio ? (
       <PublicDetailModal
         open={Boolean(selectedServicio)}
         onClose={() => setSelectedServicio(null)}
@@ -1096,7 +1133,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
           </>
         }
       />
+      ) : null}
 
+      {selectedEvento ? (
       <PublicDetailModal
         open={Boolean(selectedEvento)}
         onClose={() => setSelectedEvento(null)}
@@ -1189,6 +1228,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
           </>
         }
       />
+      ) : null}
 
       {selectedCurso && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/70 p-4">
@@ -1494,13 +1534,17 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       )}
 
       {radio.isLive && (
-        <section className="py-6">
+        <section ref={radioSectionRef} className="py-6">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <MyTunerWidget
-              streamUrl={radio.streamUrl}
-              title={radio.title}
-              description={radio.description}
-            />
+            {shouldLoadRadioWidget ? (
+              <MyTunerWidget
+                streamUrl={radio.streamUrl}
+                title={radio.title}
+                description={radio.description}
+              />
+            ) : (
+              <div className="h-[236px] w-full rounded-[28px] border border-blue-100/35 bg-[linear-gradient(135deg,#dbeafe_0%,#eff6ff_55%,#f8fbff_100%)]" />
+            )}
           </div>
         </section>
       )}
