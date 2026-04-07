@@ -13,6 +13,7 @@ import { ShareButton } from "../ShareButton"
 import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { formatEventDateRange } from "../../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../../lib/eventLikes"
+import { parseEventDescription } from "../../lib/eventSubmissionMeta"
 import { buildPublicNav } from "../../lib/publicNav"
 import { recordViewMore } from "../../lib/viewMoreTracking"
 
@@ -150,7 +151,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
         normalizeEventCategory(evento.categoria) === categoria
       const matchesSearch =
         !term ||
-        `${evento.titulo} ${evento.descripcion || ""} ${evento.ubicacion || ""} ${evento.fecha || ""} ${normalizeEventCategory(evento.categoria)}`
+        `${evento.titulo} ${parseEventDescription(evento.descripcion).baseDescription} ${evento.ubicacion || ""} ${evento.fecha || ""} ${normalizeEventCategory(evento.categoria)}`
           .toLowerCase()
           .includes(term)
 
@@ -167,13 +168,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
         imageSrc={selectedEvento?.imagen || null}
         imageAlt={selectedEvento?.titulo || "Evento"}
         badge={selectedEvento ? normalizeEventCategory(selectedEvento.categoria) : null}
-        description={selectedEvento?.descripcion || null}
-        extraContent={
-          <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-900">
-            Si quieres publicar tu evento, puedes enviarlo desde Agregar mi evento.
-            Quedará en revisión hasta que un administrador lo apruebe.
-          </div>
-        }
+        description={selectedEvento ? parseEventDescription(selectedEvento.descripcion).baseDescription || null : null}
         meta={[
           ...(selectedEvento?.fecha
             ? [{
@@ -194,13 +189,6 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
         ]}
         actions={
           <>
-            <Link
-              href="/usuarios/eventos/nuevo"
-              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
-            >
-              Agregar mi evento
-              <ArrowRight className="h-4 w-4" />
-            </Link>
             {selectedEvento?.telefono?.trim() ? (
               <ContactActionLink
                 href={getContactHref(
@@ -237,7 +225,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
             {selectedEvento ? (
               <ShareButton
                 title={selectedEvento.titulo}
-                text={selectedEvento.descripcion}
+                text={parseEventDescription(selectedEvento.descripcion).baseDescription}
                 url={getShareUrl(String(selectedEvento.id))}
                 section="eventos"
                 itemId={String(selectedEvento.id)}
@@ -268,10 +256,27 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
       <PublicHeader items={buildPublicNav("eventos")} />
 
       <div className="mx-auto max-w-7xl px-6 py-16">
-        <h1 className="text-3xl font-bold text-gray-900">Eventos</h1>
-        <p className="mt-2 text-gray-600">
-          Descubri los proximos eventos de Hola Varela
-        </p>
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Eventos</h1>
+            <p className="mt-2 text-gray-600">
+              Descubri los proximos eventos de Hola Varela
+            </p>
+          </div>
+
+          <div className="w-full max-w-sm rounded-2xl border border-blue-100 bg-blue-50 p-4 lg:w-auto">
+            <Link
+              href="/usuarios/eventos/nuevo?public=1"
+              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+            >
+              Agregar mi evento
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <p className="mt-3 text-sm leading-6 text-blue-900">
+              Tu evento queda en revision hasta que un administrador lo apruebe.
+            </p>
+          </div>
+        </div>
 
         <div className="mt-6 max-w-xl">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">
@@ -355,7 +360,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 )}
 
                 <p className="line-clamp-3 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
-                  {evento.descripcion}
+                  {parseEventDescription(evento.descripcion).baseDescription}
                 </p>
 
                 <div className="mt-4" onClick={(event) => event.stopPropagation()}>
@@ -383,7 +388,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 <div onClick={(event) => event.stopPropagation()}>
                   <ShareButton
                     title={evento.titulo}
-                    text={evento.descripcion}
+                    text={parseEventDescription(evento.descripcion).baseDescription}
                     url={getShareUrl(String(evento.id))}
                     section="eventos"
                     itemId={String(evento.id)}

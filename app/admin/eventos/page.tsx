@@ -7,6 +7,7 @@ import { buildShareCountMap } from "../../lib/shareTracking"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { buildMonthEventRange, formatEventDateRange } from "../../lib/eventDates"
+import { buildEventDescription, parseEventDescription } from "../../lib/eventSubmissionMeta"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 
 type Evento = {
@@ -155,7 +156,7 @@ export default function AdminEventosPage() {
       web_url: evento.web_url || "",
       instagram_url: evento.instagram_url || "",
       facebook_url: evento.facebook_url || "",
-      descripcion: evento.descripcion || "",
+      descripcion: parseEventDescription(evento.descripcion).baseDescription || "",
       imagen: evento.imagen || "",
       usaWhatsapp: evento.usa_whatsapp ?? true,
     })
@@ -324,7 +325,12 @@ export default function AdminEventosPage() {
       web_url: formData.web_url.trim() || null,
       instagram_url: formData.instagram_url.trim() || null,
       facebook_url: formData.facebook_url.trim() || null,
-      descripcion: formData.descripcion,
+      descripcion: buildEventDescription(
+        formData.descripcion,
+        editingEvento
+          ? parseEventDescription(editingEvento.descripcion).submissionContact
+          : null
+      ),
       imagen: formData.imagen || null,
       estado: isDraft
         ? "borrador"
@@ -768,6 +774,11 @@ export default function AdminEventosPage() {
             key={evento.id}
             className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
           >
+            {(() => {
+              const parsedDescription = parseEventDescription(evento.descripcion)
+
+              return (
+                <>
             {evento.imagen && (
               <div className="aspect-video w-full overflow-hidden bg-slate-100">
                 <img
@@ -812,8 +823,13 @@ export default function AdminEventosPage() {
               {evento.telefono && (
                 <p className="mb-1 text-sm text-slate-500">{evento.telefono}</p>
               )}
+              {parsedDescription.submissionContact ? (
+                <div className="mb-3 rounded-xl border border-sky-100 bg-sky-50 px-3 py-2 text-sm text-sky-900">
+                  Enviado por {parsedDescription.submissionContact.senderName} - {parsedDescription.submissionContact.senderPhone}
+                </div>
+              ) : null}
               <p className="mb-4 line-clamp-2 text-sm text-slate-500">
-                {evento.descripcion}
+                {parsedDescription.baseDescription}
               </p>
 
               <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
@@ -865,7 +881,10 @@ export default function AdminEventosPage() {
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
-            </div>
+              </div>
+                </>
+              )
+            })()}
           </div>
         ))}
       </div>

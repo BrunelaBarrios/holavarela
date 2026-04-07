@@ -7,6 +7,7 @@ import { CheckCircle2, ImageIcon, MapPin, MessageSquareText, Phone, Sparkles } f
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../../../components/AuthFormStatus"
 import { buildMonthEventRange } from "../../../lib/eventDates"
+import { buildEventDescription, parseEventDescription } from "../../../lib/eventSubmissionMeta"
 import { fileToDataUrl } from "../../../lib/fileToDataUrl"
 import { findUserOwnedEntity } from "../../../lib/userProfiles"
 import { supabase } from "../../../supabase"
@@ -26,6 +27,8 @@ type EventForm = {
   descripcion: string
   imagen: string
   usaWhatsapp: boolean
+  submitterName: string
+  submitterPhone: string
 }
 
 const categoriasEvento = ["Evento", "Promocion", "Sorteo", "Beneficio", "Consulta"]
@@ -45,6 +48,8 @@ const initialForm: EventForm = {
   descripcion: "",
   imagen: "",
   usaWhatsapp: true,
+  submitterName: "",
+  submitterPhone: "",
 }
 
 export default function UsuariosNuevoEventoPage() {
@@ -56,27 +61,44 @@ export default function UsuariosNuevoEventoPage() {
   const [success, setSuccess] = useState("")
   const [ownerEmail, setOwnerEmail] = useState("")
   const [editingEventId, setEditingEventId] = useState<number | null>(null)
+  const [publicMode, setPublicMode] = useState(false)
 
   useEffect(() => {
     const loadContext = async () => {
+      const publicFlag =
+        typeof window !== "undefined" &&
+        new URLSearchParams(window.location.search).get("public") === "1"
+      setPublicMode(publicFlag)
+
       const {
         data: { session },
       } = await supabase.auth.getSession()
 
-      if (!session?.user?.email) {
+      if (!session?.user?.email && !publicFlag) {
         router.replace("/usuarios/login")
         return
       }
 
       try {
-        const entity = await findUserOwnedEntity(session.user.email)
+        if (publicFlag) {
+          setLoading(false)
+          return
+        }
+
+        const userEmail = session?.user?.email
+        if (!userEmail) {
+          router.replace("/usuarios/login")
+          return
+        }
+
+        const entity = await findUserOwnedEntity(userEmail)
 
         if (!entity) {
           router.replace("/usuarios")
           return
         }
 
-        setOwnerEmail(session.user.email)
+        setOwnerEmail(userEmail)
 
         const editId =
           typeof window === "undefined"
@@ -87,7 +109,7 @@ export default function UsuariosNuevoEventoPage() {
             .from("eventos")
             .select("*")
             .eq("id", Number(editId))
-            .eq("owner_email", session.user.email)
+            .eq("owner_email", userEmail)
             .maybeSingle()
 
           if (eventError) {
@@ -109,9 +131,11 @@ export default function UsuariosNuevoEventoPage() {
               webUrl: existingEvent.web_url || "",
               instagramUrl: existingEvent.instagram_url || "",
               facebookUrl: existingEvent.facebook_url || "",
-              descripcion: existingEvent.descripcion || "",
+              descripcion: parseEventDescription(existingEvent.descripcion).baseDescription || "",
               imagen: existingEvent.imagen || "",
               usaWhatsapp: existingEvent.usa_whatsapp ?? true,
+              submitterName: "",
+              submitterPhone: "",
             })
           }
         }
@@ -170,7 +194,12 @@ export default function UsuariosNuevoEventoPage() {
       return
     }
 
-    if (!ownerEmail) {
+    if (publicMode && (!formData.submitterName.trim() || !formData.submitterPhone.trim())) {
+      setError("Necesitamos tu nombre y telefono para revisar el evento.")
+      return
+    }
+
+    if (!publicMode && !ownerEmail) {
       setError("Necesitas una cuenta activa para cargar eventos.")
       return
     }
@@ -188,11 +217,16 @@ export default function UsuariosNuevoEventoPage() {
       web_url: formData.webUrl.trim() || null,
       instagram_url: formData.instagramUrl.trim() || null,
       facebook_url: formData.facebookUrl.trim() || null,
-      descripcion: formData.descripcion.trim(),
+      descripcion: buildEventDescription(formData.descripcion, publicMode
+        ? {
+            senderName: formData.submitterName,
+            senderPhone: formData.submitterPhone,
+          }
+        : null),
       imagen: formData.imagen || null,
       estado: "borrador",
       usa_whatsapp: formData.usaWhatsapp,
-      owner_email: ownerEmail,
+      owner_email: publicMode ? null : ownerEmail,
     }
 
     const eventMutation = editingEventId
@@ -208,13 +242,15 @@ export default function UsuariosNuevoEventoPage() {
     }
 
     setSuccess(
-      editingEventId
-        ? "Tu borrador quedo actualizado."
-        : "Tu evento quedo guardado como borrador."
+      publicMode
+        ? "Recibimos tu evento y quedo en borrador para revision."
+        : editingEventId
+          ? "Tu borrador quedo actualizado."
+          : "Tu evento quedo guardado como borrador."
     )
     setSaving(false)
     window.setTimeout(() => {
-      router.push("/usuarios")
+      router.push(publicMode ? "/eventos" : "/usuarios")
       router.refresh()
     }, 900)
   }
@@ -231,15 +267,21 @@ export default function UsuariosNuevoEventoPage() {
             <div className="grid lg:grid-cols-[1.05fr_1.15fr]">
               <div className="bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10">
                 <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-                  {editingEventId ? "Editar borrador" : "Nuevo evento"}
+                  {publicMode ? "Envio de evento" : editingEventId ? "Editar borrador" : "Nuevo evento"}
                 </div>
 
                 <div className="mt-6 max-w-2xl">
                   <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                    {editingEventId ? "Continua tu borrador" : "Carga una novedad para tu perfil"}
+                    {publicMode
+                      ? "Envianos tu evento"
+                      : editingEventId
+                        ? "Continua tu borrador"
+                        : "Carga una novedad para tu perfil"}
                   </h1>
                   <p className="mt-4 text-lg leading-8 text-slate-600">
-                    Puedes publicar eventos, promociones, sorteos, beneficios o consultas. Todo entra como borrador para revisarlo antes de mostrarlo.
+                    {publicMode
+                      ? "Completa los datos y nos llega como borrador para revisarlo antes de publicarlo en Hola Varela."
+                      : "Puedes publicar eventos, promociones, sorteos, beneficios o consultas. Todo entra como borrador para revisarlo antes de mostrarlo."}
                   </p>
                 </div>
 
@@ -252,7 +294,9 @@ export default function UsuariosNuevoEventoPage() {
                       <div>
                         <div className="font-semibold text-slate-900">Que conviene cargar aca</div>
                         <p className="mt-2 text-sm leading-6 text-slate-600">
-                          Actividades especiales, promos del mes, sorteos, beneficios y cualquier novedad puntual de tu espacio.
+                          {publicMode
+                            ? "Compartenos la informacion principal del evento y una forma de contacto para poder revisarlo."
+                            : "Actividades especiales, promos del mes, sorteos, beneficios y cualquier novedad puntual de tu espacio."}
                         </p>
                       </div>
                     </div>
@@ -261,16 +305,46 @@ export default function UsuariosNuevoEventoPage() {
 
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link
-                    href="/usuarios"
+                    href={publicMode ? "/eventos" : "/usuarios"}
                     className="inline-flex items-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                   >
-                    Volver al panel
+                    {publicMode ? "Volver a eventos" : "Volver al panel"}
                   </Link>
                 </div>
               </div>
 
               <div className="bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-6 py-8 sm:px-8 sm:py-10">
                 <form onSubmit={handleSubmit} className="space-y-5">
+                  {publicMode ? (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Tu nombre</label>
+                        <input
+                          type="text"
+                          value={formData.submitterName}
+                          onChange={(event) =>
+                            setFormData((current) => ({ ...current, submitterName: event.target.value }))
+                          }
+                          required
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-blue-400"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-slate-700">Tu telefono</label>
+                        <input
+                          type="text"
+                          value={formData.submitterPhone}
+                          onChange={(event) =>
+                            setFormData((current) => ({ ...current, submitterPhone: event.target.value }))
+                          }
+                          required
+                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-blue-400"
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">Titulo</label>
                     <input

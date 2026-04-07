@@ -10,6 +10,7 @@ import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
 import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { formatEventDateRange } from "../../lib/eventDates"
+import { parseEventDescription } from "../../lib/eventSubmissionMeta"
 import { buildPublicNav } from "../../lib/publicNav"
 
 type RelatedEvent = {
@@ -409,7 +410,7 @@ export function PremiumListingPage({
                     </div>
                     {event.descripcion ? (
                       <p className="mt-4 line-clamp-4 whitespace-pre-line text-sm leading-7 text-slate-500">
-                        {event.descripcion}
+                        {parseEventDescription(event.descripcion).baseDescription}
                       </p>
                     ) : null}
                     <div className="mt-5">

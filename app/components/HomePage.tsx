@@ -18,6 +18,7 @@ import { OptimizedImage } from "./OptimizedImage"
 import { PublicHeader } from "./PublicHeader"
 import { formatEventDateRange } from "../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
+import { parseEventDescription } from "../lib/eventSubmissionMeta"
 import { recordContentVisit, recordSiteVisit } from "../lib/contentVisits"
 import { buildHomePublicNav } from "../lib/publicNav"
 import { recordViewMore, type ViewMoreSection } from "../lib/viewMoreTracking"
@@ -1103,7 +1104,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         imageSrc={selectedEvento?.imagen || null}
         imageAlt={selectedEvento?.titulo || "Evento"}
         badge={selectedEvento ? normalizeEventCategory(selectedEvento.categoria) : null}
-        description={selectedEvento?.descripcion || null}
+        description={selectedEvento ? parseEventDescription(selectedEvento.descripcion).baseDescription || null : null}
         meta={[
           ...(selectedEvento?.fecha
             ? [{
@@ -1125,7 +1126,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         actions={
           <>
             <Link
-              href="/usuarios/eventos/nuevo"
+              href="/usuarios/eventos/nuevo?public=1"
               className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
             >
               Agregar mi evento
@@ -1957,7 +1958,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
                   <p className="mt-2 text-sm text-slate-500">{event.ubicacion}</p>
                     <p className="line-clamp-3 mt-3 whitespace-pre-line text-lg leading-8 text-slate-500">
-                      {event.descripcion}
+                      {parseEventDescription(event.descripcion).baseDescription}
                     </p>
 
                   <div className="mt-4" onClick={(eventLikeWrapper) => eventLikeWrapper.stopPropagation()}>
