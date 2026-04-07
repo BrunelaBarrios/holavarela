@@ -10,18 +10,13 @@ import {
   CreditCard,
   FileText,
   GraduationCap,
-  Heart,
   Mail,
-  MessageCircle,
-  MousePointerClick,
   Plus,
   Radio,
-  Share2,
   ShieldAlert,
   Store,
   Users,
 } from "lucide-react"
-import { buildActiveEventsFilter, formatEventDateRange } from "../lib/eventDates"
 import { buildEventLikeTotal } from "../lib/eventLikes"
 import {
   buildExternalLinkTotals,
@@ -40,14 +35,6 @@ import {
   type WhatsappTotals,
 } from "../lib/whatsappTracking"
 import { supabase } from "../supabase"
-
-type EventoResumen = {
-  id: string
-  titulo: string
-  fecha: string
-  fecha_fin?: string | null
-  fecha_solo_mes?: boolean | null
-}
 
 type StatCard = {
   id: string
@@ -73,7 +60,6 @@ export default function AdminDashboardPage() {
   const [activeSubscriptionsCount, setActiveSubscriptionsCount] = useState(0)
   const [pausedSubscriptionsCount, setPausedSubscriptionsCount] = useState(0)
   const [cancelledSubscriptionsCount, setCancelledSubscriptionsCount] = useState(0)
-  const [proximosEventos, setProximosEventos] = useState<EventoResumen[]>([])
   const [shareTotals, setShareTotals] = useState<ShareTotals>(emptyShareTotals())
   const [whatsappTotals, setWhatsappTotals] = useState<WhatsappTotals>(emptyWhatsappTotals())
   const [viewMoreTotals, setViewMoreTotals] = useState<ViewMoreTotals>(emptyViewMoreTotals())
@@ -82,8 +68,6 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     const cargarDashboard = async () => {
-      const today = new Date().toISOString().slice(0, 10)
-
       const [
         { count: comercios },
         { count: eventos },
@@ -106,7 +90,6 @@ export default function AdminDashboardPage() {
         { count: cancelledComercios },
         { count: cancelledServicios },
         { count: cancelledCursos },
-        { data: eventosData },
         { data: shareRows },
         { data: whatsappRows },
         { data: viewMoreRows },
@@ -134,13 +117,6 @@ export default function AdminDashboardPage() {
         supabase.from("comercios").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "cancelada"),
         supabase.from("servicios").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "cancelada"),
         supabase.from("cursos").select("*", { count: "exact", head: true }).eq("estado_suscripcion", "cancelada"),
-        supabase
-          .from("eventos")
-          .select("id, titulo, fecha, fecha_fin, fecha_solo_mes")
-          .eq("estado", "activo")
-          .or(buildActiveEventsFilter(today))
-          .order("fecha", { ascending: true })
-          .limit(4),
         supabase.from("share_events").select("section"),
         supabase.from("whatsapp_clicks").select("section"),
         supabase.from("view_more_clicks").select("section"),
@@ -161,7 +137,6 @@ export default function AdminDashboardPage() {
       setActiveSubscriptionsCount((activeComercios || 0) + (activeServicios || 0) + (activeCursos || 0))
       setPausedSubscriptionsCount((pausedComercios || 0) + (pausedServicios || 0) + (pausedCursos || 0))
       setCancelledSubscriptionsCount((cancelledComercios || 0) + (cancelledServicios || 0) + (cancelledCursos || 0))
-      setProximosEventos(eventosData || [])
       setShareTotals(buildShareTotals(shareRows || []))
       setWhatsappTotals(buildWhatsappTotals(whatsappRows || []))
       setViewMoreTotals(buildViewMoreTotals(viewMoreRows || []))
@@ -468,220 +443,33 @@ export default function AdminDashboardPage() {
         })}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">Proximos eventos</h2>
-                <p className="text-sm text-slate-500">Lo siguiente que ya esta activo en el sitio.</p>
-              </div>
-              <Link
-                href="/admin/eventos"
-                className="text-sm font-medium text-blue-600 transition hover:text-blue-500"
-              >
-                Ver todos
-              </Link>
-            </div>
+      <div className="space-y-6">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-6 text-xl font-semibold text-slate-900">Acciones rapidas</h2>
+          <div className="space-y-3">
+            {quickActions.map((action) => {
+              const Icon = action.icon
+              return (
+                <button
+                  key={action.label}
+                  onClick={action.action}
+                  className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition ${action.className}`}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{action.label}</span>
+                </button>
+              )
+            })}
 
-            <div className="space-y-4">
-              {proximosEventos.length === 0 ? (
-                <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
-                  No hay eventos cargados todavia.
-                </div>
-              ) : (
-                proximosEventos.map((event) => (
-                  <div
-                    key={event.id}
-                    className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4"
-                  >
-                    <div className="rounded-2xl bg-blue-600 p-2 text-white">
-                      <Calendar className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-slate-900">{event.titulo}</h4>
-                      <p className="text-sm text-slate-500">
-                        {formatEventDateRange(event.fecha, event.fecha_fin, event.fecha_solo_mes ?? false)}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+            <Link
+              href="/"
+              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 transition hover:bg-slate-100"
+            >
+              <Store className="h-5 w-5" />
+              <span>Ver sitio publico</span>
+            </Link>
           </div>
         </div>
-
-        <div className="space-y-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">Interacciones del sitio</h2>
-                <p className="text-sm text-slate-500">
-                  Totales y desglose con todos los clics que ya cuentan en la web.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => router.push("/admin/metricas")}
-                className="text-sm font-medium text-blue-600 transition hover:text-blue-500"
-              >
-                Abrir metricas
-              </button>
-            </div>
-
-            <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-              <MetricCard
-                icon={<MessageCircle className="h-4 w-4 text-green-600" />}
-                title="WhatsApp"
-                value={totalWhatsapp}
-                className="bg-green-50"
-              />
-              <MetricCard
-                icon={<Share2 className="h-4 w-4 text-violet-600" />}
-                title="Compartir"
-                value={totalShares}
-                className="bg-violet-50"
-              />
-              <MetricCard
-                icon={<FileText className="h-4 w-4 text-sky-600" />}
-                title="Ver mas"
-                value={totalViewMore}
-                className="bg-sky-50"
-              />
-              <MetricCard
-                icon={<MousePointerClick className="h-4 w-4 text-amber-600" />}
-                title="Sitio y redes"
-                value={totalExternalLinks}
-                className="bg-amber-50"
-              />
-              <MetricCard
-                icon={<Heart className="h-4 w-4 text-rose-600" />}
-                title="Corazones"
-                value={eventLikeTotal}
-                className="bg-rose-50"
-              />
-            </div>
-
-            <div className="space-y-4">
-              <MetricBreakdown
-                title="WhatsApp por seccion"
-                items={[
-                  ["Comercios", whatsappTotals.comercios],
-                  ["Eventos", whatsappTotals.eventos],
-                  ["Servicios", whatsappTotals.servicios],
-                  ["Cursos", whatsappTotals.cursos],
-                  ["Instituciones", whatsappTotals.instituciones],
-                ]}
-              />
-              <MetricBreakdown
-                title="Compartidos por seccion"
-                items={[
-                  ["Comercios", shareTotals.comercios],
-                  ["Eventos", shareTotals.eventos],
-                  ["Cursos", shareTotals.cursos],
-                  ["Servicios", shareTotals.servicios],
-                  ["Instituciones", shareTotals.instituciones],
-                ]}
-              />
-              <MetricBreakdown
-                title="Ver mas por seccion"
-                items={[
-                  ["Comercios", viewMoreTotals.comercios],
-                  ["Eventos", viewMoreTotals.eventos],
-                  ["Cursos", viewMoreTotals.cursos],
-                  ["Servicios", viewMoreTotals.servicios],
-                  ["Instituciones", viewMoreTotals.instituciones],
-                ]}
-              />
-              <MetricBreakdown
-                title="Sitio y redes por seccion"
-                items={[
-                  ["Comercios", externalLinkTotals.comercios],
-                  ["Eventos", externalLinkTotals.eventos],
-                  ["Cursos", externalLinkTotals.cursos],
-                  ["Servicios", externalLinkTotals.servicios],
-                  ["Instituciones", externalLinkTotals.instituciones],
-                ]}
-              />
-              <div className="rounded-2xl bg-slate-50 p-4">
-                <div className="mb-2 text-sm text-slate-500">Corazones en eventos</div>
-                <div className="text-sm text-slate-700">
-                  Total: <span className="font-semibold">{eventLikeTotal}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-6 text-xl font-semibold text-slate-900">Acciones rapidas</h2>
-            <div className="space-y-3">
-              {quickActions.map((action) => {
-                const Icon = action.icon
-                return (
-                  <button
-                    key={action.label}
-                    onClick={action.action}
-                    className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 transition ${action.className}`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span>{action.label}</span>
-                  </button>
-                )
-              })}
-
-              <Link
-                href="/"
-                className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 transition hover:bg-slate-100"
-              >
-                <Store className="h-5 w-5" />
-                <span>Ver sitio publico</span>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function MetricCard({
-  icon,
-  title,
-  value,
-  className,
-}: {
-  icon: React.ReactNode
-  title: string
-  value: number
-  className: string
-}) {
-  return (
-    <div className={`rounded-2xl p-5 ${className}`}>
-      <div className="mb-2 flex items-center gap-2 text-sm text-slate-600">
-        {icon}
-        {title}
-      </div>
-      <div className="text-3xl font-semibold text-slate-900">{value}</div>
-    </div>
-  )
-}
-
-function MetricBreakdown({
-  title,
-  items,
-}: {
-  title: string
-  items: Array<[string, number]>
-}) {
-  return (
-    <div className="rounded-2xl bg-slate-50 p-4">
-      <div className="mb-2 text-sm text-slate-500">{title}</div>
-      <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
-        {items.map(([label, value]) => (
-          <div key={label}>
-            {label}: <span className="font-semibold">{value}</span>
-          </div>
-        ))}
       </div>
     </div>
   )

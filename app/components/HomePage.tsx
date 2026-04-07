@@ -18,18 +18,12 @@ import { OptimizedImage } from "./OptimizedImage"
 import { PublicHeader } from "./PublicHeader"
 import { formatEventDateRange } from "../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
-import { fileToDataUrl } from "../lib/fileToDataUrl"
-import {
-  getPublicLeadTypeLabel,
-  type PublicLeadType,
-} from "../lib/publicLead"
 import { recordContentVisit, recordSiteVisit } from "../lib/contentVisits"
 import { buildHomePublicNav } from "../lib/publicNav"
 import { recordViewMore, type ViewMoreSection } from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
 import {
   ArrowRight,
-  BriefcaseBusiness,
   CalendarDays,
   Cloud,
   CloudDrizzle,
@@ -39,8 +33,6 @@ import {
   Mail,
   MapPin,
   Phone,
-  School,
-  Store,
   UserRound,
   X,
 } from "lucide-react"
@@ -164,24 +156,6 @@ type ContactLeadForm = {
   nombre: string
   telefono: string
   mensaje: string
-  email: string
-  tipo: PublicLeadType
-  nombreFicha: string
-  descripcionFicha: string
-  direccionFicha: string
-  telefonoFicha: string
-  imagenFicha: string
-  categoriaServicio: string
-  responsableCurso: string
-  contactoCurso: string
-  notas: string
-  nombreRemitenteEvento: string
-  tituloEvento: string
-  categoriaEvento: string
-  fechaEvento: string
-  ubicacionEvento: string
-  descripcionEvento: string
-  imagenEvento: string
 }
 
 export type WeatherData = {
@@ -329,39 +303,7 @@ const initialContactLeadForm: ContactLeadForm = {
   nombre: "",
   telefono: "",
   mensaje: "",
-  email: "",
-  tipo: "comercio",
-  nombreFicha: "",
-  descripcionFicha: "",
-  direccionFicha: "",
-  telefonoFicha: "",
-  imagenFicha: "",
-  categoriaServicio: "Servicios",
-  responsableCurso: "",
-  contactoCurso: "",
-  notas: "",
-  nombreRemitenteEvento: "",
-  tituloEvento: "",
-  categoriaEvento: "Evento",
-  fechaEvento: "",
-  ubicacionEvento: "",
-  descripcionEvento: "",
-  imagenEvento: "",
 }
-
-const PUBLIC_LEAD_TYPE_OPTIONS: Array<{
-  value: PublicLeadType
-  label: string
-  icon: typeof Store
-}> = [
-  { value: "comercio", label: "Comercio", icon: Store },
-  { value: "servicio", label: "Servicio", icon: BriefcaseBusiness },
-  { value: "curso", label: "Curso o clase", icon: GraduationCap },
-  { value: "institucion", label: "Institución", icon: School },
-  { value: "evento", label: "Evento", icon: CalendarDays },
-]
-
-const EVENT_CATEGORY_OPTIONS = ["Evento", "Promoción", "Sorteo", "Beneficio"]
 
 const SOCIAL_LINKS = [
   {
@@ -654,37 +596,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     }
 
     setContactLeadForm(initialContactLeadForm)
-    setContactLeadStatus(
-      isEventOnlyLead
-        ? "Recibimos tu evento. Lo revisaremos y te contactaremos si hace falta completar algún dato."
-        : "Recibimos tu propuesta. La revisaremos y te contactaremos si hace falta completar algún dato."
-    )
-    setContactLeadStatus(contactLeadSuccessMessage)
+    setContactLeadStatus("Recibimos tu mensaje. Te contactaremos a la brevedad.")
     setContactLeadLoading(false)
-  }
-
-  const handleContactLeadImageChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
-    key: "imagenFicha" | "imagenEvento"
-  ) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    try {
-      const imageData = await fileToDataUrl(file)
-      setContactLeadForm((prev) => ({
-        ...prev,
-        [key]: imageData,
-      }))
-    } catch (imageError) {
-      setContactLeadStatus(
-        imageError instanceof Error
-          ? imageError.message
-          : "No pudimos cargar la imagen seleccionada."
-      )
-    } finally {
-      event.target.value = ""
-    }
   }
 
   const openWelcomeDetail = () => {
@@ -722,17 +635,10 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     closeWelcomeHighlight()
   }
 
-  const isEventOnlyLead = false
-  const showListingFields = false
-  const showEventFields = false
   const contactLeadIntro =
     "Déjanos tu nombre, teléfono y mensaje para responderte."
   const contactLeadSubmitHint =
     "Te vamos a contactar usando el teléfono que nos compartas."
-  const contactLeadSuccessMessage = isEventOnlyLead
-    ? "Recibimos tu mensaje. Te contactaremos a la brevedad."
-    : "Recibimos tu mensaje. Te contactaremos a la brevedad."
-
   return (
     <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#f2f7f5_48%,#ffffff_100%)] text-slate-900">
       {zoomedImage ? (
@@ -910,45 +816,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </div>
 
             <form onSubmit={handleContactLeadSubmit} className="mt-8 space-y-4">
-              <div className="hidden">
-                <label className="mb-3 block text-sm font-medium text-slate-700">
-                  ¿Qué quieres sumar?
-                </label>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-                  {PUBLIC_LEAD_TYPE_OPTIONS.map((option) => {
-                    const Icon = option.icon
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() =>
-                          setContactLeadForm((prev) => ({
-                            ...prev,
-                            tipo: option.value,
-                          }))
-                        }
-                        className={`rounded-2xl border px-3 py-3 text-left transition ${
-                          contactLeadForm.tipo === option.value
-                            ? "border-sky-400 bg-sky-50 text-sky-800"
-                            : "border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50/40"
-                        }`}
-                      >
-                        <Icon className="h-5 w-5" />
-                        <div className="mt-2 text-sm font-semibold">{option.label}</div>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
               <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                 <div className="mb-4 text-sm font-semibold text-slate-800">
                   Tus datos de contacto
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="hidden">
+                  <div>
                     <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Tu nombre
+                      Nombre
                     </label>
                     <input
                       type="text"
@@ -964,344 +839,25 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     />
                   </div>
 
-                  <div className="hidden">
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Tu email
-                    </label>
-                    <input
-                      type="email"
-                      value={contactLeadForm.email}
-                      onChange={(e) =>
-                        setContactLeadForm((prev) => ({
-                          ...prev,
-                          email: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <label className="mb-2 block text-sm font-medium text-slate-700">
-                    Tu número
-                  </label>
-                  <input
-                    type="tel"
-                    value={contactLeadForm.telefono}
-                    onChange={(e) =>
-                      setContactLeadForm((prev) => ({
-                        ...prev,
-                        telefono: e.target.value,
-                      }))
-                    }
-                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                    required
-                  />
-                </div>
-              </div>
-
-              {showListingFields ? (
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <div className="mb-4 text-sm font-semibold text-slate-800">
-                  Datos de tu {getPublicLeadTypeLabel(contactLeadForm.tipo).toLowerCase()}
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      {contactLeadForm.tipo === "curso"
-                        ? "Nombre del curso o clase"
-                        : contactLeadForm.tipo === "institucion"
-                          ? "Nombre de la institución"
-                          : contactLeadForm.tipo === "servicio"
-                            ? "Nombre del servicio"
-                            : "Nombre del comercio"}
-                    </label>
-                    <input
-                      type="text"
-                      value={contactLeadForm.nombreFicha}
-                      onChange={(e) =>
-                        setContactLeadForm((prev) => ({
-                          ...prev,
-                          nombreFicha: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                      required
-                    />
-                  </div>
-
-                  {contactLeadForm.tipo === "servicio" ? (
-                    <div className="sm:col-span-2">
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
-                        Categoría del servicio
-                      </label>
-                      <input
-                        type="text"
-                        value={contactLeadForm.categoriaServicio}
-                        onChange={(e) =>
-                          setContactLeadForm((prev) => ({
-                            ...prev,
-                            categoriaServicio: e.target.value,
-                          }))
-                        }
-                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                        required
-                      />
-                    </div>
-                  ) : null}
-
-                  {contactLeadForm.tipo === "curso" ? (
-                    <>
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700">
-                          Responsable
-                        </label>
-                        <input
-                          type="text"
-                          value={contactLeadForm.responsableCurso}
-                          onChange={(e) =>
-                            setContactLeadForm((prev) => ({
-                              ...prev,
-                              responsableCurso: e.target.value,
-                            }))
-                          }
-                          className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700">
-                          Contacto del curso
-                        </label>
-                        <input
-                          type="text"
-                          value={contactLeadForm.contactoCurso}
-                          onChange={(e) =>
-                            setContactLeadForm((prev) => ({
-                              ...prev,
-                              contactoCurso: e.target.value,
-                            }))
-                          }
-                          className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                          required
-                        />
-                      </div>
-                    </>
-                  ) : null}
-
-                  <div className="sm:col-span-2">
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Descripción
-                    </label>
-                    <textarea
-                      value={contactLeadForm.descripcionFicha}
-                      onChange={(e) =>
-                        setContactLeadForm((prev) => ({
-                          ...prev,
-                          descripcionFicha: e.target.value,
-                        }))
-                      }
-                      className="min-h-28 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                      placeholder="Escribi sobre tu negocio, horario, que ofreces y cualquier detalle util para mostrarlo bien."
-                      required
-                    />
-                  </div>
-
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Dirección
-                    </label>
-                    <input
-                      type="text"
-                      value={contactLeadForm.direccionFicha}
-                      onChange={(e) =>
-                        setContactLeadForm((prev) => ({
-                          ...prev,
-                          direccionFicha: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Teléfono del perfil
+                      Telefono
                     </label>
                     <input
                       type="tel"
-                      value={contactLeadForm.telefonoFicha}
+                      value={contactLeadForm.telefono}
                       onChange={(e) =>
                         setContactLeadForm((prev) => ({
                           ...prev,
-                          telefonoFicha: e.target.value,
+                          telefono: e.target.value,
                         }))
                       }
                       className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
                       required
                     />
                   </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Foto principal
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => void handleContactLeadImageChange(e, "imagenFicha")}
-                      className="block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-sky-100 file:px-4 file:py-2 file:font-medium file:text-sky-700 hover:file:bg-sky-200"
-                    />
-                    {contactLeadForm.imagenFicha ? (
-                      <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-                        <img src={contactLeadForm.imagenFicha} alt="Vista previa de la ficha" className="h-40 w-full object-cover" />
-                      </div>
-                    ) : null}
-                  </div>
                 </div>
               </div>
-              ) : null}
-
-              {showEventFields ? (
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                  <div className="mb-4 text-sm font-semibold text-slate-800">
-                    Datos del evento
-                  </div>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
-                        Nombre de quien envía el evento
-                      </label>
-                      <input
-                        type="text"
-                        value={contactLeadForm.nombreRemitenteEvento}
-                        onChange={(e) =>
-                          setContactLeadForm((prev) => ({
-                            ...prev,
-                            nombreRemitenteEvento: e.target.value,
-                          }))
-                        }
-                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                        required={showEventFields}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
-                        Categoría del evento
-                      </label>
-                      <select
-                        value={contactLeadForm.categoriaEvento}
-                        onChange={(e) =>
-                          setContactLeadForm((prev) => ({
-                            ...prev,
-                            categoriaEvento: e.target.value,
-                          }))
-                        }
-                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                      >
-                        {EVENT_CATEGORY_OPTIONS.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
-                        Título del evento
-                      </label>
-                      <input
-                        type="text"
-                        value={contactLeadForm.tituloEvento}
-                        onChange={(e) =>
-                          setContactLeadForm((prev) => ({
-                            ...prev,
-                            tituloEvento: e.target.value,
-                          }))
-                        }
-                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                        required={showEventFields}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
-                        Fecha
-                      </label>
-                      <input
-                        type="date"
-                        value={contactLeadForm.fechaEvento}
-                        onChange={(e) =>
-                          setContactLeadForm((prev) => ({
-                            ...prev,
-                            fechaEvento: e.target.value,
-                          }))
-                        }
-                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                        required={showEventFields}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
-                        Ubicación
-                      </label>
-                      <input
-                        type="text"
-                        value={contactLeadForm.ubicacionEvento}
-                        onChange={(e) =>
-                          setContactLeadForm((prev) => ({
-                            ...prev,
-                            ubicacionEvento: e.target.value,
-                          }))
-                        }
-                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                        required={showEventFields}
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
-                        Descripción del evento
-                      </label>
-                      <textarea
-                        value={contactLeadForm.descripcionEvento}
-                        onChange={(e) =>
-                          setContactLeadForm((prev) => ({
-                            ...prev,
-                            descripcionEvento: e.target.value,
-                          }))
-                        }
-                        className="min-h-28 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                        required={showEventFields}
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label className="mb-2 block text-sm font-medium text-slate-700">
-                        Imagen del evento
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => void handleContactLeadImageChange(e, "imagenEvento")}
-                        className="block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-sky-100 file:px-4 file:py-2 file:font-medium file:text-sky-700 hover:file:bg-sky-200"
-                      />
-                      {contactLeadForm.imagenEvento ? (
-                        <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
-                          <img src={contactLeadForm.imagenEvento} alt="Vista previa del evento" className="h-40 w-full object-cover" />
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                </div>
-              ) : null}
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -1316,7 +872,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     }))
                   }
                   className="min-h-28 w-full resize-none rounded-2xl border border-slate-200 px-4 py-3 text-slate-900 outline-none transition focus:border-sky-400"
-                  placeholder="Cuéntanos brevemente qué necesitas o cómo quieres estar en Hola Varela."
+                  placeholder="Cuentanos brevemente que necesitas o como quieres estar en Hola Varela."
                   required
                 />
               </div>

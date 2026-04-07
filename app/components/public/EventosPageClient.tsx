@@ -168,6 +168,12 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
         imageAlt={selectedEvento?.titulo || "Evento"}
         badge={selectedEvento ? normalizeEventCategory(selectedEvento.categoria) : null}
         description={selectedEvento?.descripcion || null}
+        extraContent={
+          <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-900">
+            Si quieres publicar tu evento, puedes enviarlo desde Agregar mi evento.
+            Quedará en revisión hasta que un administrador lo apruebe.
+          </div>
+        }
         meta={[
           ...(selectedEvento?.fecha
             ? [{
@@ -188,6 +194,13 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
         ]}
         actions={
           <>
+            <Link
+              href="/usuarios/eventos/nuevo"
+              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+            >
+              Agregar mi evento
+              <ArrowRight className="h-4 w-4" />
+            </Link>
             {selectedEvento?.telefono?.trim() ? (
               <ContactActionLink
                 href={getContactHref(
