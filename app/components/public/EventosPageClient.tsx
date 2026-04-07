@@ -272,9 +272,6 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
               Agregar mi evento
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <p className="mt-3 text-sm leading-6 text-blue-900">
-              Tu evento queda en revision hasta que un administrador lo apruebe.
-            </p>
           </div>
         </div>
 

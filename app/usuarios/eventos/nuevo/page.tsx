@@ -243,7 +243,7 @@ export default function UsuariosNuevoEventoPage() {
 
     setSuccess(
       publicMode
-        ? "Recibimos tu evento y quedo en borrador para revision."
+        ? "Recibimos tu evento y lo vamos a revisar."
         : editingEventId
           ? "Tu borrador quedo actualizado."
           : "Tu evento quedo guardado como borrador."
@@ -280,7 +280,7 @@ export default function UsuariosNuevoEventoPage() {
                   </h1>
                   <p className="mt-4 text-lg leading-8 text-slate-600">
                     {publicMode
-                      ? "Completa los datos y nos llega como borrador para revisarlo antes de publicarlo en Hola Varela."
+                      ? "Completa los datos y nos llega para revisarlo antes de publicarlo en Hola Varela."
                       : "Puedes publicar eventos, promociones, sorteos, beneficios o consultas. Todo entra como borrador para revisarlo antes de mostrarlo."}
                   </p>
                 </div>
@@ -295,7 +295,7 @@ export default function UsuariosNuevoEventoPage() {
                         <div className="font-semibold text-slate-900">Que conviene cargar aca</div>
                         <p className="mt-2 text-sm leading-6 text-slate-600">
                           {publicMode
-                            ? "Compartenos la informacion principal del evento y una forma de contacto para poder revisarlo."
+                            ? "Compartenos la informacion principal del evento. Te pedimos tu numero para ponernos en contacto ante cualquier duda."
                             : "Actividades especiales, promos del mes, sorteos, beneficios y cualquier novedad puntual de tu espacio."}
                         </p>
                       </div>
@@ -316,35 +316,56 @@ export default function UsuariosNuevoEventoPage() {
               <div className="bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-6 py-8 sm:px-8 sm:py-10">
                 <form onSubmit={handleSubmit} className="space-y-5">
                   {publicMode ? (
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Tu nombre</label>
-                        <input
-                          type="text"
-                          value={formData.submitterName}
-                          onChange={(event) =>
-                            setFormData((current) => ({ ...current, submitterName: event.target.value }))
-                          }
-                          required
-                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-blue-400"
-                        />
+                    <div className="space-y-5">
+                      <div className="rounded-[28px] border border-amber-200 bg-amber-50/80 p-5">
+                        <div className="mb-4">
+                          <h2 className="text-base font-semibold text-amber-950">Tus datos de contacto</h2>
+                          <p className="mt-1 text-sm leading-6 text-amber-900">
+                            Estos datos no se publican. Te pedimos tu numero para ponernos en contacto ante cualquier duda.
+                          </p>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-slate-700">Tu nombre</label>
+                            <input
+                              type="text"
+                              value={formData.submitterName}
+                              onChange={(event) =>
+                                setFormData((current) => ({ ...current, submitterName: event.target.value }))
+                              }
+                              required
+                              className="w-full rounded-2xl border border-amber-200 bg-white px-4 py-3 outline-none transition focus:border-amber-400"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium text-slate-700">Tu telefono</label>
+                            <input
+                              type="text"
+                              value={formData.submitterPhone}
+                              onChange={(event) =>
+                                setFormData((current) => ({ ...current, submitterPhone: event.target.value }))
+                              }
+                              required
+                              className="w-full rounded-2xl border border-amber-200 bg-white px-4 py-3 outline-none transition focus:border-amber-400"
+                            />
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700">Tu telefono</label>
-                        <input
-                          type="text"
-                          value={formData.submitterPhone}
-                          onChange={(event) =>
-                            setFormData((current) => ({ ...current, submitterPhone: event.target.value }))
-                          }
-                          required
-                          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-blue-400"
-                        />
+                      <div className="rounded-[28px] border border-sky-200 bg-sky-50/70 p-5">
+                        <div className="mb-4">
+                          <h2 className="text-base font-semibold text-sky-950">Datos que si quedan publicados</h2>
+                          <p className="mt-1 text-sm leading-6 text-sky-900">
+                            Esta informacion es la que va a verse en Hola Varela cuando el evento se publique.
+                          </p>
+                        </div>
                       </div>
                     </div>
                   ) : null}
 
+                  <div className={publicMode ? "space-y-5 rounded-[28px] border border-sky-200 bg-sky-50/70 p-5" : "space-y-5"}>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">Titulo</label>
                     <input
@@ -573,6 +594,7 @@ export default function UsuariosNuevoEventoPage() {
                       )}
                     </div>
                   </div>
+                  </div>
 
                   {error ? <AuthFormStatus tone="error" message={error} /> : null}
                   {success ? <AuthFormStatus tone="success" message={success} /> : null}
@@ -586,13 +608,15 @@ export default function UsuariosNuevoEventoPage() {
                       <Sparkles className="h-4 w-4" />
                       {saving
                         ? "Guardando evento..."
-                        : editingEventId
+                        : publicMode
+                          ? "Enviar evento"
+                          : editingEventId
                           ? "Guardar cambios del borrador"
                           : "Guardar evento en borrador"}
                     </button>
 
                     <Link
-                      href="/usuarios"
+                      href={publicMode ? "/eventos" : "/usuarios"}
                       className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                     >
                       Cancelar
