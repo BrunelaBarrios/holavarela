@@ -99,16 +99,17 @@ export default function AdminEventosPage() {
     ])
 
     if (error) {
-      alert(`Error al cargar eventos: ${error.message}`)
+      setSaveError(`Error al cargar eventos: ${error.message}`)
       return
     }
 
+    const warnings: string[] = []
     if (shareError) {
-      alert(`Error al cargar compartidos de eventos: ${shareError.message}`)
-      return
+      warnings.push(`No se pudieron cargar los compartidos de eventos: ${shareError.message}`)
     }
 
     const shareMap = buildShareCountMap(shareRows || [])
+    setSaveError(warnings.join(" "))
     setEventos(
       (data || []).map((evento) => ({
         ...evento,
@@ -400,6 +401,12 @@ export default function AdminEventosPage() {
           Agregar Evento
         </button>
       </div>
+
+      {saveError && !isFormOpen && (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {saveError}
+        </div>
+      )}
 
       {isFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">

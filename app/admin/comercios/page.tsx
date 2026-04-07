@@ -97,22 +97,22 @@ export default function AdminComerciosPage() {
     ])
 
     if (error) {
-      alert(`Error al cargar comercios: ${error.message}`)
+      setSaveError(`Error al cargar comercios: ${error.message}`)
       return
     }
 
+    const warnings: string[] = []
     if (shareError) {
-      alert(`Error al cargar compartidos de comercios: ${shareError.message}`)
-      return
+      warnings.push(`No se pudieron cargar los compartidos de comercios: ${shareError.message}`)
     }
 
     if (whatsappError) {
-      alert(`Error al cargar clics de WhatsApp: ${whatsappError.message}`)
-      return
+      warnings.push(`No se pudieron cargar los clics de WhatsApp: ${whatsappError.message}`)
     }
 
     const shareMap = buildShareCountMap(shareRows || [])
     const whatsappMap = buildWhatsappCountMap(whatsappRows || [])
+    setSaveError(warnings.join(" "))
     setComercios(
       (data || []).map((comercio) => ({
         ...comercio,
@@ -394,6 +394,12 @@ export default function AdminComerciosPage() {
           Agregar Comercio
         </button>
       </div>
+
+      {saveError && !isFormOpen && (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {saveError}
+        </div>
+      )}
 
       {isFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">

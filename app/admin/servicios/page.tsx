@@ -105,18 +105,18 @@ export default function AdminServiciosPage() {
       return
     }
 
+    const warnings: string[] = []
     if (shareError) {
-      setSaveError(`Error al cargar compartidos de servicios: ${shareError.message}`)
-      return
+      warnings.push(`No se pudieron cargar los compartidos de servicios: ${shareError.message}`)
     }
 
     if (whatsappError) {
-      setSaveError(`Error al cargar clics de WhatsApp: ${whatsappError.message}`)
-      return
+      warnings.push(`No se pudieron cargar los clics de WhatsApp: ${whatsappError.message}`)
     }
 
     const shareMap = buildShareCountMap(shareRows || [])
     const whatsappMap = buildWhatsappCountMap(whatsappRows || [])
+    setSaveError(warnings.join(" "))
     setServicios(
       (data || []).map((servicio) => ({
         ...servicio,
@@ -367,6 +367,12 @@ export default function AdminServiciosPage() {
           Agregar Servicio
         </button>
       </div>
+
+      {saveError && !isFormOpen && (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {saveError}
+        </div>
+      )}
 
       {isFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
