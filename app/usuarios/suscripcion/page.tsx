@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState, type ReactNode } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { CheckCircle2, ExternalLink, ShieldOff } from "lucide-react"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
 import {
@@ -43,8 +43,7 @@ const siteFieldSelection = `
 
 export default function UsuariosSuscripcionPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const isFirstSetup = searchParams.get("setup") === "1"
+  const [isFirstSetup, setIsFirstSetup] = useState(false)
   const [ownedEntity, setOwnedEntity] = useState<UserOwnedEntity | null>(null)
   const [plans, setPlans] = useState(() => buildSubscriptionPlansForUser())
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlanKey>("presencia")
@@ -56,6 +55,12 @@ export default function UsuariosSuscripcionPage() {
   const [pendingCheckoutRedirect, setPendingCheckoutRedirect] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const params = new URLSearchParams(window.location.search)
+    setIsFirstSetup(params.get("setup") === "1")
+  }, [])
 
   useEffect(() => {
     const loadSubscription = async () => {

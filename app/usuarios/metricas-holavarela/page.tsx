@@ -181,7 +181,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
 
       setVisitors30Days(BASELINE_SITE_VISITORS_30D + countUniqueBrowsers(siteVisitRows30))
       setPageViews30Days(BASELINE_SITE_PAGE_VIEWS_30D + siteVisitRows30.length)
-      setSectionTotals(buildSectionTotals(siteVisitRows30).slice(0, 5))
+      setSectionTotals(buildSectionTotals(siteVisitRows30))
       setRecentActivity({
         interactions15Days:
           shareRows15.length +
@@ -302,9 +302,9 @@ export default function UsuariosMetricasHolaVarelaPage() {
               <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="mb-5">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Secciones mas visitadas
+                    Paginas visitadas
                   </div>
-                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Donde se mueve mas la gente</h2>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Todas las paginas con actividad</h2>
                   <p className="mt-2 text-sm leading-7 text-slate-500">{sectionSummary}</p>
                 </div>
                 <div className="space-y-4">
