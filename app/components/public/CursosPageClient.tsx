@@ -5,6 +5,7 @@ import { ArrowRight, GraduationCap, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
+import { PrimaryExternalLinkButton } from "../PrimaryExternalLinkButton"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
@@ -234,22 +235,35 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                       <ArrowRight className="h-4 w-4" />
                     </button>
 
-                    {curso.contacto?.trim() ? (
-                      <ContactActionLink
-                        href={getContactHref(curso.contacto, curso.usa_whatsapp)}
-                        mode={curso.usa_whatsapp === false ? "phone" : "whatsapp"}
-                        section="cursos"
-                        itemId={String(curso.id)}
-                        itemTitle={curso.nombre}
-                        onClick={(event) => event.stopPropagation()}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
-                      >
-                        <Phone className="h-4 w-4" />
-                        {curso.usa_whatsapp === false ? "Llamar" : "Contactar"}
-                      </ContactActionLink>
-                    ) : null}
+                      {curso.contacto?.trim() && curso.usa_whatsapp !== false ? (
+                        <ContactActionLink
+                          href={getContactHref(curso.contacto, curso.usa_whatsapp)}
+                          mode="whatsapp"
+                          section="cursos"
+                          itemId={String(curso.id)}
+                          itemTitle={curso.nombre}
+                          onClick={(event) => event.stopPropagation()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
+                        >
+                          <Phone className="h-4 w-4" />
+                          Contactar
+                        </ContactActionLink>
+                      ) : (
+                        <PrimaryExternalLinkButton
+                          webUrl={curso.web_url}
+                          instagramUrl={curso.instagram_url}
+                          facebookUrl={curso.facebook_url}
+                          section="cursos"
+                          itemId={String(curso.id)}
+                          itemTitle={curso.nombre}
+                          onClick={(event) => event.stopPropagation()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+                        />
+                      )}
 
                     <div onClick={(event) => event.stopPropagation()}>
                       <ShareButton

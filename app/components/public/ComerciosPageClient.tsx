@@ -7,6 +7,7 @@ import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
+import { PrimaryExternalLinkButton } from "../PrimaryExternalLinkButton"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
@@ -336,19 +337,34 @@ export function ComerciosPageClient({
                       </button>
                     )}
 
-                    <ContactActionLink
-                      href={getContactHref(comercio.telefono, comercio.usa_whatsapp)}
-                      mode={comercio.usa_whatsapp === false ? "phone" : "whatsapp"}
-                      section="comercios"
-                      itemId={String(comercio.id)}
-                      itemTitle={comercio.nombre}
-                      onClick={(event) => event.stopPropagation()}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block rounded-lg bg-green-600 px-4 py-2 text-sm text-white"
-                    >
-                      {getContactLabel(comercio.usa_whatsapp)}
-                    </ContactActionLink>
+                      {comercio.telefono && comercio.usa_whatsapp !== false ? (
+                        <ContactActionLink
+                          href={getContactHref(comercio.telefono, comercio.usa_whatsapp)}
+                          mode="whatsapp"
+                          section="comercios"
+                          itemId={String(comercio.id)}
+                          itemTitle={comercio.nombre}
+                          onClick={(event) => event.stopPropagation()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block rounded-lg bg-green-600 px-4 py-2 text-sm text-white"
+                        >
+                          Contactar por WhatsApp
+                        </ContactActionLink>
+                      ) : (
+                        <PrimaryExternalLinkButton
+                          webUrl={comercio.web_url}
+                          instagramUrl={comercio.instagram_url}
+                          facebookUrl={comercio.facebook_url}
+                          section="comercios"
+                          itemId={String(comercio.id)}
+                          itemTitle={comercio.nombre}
+                          onClick={(event) => event.stopPropagation()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+                        />
+                      )}
 
                     <div onClick={(event) => event.stopPropagation()}>
                       <ShareButton

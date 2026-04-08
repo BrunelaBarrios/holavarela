@@ -7,6 +7,7 @@ import { ArrowRight, MapPin, Phone, Search, UserRound } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
+import { PrimaryExternalLinkButton } from "../PrimaryExternalLinkButton"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
@@ -378,21 +379,34 @@ export function ServiciosPageClient({
                             </button>
                           )}
 
-                          {servicio.contacto && (
-                            <ContactActionLink
-                              href={getContactHref(servicio.contacto, servicio.usa_whatsapp)}
-                              mode={servicio.usa_whatsapp === false ? "phone" : "whatsapp"}
-                              section="servicios"
-                              itemId={String(servicio.id)}
-                              itemTitle={servicio.nombre}
-                              onClick={(event) => event.stopPropagation()}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
-                            >
-                              {servicio.usa_whatsapp === false ? "Llamar" : "Contactar"}
-                            </ContactActionLink>
-                          )}
+                            {servicio.contacto && servicio.usa_whatsapp !== false ? (
+                              <ContactActionLink
+                                href={getContactHref(servicio.contacto, servicio.usa_whatsapp)}
+                                mode="whatsapp"
+                                section="servicios"
+                                itemId={String(servicio.id)}
+                                itemTitle={servicio.nombre}
+                                onClick={(event) => event.stopPropagation()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
+                              >
+                                Contactar
+                              </ContactActionLink>
+                            ) : (
+                              <PrimaryExternalLinkButton
+                                webUrl={servicio.web_url}
+                                instagramUrl={servicio.instagram_url}
+                                facebookUrl={servicio.facebook_url}
+                                section="servicios"
+                                itemId={String(servicio.id)}
+                                itemTitle={servicio.nombre}
+                                onClick={(event) => event.stopPropagation()}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+                              />
+                            )}
 
                           <div onClick={(event) => event.stopPropagation()}>
                             <ShareButton
