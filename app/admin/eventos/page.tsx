@@ -75,7 +75,7 @@ const categoriasEvento = ["Evento", "Promocion", "Sorteo", "Beneficio", "Consult
 
 export default function AdminEventosPage() {
   const [eventos, setEventos] = useState<Evento[]>([])
-  const [activeTab, setActiveTab] = useState<"vigentes" | "pasados">("vigentes")
+  const [activeTab, setActiveTab] = useState<"vigentes" | "pasados" | "borradores">("vigentes")
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingEvento, setEditingEvento] = useState<Evento | null>(null)
   const [formData, setFormData] = useState<EventoForm>(initialForm)
@@ -127,11 +127,18 @@ export default function AdminEventosPage() {
     return () => window.clearTimeout(timeoutId)
   }, [])
 
-  const visibleEventos = eventos.filter((evento) =>
-    activeTab === "vigentes" ? !isPastEvent(evento) : isPastEvent(evento)
-  )
-  const vigentesCount = eventos.filter((evento) => !isPastEvent(evento)).length
-  const pasadosCount = eventos.filter((evento) => isPastEvent(evento)).length
+  const visibleEventos = eventos.filter((evento) => {
+    if (activeTab === "borradores") return evento.estado === "borrador"
+    if (evento.estado === "borrador") return false
+    return activeTab === "vigentes" ? !isPastEvent(evento) : isPastEvent(evento)
+  })
+  const vigentesCount = eventos.filter(
+    (evento) => evento.estado !== "borrador" && !isPastEvent(evento)
+  ).length
+  const pasadosCount = eventos.filter(
+    (evento) => evento.estado !== "borrador" && isPastEvent(evento)
+  ).length
+  const borradoresCount = eventos.filter((evento) => evento.estado === "borrador").length
 
   const resetForm = () => {
     setFormData(initialForm)
@@ -760,6 +767,7 @@ export default function AdminEventosPage() {
         {[
           { id: "vigentes" as const, label: `Vigentes (${vigentesCount})` },
           { id: "pasados" as const, label: `Pasados (${pasadosCount})` },
+          { id: "borradores" as const, label: `Borradores (${borradoresCount})` },
         ].map((tab) => (
           <button
             key={tab.id}
