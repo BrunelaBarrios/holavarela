@@ -303,6 +303,7 @@ export default function AdminComerciosPage() {
     setLoading(true)
     setSaveError("")
     const isDraft = submitMode === "draft"
+    const hasPhone = formData.telefono.trim().length > 0
 
     if (!isDraft && !editingComercio && !formData.imagen_url) {
       setSaveError("Tenes que cargar una foto para crear un comercio.")
@@ -331,14 +332,14 @@ export default function AdminComerciosPage() {
       instagram_url: formData.instagram_url.trim() || null,
       facebook_url: formData.facebook_url.trim() || null,
       imagen_url: formData.imagen_url || null,
-      estado: isDraft
-        ? "borrador"
-        : editingComercio?.estado === "oculto"
-          ? "oculto"
-          : "activo",
-      destacado: editingComercio?.destacado ?? false,
-      usa_whatsapp: formData.usa_whatsapp,
-    }
+        estado: isDraft
+          ? "borrador"
+          : editingComercio?.estado === "oculto"
+            ? "oculto"
+            : "activo",
+        destacado: editingComercio?.destacado ?? false,
+        usa_whatsapp: hasPhone ? formData.usa_whatsapp : false,
+      }
 
     if (editingComercio) {
       const { error } = await supabase
@@ -380,6 +381,8 @@ export default function AdminComerciosPage() {
     resetForm()
     setLoading(false)
   }
+
+  const hasPhone = formData.telefono.trim().length > 0
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -473,7 +476,7 @@ export default function AdminComerciosPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Telefono *
+                  Telefono
                 </label>
                 <input
                   type="text"
@@ -482,24 +485,28 @@ export default function AdminComerciosPage() {
                     setFormData((prev) => ({ ...prev, telefono: e.target.value }))
                   }
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
-                  required
                 />
               </div>
 
-              <label className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={formData.usa_whatsapp}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      usa_whatsapp: e.target.checked,
-                    }))
-                  }
-                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span>Este numero tiene WhatsApp</span>
-              </label>
+                <label className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={hasPhone && formData.usa_whatsapp}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        usa_whatsapp: e.target.checked,
+                      }))
+                    }
+                    disabled={!hasPhone}
+                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>
+                    {hasPhone
+                      ? "Este numero tiene WhatsApp"
+                      : "Completa un telefono si quieres habilitar WhatsApp"}
+                  </span>
+                </label>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">

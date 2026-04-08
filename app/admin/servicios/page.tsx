@@ -262,6 +262,7 @@ export default function AdminServiciosPage() {
     setLoading(true)
     setSaveError("")
     const isDraft = submitMode === "draft"
+    const hasContact = formData.contacto.trim().length > 0
 
     if (!isDraft && !editingServicio && !formData.imagen) {
       setSaveError("Tenes que cargar una foto para crear un servicio.")
@@ -287,13 +288,13 @@ export default function AdminServiciosPage() {
       facebook_url: formData.facebook_url.trim() || null,
       imagen: formData.imagen || null,
       destacado: editingServicio?.destacado ?? false,
-      estado: isDraft
-        ? "borrador"
-        : editingServicio?.estado === "oculto"
-          ? "oculto"
-          : "activo",
-      usa_whatsapp: formData.usa_whatsapp,
-    }
+        estado: isDraft
+          ? "borrador"
+          : editingServicio?.estado === "oculto"
+            ? "oculto"
+            : "activo",
+        usa_whatsapp: hasContact ? formData.usa_whatsapp : false,
+      }
 
     if (editingServicio) {
       const { error } = await supabase
@@ -332,6 +333,8 @@ export default function AdminServiciosPage() {
     resetForm()
     setLoading(false)
   }
+
+  const hasContact = formData.contacto.trim().length > 0
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -553,20 +556,25 @@ export default function AdminServiciosPage() {
                 </div>
               </div>
 
-              <label className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={formData.usa_whatsapp}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      usa_whatsapp: e.target.checked,
-                    }))
-                  }
-                  className="h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
-                />
-                <span>Este contacto tiene WhatsApp</span>
-              </label>
+                <label className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={hasContact && formData.usa_whatsapp}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        usa_whatsapp: e.target.checked,
+                      }))
+                    }
+                    disabled={!hasContact}
+                    className="h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                  />
+                  <span>
+                    {hasContact
+                      ? "Este contacto tiene WhatsApp"
+                      : "Completa un contacto si quieres habilitar WhatsApp"}
+                  </span>
+                </label>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">

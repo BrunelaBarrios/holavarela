@@ -176,6 +176,7 @@ export default function AdminCursosPage() {
     setLoading(true)
     setSaveError("")
     const isDraft = submitMode === "draft"
+    const hasContact = formData.contacto.trim().length > 0
 
     if (!isDraft && !editingCurso && !formData.imagen) {
       setSaveError("Tenes que cargar una foto para crear un curso o clase.")
@@ -193,13 +194,13 @@ export default function AdminCursosPage() {
       facebook_url: formData.facebook_url?.trim() || null,
       imagen: formData.imagen || null,
       destacado: editingCurso?.destacado ?? false,
-      estado: isDraft
-        ? "borrador"
-        : editingCurso?.estado === "oculto"
-          ? "oculto"
-          : "activo",
-      usa_whatsapp: formData.usa_whatsapp,
-    }
+        estado: isDraft
+          ? "borrador"
+          : editingCurso?.estado === "oculto"
+            ? "oculto"
+            : "activo",
+        usa_whatsapp: hasContact ? formData.usa_whatsapp : false,
+      }
 
     if (editingCurso) {
       const { error } = await supabase
@@ -238,6 +239,8 @@ export default function AdminCursosPage() {
     resetForm()
     setLoading(false)
   }
+
+  const hasContact = formData.contacto.trim().length > 0
 
   const handleEdit = (curso: Curso) => {
     setEditingCurso(curso)
@@ -406,7 +409,7 @@ export default function AdminCursosPage() {
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Contacto *
+                    Contacto
                   </label>
                   <input
                     type="text"
@@ -418,25 +421,29 @@ export default function AdminCursosPage() {
                       }))
                     }
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500"
-                    required
                   />
                 </div>
               </div>
 
-              <label className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={formData.usa_whatsapp ?? true}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      usa_whatsapp: e.target.checked,
-                    }))
-                  }
-                  className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
-                />
-                <span>Este contacto tiene WhatsApp</span>
-              </label>
+                <label className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={hasContact && (formData.usa_whatsapp ?? true)}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        usa_whatsapp: e.target.checked,
+                      }))
+                    }
+                    disabled={!hasContact}
+                    className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                  />
+                  <span>
+                    {hasContact
+                      ? "Este contacto tiene WhatsApp"
+                      : "Completa un contacto si quieres habilitar WhatsApp"}
+                  </span>
+                </label>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div>

@@ -276,6 +276,7 @@ export default function AdminEventosPage() {
     setLoading(true)
     setSaveError("")
     const isDraft = submitMode === "draft"
+    const hasPhone = formData.telefono.trim().length > 0
 
     if (!isDraft && !editingEvento && !formData.imagen) {
       setSaveError("Tenes que cargar una foto para crear un evento.")
@@ -332,13 +333,13 @@ export default function AdminEventosPage() {
           : null
       ),
       imagen: formData.imagen || null,
-      estado: isDraft
-        ? "borrador"
-        : editingEvento?.estado === "oculto"
-          ? "oculto"
-          : "activo",
-      usa_whatsapp: formData.usaWhatsapp,
-    }
+        estado: isDraft
+          ? "borrador"
+          : editingEvento?.estado === "oculto"
+            ? "oculto"
+            : "activo",
+        usa_whatsapp: hasPhone ? formData.usaWhatsapp : false,
+      }
 
     if (editingEvento) {
       const { error } = await supabase
@@ -377,6 +378,8 @@ export default function AdminEventosPage() {
     resetForm()
     setLoading(false)
   }
+
+  const hasPhone = formData.telefono.trim().length > 0
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -600,20 +603,25 @@ export default function AdminEventosPage() {
                 </p>
               </div>
 
-              <label className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={formData.usaWhatsapp}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      usaWhatsapp: e.target.checked,
-                    }))
-                  }
-                  className="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <span>Este numero tiene WhatsApp</span>
-              </label>
+                <label className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={hasPhone && formData.usaWhatsapp}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        usaWhatsapp: e.target.checked,
+                      }))
+                    }
+                    disabled={!hasPhone}
+                    className="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span>
+                    {hasPhone
+                      ? "Este numero tiene WhatsApp"
+                      : "Completa un telefono si quieres habilitar WhatsApp"}
+                  </span>
+                </label>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
