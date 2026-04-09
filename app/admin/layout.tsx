@@ -8,6 +8,7 @@ import {
   BadgeCheck,
   Building2,
   Calendar,
+  ChevronDown,
   CreditCard,
   FileText,
   GraduationCap,
@@ -82,6 +83,12 @@ export default function AdminLayout({
   const pathname = usePathname()
   const router = useRouter()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    panel: true,
+    contenido: true,
+    gestion: false,
+    configuracion: false,
+  })
   const session = getAdminSession()
   const adminRole: AdminRole = session?.role || "admin"
   const adminName = session?.name || ""
@@ -94,6 +101,15 @@ export default function AdminLayout({
   const shouldRedirectToDashboard = isLoggedIn && isLoginPage
   const shouldRedirectByRole =
     session?.role !== "superadmin" && isSuperAdminOnlyRoute
+  const visibleMenuItems = menuItems.filter((item) => item.roles.includes(adminRole))
+  const groupedMenuItems = menuGroups
+    .map((group) => ({
+      ...group,
+      items: group.items
+        .map((href) => visibleMenuItems.find((item) => item.href === href))
+        .filter((item): item is (typeof menuItems)[number] => Boolean(item)),
+    }))
+    .filter((group) => group.items.length > 0)
 
   useEffect(() => {
     if (shouldRedirectToLogin) {
@@ -124,16 +140,6 @@ export default function AdminLayout({
   if (pathname === "/admin/login") {
     return <>{children}</>
   }
-
-  const visibleMenuItems = menuItems.filter((item) => item.roles.includes(adminRole))
-  const groupedMenuItems = menuGroups
-    .map((group) => ({
-      ...group,
-      items: group.items
-        .map((href) => visibleMenuItems.find((item) => item.href === href))
-        .filter((item): item is (typeof menuItems)[number] => Boolean(item)),
-    }))
-    .filter((group) => group.items.length > 0)
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -189,34 +195,61 @@ export default function AdminLayout({
             <nav className="flex-1 space-y-5 overflow-y-auto p-4">
               {groupedMenuItems.map((group) => (
                 <div key={group.id}>
-                  <div className="mb-2 px-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                    {group.label}
-                  </div>
-                  <div className="space-y-2">
-                    {group.items.map((item) => {
-                      const isActive =
-                        item.href === "/admin"
-                          ? pathname === "/admin"
-                          : pathname.startsWith(item.href)
-                      const Icon = item.icon
+                  {(() => {
+                    const hasActiveItem = group.items.some((item) =>
+                      item.href === "/admin"
+                        ? pathname === "/admin"
+                        : pathname.startsWith(item.href)
+                    )
+                    const isOpen = hasActiveItem || Boolean(openGroups[group.id])
 
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setIsSidebarOpen(false)}
-                          className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${
-                            isActive
-                              ? "bg-blue-600 text-white"
-                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                          }`}
-                        >
-                          <Icon className="h-5 w-5" />
-                          <span className="font-medium">{item.label}</span>
-                        </Link>
-                      )
-                    })}
-                  </div>
+                    return (
+                      <>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpenGroups((prev) => ({
+                        ...prev,
+                        [group.id]: !prev[group.id],
+                      }))
+                    }
+                    className="mb-2 flex w-full items-center justify-between rounded-xl px-4 py-2 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 transition hover:bg-slate-50"
+                  >
+                    <span>{group.label}</span>
+                    <ChevronDown
+                      className={`h-4 w-4 transition ${isOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {isOpen ? (
+                    <div className="space-y-2">
+                      {group.items.map((item) => {
+                        const isActive =
+                          item.href === "/admin"
+                            ? pathname === "/admin"
+                            : pathname.startsWith(item.href)
+                        const Icon = item.icon
+
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setIsSidebarOpen(false)}
+                            className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${
+                              isActive
+                                ? "bg-blue-600 text-white"
+                                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                            }`}
+                          >
+                            <Icon className="h-5 w-5" />
+                            <span className="font-medium">{item.label}</span>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  ) : null}
+                      </>
+                    )
+                  })()}
                 </div>
               ))}
             </nav>
