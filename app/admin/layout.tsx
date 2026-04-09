@@ -43,6 +43,35 @@ const menuItems = [
   { href: "/admin/actividad", icon: Activity, label: "Actividad", roles: ["superadmin"] },
 ]
 
+const menuGroups = [
+  {
+    id: "panel",
+    label: "Panel",
+    items: ["/admin"],
+  },
+  {
+    id: "contenido",
+    label: "Contenido",
+    items: [
+      "/admin/comercios",
+      "/admin/eventos",
+      "/admin/servicios",
+      "/admin/instituciones",
+      "/admin/cursos",
+    ],
+  },
+  {
+    id: "gestion",
+    label: "Gestion",
+    items: ["/admin/contactos", "/admin/usuarios", "/admin/suscripciones"],
+  },
+  {
+    id: "configuracion",
+    label: "Configuracion",
+    items: ["/admin/sitio", "/admin/radio", "/admin/administradores", "/admin/actividad"],
+  },
+]
+
 const superAdminOnlyPrefixes = ["/admin/sitio", "/admin/radio", "/admin/administradores", "/admin/actividad"]
 
 export default function AdminLayout({
@@ -97,6 +126,14 @@ export default function AdminLayout({
   }
 
   const visibleMenuItems = menuItems.filter((item) => item.roles.includes(adminRole))
+  const groupedMenuItems = menuGroups
+    .map((group) => ({
+      ...group,
+      items: group.items
+        .map((href) => visibleMenuItems.find((item) => item.href === href))
+        .filter((item): item is (typeof menuItems)[number] => Boolean(item)),
+    }))
+    .filter((group) => group.items.length > 0)
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -149,30 +186,39 @@ export default function AdminLayout({
               </div>
             </Link>
 
-            <nav className="flex-1 space-y-2 p-4">
-              {visibleMenuItems.map((item) => {
-                const isActive =
-                  item.href === "/admin"
-                    ? pathname === "/admin"
-                    : pathname.startsWith(item.href)
-                const Icon = item.icon
+            <nav className="flex-1 space-y-5 overflow-y-auto p-4">
+              {groupedMenuItems.map((group) => (
+                <div key={group.id}>
+                  <div className="mb-2 px-4 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    {group.label}
+                  </div>
+                  <div className="space-y-2">
+                    {group.items.map((item) => {
+                      const isActive =
+                        item.href === "/admin"
+                          ? pathname === "/admin"
+                          : pathname.startsWith(item.href)
+                      const Icon = item.icon
 
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setIsSidebarOpen(false)}
-                    className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${
-                      isActive
-                        ? "bg-blue-600 text-white"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span className="font-medium">{item.label}</span>
-                  </Link>
-                )
-              })}
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setIsSidebarOpen(false)}
+                          className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${
+                            isActive
+                              ? "bg-blue-600 text-white"
+                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                          }`}
+                        >
+                          <Icon className="h-5 w-5" />
+                          <span className="font-medium">{item.label}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
             </nav>
 
             <div className="space-y-2 border-t border-slate-200 p-4">
