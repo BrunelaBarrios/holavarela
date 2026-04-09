@@ -231,14 +231,6 @@ export default function AdminComerciosPage() {
   }
 
   const toggleFeatured = async (comercio: Comercio) => {
-    if (!comercio.destacado) {
-      const destacadosActuales = comercios.filter((item) => item.destacado).length
-      if (destacadosActuales >= 8) {
-        alert("Solo podes tener hasta 8 comercios destacados.")
-        return
-      }
-    }
-
     const { error } = await supabase
       .from("comercios")
       .update({ destacado: !comercio.destacado })
@@ -404,7 +396,7 @@ export default function AdminComerciosPage() {
           <h1 className="mb-2 text-3xl font-semibold text-slate-900">Comercios</h1>
           <p className="text-slate-500">Gestiona los comercios locales</p>
           <p className="mt-1 text-sm text-slate-400">
-            Podes marcar hasta 8 como destacados para la home.
+            Puedes marcar todos los que quieras. La home muestra tandas de 8 y las rota cada 2 dias.
           </p>
         </div>
 

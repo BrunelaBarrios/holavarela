@@ -17,6 +17,7 @@ import { EventLikeButton } from "./EventLikeButton"
 import { OptimizedImage } from "./OptimizedImage"
 import { PrimaryExternalLinkButton } from "./PrimaryExternalLinkButton"
 import { PublicHeader } from "./PublicHeader"
+import { ShareButton } from "./ShareButton"
 import { formatEventDateRange } from "../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
 import { parseEventDescription } from "../lib/eventSubmissionMeta"
@@ -55,6 +56,11 @@ const PublicDetailModal = dynamic(
     ssr: false,
   }
 )
+
+const getEventShareUrl = (id: string) => {
+  if (typeof window === "undefined") return `/eventos/${id}`
+  return `${window.location.origin}/eventos/${id}`
+}
 
 type Comercio = {
   id: number
@@ -334,6 +340,7 @@ const SOCIAL_LINKS = [
 ]
 
 const ITEMS_PER_ROTATION = 8
+const FEATURED_ROTATION_DAYS = 2
 
 function isFeaturedListing(item: {
   destacado?: boolean | null
@@ -349,6 +356,13 @@ function isFeaturedListing(item: {
 function sliceRotatingItems<T>(items: T[], page: number, pageSize = ITEMS_PER_ROTATION) {
   const start = page * pageSize
   return items.slice(start, start + pageSize)
+}
+
+function getScheduledRotationPage(totalPages: number, rotationDays = FEATURED_ROTATION_DAYS) {
+  if (totalPages <= 1) return 0
+
+  const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24))
+  return Math.floor(daysSinceEpoch / rotationDays) % totalPages
 }
 
 export function HomePage({ initialData }: { initialData: HomePageData }) {
@@ -382,15 +396,20 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [isContactLeadOpen, setIsContactLeadOpen] = useState(false)
   const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(null)
   const [zoomedImage, setZoomedImage] = useState<{ src: string; alt: string } | null>(null)
-  const [featuredBusinessPage, setFeaturedBusinessPage] = useState(0)
   const [servicePage, setServicePage] = useState(0)
   const [shouldLoadEventLikes, setShouldLoadEventLikes] = useState(false)
   const [shouldLoadRadioWidget, setShouldLoadRadioWidget] = useState(false)
   const eventsSectionRef = useRef<HTMLElement | null>(null)
   const radioSectionRef = useRef<HTMLElement | null>(null)
 
-  const featuredBusinessPageCount = Math.max(1, Math.ceil(featuredBusinesses.length / ITEMS_PER_ROTATION))
-  const safeFeaturedBusinessPage = featuredBusinessPage % featuredBusinessPageCount
+  const featuredBusinessPageCount = Math.max(
+    1,
+    Math.ceil(featuredBusinesses.length / ITEMS_PER_ROTATION)
+  )
+  const scheduledFeaturedBusinessPage = useMemo(
+    () => getScheduledRotationPage(featuredBusinessPageCount),
+    [featuredBusinessPageCount]
+  )
   const orderedServicios = useMemo(
     () =>
       [...servicios].sort((a, b) => Number(isFeaturedListing(b)) - Number(isFeaturedListing(a))),
@@ -399,8 +418,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const servicePageCount = Math.max(1, Math.ceil(orderedServicios.length / ITEMS_PER_ROTATION))
   const safeServicePage = servicePage % servicePageCount
   const visibleFeaturedBusinesses = useMemo(
-    () => sliceRotatingItems(featuredBusinesses, safeFeaturedBusinessPage),
-    [featuredBusinesses, safeFeaturedBusinessPage]
+    () => sliceRotatingItems(featuredBusinesses, scheduledFeaturedBusinessPage),
+    [featuredBusinesses, scheduledFeaturedBusinessPage]
   )
   const visibleServicios = useMemo(
     () => sliceRotatingItems(orderedServicios, safeServicePage),
@@ -412,14 +431,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
   const weather = initialData.weather
   const weatherLabel = weather ? WEATHER_LABELS[weather.weatherCode] || "Clima actual" : null
-
-  useEffect(() => {
-    if (featuredBusinessPageCount <= 1) return
-    const intervalId = window.setInterval(() => {
-      setFeaturedBusinessPage((current) => (current + 1) % featuredBusinessPageCount)
-    }, 7000)
-    return () => window.clearInterval(intervalId)
-  }, [featuredBusinessPageCount])
 
   useEffect(() => {
     if (servicePageCount <= 1) return
@@ -1208,6 +1219,17 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             ) : null}
 
             {selectedEvento ? (
+              <ShareButton
+                title={selectedEvento.titulo}
+                text={parseEventDescription(selectedEvento.descripcion).baseDescription}
+                url={getEventShareUrl(String(selectedEvento.id))}
+                section="eventos"
+                itemId={String(selectedEvento.id)}
+                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+              />
+            ) : null}
+
+            {selectedEvento ? (
               <EventLikeButton
                 count={eventLikeCounts[String(selectedEvento.id)] || 0}
                 liked={Boolean(likedEvents[String(selectedEvento.id)])}
@@ -1712,25 +1734,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             })}
           </div>
           {featuredBusinessPageCount > 1 ? (
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                <div className="text-sm text-slate-500">
-                Mostrando {safeFeaturedBusinessPage + 1} de {featuredBusinessPageCount}
-                </div>
-              <div className="flex items-center gap-2">
-                {Array.from({ length: featuredBusinessPageCount }).map((_, index) => (
-                  <button
-                    key={`featured-page-${index}`}
-                    type="button"
-                    onClick={() => setFeaturedBusinessPage(index)}
-                    className={`h-2.5 rounded-full transition ${
-                      safeFeaturedBusinessPage === index
-                        ? "w-8 bg-slate-900"
-                        : "w-2.5 bg-slate-300 hover:bg-slate-400"
-                    }`}
-                    aria-label={`Ver tanda ${index + 1} de comercios destacados`}
-                  />
-                ))}
-              </div>
+            <div className="mt-8 text-center text-sm text-slate-500">
+              La home muestra una tanda de 8 destacados y la rota automaticamente cada 2 dias.
             </div>
           ) : null}
         </div>

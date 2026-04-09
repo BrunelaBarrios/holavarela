@@ -109,7 +109,13 @@ export default function UsuariosLoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-slate-500">
+        <div className="mt-5 text-center text-sm">
+          <Link href="/usuarios/recuperar-whatsapp" className="font-medium text-emerald-700 hover:text-emerald-600">
+            Recuperar contrasena por WhatsApp
+          </Link>
+        </div>
+
+        <div className="mt-4 text-center text-sm text-slate-500">
           <Link href="/" className="font-medium text-slate-700 hover:text-slate-900">
             Volver al inicio
           </Link>
