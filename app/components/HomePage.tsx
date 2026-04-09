@@ -211,6 +211,9 @@ const WEATHER_LABELS: Record<number, string> = {
   95: "Tormenta",
 }
 
+const desktopContainerClass =
+  "mx-auto w-full max-w-[1600px] px-4 sm:px-6 lg:px-10 2xl:px-12"
+
 type WelcomeHighlight = {
   key: string
   kind: "comercio" | "servicio" | "curso"
@@ -1475,7 +1478,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         <div className="absolute -left-16 top-20 -z-0 h-48 w-48 rounded-full bg-blue-200/30 blur-3xl" />
         <div className="absolute right-0 top-10 -z-0 h-56 w-56 rounded-full bg-emerald-200/40 blur-3xl" />
 
-        <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+        <div className={`${desktopContainerClass} text-center`}>
           <div className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-white/80 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm">
             <MapPin className="h-4 w-4" />
             Jose Pedro Varela, Uruguay
@@ -1507,7 +1510,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
       {weather && (
         <section className="py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className={desktopContainerClass}>
             <div className="grid gap-4 rounded-[28px] border border-sky-100 bg-white/90 p-6 shadow-[0_18px_45px_-30px_rgba(14,165,233,0.35)] backdrop-blur md:grid-cols-[auto_1fr_auto] md:items-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
                 <WeatherIcon className="h-8 w-8" />
@@ -1536,7 +1539,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
       {radio.isLive && (
         <section ref={radioSectionRef} className="py-6">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className={desktopContainerClass}>
             {shouldLoadRadioWidget ? (
               <MyTunerWidget
                 streamUrl={radio.streamUrl}
@@ -1553,7 +1556,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       <div className="flex flex-col">
 
       <section id="comercios" className="order-5 py-18">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className={desktopContainerClass}>
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
               Comercios
@@ -1572,7 +1575,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 xl:grid-cols-4 2xl:grid-cols-5">
             {visibleFeaturedBusinesses.map((business) => {
               const imageSrc = business.imagen_url || business.imagen
 
@@ -1737,7 +1740,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       </section>
 
       <section id="servicios" className="order-6 py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className={desktopContainerClass}>
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
               Servicios y Profesionales
@@ -1762,7 +1765,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </div>
           ) : (
             <>
-            <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 xl:grid-cols-4 2xl:grid-cols-5">
               {visibleServicios.map((servicio) => (
                 <div
                         key={servicio.id}
@@ -1955,7 +1958,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         ref={eventsSectionRef}
         className="order-2 py-16"
       >
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className={desktopContainerClass}>
           <div className="mb-12 text-center">
             <div className="mb-4 inline-flex rounded-full bg-sky-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
               Hoy en Varela
@@ -1977,7 +1980,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 2xl:grid-cols-4">
             {visibleEventos.map((event) => (
               <div
                 key={event.id}
@@ -2067,7 +2070,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       </section>
 
       <section id="cursos" className="order-3 py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className={desktopContainerClass}>
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
               Cursos y Clases
@@ -2091,7 +2094,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               Todavia no hay cursos o clases cargados.
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 xl:grid-cols-4 2xl:grid-cols-5">
               {visibleCursos.map((curso) => (
                 <div
                   key={curso.id}
@@ -2164,7 +2167,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       </section>
 
       <section id="instituciones" className="order-4 py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className={desktopContainerClass}>
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
               Instituciones
@@ -2188,7 +2191,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 Todavía no hay instituciones cargadas.
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6">
               {visibleInstituciones.map((institucion) => (
                 <div
                   key={institucion.id}
@@ -2257,7 +2260,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       </div>
 
       <section className="py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className={desktopContainerClass}>
           <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
             <div>
               <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
@@ -2300,7 +2303,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       </section>
 
       <footer id="contacto" className="mt-6 border-t border-slate-200/80 bg-white/80 py-14 backdrop-blur">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 sm:px-6 md:grid-cols-2 lg:px-8">
+        <div className={`${desktopContainerClass} grid grid-cols-1 gap-10 md:grid-cols-2`}>
           <div>
             <div className="flex items-center gap-3">
               <Image
