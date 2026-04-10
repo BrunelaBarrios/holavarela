@@ -100,6 +100,9 @@ add column if not exists suscripcion_actualizada_at timestamp with time zone;
 alter table public.cursos
 add column if not exists mp_preapproval_id text;
 
+alter table public.cursos
+add column if not exists institucion_id bigint;
+
 alter table public.eventos
 add column if not exists fecha_solo_mes boolean default false;
 
@@ -138,6 +141,24 @@ add column if not exists instagram_url text;
 
 alter table public.instituciones
 add column if not exists facebook_url text;
+
+alter table public.instituciones
+add column if not exists premium_detalle text;
+
+alter table public.instituciones
+add column if not exists premium_galeria text[];
+
+alter table public.instituciones
+add column if not exists premium_extra_titulo text;
+
+alter table public.instituciones
+add column if not exists premium_extra_detalle text;
+
+alter table public.instituciones
+add column if not exists premium_extra_galeria text[];
+
+alter table public.instituciones
+add column if not exists premium_activo boolean default false;
 
 alter table public.sitio
 add column if not exists plan_presencia_titulo text;
@@ -190,6 +211,7 @@ create table if not exists public.cursos (
   descripcion text not null,
   responsable text not null,
   contacto text not null,
+  institucion_id bigint,
   plan_suscripcion text,
   estado_suscripcion text default 'pendiente',
   web_url text,

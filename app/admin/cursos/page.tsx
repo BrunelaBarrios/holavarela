@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Eye, EyeOff, GraduationCap, MessageCircle, Pencil, Phone, Plus, Share2, Star, Trash2, UserRound, X } from "lucide-react"
 import { OptimizedImage } from "../../components/OptimizedImage"
 import { supabase } from "../../supabase"
@@ -18,6 +18,7 @@ type Curso = {
   descripcion: string
   plan_suscripcion?: SubscriptionPlanKey | null
   estado_suscripcion?: SubscriptionStatusKey | null
+  institucion_id?: number | null
   responsable: string
   contacto: string
   web_url?: string | null
@@ -36,6 +37,11 @@ type CursoForm = Omit<
   "id" | "plan_suscripcion" | "estado_suscripcion" | "share_count" | "whatsapp_count"
 >
 
+type InstitucionOption = {
+  id: number
+  nombre: string
+}
+
 const initialForm: CursoForm = {
   nombre: "",
   descripcion: "",
@@ -46,6 +52,7 @@ const initialForm: CursoForm = {
   facebook_url: "",
   imagen: "",
   usa_whatsapp: true,
+  institucion_id: null,
 }
 
 export default function AdminCursosPage() {
@@ -57,6 +64,7 @@ export default function AdminCursosPage() {
   const [saveError, setSaveError] = useState("")
   const [deletingCurso, setDeletingCurso] = useState<Curso | null>(null)
   const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
+  const [instituciones, setInstituciones] = useState<InstitucionOption[]>([])
 
   const cargarCursos = async () => {
     const [
@@ -98,9 +106,23 @@ export default function AdminCursosPage() {
     )
   }
 
+  const cargarInstituciones = async () => {
+    const { data, error } = await supabase
+      .from("instituciones")
+      .select("id, nombre")
+      .order("nombre", { ascending: true })
+
+    if (error) {
+      setSaveError(`Error al cargar instituciones: ${error.message}`)
+      return
+    }
+
+    setInstituciones((data || []) as InstitucionOption[])
+  }
+
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      void cargarCursos()
+      void Promise.all([cargarCursos(), cargarInstituciones()])
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
@@ -190,6 +212,7 @@ export default function AdminCursosPage() {
       descripcion: formData.descripcion,
       responsable: formData.responsable,
       contacto: formData.contacto,
+      institucion_id: formData.institucion_id || null,
       web_url: formData.web_url?.trim() || null,
       instagram_url: formData.instagram_url?.trim() || null,
       facebook_url: formData.facebook_url?.trim() || null,
@@ -242,6 +265,10 @@ export default function AdminCursosPage() {
   }
 
   const hasContact = formData.contacto.trim().length > 0
+  const institutionNameById = useMemo(
+    () => new Map(instituciones.map((institucion) => [institucion.id, institucion.nombre])),
+    [instituciones]
+  )
 
   const handleEdit = (curso: Curso) => {
     setEditingCurso(curso)
@@ -250,6 +277,7 @@ export default function AdminCursosPage() {
       descripcion: curso.descripcion,
       responsable: curso.responsable,
       contacto: curso.contacto,
+      institucion_id: curso.institucion_id ?? null,
       web_url: curso.web_url || "",
       instagram_url: curso.instagram_url || "",
       facebook_url: curso.facebook_url || "",
@@ -406,6 +434,29 @@ export default function AdminCursosPage() {
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500"
                     required
                   />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Institucion
+                  </label>
+                  <select
+                    value={formData.institucion_id || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        institucion_id: e.target.value ? Number(e.target.value) : null,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500"
+                  >
+                    <option value="">Sin institucion asociada</option>
+                    {instituciones.map((institucion) => (
+                      <option key={institucion.id} value={institucion.id}>
+                        {institucion.nombre}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -610,6 +661,14 @@ export default function AdminCursosPage() {
                   <UserRound className="h-4 w-4" />
                   <span>{curso.responsable}</span>
                 </div>
+                {curso.institucion_id ? (
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4" />
+                    <span>
+                      Institucion: {institutionNameById.get(curso.institucion_id) || `ID ${curso.institucion_id}`}
+                    </span>
+                  </div>
+                ) : null}
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4" />
                   <span>{curso.contacto}</span>

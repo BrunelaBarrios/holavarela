@@ -19,6 +19,7 @@ type Institucion = {
   foto: string | null
   estado?: string | null
   usa_whatsapp?: boolean | null
+  premium_activo?: boolean | null
 }
 
 type InstitucionForm = Omit<Institucion, "id">
@@ -33,6 +34,7 @@ const initialForm: InstitucionForm = {
   facebook_url: "",
   foto: "",
   usa_whatsapp: true,
+  premium_activo: false,
 }
 
 export default function AdminInstitucionesPage() {
@@ -85,6 +87,7 @@ export default function AdminInstitucionesPage() {
       facebook_url: institucion.facebook_url || "",
       foto: institucion.foto || "",
       usa_whatsapp: institucion.usa_whatsapp ?? true,
+      premium_activo: institucion.premium_activo ?? false,
     })
     setIsFormOpen(true)
   }
@@ -171,6 +174,7 @@ export default function AdminInstitucionesPage() {
       foto: formData.foto || null,
       estado: editingInstitucion?.estado ?? "activo",
       usa_whatsapp: formData.usa_whatsapp,
+      premium_activo: formData.premium_activo ?? false,
     }
 
     if (editingInstitucion) {
@@ -319,6 +323,21 @@ export default function AdminInstitucionesPage() {
                   className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500"
                 />
                 <span>Este numero tiene WhatsApp</span>
+              </label>
+
+              <label className="flex items-center gap-3 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800">
+                <input
+                  type="checkbox"
+                  checked={formData.premium_activo ?? false}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      premium_activo: e.target.checked,
+                    }))
+                  }
+                  className="h-4 w-4 rounded border-violet-300 text-violet-600 focus:ring-violet-500"
+                />
+                <span>Perfil premium activo para esta institucion</span>
               </label>
 
               <div>
@@ -488,6 +507,11 @@ export default function AdminInstitucionesPage() {
               )}
 
               <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                {institucion.premium_activo ? (
+                  <span className="mr-auto inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+                    Premium
+                  </span>
+                ) : null}
                 <button
                   onClick={() => toggleVisibility(institucion)}
                   className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"

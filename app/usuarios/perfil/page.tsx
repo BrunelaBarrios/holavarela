@@ -176,25 +176,31 @@ export default function UsuariosPerfilPage() {
       web_url: formData.webUrl.trim() || null,
       instagram_url: formData.instagramUrl.trim() || null,
       facebook_url: formData.facebookUrl.trim() || null,
-      premium_detalle: formData.premiumDetalle.trim() || null,
-      premium_galeria: formData.premiumGaleria,
-      premium_extra_titulo: formData.premiumExtraTitulo.trim() || null,
-      premium_extra_detalle: formData.premiumExtraDetalle.trim() || null,
-      premium_extra_galeria: formData.premiumExtraGaleria,
       [imageColumn]: formData.image || null,
     }
+    const premiumPayload = supportsPremiumProfile(ownedEntity.type)
+      ? {
+          premium_detalle: formData.premiumDetalle.trim() || null,
+          premium_galeria: formData.premiumGaleria,
+          premium_extra_titulo: formData.premiumExtraTitulo.trim() || null,
+          premium_extra_detalle: formData.premiumExtraDetalle.trim() || null,
+          premium_extra_galeria: formData.premiumExtraGaleria,
+        }
+      : {}
 
-    let payload: Record<string, string | boolean | string[] | null>
+    let payload: Record<string, string | boolean | string[] | null | undefined>
 
     if (ownedEntity.type === "comercio") {
       payload = {
         ...commonPayload,
+        ...premiumPayload,
         direccion: formData.direccion.trim() || null,
         telefono: formData.telefono.trim() || null,
       }
     } else if (ownedEntity.type === "servicio") {
       payload = {
         ...commonPayload,
+        ...premiumPayload,
         categoria: formData.categoria,
         responsable: formData.responsable.trim() || null,
         contacto: formData.contacto.trim() || null,
@@ -209,6 +215,7 @@ export default function UsuariosPerfilPage() {
     } else {
       payload = {
         ...commonPayload,
+        ...premiumPayload,
         direccion: formData.direccion.trim() || null,
         telefono: formData.telefono.trim() || null,
       }

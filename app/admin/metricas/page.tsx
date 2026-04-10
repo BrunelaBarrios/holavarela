@@ -67,11 +67,6 @@ type InteractionRow = {
   created_at: string | null
 }
 
-type SiteSectionTotal = {
-  label: string
-  value: number
-}
-
 type RecentSiteActivity = {
   interactions15Days: number
   whatsapp15Days: number
@@ -97,15 +92,6 @@ const SECTION_LABELS: Record<string, string> = {
   cursos: "Cursos",
   servicios: "Servicios",
   instituciones: "Instituciones",
-}
-
-const SITE_PAGE_LABELS: Record<string, string> = {
-  home: "Inicio",
-  "comercios-page": "Listado de comercios",
-  "servicios-page": "Listado de servicios",
-  "eventos-page": "Listado de eventos",
-  "cursos-page": "Listado de cursos y clases",
-  "instituciones-page": "Listado de instituciones",
 }
 
 const LINK_TYPE_LABELS: Record<string, string> = {
@@ -143,22 +129,6 @@ const getIsoDaysAgo = (days: number) => {
 
 const countUniqueBrowsers = (rows: Array<{ browser_key: string | null }>) =>
   new Set(rows.map((row) => row.browser_key).filter((key): key is string => Boolean(key))).size
-
-const buildSiteSectionTotals = (rows: VisitRow[]): SiteSectionTotal[] => {
-  const totals = rows.reduce<Record<string, number>>((acc, row) => {
-    const key = row.item_id || row.item_title
-    if (!key) return acc
-    acc[key] = (acc[key] || 0) + 1
-    return acc
-  }, {})
-
-  return Object.entries(totals)
-    .map(([section, value]) => ({
-      label: SITE_PAGE_LABELS[section] || section,
-      value,
-    }))
-    .sort((a, b) => b.value - a.value)
-}
 
 const buildDailyTrend = (
   shareRows: MetricRow[],
@@ -327,7 +297,6 @@ export default function AdminMetricasPage() {
   const [dailyTrend, setDailyTrend] = useState<TrendPoint[]>([])
   const [visitors30Days, setVisitors30Days] = useState(BASELINE_SITE_VISITORS_30D)
   const [pageViews30Days, setPageViews30Days] = useState(BASELINE_SITE_PAGE_VIEWS_30D)
-  const [siteSectionTotals, setSiteSectionTotals] = useState<SiteSectionTotal[]>([])
   const [recentMessages, setRecentMessages] = useState<RecentMessage[]>([])
   const [recentSiteActivity, setRecentSiteActivity] = useState<RecentSiteActivity>({
     interactions15Days: 0,
@@ -472,7 +441,6 @@ export default function AdminMetricasPage() {
 
       setVisitors30Days(BASELINE_SITE_VISITORS_30D + countUniqueBrowsers(siteVisitRows30))
       setPageViews30Days(BASELINE_SITE_PAGE_VIEWS_30D + siteVisitRows30.length)
-      setSiteSectionTotals(buildSiteSectionTotals(siteVisitRows30))
       setRecentSiteActivity({
         interactions15Days:
           shareRows15.length +
@@ -538,13 +506,6 @@ export default function AdminMetricasPage() {
       item.corazones,
     ])
   )
-  const siteSectionSummary = useMemo(() => {
-    if (siteSectionTotals.length === 0) {
-      return "Todavia no hay suficiente actividad para mostrar secciones destacadas."
-    }
-    return `${siteSectionTotals[0]?.label || "Seccion principal"} lidera el interes reciente dentro de Hola Varela.`
-  }, [siteSectionTotals])
-
   return (
     <div className="mx-auto max-w-7xl">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -781,35 +742,7 @@ export default function AdminMetricasPage() {
               />
             </section>
 
-            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="mb-5">
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Paginas visitadas
-                  </div>
-                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Todas las paginas con actividad</h2>
-                  <p className="mt-2 text-sm leading-7 text-slate-500">{siteSectionSummary}</p>
-                </div>
-                <div className="space-y-4">
-                  {siteSectionTotals.length === 0 ? (
-                    <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                      Aun no hay visitas registradas para mostrar.
-                    </div>
-                  ) : (
-                    siteSectionTotals.map((section) => (
-                      <div key={section.label} className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="text-base font-semibold text-slate-900">{section.label}</div>
-                          <div className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
-                            {section.value}
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </section>
-
+            <div className="grid gap-6">
               <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="mb-5">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
-import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
+import { ArrowRight, GraduationCap, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../components/ContactActionLink"
 import { ExternalLinksButtons } from "../components/ExternalLinksButtons"
 import { OptimizedImage } from "../components/OptimizedImage"
@@ -25,10 +25,23 @@ type Institucion = {
   foto: string | null
   estado?: string | null
   usa_whatsapp?: boolean | null
+  premium_detalle?: string | null
+  premium_extra_titulo?: string | null
+  premium_extra_detalle?: string | null
+  premium_activo?: boolean | null
+}
+
+type CursoRelacion = {
+  id: number
+  nombre: string
+  descripcion: string | null
+  responsable: string | null
+  institucion_id?: number | null
 }
 
 export default function InstitucionesPage() {
   const [instituciones, setInstituciones] = useState<Institucion[]>([])
+  const [cursosRelacionados, setCursosRelacionados] = useState<CursoRelacion[]>([])
   const [search, setSearch] = useState("")
   const [selectedInstitucion, setSelectedInstitucion] = useState<Institucion | null>(null)
 
@@ -38,18 +51,32 @@ export default function InstitucionesPage() {
 
   useEffect(() => {
     const cargarInstituciones = async () => {
-      const { data, error } = await supabase
-        .from("instituciones")
-        .select("*")
-        .or("estado.is.null,estado.eq.activo")
-        .order("id", { ascending: false })
+      const [{ data, error }, { data: cursosData, error: cursosError }] = await Promise.all([
+        supabase
+          .from("instituciones")
+          .select("*")
+          .or("estado.is.null,estado.eq.activo")
+          .order("id", { ascending: false }),
+        supabase
+          .from("cursos")
+          .select("id, nombre, descripcion, responsable, institucion_id")
+          .or("estado.is.null,estado.eq.activo")
+          .not("institucion_id", "is", null)
+          .order("id", { ascending: false }),
+      ])
 
       if (error) {
         console.error("Error al cargar instituciones:", error)
         return
       }
 
+      if (cursosError) {
+        console.error("Error al cargar cursos relacionados:", cursosError)
+        return
+      }
+
       setInstituciones(data || [])
+      setCursosRelacionados((cursosData || []) as CursoRelacion[])
     }
 
     void cargarInstituciones()
@@ -86,6 +113,19 @@ export default function InstitucionesPage() {
         .includes(term)
     )
   }, [instituciones, search])
+
+  const cursosPorInstitucion = useMemo(() => {
+    const map = new Map<number, CursoRelacion[]>()
+
+    cursosRelacionados.forEach((curso) => {
+      if (!curso.institucion_id) return
+      const current = map.get(curso.institucion_id) || []
+      current.push(curso)
+      map.set(curso.institucion_id, current)
+    })
+
+    return map
+  }, [cursosRelacionados])
 
   const whatsappLink = (telefono: string | null) => {
     if (!telefono) return "#"
@@ -144,6 +184,75 @@ export default function InstitucionesPage() {
             ? [{ icon: Phone, text: selectedInstitucion.telefono }]
             : []),
         ]}
+        extraContent={
+          selectedInstitucion ? (
+            <div className="space-y-5">
+              {selectedInstitucion.premium_activo && selectedInstitucion.premium_detalle ? (
+                <div className="rounded-[24px] border border-sky-100 bg-sky-50/70 p-5">
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
+                    Informacion ampliada
+                  </div>
+                  <p className="whitespace-pre-line text-sm leading-7 text-slate-700">
+                    {selectedInstitucion.premium_detalle}
+                  </p>
+                </div>
+              ) : null}
+
+              {selectedInstitucion.premium_activo &&
+              (selectedInstitucion.premium_extra_titulo ||
+                selectedInstitucion.premium_extra_detalle) ? (
+                <div className="rounded-[24px] border border-violet-100 bg-violet-50/70 p-5">
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-violet-700">
+                    Contenido extra
+                  </div>
+                  {selectedInstitucion.premium_extra_titulo ? (
+                    <h3 className="text-lg font-semibold text-slate-950">
+                      {selectedInstitucion.premium_extra_titulo}
+                    </h3>
+                  ) : null}
+                  {selectedInstitucion.premium_extra_detalle ? (
+                    <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">
+                      {selectedInstitucion.premium_extra_detalle}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {(cursosPorInstitucion.get(selectedInstitucion.id) || []).length > 0 ? (
+                <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-5">
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
+                    Cursos de esta institucion
+                  </div>
+                  <div className="space-y-3">
+                    {(cursosPorInstitucion.get(selectedInstitucion.id) || []).map((curso) => (
+                      <div
+                        key={curso.id}
+                        className="rounded-2xl border border-emerald-200 bg-white px-4 py-3"
+                      >
+                        <div className="flex items-start gap-3">
+                          <GraduationCap className="mt-1 h-4 w-4 text-emerald-600" />
+                          <div>
+                            <div className="font-semibold text-slate-900">{curso.nombre}</div>
+                            {curso.responsable ? (
+                              <div className="mt-1 text-sm text-slate-500">
+                                Responsable: {curso.responsable}
+                              </div>
+                            ) : null}
+                            {curso.descripcion ? (
+                              <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">
+                                {curso.descripcion}
+                              </p>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null
+        }
         actions={
           <>
             {selectedInstitucion?.telefono?.trim() ? (

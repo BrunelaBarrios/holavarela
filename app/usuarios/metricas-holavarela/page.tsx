@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { ArrowLeft, BarChart3, Eye, FileText, MessageCircle } from "lucide-react"
 import { supabase } from "../../supabase"
 
@@ -22,11 +22,6 @@ type InteractionRow = {
   created_at: string | null
 }
 
-type SectionTotal = {
-  label: string
-  value: number
-}
-
 type RecentActivity = {
   interactions15Days: number
   whatsapp15Days: number
@@ -35,15 +30,6 @@ type RecentActivity = {
 type RecentMessage = {
   label: string
   value: number
-}
-
-const SECTION_LABELS: Record<string, string> = {
-  home: "Inicio",
-  "comercios-page": "Listado de comercios",
-  "servicios-page": "Listado de servicios",
-  "eventos-page": "Listado de eventos",
-  "cursos-page": "Listado de cursos y clases",
-  "instituciones-page": "Listado de instituciones",
 }
 
 const BASELINE_SITE_VISITORS_30D = 752
@@ -57,22 +43,6 @@ const getIsoDaysAgo = (days: number) => {
 
 const countUniqueBrowsers = (rows: Array<{ browser_key: string | null }>) =>
   new Set(rows.map((row) => row.browser_key).filter((key): key is string => Boolean(key))).size
-
-const buildSectionTotals = (rows: VisitRow[]): SectionTotal[] => {
-  const totals = rows.reduce<Record<string, number>>((acc, row) => {
-    const key = row.item_id || row.item_title
-    if (!key) return acc
-    acc[key] = (acc[key] || 0) + 1
-    return acc
-  }, {})
-
-  return Object.entries(totals)
-    .map(([section, value]) => ({
-      label: SECTION_LABELS[section] || section,
-      value,
-    }))
-    .sort((a, b) => b.value - a.value)
-}
 
 const withFallback = async <T,>(
   promiseLike: PromiseLike<{ data: T[] | null; error: unknown }>,
@@ -90,7 +60,6 @@ export default function UsuariosMetricasHolaVarelaPage() {
   const [loading, setLoading] = useState(true)
   const [visitors30Days, setVisitors30Days] = useState(BASELINE_SITE_VISITORS_30D)
   const [pageViews30Days, setPageViews30Days] = useState(BASELINE_SITE_PAGE_VIEWS_30D)
-  const [sectionTotals, setSectionTotals] = useState<SectionTotal[]>([])
   const [recentMessages, setRecentMessages] = useState<RecentMessage[]>([])
   const [recentActivity, setRecentActivity] = useState<RecentActivity>({
     interactions15Days: 0,
@@ -181,7 +150,6 @@ export default function UsuariosMetricasHolaVarelaPage() {
 
       setVisitors30Days(BASELINE_SITE_VISITORS_30D + countUniqueBrowsers(siteVisitRows30))
       setPageViews30Days(BASELINE_SITE_PAGE_VIEWS_30D + siteVisitRows30.length)
-      setSectionTotals(buildSectionTotals(siteVisitRows30))
       setRecentActivity({
         interactions15Days:
           shareRows15.length +
@@ -229,13 +197,6 @@ export default function UsuariosMetricasHolaVarelaPage() {
 
     void loadMetrics()
   }, [])
-
-  const sectionSummary = useMemo(() => {
-    if (sectionTotals.length === 0) {
-      return "Todavia no hay suficiente actividad para mostrar secciones destacadas."
-    }
-    return `${sectionTotals[0]?.label || "Seccion principal"} lidera el interes reciente dentro de Hola Varela.`
-  }, [sectionTotals])
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_48%,#ffffff_100%)] px-4 py-10 text-slate-900 sm:px-6">
@@ -298,35 +259,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
               />
             </section>
 
-            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-              <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="mb-5">
-                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                    Paginas visitadas
-                  </div>
-                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Todas las paginas con actividad</h2>
-                  <p className="mt-2 text-sm leading-7 text-slate-500">{sectionSummary}</p>
-                </div>
-                <div className="space-y-4">
-                  {sectionTotals.length === 0 ? (
-                    <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                      Aun no hay visitas registradas para mostrar.
-                    </div>
-                  ) : (
-                    sectionTotals.map((section) => (
-                      <div key={section.label} className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="text-base font-semibold text-slate-900">{section.label}</div>
-                          <div className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm">
-                            {section.value}
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </section>
-
+            <div className="grid gap-6">
               <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="mb-5">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
