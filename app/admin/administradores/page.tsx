@@ -51,7 +51,11 @@ export default function AdminAdministradoresPage() {
   }
 
   useEffect(() => {
-    cargarAdministradores()
+    const timeoutId = window.setTimeout(() => {
+      void cargarAdministradores()
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [])
 
   const resetForm = () => {

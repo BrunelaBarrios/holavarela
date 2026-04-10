@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Eye, EyeOff, MessageCircle, Pencil, Plus, Share2, Star, Store, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
+import { OptimizedImage } from "../../components/OptimizedImage"
 import { buildShareCountMap } from "../../lib/shareTracking"
 import { subscriptionPlans, type SubscriptionPlanKey } from "../../lib/subscriptionPlans"
 import { getSubscriptionStatusBadge, getSubscriptionStatusLabel, type SubscriptionStatusKey } from "../../lib/subscriptionStatus"
@@ -587,12 +588,17 @@ export default function AdminComerciosPage() {
                             .map((item) => item.trim())
                             .filter(Boolean)
                             .map((image, index) => (
-                              <img
+                              <div
                                 key={`${image}-${index}`}
-                                src={image}
-                                alt={`Galeria premium ${index + 1}`}
-                                className="h-28 w-full rounded-2xl object-cover"
-                              />
+                                className="relative h-28 w-full overflow-hidden rounded-2xl"
+                              >
+                                <OptimizedImage
+                                  src={image}
+                                  alt={`Galeria premium ${index + 1}`}
+                                  sizes="(max-width: 768px) 100vw, 50vw"
+                                  className="object-cover"
+                                />
+                              </div>
                             ))}
                         </div>
                         <button
@@ -686,12 +692,17 @@ export default function AdminComerciosPage() {
                                 .map((item) => item.trim())
                                 .filter(Boolean)
                                 .map((image, index) => (
-                                  <img
+                                  <div
                                     key={`${image}-${index}`}
-                                    src={image}
-                                    alt={`Galeria extra ${index + 1}`}
-                                    className="h-28 w-full rounded-2xl object-cover"
-                                  />
+                                    className="relative h-28 w-full overflow-hidden rounded-2xl"
+                                  >
+                                    <OptimizedImage
+                                      src={image}
+                                      alt={`Galeria extra ${index + 1}`}
+                                      sizes="(max-width: 768px) 100vw, 50vw"
+                                      className="object-cover"
+                                    />
+                                  </div>
                                 ))}
                             </div>
                             <button
@@ -774,11 +785,14 @@ export default function AdminComerciosPage() {
                 </p>
                 {formData.imagen_url && (
                   <div className="mt-4 space-y-3">
-                    <img
-                      src={formData.imagen_url}
-                      alt="Vista previa del comercio"
-                      className="h-40 w-full rounded-2xl object-cover"
-                    />
+                    <div className="relative h-40 w-full overflow-hidden rounded-2xl">
+                      <OptimizedImage
+                        src={formData.imagen_url}
+                        alt="Vista previa del comercio"
+                        sizes="100vw"
+                        className="object-cover"
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={() =>
@@ -839,11 +853,14 @@ export default function AdminComerciosPage() {
               className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
             >
               {imagenSrc && (
-                <img
-                  src={imagenSrc}
-                  alt={comercio.nombre}
-                  className="h-48 w-full object-cover"
-                />
+                <div className="relative h-48 w-full">
+                  <OptimizedImage
+                    src={imagenSrc}
+                    alt={comercio.nombre}
+                    sizes="(max-width: 1280px) 50vw, 33vw"
+                    className="object-cover"
+                  />
+                </div>
               )}
 
               <div className="p-5">

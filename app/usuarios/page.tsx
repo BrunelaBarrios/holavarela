@@ -6,6 +6,7 @@ import type { User } from "@supabase/supabase-js"
 import { BarChart3, CalendarDays, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, Menu, PlusCircle, Send, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../components/AuthFormStatus"
+import { OptimizedImage } from "../components/OptimizedImage"
 import { formatEventDateRange } from "../lib/eventDates"
 import { buildUserProfileFields, fetchUserOwnedEvents, findUserOwnedEntity, getUserProfileImageSrc, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, type UserEntityType, type UserOwnedEntity, type UserOwnedEvent } from "../lib/userProfiles"
 import { supabase } from "../supabase"
@@ -315,7 +316,7 @@ export default function UsuariosHomePage() {
               </div>
             </div>
             <div className="w-full rounded-[32px] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-6 py-8 sm:px-8 sm:py-10 lg:w-[420px]">
-              {imageSrc ? <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"><img src={imageSrc} alt={ownedEntity.record.nombre} className="h-72 w-full object-cover" /></div> : <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-8 shadow-sm"><div className="flex items-start gap-4"><div className="rounded-[20px] bg-slate-100 p-4"><ImageIcon className="h-6 w-6 text-slate-400" /></div><div><h3 className="text-lg font-semibold text-slate-900">Agrega una imagen</h3><p className="mt-2 text-sm leading-7 text-slate-500">Tu perfil se ve mucho mejor cuando tiene una foto o imagen principal.</p></div></div></div>}
+              {imageSrc ? <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"><div className="relative h-72 w-full"><OptimizedImage src={imageSrc} alt={ownedEntity.record.nombre} sizes="(max-width: 1024px) 100vw, 420px" className="object-cover" /></div></div> : <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-8 shadow-sm"><div className="flex items-start gap-4"><div className="rounded-[20px] bg-slate-100 p-4"><ImageIcon className="h-6 w-6 text-slate-400" /></div><div><h3 className="text-lg font-semibold text-slate-900">Agrega una imagen</h3><p className="mt-2 text-sm leading-7 text-slate-500">Tu perfil se ve mucho mejor cuando tiene una foto o imagen principal.</p></div></div></div>}
               <ProfileSummaryCard
                 title={ownedEntity.record.nombre}
                 typeLabel={userEntityLabels[ownedEntity.type]}
@@ -517,7 +518,9 @@ function EventGroup({
           {events.map((event) => (
             <article key={event.id} className="overflow-hidden rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)]">
               {event.imagen ? (
-                <img src={event.imagen} alt={event.titulo} className="h-44 w-full object-cover" />
+                <div className="relative h-44 w-full">
+                  <OptimizedImage src={event.imagen} alt={event.titulo} sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
+                </div>
               ) : (
                 <div className="flex h-44 items-center justify-center bg-slate-100">
                   <ImageIcon className="h-8 w-8 text-slate-300" />

@@ -10,6 +10,7 @@ import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
 import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { formatEventDateRange } from "../../lib/eventDates"
+import { buildJosePedroVarelaDirectionsUrl } from "../../lib/mapLinks"
 import { parseEventDescription } from "../../lib/eventSubmissionMeta"
 import { buildPublicNav } from "../../lib/publicNav"
 
@@ -88,9 +89,7 @@ export function PremiumListingPage({
       : whatsappLink(phone)
     : null
   const directionsUrl = address
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        `${title} ${address}`.trim()
-      )}`
+    ? buildJosePedroVarelaDirectionsUrl(address)
     : null
 
   const galleryImages = useMemo(

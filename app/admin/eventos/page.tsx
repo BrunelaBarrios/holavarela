@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Calendar, Copy, Eye, EyeOff, Pencil, Plus, Share2, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
+import { OptimizedImage } from "../../components/OptimizedImage"
 import { buildShareCountMap } from "../../lib/shareTracking"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
@@ -710,11 +711,14 @@ export default function AdminEventosPage() {
                 </p>
                 {formData.imagen && (
                   <div className="mt-4 space-y-3">
-                    <img
-                      src={formData.imagen}
-                      alt="Vista previa del evento"
-                      className="h-40 w-full rounded-2xl object-cover"
-                    />
+                    <div className="relative h-40 w-full overflow-hidden rounded-2xl">
+                      <OptimizedImage
+                        src={formData.imagen}
+                        alt="Vista previa del evento"
+                        sizes="100vw"
+                        className="object-cover"
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={() => setFormData((prev) => ({ ...prev, imagen: "" }))}
@@ -796,11 +800,12 @@ export default function AdminEventosPage() {
               return (
                 <>
             {evento.imagen && (
-              <div className="aspect-video w-full overflow-hidden bg-slate-100">
-                <img
+              <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
+                <OptimizedImage
                   src={evento.imagen}
                   alt={evento.titulo}
-                  className="h-full w-full object-cover"
+                  sizes="(max-width: 1280px) 50vw, 33vw"
+                  className="object-cover"
                 />
               </div>
             )}

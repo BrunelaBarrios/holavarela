@@ -6,6 +6,7 @@ import Link from "next/link"
 import { CheckCircle2, ImageIcon, MapPin, MessageSquareText, Phone, Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthFormStatus } from "../../../components/AuthFormStatus"
+import { OptimizedImage } from "../../../components/OptimizedImage"
 import { buildMonthEventRange } from "../../../lib/eventDates"
 import { buildEventDescription, parseEventDescription } from "../../../lib/eventSubmissionMeta"
 import { fileToDataUrl } from "../../../lib/fileToDataUrl"
@@ -194,8 +195,8 @@ export default function UsuariosNuevoEventoPage() {
       return
     }
 
-    if (publicMode && (!formData.submitterName.trim() || !formData.submitterPhone.trim())) {
-      setError("Necesitamos tu nombre y telefono para revisar el evento.")
+    if (publicMode && !formData.submitterName.trim()) {
+      setError("Necesitamos tu nombre para revisar el evento.")
       return
     }
 
@@ -217,7 +218,7 @@ export default function UsuariosNuevoEventoPage() {
       web_url: formData.webUrl.trim() || null,
       instagram_url: formData.instagramUrl.trim() || null,
       facebook_url: formData.facebookUrl.trim() || null,
-      descripcion: buildEventDescription(formData.descripcion, publicMode
+      descripcion: buildEventDescription(formData.descripcion, publicMode && formData.submitterPhone.trim()
         ? {
             senderName: formData.submitterName,
             senderPhone: formData.submitterPhone,
@@ -321,7 +322,7 @@ export default function UsuariosNuevoEventoPage() {
                         <div className="mb-4">
                           <h2 className="text-base font-semibold text-amber-950">Tus datos de contacto</h2>
                           <p className="mt-1 text-sm leading-6 text-amber-900">
-                            Estos datos no se publican. Te pedimos tu numero para ponernos en contacto ante cualquier duda.
+                            Estos datos no se publican. Si nos dejas tu numero, podemos contactarte ante cualquier duda.
                           </p>
                         </div>
 
@@ -347,7 +348,6 @@ export default function UsuariosNuevoEventoPage() {
                               onChange={(event) =>
                                 setFormData((current) => ({ ...current, submitterPhone: event.target.value }))
                               }
-                              required
                               className="w-full rounded-2xl border border-amber-200 bg-white px-4 py-3 outline-none transition focus:border-amber-400"
                             />
                           </div>
@@ -579,11 +579,14 @@ export default function UsuariosNuevoEventoPage() {
                       />
 
                       {formData.imagen ? (
-                        <img
-                          src={formData.imagen}
-                          alt="Vista previa del evento"
-                          className="mt-4 h-52 w-full rounded-2xl object-cover"
-                        />
+                        <div className="relative mt-4 h-52 w-full overflow-hidden rounded-2xl">
+                          <OptimizedImage
+                            src={formData.imagen}
+                            alt="Vista previa del evento"
+                            sizes="100vw"
+                            className="object-cover"
+                          />
+                        </div>
                       ) : (
                         <div className="mt-4 flex h-40 items-center justify-center rounded-2xl bg-slate-50 text-slate-400">
                           <div className="flex items-center gap-2 text-sm">

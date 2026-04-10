@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { FileText, ImageIcon, Save } from "lucide-react"
+import { OptimizedImage } from "../../components/OptimizedImage"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
@@ -264,11 +265,14 @@ export default function AdminSitioPage() {
           </div>
 
           {formData.imagen_url ? (
-            <img
-              src={formData.imagen_url}
-              alt={formData.titulo}
-              className="mb-5 h-64 w-full rounded-2xl object-cover"
-            />
+            <div className="relative mb-5 h-64 w-full overflow-hidden rounded-2xl">
+              <OptimizedImage
+                src={formData.imagen_url}
+                alt={formData.titulo}
+                sizes="100vw"
+                className="object-cover"
+              />
+            </div>
           ) : (
             <div className="mb-5 flex h-64 w-full items-center justify-center rounded-2xl bg-slate-100 text-center text-slate-500">
               Sin foto cargada

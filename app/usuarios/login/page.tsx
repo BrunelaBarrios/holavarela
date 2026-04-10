@@ -1,5 +1,6 @@
 'use client'
 
+import Image from "next/image"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -46,9 +47,11 @@ export default function UsuariosLoginPage() {
       <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl">
         <div className="mb-8 text-center">
           <div className="mb-5 flex justify-center">
-            <img
+            <Image
               src="/logo-varela-grande.png"
               alt="Hola Varela"
+              width={196}
+              height={56}
               className="h-14 w-auto"
             />
           </div>

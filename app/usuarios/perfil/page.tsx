@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Trash2 } from "lucide-react"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
+import { OptimizedImage } from "../../components/OptimizedImage"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 import { findUserOwnedEntity, getUserProfileTable, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, type UserOwnedEntity } from "../../lib/userProfiles"
 import { supabase } from "../../supabase"
@@ -505,11 +506,14 @@ export default function UsuariosPerfilPage() {
                       className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:font-medium file:text-blue-600 hover:file:bg-blue-100"
                     />
                     {formData.image ? (
-                      <img
-                        src={formData.image}
-                        alt="Vista previa del perfil"
-                        className="mt-3 h-40 w-full rounded-2xl object-cover"
-                      />
+                      <div className="relative mt-3 h-40 w-full overflow-hidden rounded-2xl">
+                        <OptimizedImage
+                          src={formData.image}
+                          alt="Vista previa del perfil"
+                          sizes="100vw"
+                          className="object-cover"
+                        />
+                      </div>
                     ) : null}
                   </div>
 
@@ -610,11 +614,14 @@ function ImageUploadField({
         <div className="grid gap-3 sm:grid-cols-2">
           {images.map((image, index) => (
             <div key={`${index}-${image.slice(0, 24)}`} className="overflow-hidden rounded-[22px] border border-slate-200 bg-white">
-              <img
-                src={image}
-                alt={`Vista previa ${index + 1}`}
-                className="h-40 w-full object-cover"
-              />
+              <div className="relative h-40 w-full">
+                <OptimizedImage
+                  src={image}
+                  alt={`Vista previa ${index + 1}`}
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                  className="object-cover"
+                />
+              </div>
               <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-4 py-3">
                 <span className="text-sm text-slate-500">Imagen {index + 1}</span>
                 <button

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Eye, EyeOff, MessageCircle, Pencil, Phone, Plus, Share2, ShieldAlert, Star, Trash2, UserRound, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
+import { OptimizedImage } from "../../components/OptimizedImage"
 import { buildShareCountMap } from "../../lib/shareTracking"
 import { subscriptionPlans, type SubscriptionPlanKey } from "../../lib/subscriptionPlans"
 import { getSubscriptionStatusBadge, getSubscriptionStatusLabel, type SubscriptionStatusKey } from "../../lib/subscriptionStatus"
@@ -254,6 +255,34 @@ export default function AdminServiciosPage() {
       setSaveError(
         error instanceof Error ? error.message : "No se pudo cargar la imagen."
       )
+    }
+  }
+
+  const handlePremiumGalleryChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    try {
+      const nextImages = await Promise.all(files.map((file) => fileToDataUrl(file)))
+      setFormData((prev) => {
+        const currentImages = prev.premium_galeria
+          .split(/\r?\n/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+
+        return {
+          ...prev,
+          premium_galeria: [...currentImages, ...nextImages].join("\n"),
+        }
+      })
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudieron cargar las imagenes premium."
+      )
+    } finally {
+      e.target.value = ""
     }
   }
 
@@ -516,6 +545,48 @@ export default function AdminServiciosPage() {
                     <p className="mt-2 text-xs text-slate-500">
                       Puedes cargar varias imagenes del perfil ampliado, una por linea.
                     </p>
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={!formData.premium_activo}
+                      onChange={handlePremiumGalleryChange}
+                      className="mt-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-violet-100 file:px-4 file:py-2 file:font-medium file:text-violet-700 hover:file:bg-violet-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+                    />
+
+                    {formData.premium_galeria.trim() ? (
+                      <div className="mt-4 space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          {formData.premium_galeria
+                            .split(/\r?\n/)
+                            .map((item) => item.trim())
+                            .filter(Boolean)
+                            .map((image, index) => (
+                              <div
+                                key={`${image}-${index}`}
+                                className="relative h-28 w-full overflow-hidden rounded-2xl"
+                              >
+                                <OptimizedImage
+                                  src={image}
+                                  alt={`Galeria premium ${index + 1}`}
+                                  sizes="(max-width: 768px) 100vw, 50vw"
+                                  className="object-cover"
+                                />
+                              </div>
+                            ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData((prev) => ({ ...prev, premium_galeria: "" }))
+                          }
+                          className="text-sm font-medium text-red-600 transition hover:text-red-500"
+                        >
+                          Limpiar galeria premium
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -656,11 +727,14 @@ export default function AdminServiciosPage() {
                 </p>
                 {formData.imagen && (
                   <div className="mt-4 space-y-3">
-                    <img
-                      src={formData.imagen}
-                      alt="Vista previa del servicio"
-                      className="h-40 w-full rounded-2xl object-cover"
-                    />
+                    <div className="relative h-40 w-full overflow-hidden rounded-2xl">
+                      <OptimizedImage
+                        src={formData.imagen}
+                        alt="Vista previa del servicio"
+                        sizes="100vw"
+                        className="object-cover"
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={() => setFormData((prev) => ({ ...prev, imagen: "" }))}
@@ -716,11 +790,14 @@ export default function AdminServiciosPage() {
             className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
           >
             {servicio.imagen && (
-              <img
-                src={servicio.imagen}
-                alt={servicio.nombre}
-                className="h-56 w-full object-cover"
-              />
+              <div className="relative h-56 w-full">
+                <OptimizedImage
+                  src={servicio.imagen}
+                  alt={servicio.nombre}
+                  sizes="(max-width: 1280px) 50vw, 33vw"
+                  className="object-cover"
+                />
+              </div>
             )}
 
             <div className="p-5">

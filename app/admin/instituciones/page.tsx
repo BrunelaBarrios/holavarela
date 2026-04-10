@@ -396,6 +396,7 @@ export default function AdminInstitucionesPage() {
                 />
                 {formData.foto && (
                   <div className="mt-4 space-y-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={formData.foto}
                       alt="Vista previa de la institución"
@@ -445,11 +446,14 @@ export default function AdminInstitucionesPage() {
             className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
           >
             {institucion.foto && (
-              <img
-                src={institucion.foto}
-                alt={institucion.nombre}
-                className="h-48 w-full object-cover"
-              />
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={institucion.foto}
+                  alt={institucion.nombre}
+                  className="h-48 w-full object-cover"
+                />
+              </>
             )}
 
             <div className="p-5">

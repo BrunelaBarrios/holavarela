@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Eye, EyeOff, GraduationCap, MessageCircle, Pencil, Phone, Plus, Share2, Star, Trash2, UserRound, X } from "lucide-react"
+import { OptimizedImage } from "../../components/OptimizedImage"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
@@ -508,11 +509,14 @@ export default function AdminCursosPage() {
                 </p>
                 {formData.imagen && (
                   <div className="mt-4 space-y-3">
-                    <img
-                      src={formData.imagen}
-                      alt="Vista previa del curso"
-                      className="h-40 w-full rounded-2xl object-cover"
-                    />
+                    <div className="relative h-40 w-full overflow-hidden rounded-2xl">
+                      <OptimizedImage
+                        src={formData.imagen}
+                        alt="Vista previa del curso"
+                        sizes="100vw"
+                        className="object-cover"
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={() => setFormData((prev) => ({ ...prev, imagen: "" }))}
@@ -568,11 +572,14 @@ export default function AdminCursosPage() {
             className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
           >
             {curso.imagen && (
-              <img
-                src={curso.imagen}
-                alt={curso.nombre}
-                className="h-56 w-full object-cover"
-              />
+              <div className="relative h-56 w-full">
+                <OptimizedImage
+                  src={curso.imagen}
+                  alt={curso.nombre}
+                  sizes="(max-width: 1280px) 50vw, 33vw"
+                  className="object-cover"
+                />
+              </div>
             )}
 
             <div className="p-5">

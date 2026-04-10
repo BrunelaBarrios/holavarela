@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { CheckCheck, Mail, MessageSquare, Phone, Search, Trash2, UserRound } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
+import { OptimizedImage } from "../../components/OptimizedImage"
 import { getPublicLeadTypeLabel, parsePublicLead } from "../../lib/publicLead"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
@@ -406,11 +407,14 @@ export default function AdminContactosPage() {
                         <div className="space-y-3">
                           {parsedLead.listingImage ? (
                             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                              <img
-                                src={parsedLead.listingImage}
-                                alt={parsedLead.listingName}
-                                className="h-56 w-full object-cover"
-                              />
+                              <div className="relative h-56 w-full">
+                                <OptimizedImage
+                                  src={parsedLead.listingImage}
+                                  alt={parsedLead.listingName}
+                                  sizes="(max-width: 1024px) 100vw, 40vw"
+                                  className="object-cover"
+                                />
+                              </div>
                             </div>
                           ) : null}
 
@@ -433,11 +437,14 @@ export default function AdminContactosPage() {
                               </p>
                               {parsedLead.event.image ? (
                                 <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                                  <img
-                                    src={parsedLead.event.image}
-                                    alt={parsedLead.event.title}
-                                    className="h-48 w-full object-cover"
-                                  />
+                                  <div className="relative h-48 w-full">
+                                    <OptimizedImage
+                                      src={parsedLead.event.image}
+                                      alt={parsedLead.event.title}
+                                      sizes="(max-width: 1024px) 100vw, 40vw"
+                                      className="object-cover"
+                                    />
+                                  </div>
                                 </div>
                               ) : null}
                             </div>

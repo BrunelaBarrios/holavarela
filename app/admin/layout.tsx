@@ -1,5 +1,6 @@
 'use client'
 
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -150,9 +151,11 @@ export default function AdminLayout({
             className="flex items-center gap-3"
             onClick={() => setIsSidebarOpen(false)}
           >
-            <img
+            <Image
               src="/logo-varela-chico.png"
               alt="Hola Varela"
+              width={40}
+              height={40}
               className="h-10 w-auto"
             />
             <div>
@@ -181,9 +184,11 @@ export default function AdminLayout({
               href="/admin"
               className="hidden items-center gap-3 border-b border-slate-200 p-6 lg:flex"
             >
-              <img
+              <Image
                 src="/logo-varela-chico.png"
                 alt="Hola Varela"
+                width={40}
+                height={40}
                 className="h-10 w-auto"
               />
               <div>
