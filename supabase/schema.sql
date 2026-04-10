@@ -348,7 +348,24 @@ create table if not exists public.usuarios_registrados (
   created_at timestamp with time zone default now()
 );
 
+create table if not exists public.password_reset_requests (
+  id bigint generated always as identity primary key,
+  user_id uuid,
+  email text not null,
+  contact_name text,
+  phone text,
+  message text,
+  status text not null default 'pending',
+  resolved_at timestamp with time zone,
+  resolved_by text,
+  ip_address text,
+  user_agent text,
+  created_at timestamp with time zone default now()
+);
+
 alter table public.usuarios_registrados enable row level security;
+
+alter table public.password_reset_requests enable row level security;
 
 create policy if not exists "Users can insert their own registered profile"
 on public.usuarios_registrados
@@ -364,6 +381,12 @@ using (auth.uid() = user_id);
 
 create policy if not exists "Admins can read registered users"
 on public.usuarios_registrados
+for select
+to anon, authenticated
+using (true);
+
+create policy if not exists "Admins can read password reset requests"
+on public.password_reset_requests
 for select
 to anon, authenticated
 using (true);

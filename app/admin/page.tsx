@@ -47,6 +47,7 @@ export default function AdminDashboardPage() {
   const [newEventosCount, setNewEventosCount] = useState(0)
   const [newContactosCount, setNewContactosCount] = useState(0)
   const [pendingSubscriptionsCount, setPendingSubscriptionsCount] = useState(0)
+  const [pendingPasswordRequestsCount, setPendingPasswordRequestsCount] = useState(0)
 
   useEffect(() => {
     const cargarDashboard = async () => {
@@ -60,6 +61,7 @@ export default function AdminDashboardPage() {
         { count: newComercios },
         { count: newEventos },
         { count: newContactos },
+        { count: pendingPasswordRequests },
         { count: pendingComercios },
         { count: pendingServicios },
         { count: pendingCursos },
@@ -76,6 +78,10 @@ export default function AdminDashboardPage() {
           .from("contacto_solicitudes")
           .select("*", { count: "exact", head: true })
           .or("visto.is.null,visto.eq.false"),
+        supabase
+          .from("password_reset_requests")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "pending"),
         supabase
           .from("comercios")
           .select("*", { count: "exact", head: true })
@@ -99,6 +105,7 @@ export default function AdminDashboardPage() {
       setNewComerciosCount(newComercios || 0)
       setNewEventosCount(newEventos || 0)
       setNewContactosCount(newContactos || 0)
+      setPendingPasswordRequestsCount(pendingPasswordRequests || 0)
       setPendingSubscriptionsCount(
         (pendingComercios || 0) + (pendingServicios || 0) + (pendingCursos || 0)
       )
@@ -109,6 +116,15 @@ export default function AdminDashboardPage() {
   }, [])
 
   const priorityCards: PriorityCard[] = [
+    {
+      id: "password-requests",
+      title: "Claves solicitadas",
+      value: pendingPasswordRequestsCount,
+      description: "Usuarios esperando una nueva contrasena.",
+      icon: ShieldAlert,
+      color: "bg-violet-600",
+      action: () => router.push("/admin/usuarios"),
+    },
     {
       id: "contactos",
       title: "Contactos pendientes",

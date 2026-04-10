@@ -114,7 +114,7 @@ export default function UsuariosLoginPage() {
 
         <div className="mt-5 text-center text-sm">
           <Link href="/usuarios/recuperar-whatsapp" className="font-medium text-emerald-700 hover:text-emerald-600">
-            Recuperar contrasena por WhatsApp
+            Solicitar nueva contrasena al admin
           </Link>
         </div>
 
