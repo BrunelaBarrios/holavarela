@@ -1733,11 +1733,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               )
             })}
           </div>
-          {featuredBusinessPageCount > 1 ? (
-            <div className="mt-8 text-center text-sm text-slate-500">
-              La home muestra una tanda de 8 comercios y la rota automaticamente cada 2 dias.
-            </div>
-          ) : null}
         </div>
       </section>
 
