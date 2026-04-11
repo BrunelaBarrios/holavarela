@@ -13,8 +13,6 @@ import { buildPublicNav } from "../lib/publicNav"
 import { recordViewMore } from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
 
-export const revalidate = 3600
-
 type Institucion = {
   id: number
   nombre: string
