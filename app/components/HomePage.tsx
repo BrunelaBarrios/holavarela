@@ -152,6 +152,9 @@ type Institucion = {
   facebook_url?: string | null
   foto: string | null
   usa_whatsapp?: boolean | null
+  premium_activo?: boolean | null
+  plan_suscripcion?: string | null
+  estado_suscripcion?: string | null
 }
 
 type SobreVarelaConfig = {
@@ -350,6 +353,18 @@ function isFeaturedListing(item: {
     item.destacado === true ||
     item.plan_suscripcion === "destacado" ||
     item.plan_suscripcion === "destacado_plus"
+  )
+}
+
+function hasInstitutionPremium(item: {
+  premium_activo?: boolean | null
+  plan_suscripcion?: string | null
+  estado_suscripcion?: string | null
+}) {
+  return Boolean(
+    item.premium_activo ||
+      (item.plan_suscripcion === "destacado_plus" &&
+        item.estado_suscripcion === "activa")
   )
 }
 
@@ -592,6 +607,22 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       event.preventDefault()
       action()
     }
+  }
+
+  const handleInstitutionClick = (institucion: Institucion) => {
+    if (hasInstitutionPremium(institucion)) {
+      void recordViewMore("instituciones", String(institucion.id), institucion.nombre)
+      void recordContentVisit("instituciones", String(institucion.id), institucion.nombre)
+      router.push(`/instituciones/${institucion.id}`)
+      return
+    }
+
+    handleViewMoreClick(
+      "instituciones",
+      String(institucion.id),
+      institucion.nombre,
+      () => setSelectedInstitucion(institucion)
+    )
   }
 
   const handleEventLike = async (eventId: string, eventTitle: string) => {
@@ -2194,23 +2225,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   key={institucion.id}
                   role="button"
                   tabIndex={0}
-                  onClick={() =>
-                    handleViewMoreClick(
-                      "instituciones",
-                      String(institucion.id),
-                      institucion.nombre,
-                      () => setSelectedInstitucion(institucion)
-                    )
-                  }
+                  onClick={() => handleInstitutionClick(institucion)}
                   onKeyDown={(event) =>
-                    handleCardKeyDown(event, () =>
-                      handleViewMoreClick(
-                        "instituciones",
-                        String(institucion.id),
-                        institucion.nombre,
-                        () => setSelectedInstitucion(institucion)
-                      )
-                    )
+                    handleCardKeyDown(event, () => handleInstitutionClick(institucion))
                   }
                   className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(6,182,212,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
                 >
@@ -2230,22 +2247,32 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       {institucion.nombre}
                     </h3>
 
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        handleViewMoreClick(
-                          "instituciones",
-                          String(institucion.id),
-                          institucion.nombre,
-                          () => setSelectedInstitucion(institucion)
-                        )
-                      }}
-                      className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-cyan-600 transition hover:text-cyan-700 sm:mt-5 sm:text-sm"
-                    >
+                    {hasInstitutionPremium(institucion) ? (
+                      <Link
+                        href={`/instituciones/${institucion.id}`}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          void recordViewMore("instituciones", String(institucion.id), institucion.nombre)
+                          void recordContentVisit("instituciones", String(institucion.id), institucion.nombre)
+                        }}
+                        className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-violet-600 transition hover:text-violet-700 sm:mt-5 sm:text-sm"
+                      >
+                        Ver perfil completo
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          handleInstitutionClick(institucion)
+                        }}
+                        className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-cyan-600 transition hover:text-cyan-700 sm:mt-5 sm:text-sm"
+                      >
                         Ver más
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
