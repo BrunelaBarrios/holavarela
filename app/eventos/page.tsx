@@ -2,7 +2,7 @@ import { EventosPageClient } from "../components/public/EventosPageClient"
 import { buildActiveEventsFilter } from "../lib/eventDates"
 import { supabaseServer } from "../lib/supabaseServer"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 3600
 
 export default async function EventosPage() {
   const today = new Date().toISOString().slice(0, 10)

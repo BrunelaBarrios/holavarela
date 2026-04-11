@@ -13,6 +13,8 @@ import { buildPublicNav } from "../lib/publicNav"
 import { recordViewMore } from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
 
+export const revalidate = 3600
+
 type Institucion = {
   id: number
   nombre: string
@@ -29,6 +31,8 @@ type Institucion = {
   premium_extra_titulo?: string | null
   premium_extra_detalle?: string | null
   premium_activo?: boolean | null
+  premium_cursos_activo?: boolean | null
+  premium_cursos_titulo?: string | null
 }
 
 type CursoRelacion = {
@@ -218,10 +222,13 @@ export default function InstitucionesPage() {
                 </div>
               ) : null}
 
-              {(cursosPorInstitucion.get(selectedInstitucion.id) || []).length > 0 ? (
+              {selectedInstitucion.premium_activo &&
+              selectedInstitucion.premium_cursos_activo &&
+              (cursosPorInstitucion.get(selectedInstitucion.id) || []).length > 0 ? (
                 <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-5">
                   <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
-                    Cursos de esta institucion
+                    {selectedInstitucion.premium_cursos_titulo?.trim() ||
+                      "Cursos de esta institucion"}
                   </div>
                   <div className="space-y-3">
                     {(cursosPorInstitucion.get(selectedInstitucion.id) || []).map((curso) => (

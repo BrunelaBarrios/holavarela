@@ -20,6 +20,8 @@ type Institucion = {
   estado?: string | null
   usa_whatsapp?: boolean | null
   premium_activo?: boolean | null
+  premium_cursos_activo?: boolean | null
+  premium_cursos_titulo?: string | null
 }
 
 type InstitucionForm = Omit<Institucion, "id">
@@ -35,6 +37,8 @@ const initialForm: InstitucionForm = {
   foto: "",
   usa_whatsapp: true,
   premium_activo: false,
+  premium_cursos_activo: false,
+  premium_cursos_titulo: "",
 }
 
 export default function AdminInstitucionesPage() {
@@ -88,6 +92,8 @@ export default function AdminInstitucionesPage() {
       foto: institucion.foto || "",
       usa_whatsapp: institucion.usa_whatsapp ?? true,
       premium_activo: institucion.premium_activo ?? false,
+      premium_cursos_activo: institucion.premium_cursos_activo ?? false,
+      premium_cursos_titulo: institucion.premium_cursos_titulo || "",
     })
     setIsFormOpen(true)
   }
@@ -175,6 +181,8 @@ export default function AdminInstitucionesPage() {
       estado: editingInstitucion?.estado ?? "activo",
       usa_whatsapp: formData.usa_whatsapp,
       premium_activo: formData.premium_activo ?? false,
+      premium_cursos_activo: formData.premium_cursos_activo ?? false,
+      premium_cursos_titulo: formData.premium_cursos_titulo?.trim() || null,
     }
 
     if (editingInstitucion) {
@@ -339,6 +347,44 @@ export default function AdminInstitucionesPage() {
                 />
                 <span>Perfil premium activo para esta institucion</span>
               </label>
+
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
+                <label className="flex items-center gap-3 text-sm text-emerald-800">
+                  <input
+                    type="checkbox"
+                    checked={formData.premium_cursos_activo ?? false}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        premium_cursos_activo: e.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 rounded border-emerald-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span>Mostrar cursos relacionados en el perfil premium</span>
+                </label>
+
+                <div className="mt-4">
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Titulo del bloque de cursos
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.premium_cursos_titulo || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        premium_cursos_titulo: e.target.value,
+                      }))
+                    }
+                    placeholder="Cursos de esta institucion"
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
+                  />
+                  <p className="mt-2 text-xs text-slate-500">
+                    Si lo dejas vacio, se usa el titulo por defecto.
+                  </p>
+                </div>
+              </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
@@ -510,6 +556,11 @@ export default function AdminInstitucionesPage() {
                 {institucion.premium_activo ? (
                   <span className="mr-auto inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
                     Premium
+                  </span>
+                ) : null}
+                {institucion.premium_cursos_activo ? (
+                  <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                    Cursos en premium
                   </span>
                 ) : null}
                 <button

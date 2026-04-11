@@ -3,6 +3,8 @@ import { PremiumListingPage } from "../../components/public/PremiumListingPage"
 import { buildActiveEventsFilter } from "../../lib/eventDates"
 import { supabaseServer } from "../../lib/supabaseServer"
 
+export const revalidate = 7200
+
 export default async function ComercioSharePage({
   params,
 }: {

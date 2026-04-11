@@ -2,7 +2,7 @@ import { HomePage, type HomePageData, type WeatherData } from "./components/Home
 import { buildActiveEventsFilter } from "./lib/eventDates"
 import { supabaseServer } from "./lib/supabaseServer"
 
-export const revalidate = 300
+export const revalidate = 3600
 
 const defaultSobreVarela = {
   titulo: "Jose Pedro Varela",
@@ -20,7 +20,7 @@ export default async function Page() {
   const weatherPromise = fetch(
     "https://api.open-meteo.com/v1/forecast?latitude=-33.45&longitude=-54.53&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FMontevideo&forecast_days=1",
     {
-      next: { revalidate: 1800 },
+      next: { revalidate: 3600 },
     }
   )
     .then(async (response) => {

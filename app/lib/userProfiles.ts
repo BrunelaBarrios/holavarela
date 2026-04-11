@@ -25,6 +25,8 @@ export type UserEntityRecord = {
   premium_extra_detalle?: string | null
   premium_extra_galeria?: string[] | null
   premium_activo?: boolean | null
+  premium_cursos_activo?: boolean | null
+  premium_cursos_titulo?: string | null
   plan_suscripcion?: SubscriptionPlanKey | null
   estado_suscripcion?: string | null
   suscripcion_actualizada_at?: string | null

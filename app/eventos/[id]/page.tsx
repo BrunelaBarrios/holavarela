@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation"
 
+export const revalidate = 7200
+
 export default async function EventoSharePage({
   params,
 }: {

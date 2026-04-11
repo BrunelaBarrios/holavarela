@@ -160,6 +160,12 @@ add column if not exists premium_extra_galeria text[];
 alter table public.instituciones
 add column if not exists premium_activo boolean default false;
 
+alter table public.instituciones
+add column if not exists premium_cursos_activo boolean default false;
+
+alter table public.instituciones
+add column if not exists premium_cursos_titulo text;
+
 alter table public.sitio
 add column if not exists plan_presencia_titulo text;
 

@@ -1,7 +1,7 @@
 import { ServiciosPageClient } from "../components/public/ServiciosPageClient"
 import { supabaseServer } from "../lib/supabaseServer"
 
-export const dynamic = "force-dynamic"
+export const revalidate = 3600
 
 export default async function ServiciosPage() {
   const { data } = await supabaseServer

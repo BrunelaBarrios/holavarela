@@ -27,6 +27,8 @@ type ProfileForm = {
   premiumExtraTitulo: string
   premiumExtraDetalle: string
   premiumExtraGaleria: string[]
+  premiumCursosActivo: boolean
+  premiumCursosTitulo: string
   usaWhatsapp: boolean
   image: string
 }
@@ -49,6 +51,8 @@ const initialForm: ProfileForm = {
   premiumExtraTitulo: "",
   premiumExtraDetalle: "",
   premiumExtraGaleria: [],
+  premiumCursosActivo: false,
+  premiumCursosTitulo: "",
   usaWhatsapp: true,
   image: "",
 }
@@ -98,6 +102,8 @@ export default function UsuariosPerfilPage() {
           premiumExtraTitulo: entity.record.premium_extra_titulo || "",
           premiumExtraDetalle: entity.record.premium_extra_detalle || "",
           premiumExtraGaleria: entity.record.premium_extra_galeria || [],
+          premiumCursosActivo: entity.record.premium_cursos_activo ?? false,
+          premiumCursosTitulo: entity.record.premium_cursos_titulo || "",
           usaWhatsapp: entity.record.usa_whatsapp ?? true,
           image: entity.record.imagen_url || entity.record.imagen || entity.record.foto || "",
         })
@@ -185,6 +191,12 @@ export default function UsuariosPerfilPage() {
           premium_extra_titulo: formData.premiumExtraTitulo.trim() || null,
           premium_extra_detalle: formData.premiumExtraDetalle.trim() || null,
           premium_extra_galeria: formData.premiumExtraGaleria,
+          premium_cursos_activo:
+            ownedEntity.type === "institucion" ? formData.premiumCursosActivo : undefined,
+          premium_cursos_titulo:
+            ownedEntity.type === "institucion"
+              ? formData.premiumCursosTitulo.trim() || null
+              : undefined,
         }
       : {}
 
@@ -484,6 +496,46 @@ export default function UsuariosPerfilPage() {
                             />
                           </div>
                         </div>
+
+                        {ownedEntity.type === "institucion" ? (
+                          <div className="rounded-[24px] border border-emerald-200 bg-emerald-50/70 p-5">
+                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
+                              Cursos en perfil premium
+                            </div>
+                            <p className="mt-2 text-sm leading-6 text-slate-600">
+                              Decide si quieres mostrar en tu ficha premium los cursos vinculados a esta institucion.
+                            </p>
+                            <label className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700">
+                              <input
+                                type="checkbox"
+                                checked={formData.premiumCursosActivo}
+                                onChange={(event) =>
+                                  setFormData((current) => ({
+                                    ...current,
+                                    premiumCursosActivo: event.target.checked,
+                                  }))
+                                }
+                                className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                              />
+                              <span>Mostrar cursos relacionados en mi perfil premium</span>
+                            </label>
+                            <div className="mt-4">
+                              <Field
+                                label="Titulo del bloque de cursos"
+                                value={formData.premiumCursosTitulo}
+                                onChange={(value) =>
+                                  setFormData((current) => ({
+                                    ...current,
+                                    premiumCursosTitulo: value,
+                                  }))
+                                }
+                              />
+                            </div>
+                            <p className="mt-2 text-xs text-slate-500">
+                              Si dejas el titulo vacio, se usara "Cursos de esta institucion".
+                            </p>
+                          </div>
+                        ) : null}
                       </div>
                     ) : (
                       <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-600">
