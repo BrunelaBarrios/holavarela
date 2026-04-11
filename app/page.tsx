@@ -1,5 +1,5 @@
 import { HomePage, type HomePageData, type WeatherData } from "./components/HomePage"
-import { buildActiveEventsFilter } from "./lib/eventDates"
+import { isEventCurrentOrUpcoming } from "./lib/eventDates"
 import { supabaseServer } from "./lib/supabaseServer"
 
 export const revalidate = 3600
@@ -16,7 +16,6 @@ const defaultSobreVarela = {
 }
 
 export default async function Page() {
-  const today = new Date().toISOString().slice(0, 10)
   const weatherPromise = fetch(
     "https://api.open-meteo.com/v1/forecast?latitude=-33.45&longitude=-54.53&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FMontevideo&forecast_days=1",
     {
@@ -64,7 +63,6 @@ export default async function Page() {
       .from("eventos")
       .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp")
       .or("estado.is.null,estado.eq.activo")
-      .or(buildActiveEventsFilter(today))
       .order("fecha", { ascending: true }),
     supabaseServer
       .from("cursos")
@@ -108,7 +106,7 @@ export default async function Page() {
 
   const initialData: HomePageData = {
     featuredBusinesses: featuredBusinesses || [],
-    eventos: (eventosData || []).slice(0, 6),
+    eventos: (eventosData || []).filter((evento) => isEventCurrentOrUpcoming(evento)).slice(0, 6),
     cursos: cursos || [],
     servicios: servicios || [],
     instituciones: instituciones || [],

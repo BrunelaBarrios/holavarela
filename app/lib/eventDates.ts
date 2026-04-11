@@ -73,3 +73,37 @@ export const formatEventDateRange = (
 
 export const buildActiveEventsFilter = (today: string) =>
   `fecha.gte.${today},and(fecha.lte.${today},fecha_fin.gte.${today})`
+
+export const isEventCurrentOrUpcoming = ({
+  fecha,
+  fecha_fin,
+  fecha_solo_mes,
+}: {
+  fecha?: string | null
+  fecha_fin?: string | null
+  fecha_solo_mes?: boolean | null
+}) => {
+  if (!fecha) return false
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const start = parseEventDate(fecha)
+  if (!start) return false
+
+  if (fecha_solo_mes) {
+    const monthEnd = new Date(start.getFullYear(), start.getMonth() + 1, 0)
+    monthEnd.setHours(23, 59, 59, 999)
+    return monthEnd >= today
+  }
+
+  if (fecha_fin) {
+    const end = parseEventDate(fecha_fin)
+    if (end) {
+      end.setHours(23, 59, 59, 999)
+      return end >= today
+    }
+  }
+
+  return start >= today
+}
