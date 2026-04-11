@@ -30,6 +30,8 @@ type Institucion = {
   premium_extra_titulo?: string | null
   premium_extra_detalle?: string | null
   premium_activo?: boolean | null
+  plan_suscripcion?: string | null
+  estado_suscripcion?: string | null
   premium_cursos_activo?: boolean | null
   premium_cursos_titulo?: string | null
 }
@@ -40,6 +42,16 @@ type CursoRelacion = {
   descripcion: string | null
   responsable: string | null
   institucion_id?: number | null
+}
+
+function hasInstitutionPremium(institucion: Institucion | null | undefined) {
+  if (!institucion) return false
+
+  return Boolean(
+    institucion.premium_activo ||
+      (institucion.plan_suscripcion === "destacado_plus" &&
+        institucion.estado_suscripcion === "activa")
+  )
 }
 
 export default function InstitucionesPage() {
@@ -195,7 +207,7 @@ export default function InstitucionesPage() {
         extraContent={
           selectedInstitucion ? (
             <div className="space-y-5">
-              {selectedInstitucion.premium_activo && selectedInstitucion.premium_detalle ? (
+              {hasInstitutionPremium(selectedInstitucion) && selectedInstitucion.premium_detalle ? (
                 <div className="rounded-[24px] border border-sky-100 bg-sky-50/70 p-5">
                   <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
                     Informacion ampliada
@@ -206,7 +218,7 @@ export default function InstitucionesPage() {
                 </div>
               ) : null}
 
-              {selectedInstitucion.premium_activo &&
+              {hasInstitutionPremium(selectedInstitucion) &&
               (selectedInstitucion.premium_extra_titulo ||
                 selectedInstitucion.premium_extra_detalle) ? (
                 <div className="rounded-[24px] border border-violet-100 bg-violet-50/70 p-5">
@@ -226,7 +238,7 @@ export default function InstitucionesPage() {
                 </div>
               ) : null}
 
-              {selectedInstitucion.premium_activo &&
+              {hasInstitutionPremium(selectedInstitucion) &&
               selectedInstitucion.premium_cursos_activo &&
               (cursosPorInstitucion.get(selectedInstitucion.id) || []).length > 0 ? (
                 <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-5">
@@ -306,7 +318,7 @@ export default function InstitucionesPage() {
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-sky-300 hover:text-sky-600"
               />
             ) : null}
-            {selectedInstitucion?.premium_activo ? (
+            {selectedInstitucion && hasInstitutionPremium(selectedInstitucion) ? (
               <Link
                 href={`/instituciones/${selectedInstitucion.id}`}
                 onClick={() => handleOpenPremiumProfile(selectedInstitucion)}
@@ -378,7 +390,7 @@ export default function InstitucionesPage() {
                     {institucion.nombre}
                   </h2>
 
-                  {institucion.premium_activo ? (
+                  {hasInstitutionPremium(institucion) ? (
                     <Link
                       href={`/instituciones/${institucion.id}`}
                       onClick={(event) => {

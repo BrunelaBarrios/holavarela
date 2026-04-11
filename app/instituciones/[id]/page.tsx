@@ -4,6 +4,18 @@ import { supabaseServer } from "../../lib/supabaseServer"
 
 export const revalidate = 7200
 
+function hasInstitutionPremium(data: {
+  premium_activo?: boolean | null
+  plan_suscripcion?: string | null
+  estado_suscripcion?: string | null
+}) {
+  return Boolean(
+    data.premium_activo ||
+      (data.plan_suscripcion === "destacado_plus" &&
+        data.estado_suscripcion === "activa")
+  )
+}
+
 export default async function InstitucionSharePage({
   params,
 }: {
@@ -12,7 +24,7 @@ export default async function InstitucionSharePage({
   const { id } = await params
   const { data } = await supabaseServer
     .from("instituciones")
-    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, premium_cursos_activo, premium_cursos_titulo, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, estado")
+    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, plan_suscripcion, estado_suscripcion, premium_cursos_activo, premium_cursos_titulo, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, estado")
     .eq("id", Number(id))
     .maybeSingle()
 
@@ -24,7 +36,7 @@ export default async function InstitucionSharePage({
     notFound()
   }
 
-  if (!data.premium_activo) {
+  if (!hasInstitutionPremium(data)) {
     redirect(`/instituciones?item=${encodeURIComponent(id)}`)
   }
 
