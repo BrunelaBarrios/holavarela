@@ -56,7 +56,6 @@ export default async function Page() {
       .from("comercios")
       .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, imagen, imagen_url, destacado, plan_suscripcion, usa_whatsapp")
       .or("estado.is.null,estado.eq.activo")
-      .or("destacado.eq.true,plan_suscripcion.eq.destacado,plan_suscripcion.eq.destacado_plus")
       .order("id", { ascending: false })
       .limit(48),
     supabaseServer

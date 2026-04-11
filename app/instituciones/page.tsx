@@ -1,5 +1,6 @@
 'use client'
 
+import Link from "next/link"
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
 import { ArrowRight, GraduationCap, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../components/ContactActionLink"
@@ -158,6 +159,11 @@ export default function InstitucionesPage() {
     setSelectedInstitucion(institucion)
   }
 
+  const handleOpenPremiumProfile = (institucion: Institucion) => {
+    void recordViewMore("instituciones", String(institucion.id), institucion.nombre)
+    void recordContentVisit("instituciones", String(institucion.id), institucion.nombre)
+  }
+
   const handleCardKeyDown = (
     event: KeyboardEvent<HTMLElement>,
     action: () => void
@@ -300,6 +306,16 @@ export default function InstitucionesPage() {
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-sky-300 hover:text-sky-600"
               />
             ) : null}
+            {selectedInstitucion?.premium_activo ? (
+              <Link
+                href={`/instituciones/${selectedInstitucion.id}`}
+                onClick={() => handleOpenPremiumProfile(selectedInstitucion)}
+                className="inline-flex items-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3 font-semibold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
+              >
+                Ver perfil completo
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : null}
           </>
         }
       />
@@ -362,17 +378,31 @@ export default function InstitucionesPage() {
                     {institucion.nombre}
                   </h2>
 
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      handleOpenInstitucion(institucion)
-                    }}
-                    className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                  >
-                    Ver más
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+                  {institucion.premium_activo ? (
+                    <Link
+                      href={`/instituciones/${institucion.id}`}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        handleOpenPremiumProfile(institucion)
+                      }}
+                      className="mt-5 inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
+                    >
+                      Ver perfil completo
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        handleOpenInstitucion(institucion)
+                      }}
+                      className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                    >
+                      Ver más
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
