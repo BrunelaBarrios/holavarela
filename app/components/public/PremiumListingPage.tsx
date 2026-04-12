@@ -115,13 +115,21 @@ export function PremiumListingPage({
     : null
 
   const galleryImages = useMemo(
-    () =>
-      [imageSrc, ...(premiumGallery || []), ...(premiumExtraGallery || [])].filter(
-        Boolean
-      ) as string[],
+    () => {
+      const uniqueImages = Array.from(
+        new Set(
+          [imageSrc, ...(premiumGallery || []), ...(premiumExtraGallery || [])].filter(
+            Boolean
+          ) as string[]
+        )
+      )
+
+      return uniqueImages
+    },
     [imageSrc, premiumGallery, premiumExtraGallery]
   )
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null)
   const selectedImage = galleryImages[selectedImageIndex] || imageSrc || null
 
   useEffect(() => {
@@ -150,6 +158,33 @@ export function PremiumListingPage({
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)]">
+      {zoomedImage ? (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/88 p-4"
+          onClick={() => setZoomedImage(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setZoomedImage(null)}
+            className="absolute right-5 top-5 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+          >
+            Cerrar
+          </button>
+          <div
+            className="relative h-[78vh] w-full max-w-6xl overflow-hidden rounded-[28px] border border-white/10 bg-white/5 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <OptimizedImage
+              src={zoomedImage}
+              alt={title}
+              sizes="100vw"
+              priority
+              className="object-contain bg-transparent p-3 sm:p-6"
+            />
+          </div>
+        </div>
+      ) : null}
+
       <PublicHeader items={buildPublicNav(section)} />
 
       <div className="mx-auto max-w-[1520px] px-4 py-10 sm:px-6 lg:px-8">
@@ -164,19 +199,24 @@ export function PremiumListingPage({
         </div>
 
         <section className="overflow-hidden rounded-[36px] border border-slate-200 bg-white shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
-          <div className="grid xl:grid-cols-[1.18fr_0.82fr]">
-            <div className="bg-[radial-gradient(circle_at_top_left,#e8f6ec_0%,#f4f9ff_38%,#eef4ff_100%)] p-5 sm:p-7 lg:p-10">
+          <div className="grid lg:grid-cols-[minmax(0,0.94fr)_minmax(0,1.06fr)]">
+            <div className="bg-[radial-gradient(circle_at_top_left,#e8f6ec_0%,#f4f9ff_38%,#eef4ff_100%)] p-5 sm:p-7 lg:p-8">
               <div className="overflow-hidden rounded-[30px] border border-white/80 bg-white/90 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.45)]">
                 {selectedImage ? (
-                  <div className="relative aspect-[16/10] w-full">
+                  <button
+                    type="button"
+                    onClick={() => setZoomedImage(selectedImage)}
+                    className="relative block aspect-[4/3] w-full transition hover:scale-[1.01]"
+                    aria-label="Ver imagen más grande"
+                  >
                     <OptimizedImage
                       src={selectedImage}
                       alt={title}
-                      sizes="(max-width: 1280px) 100vw, 65vw"
+                      sizes="(max-width: 1280px) 100vw, 55vw"
                       priority
-                      className="object-contain bg-white"
+                      className="object-contain bg-white p-2 sm:p-4"
                     />
-                  </div>
+                  </button>
                 ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
                     Sin imagen principal
@@ -192,7 +232,7 @@ export function PremiumListingPage({
                         Imagenes
                       </div>
                       <p className="mt-2 text-sm text-slate-500">
-                        Toca una miniatura para verla grande y pasa de una a otra.
+                        Toca una miniatura para verla grande y recorre las imagenes.
                       </p>
                     </div>
                     <div className="flex gap-2">
@@ -219,7 +259,10 @@ export function PremiumListingPage({
                       <button
                         type="button"
                         key={`${image}-${index}`}
-                        onClick={() => setSelectedImageIndex(index)}
+                        onClick={() => {
+                          setSelectedImageIndex(index)
+                          setZoomedImage(image)
+                        }}
                         className={`relative aspect-[4/3] overflow-hidden rounded-[24px] border bg-white shadow-sm transition ${
                           selectedImageIndex === index
                             ? "border-blue-400 ring-2 ring-blue-100"
@@ -239,7 +282,7 @@ export function PremiumListingPage({
               ) : null}
             </div>
 
-            <div className="bg-white p-6 sm:p-8 lg:p-10">
+            <div className="bg-white p-6 sm:p-8 lg:p-8">
               <div className="rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6">
                 {category ? (
                   <div className="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
@@ -353,12 +396,15 @@ export function PremiumListingPage({
                   {premiumExtraGallery?.length ? (
                     <div className="mt-5 grid grid-cols-2 gap-4">
                       {premiumExtraGallery.map((image, index) => (
-                        <button
-                          type="button"
-                          key={`${image}-${index}`}
-                          onClick={() => setSelectedImageIndex(galleryImages.indexOf(image))}
-                          className="relative aspect-[4/3] overflow-hidden rounded-[22px] border border-amber-200 bg-white"
-                        >
+                      <button
+                        type="button"
+                        key={`${image}-${index}`}
+                        onClick={() => {
+                          setSelectedImageIndex(galleryImages.indexOf(image))
+                          setZoomedImage(image)
+                        }}
+                        className="relative aspect-[4/3] overflow-hidden rounded-[22px] border border-amber-200 bg-white"
+                      >
                           <OptimizedImage
                             src={image}
                             alt={`${premiumExtraTitle || title} ${index + 1}`}
@@ -375,65 +421,7 @@ export function PremiumListingPage({
           </div>
         </section>
 
-        {kind === "institucion" ? (
-          <section className="mt-8 rounded-[36px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.2)] sm:p-8">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Oferta educativa
-                </div>
-                <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-                  {relatedCoursesTitle?.trim() || `Cursos de ${title}`}
-                </h2>
-              </div>
-              <Link
-                href="/cursos"
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-              >
-                Ver todos los cursos
-              </Link>
-            </div>
-
-            {relatedCourses.length === 0 ? (
-              <div className="mt-6 rounded-[28px] border border-dashed border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#f4faf6_100%)] p-8">
-                <h3 className="text-lg font-semibold text-slate-900">Todavia no tiene cursos visibles</h3>
-                <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
-                  Cuando esta institucion tenga cursos activos vinculados, van a aparecer en esta seccion.
-                </p>
-              </div>
-            ) : (
-              <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {relatedCourses.map((course) => (
-                  <article key={course.id} className="rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-5 shadow-sm">
-                    <div className="mb-3 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
-                      Curso
-                    </div>
-                    <h3 className="text-xl font-semibold text-slate-900">{course.nombre}</h3>
-                    {course.responsable ? (
-                      <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
-                        <UserRound className="h-4 w-4 text-slate-400" />
-                        <span>{course.responsable}</span>
-                      </div>
-                    ) : null}
-                    {course.descripcion ? (
-                      <p className="mt-4 line-clamp-4 whitespace-pre-line text-sm leading-7 text-slate-500">
-                        {course.descripcion}
-                      </p>
-                    ) : null}
-                    <div className="mt-5">
-                      <Link
-                        href={`/cursos?item=${course.id}`}
-                        className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
-                      >
-                        Ver curso
-                      </Link>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-        ) : (
+        {kind === "institucion" ? null : (
           <section id="eventos-del-local" className="mt-8 rounded-[36px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.2)] sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
