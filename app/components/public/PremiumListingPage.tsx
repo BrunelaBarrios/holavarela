@@ -56,6 +56,8 @@ type PremiumListingPageProps = {
   relatedCoursesTitle?: string | null
 }
 
+type GalleryKind = "main" | "extra"
+
 export function PremiumListingPage({
   kind,
   id,
@@ -114,11 +116,11 @@ export function PremiumListingPage({
     ? buildJosePedroVarelaDirectionsUrl(address)
     : null
 
-  const galleryImages = useMemo(
+  const mainGalleryImages = useMemo(
     () => {
       const uniqueImages = Array.from(
         new Set(
-          [imageSrc, ...(premiumGallery || []), ...(premiumExtraGallery || [])].filter(
+          [imageSrc, ...(premiumGallery || [])].filter(
             Boolean
           ) as string[]
         )
@@ -126,11 +128,22 @@ export function PremiumListingPage({
 
       return uniqueImages
     },
-    [imageSrc, premiumGallery, premiumExtraGallery]
+    [imageSrc, premiumGallery]
   )
+  const extraGalleryImages = useMemo(
+    () =>
+      Array.from(new Set((premiumExtraGallery || []).filter(Boolean) as string[])),
+    [premiumExtraGallery]
+  )
+  const [activeGallery, setActiveGallery] = useState<GalleryKind>("main")
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [zoomedImage, setZoomedImage] = useState<string | null>(null)
-  const selectedImage = galleryImages[selectedImageIndex] || imageSrc || null
+  const currentGalleryImages = activeGallery === "extra" ? extraGalleryImages : mainGalleryImages
+  const selectedImage =
+    currentGalleryImages[selectedImageIndex] ||
+    mainGalleryImages[0] ||
+    extraGalleryImages[0] ||
+    null
   const eventsSectionEyebrow = kind === "institucion" ? "Actividades" : "Actividad del local"
   const eventsSectionTitle =
     kind === "institucion"
@@ -143,16 +156,18 @@ export function PremiumListingPage({
       ? "Cuando esta institucion publique actividades o eventos activos en Hola Varela, van a aparecer en esta seccion."
       : "Cuando este perfil publique eventos y queden activos en Hola Varela, van a aparecer en esta seccion."
 
-  const openImageAt = (index: number) => {
+  const openImageAt = (index: number, gallery: GalleryKind = "main") => {
+    const images = gallery === "extra" ? extraGalleryImages : mainGalleryImages
     const safeIndex =
       index < 0
-        ? Math.max(galleryImages.length - 1, 0)
-        : index >= galleryImages.length
+        ? Math.max(images.length - 1, 0)
+        : index >= images.length
           ? 0
           : index
 
+    setActiveGallery(gallery)
     setSelectedImageIndex(safeIndex)
-    setZoomedImage(galleryImages[safeIndex] || null)
+    setZoomedImage(images[safeIndex] || null)
   }
 
   useEffect(() => {
@@ -168,11 +183,17 @@ export function PremiumListingPage({
   }, [id, kind, section, title])
 
   const goToPrevious = () => {
-    openImageAt(selectedImageIndex === 0 ? galleryImages.length - 1 : selectedImageIndex - 1)
+    openImageAt(
+      selectedImageIndex === 0 ? currentGalleryImages.length - 1 : selectedImageIndex - 1,
+      activeGallery
+    )
   }
 
   const goToNext = () => {
-    openImageAt(selectedImageIndex >= galleryImages.length - 1 ? 0 : selectedImageIndex + 1)
+    openImageAt(
+      selectedImageIndex >= currentGalleryImages.length - 1 ? 0 : selectedImageIndex + 1,
+      activeGallery
+    )
   }
 
   return (
@@ -193,7 +214,7 @@ export function PremiumListingPage({
             className="relative h-[78vh] w-full max-w-6xl overflow-hidden rounded-[28px] border border-white/10 bg-white/5 shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
-            {galleryImages.length > 1 ? (
+            {currentGalleryImages.length > 1 ? (
               <>
                 <button
                   type="button"
@@ -212,7 +233,7 @@ export function PremiumListingPage({
                   <ChevronRight className="h-6 w-6" />
                 </button>
                 <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/20 bg-slate-950/55 px-4 py-2 text-sm font-medium text-white">
-                  {selectedImageIndex + 1} / {galleryImages.length}
+                  {selectedImageIndex + 1} / {currentGalleryImages.length}
                 </div>
               </>
             ) : null}
@@ -266,7 +287,7 @@ export function PremiumListingPage({
                 )}
               </div>
 
-              {galleryImages.length > 1 ? (
+              {mainGalleryImages.length > 1 ? (
                 <div className="mt-6">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -297,13 +318,13 @@ export function PremiumListingPage({
                     </div>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-                    {galleryImages.map((image, index) => (
+                    {mainGalleryImages.map((image, index) => (
                       <button
                         type="button"
                         key={`${image}-${index}`}
-                        onClick={() => openImageAt(index)}
+                        onClick={() => openImageAt(index, "main")}
                         className={`relative aspect-[4/3] overflow-hidden rounded-[24px] border bg-white shadow-sm transition ${
-                          selectedImageIndex === index
+                          activeGallery === "main" && selectedImageIndex === index
                             ? "border-blue-400 ring-2 ring-blue-100"
                             : "border-slate-200 hover:border-blue-300"
                         }`}
@@ -332,14 +353,18 @@ export function PremiumListingPage({
                       {premiumExtraDetail}
                     </p>
                   ) : null}
-                  {premiumExtraGallery?.length ? (
+                  {extraGalleryImages.length ? (
                     <div className="mt-5 grid grid-cols-2 gap-4">
-                      {premiumExtraGallery.map((image, index) => (
+                      {extraGalleryImages.map((image, index) => (
                         <button
                           type="button"
                           key={`${image}-${index}`}
-                          onClick={() => openImageAt(galleryImages.indexOf(image))}
-                          className="relative aspect-[4/3] overflow-hidden rounded-[22px] border border-amber-200 bg-white"
+                          onClick={() => openImageAt(index, "extra")}
+                          className={`relative aspect-[4/3] overflow-hidden rounded-[22px] border bg-white ${
+                            activeGallery === "extra" && selectedImageIndex === index
+                              ? "border-amber-400 ring-2 ring-amber-100"
+                              : "border-amber-200"
+                          }`}
                         >
                           <OptimizedImage
                             src={image}
