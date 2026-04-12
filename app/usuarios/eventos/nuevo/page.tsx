@@ -3,8 +3,9 @@
 import type { ChangeEvent, FormEvent } from "react"
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { CheckCircle2, ImageIcon, MapPin, MessageSquareText, Phone, Sparkles } from "lucide-react"
+import { CheckCircle2, ImageIcon, MapPin, MessageSquareText, Phone, Sparkles, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { AdminConfirmModal } from "../../../components/AdminConfirmModal"
 import { AuthFormStatus } from "../../../components/AuthFormStatus"
 import { OptimizedImage } from "../../../components/OptimizedImage"
 import { buildMonthEventRange } from "../../../lib/eventDates"
@@ -63,6 +64,8 @@ export default function UsuariosNuevoEventoPage() {
   const [ownerEmail, setOwnerEmail] = useState("")
   const [editingEventId, setEditingEventId] = useState<number | null>(null)
   const [publicMode, setPublicMode] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   useEffect(() => {
     const loadContext = async () => {
@@ -256,8 +259,52 @@ export default function UsuariosNuevoEventoPage() {
     }, 900)
   }
 
+  const handleDeleteEvent = async () => {
+    if (!editingEventId || !ownerEmail) {
+      setError("No encontramos el evento para eliminar.")
+      return
+    }
+
+    setError("")
+    setSuccess("")
+    setDeleting(true)
+
+    const { error: deleteError } = await supabase
+      .from("eventos")
+      .delete()
+      .eq("id", editingEventId)
+      .eq("owner_email", ownerEmail)
+
+    if (deleteError) {
+      setError(`No pudimos eliminar el evento: ${deleteError.message}`)
+      setDeleting(false)
+      setShowDeleteConfirm(false)
+      return
+    }
+
+    setDeleting(false)
+    setShowDeleteConfirm(false)
+    router.push("/usuarios")
+    router.refresh()
+  }
+
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6 lg:px-8">
+      <AdminConfirmModal
+        isOpen={showDeleteConfirm}
+        title="Eliminar evento"
+        description="Vas a borrar este evento desde la pantalla de edición. Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        onCancel={() => {
+          if (!deleting) {
+            setShowDeleteConfirm(false)
+          }
+        }}
+        onConfirm={() => {
+          void handleDeleteEvent()
+        }}
+        isLoading={deleting}
+      />
       <div className="mx-auto max-w-7xl">
         {loading ? (
           <div className="rounded-[32px] border border-slate-200 bg-white p-12 text-center text-slate-500 shadow-[0_20px_60px_-30px_rgba(15,23,42,0.3)]">
@@ -605,7 +652,7 @@ export default function UsuariosNuevoEventoPage() {
                   <div className="flex flex-wrap gap-3 pt-2">
                     <button
                       type="submit"
-                      disabled={saving}
+                      disabled={saving || deleting}
                       className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70"
                     >
                       <Sparkles className="h-4 w-4" />
@@ -617,6 +664,18 @@ export default function UsuariosNuevoEventoPage() {
                           ? "Guardar cambios del borrador"
                           : "Guardar evento en borrador"}
                     </button>
+
+                    {!publicMode && editingEventId ? (
+                      <button
+                        type="button"
+                        disabled={saving || deleting}
+                        onClick={() => setShowDeleteConfirm(true)}
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-white px-5 py-3 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 disabled:opacity-60"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Eliminar evento
+                      </button>
+                    ) : null}
 
                     <Link
                       href={publicMode ? "/eventos" : "/usuarios"}
