@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation"
 import { PremiumListingPage } from "../../components/public/PremiumListingPage"
-import { supabaseServer } from "../../lib/supabaseServer"
+import { getSupabaseAdmin } from "../../lib/supabaseAdmin"
 
 export const revalidate = 7200
 
@@ -22,7 +22,9 @@ export default async function InstitucionSharePage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const { data } = await supabaseServer
+  const supabaseAdmin = getSupabaseAdmin()
+
+  const { data } = await supabaseAdmin
     .from("instituciones")
     .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, plan_suscripcion, estado_suscripcion, premium_cursos_activo, premium_cursos_titulo, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, estado")
     .eq("id", Number(id))
@@ -42,7 +44,7 @@ export default async function InstitucionSharePage({
 
   const { data: relatedCourses } =
     data.premium_cursos_activo
-      ? await supabaseServer
+      ? await supabaseAdmin
           .from("cursos")
           .select("id, nombre, descripcion, responsable")
           .eq("institucion_id", data.id)
