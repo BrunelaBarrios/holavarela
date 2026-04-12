@@ -91,7 +91,7 @@ export default async function Page() {
       .limit(12),
     supabaseServer
       .from("instituciones")
-      .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, premium_activo, plan_suscripcion, estado_suscripcion")
+      .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, premium_activo")
       .or("estado.is.null,estado.eq.activo")
       .order("id", { ascending: false })
       .limit(10),

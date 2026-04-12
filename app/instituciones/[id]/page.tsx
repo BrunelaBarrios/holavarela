@@ -1,19 +1,13 @@
 import { notFound, redirect } from "next/navigation"
 import { PremiumListingPage } from "../../components/public/PremiumListingPage"
-import { getSupabaseAdmin } from "../../lib/supabaseAdmin"
+import { supabaseServer } from "../../lib/supabaseServer"
 
 export const revalidate = 7200
 
 function hasInstitutionPremium(data: {
   premium_activo?: boolean | null
-  plan_suscripcion?: string | null
-  estado_suscripcion?: string | null
 }) {
-  return Boolean(
-    data.premium_activo ||
-      (data.plan_suscripcion === "destacado_plus" &&
-        data.estado_suscripcion === "activa")
-  )
+  return Boolean(data.premium_activo)
 }
 
 export default async function InstitucionSharePage({
@@ -22,11 +16,10 @@ export default async function InstitucionSharePage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const supabaseAdmin = getSupabaseAdmin()
 
-  const { data } = await supabaseAdmin
+  const { data } = await supabaseServer
     .from("instituciones")
-    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, plan_suscripcion, estado_suscripcion, premium_cursos_activo, premium_cursos_titulo, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, estado")
+    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, estado")
     .eq("id", Number(id))
     .maybeSingle()
 
@@ -41,16 +34,6 @@ export default async function InstitucionSharePage({
   if (!hasInstitutionPremium(data)) {
     redirect(`/instituciones?item=${encodeURIComponent(id)}`)
   }
-
-  const { data: relatedCourses } =
-    data.premium_cursos_activo
-      ? await supabaseAdmin
-          .from("cursos")
-          .select("id, nombre, descripcion, responsable")
-          .eq("institucion_id", data.id)
-          .or("estado.is.null,estado.eq.activo")
-          .order("id", { ascending: false })
-      : { data: [] }
 
   return (
     <PremiumListingPage
@@ -70,8 +53,7 @@ export default async function InstitucionSharePage({
       instagramUrl={data.instagram_url}
       facebookUrl={data.facebook_url}
       usesWhatsapp={data.usa_whatsapp}
-      relatedCourses={relatedCourses || []}
-      relatedCoursesTitle={data.premium_cursos_titulo}
+      relatedCourses={[]}
     />
   )
 }

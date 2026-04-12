@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
-import { ArrowRight, GraduationCap, MapPin, Phone, Search } from "lucide-react"
+import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
@@ -29,39 +29,18 @@ type Institucion = {
   premium_extra_titulo?: string | null
   premium_extra_detalle?: string | null
   premium_activo?: boolean | null
-  plan_suscripcion?: string | null
-  estado_suscripcion?: string | null
-  premium_cursos_activo?: boolean | null
-  premium_cursos_titulo?: string | null
-}
-
-type CursoRelacion = {
-  id: number
-  nombre: string
-  descripcion: string | null
-  responsable: string | null
-  institucion_id?: number | null
 }
 
 function hasInstitutionPremium(institucion: Institucion | null | undefined) {
-  if (!institucion) return false
-
-  return Boolean(
-    institucion.premium_activo ||
-      (institucion.plan_suscripcion === "destacado_plus" &&
-        institucion.estado_suscripcion === "activa")
-  )
+  return Boolean(institucion?.premium_activo)
 }
 
 export function InstitucionesPageClient({
   initialInstituciones,
-  initialCursosRelacionados,
 }: {
   initialInstituciones: Institucion[]
-  initialCursosRelacionados: CursoRelacion[]
 }) {
   const [instituciones] = useState<Institucion[]>(initialInstituciones)
-  const [cursosRelacionados] = useState<CursoRelacion[]>(initialCursosRelacionados)
   const [search, setSearch] = useState("")
   const [selectedInstitucion, setSelectedInstitucion] = useState<Institucion | null>(null)
 
@@ -100,19 +79,6 @@ export function InstitucionesPageClient({
         .includes(term)
     )
   }, [instituciones, search])
-
-  const cursosPorInstitucion = useMemo(() => {
-    const map = new Map<number, CursoRelacion[]>()
-
-    cursosRelacionados.forEach((curso) => {
-      if (!curso.institucion_id) return
-      const current = map.get(curso.institucion_id) || []
-      current.push(curso)
-      map.set(curso.institucion_id, current)
-    })
-
-    return map
-  }, [cursosRelacionados])
 
   const whatsappLink = (telefono: string | null) => {
     if (!telefono) return "#"
@@ -207,42 +173,6 @@ export function InstitucionesPageClient({
                       {selectedInstitucion.premium_extra_detalle}
                     </p>
                   ) : null}
-                </div>
-              ) : null}
-
-              {hasInstitutionPremium(selectedInstitucion) &&
-              selectedInstitucion.premium_cursos_activo &&
-              (cursosPorInstitucion.get(selectedInstitucion.id) || []).length > 0 ? (
-                <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-5">
-                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
-                    {selectedInstitucion.premium_cursos_titulo?.trim() ||
-                      "Cursos de esta institucion"}
-                  </div>
-                  <div className="space-y-3">
-                    {(cursosPorInstitucion.get(selectedInstitucion.id) || []).map((curso) => (
-                      <div
-                        key={curso.id}
-                        className="rounded-2xl border border-emerald-200 bg-white px-4 py-3"
-                      >
-                        <div className="flex items-start gap-3">
-                          <GraduationCap className="mt-1 h-4 w-4 text-emerald-600" />
-                          <div>
-                            <div className="font-semibold text-slate-900">{curso.nombre}</div>
-                            {curso.responsable ? (
-                              <div className="mt-1 text-sm text-slate-500">
-                                Responsable: {curso.responsable}
-                              </div>
-                            ) : null}
-                            {curso.descripcion ? (
-                              <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">
-                                {curso.descripcion}
-                              </p>
-                            ) : null}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               ) : null}
             </div>

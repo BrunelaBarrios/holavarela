@@ -153,8 +153,6 @@ type Institucion = {
   foto: string | null
   usa_whatsapp?: boolean | null
   premium_activo?: boolean | null
-  plan_suscripcion?: string | null
-  estado_suscripcion?: string | null
 }
 
 type SobreVarelaConfig = {
@@ -358,14 +356,8 @@ function isFeaturedListing(item: {
 
 function hasInstitutionPremium(item: {
   premium_activo?: boolean | null
-  plan_suscripcion?: string | null
-  estado_suscripcion?: string | null
 }) {
-  return Boolean(
-    item.premium_activo ||
-      (item.plan_suscripcion === "destacado_plus" &&
-        item.estado_suscripcion === "activa")
-  )
+  return Boolean(item.premium_activo)
 }
 
 function sliceRotatingItems<T>(items: T[], page: number, pageSize = ITEMS_PER_ROTATION) {
