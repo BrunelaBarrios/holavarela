@@ -19,7 +19,7 @@ type EventPageParams = {
 }
 
 type EventoRecord = {
-  id: number
+  id: string
   titulo: string
   categoria?: string | null
   descripcion: string
@@ -51,8 +51,8 @@ const getSiteUrl = () => {
   return "https://www.holavarela.uy"
 }
 
-const getEventUrl = (id: string | number) => `${getSiteUrl()}/eventos/${id}`
-const getEventImageUrl = (id: string | number) => `${getSiteUrl()}/api/eventos/${id}/og-image`
+const getEventUrl = (id: string) => `${getSiteUrl()}/eventos/${id}`
+const getEventImageUrl = (id: string) => `${getSiteUrl()}/api/eventos/${id}/og-image`
 
 const normalizeEventCategory = (categoria?: string | null) => {
   const value = categoria?.trim()
@@ -71,13 +71,10 @@ const whatsappLink = (telefono: string) => {
 }
 
 async function fetchEventById(id: string) {
-  const eventId = Number(id)
-  if (!Number.isFinite(eventId)) return null
-
   const { data } = await supabaseServer
     .from("eventos")
     .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email")
-    .eq("id", eventId)
+    .eq("id", id)
     .or("estado.is.null,estado.eq.activo")
     .maybeSingle()
 

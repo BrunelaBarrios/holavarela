@@ -71,9 +71,9 @@ export default function UsuariosHomePage() {
   const [curso, setCurso] = useState<CursoForm>(initialCurso)
   const [institucion, setInstitucion] = useState<InstitucionForm>(initialInstitucion)
   const [savingOnboarding, setSavingOnboarding] = useState(false)
-  const [updatingEventId, setUpdatingEventId] = useState<number | null>(null)
-  const [deletingEventId, setDeletingEventId] = useState<number | null>(null)
-  const [confirmingDeleteEventId, setConfirmingDeleteEventId] = useState<number | null>(null)
+  const [updatingEventId, setUpdatingEventId] = useState<string | null>(null)
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null)
+  const [confirmingDeleteEventId, setConfirmingDeleteEventId] = useState<string | null>(null)
   const [actionsOpen, setActionsOpen] = useState(false)
 
   useEffect(() => {
@@ -151,7 +151,7 @@ export default function UsuariosHomePage() {
   }
 
   const handleEventStatusChange = async (
-    eventId: number,
+    eventId: string,
     nextStatus: "activo" | "oculto" | "cancelado"
   ) => {
     if (!user?.email) {
@@ -187,7 +187,7 @@ export default function UsuariosHomePage() {
     setUpdatingEventId(null)
   }
 
-  const handleDeleteEvent = async (eventId: number) => {
+  const handleDeleteEvent = async (eventId: string) => {
     if (!user?.email) {
       setError("Necesitas iniciar sesion para gestionar eventos.")
       return
@@ -444,10 +444,10 @@ function UnifiedEventsSection({
   draftEvents: UserOwnedEvent[]
   hiddenEvents: UserOwnedEvent[]
   cancelledEvents: UserOwnedEvent[]
-  updatingEventId: number | null
-  deletingEventId: number | null
-  onChangeStatus: (eventId: number, nextStatus: "activo" | "oculto" | "cancelado") => void
-  onDeleteEvent: (eventId: number) => void
+  updatingEventId: string | null
+  deletingEventId: string | null
+  onChangeStatus: (eventId: string, nextStatus: "activo" | "oculto" | "cancelado") => void
+  onDeleteEvent: (eventId: string) => void
 }) {
   return (
     <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
@@ -545,10 +545,10 @@ function EventGroup({
   emptyTitle: string
   emptyDescription: string
   events: UserOwnedEvent[]
-  updatingEventId: number | null
-  deletingEventId: number | null
-  onChangeStatus: (eventId: number, nextStatus: "activo" | "oculto" | "cancelado") => void
-  onDeleteEvent: (eventId: number) => void
+  updatingEventId: string | null
+  deletingEventId: string | null
+  onChangeStatus: (eventId: string, nextStatus: "activo" | "oculto" | "cancelado") => void
+  onDeleteEvent: (eventId: string) => void
   allowDraftResume?: boolean
 }) {
   const toneClass =
@@ -602,9 +602,9 @@ function EventGroup({
                   </div>
                 </div>
                 <p className="mt-4 line-clamp-4 text-sm leading-7 text-slate-500">{event.descripcion}</p>
-                <div className="mt-5 flex flex-wrap gap-3">
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   {allowDraftResume ? (
-                    <Link href={`/usuarios/eventos/nuevo?edit=${event.id}`} className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100">
+                    <Link href={`/usuarios/eventos/nuevo?edit=${event.id}`} className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100">
                       {tone === "draft" ? "Continuar borrador" : "Editar evento"}
                     </Link>
                   ) : null}
@@ -614,7 +614,7 @@ function EventGroup({
                       type="button"
                       disabled={updatingEventId === event.id}
                       onClick={() => onChangeStatus(event.id, "activo")}
-                      className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:opacity-60"
                     >
                       <Send className="h-4 w-4" />
                       {tone === "draft" ? "Publicar" : "Volver a publicar"}
@@ -624,7 +624,7 @@ function EventGroup({
                       type="button"
                       disabled={updatingEventId === event.id}
                       onClick={() => onChangeStatus(event.id, "oculto")}
-                      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 disabled:opacity-60"
                     >
                       <EyeOff className="h-4 w-4" />
                       Desactivar visibilidad
@@ -636,7 +636,7 @@ function EventGroup({
                       type="button"
                       disabled={updatingEventId === event.id}
                       onClick={() => onChangeStatus(event.id, "cancelado")}
-                      className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:opacity-60"
                     >
                       <XCircle className="h-4 w-4" />
                       Cancelar
@@ -647,7 +647,7 @@ function EventGroup({
                     type="button"
                     disabled={deletingEventId === event.id}
                     onClick={() => onDeleteEvent(event.id)}
-                    className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 disabled:opacity-60"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 shadow-sm transition hover:border-rose-400 hover:bg-rose-50 disabled:opacity-60 sm:col-span-2"
                   >
                     <Trash2 className="h-4 w-4" />
                     Eliminar

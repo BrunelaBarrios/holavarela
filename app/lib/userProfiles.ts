@@ -55,7 +55,7 @@ export type UserOwnedEntity = {
 }
 
 export type UserOwnedEvent = {
-  id: number
+  id: string
   titulo: string
   categoria?: string | null
   fecha: string

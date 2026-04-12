@@ -82,7 +82,7 @@ type Comercio = {
 }
 
 type Evento = {
-  id: number
+  id: string
   titulo: string
   categoria?: string | null
   descripcion: string
@@ -1845,12 +1845,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             {servicio.nombre}
                           </h3>
 
-                          {servicio.descripcion && (
-                              <p className="mt-2 line-clamp-2 whitespace-pre-line text-xs leading-6 text-slate-500 sm:mt-3 sm:line-clamp-3 sm:text-sm sm:leading-7">
-                                {servicio.descripcion}
-                              </p>
-                          )}
-
                           <div className="mt-3 space-y-2 text-xs text-slate-600 sm:mt-4 sm:text-sm">
                             {servicio.responsable && (
                               <div className="flex items-center gap-2">
@@ -2056,9 +2050,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   </h3>
 
                   <p className="mt-2 text-sm text-slate-500">{event.ubicacion}</p>
-                    <p className="line-clamp-3 mt-3 whitespace-pre-line text-lg leading-8 text-slate-500">
-                      {parseEventDescription(event.descripcion).baseDescription}
-                    </p>
 
                   <div className="mt-4" onClick={(eventLikeWrapper) => eventLikeWrapper.stopPropagation()}>
                     <EventLikeButton

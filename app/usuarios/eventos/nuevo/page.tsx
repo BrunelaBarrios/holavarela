@@ -354,7 +354,7 @@ export default function UsuariosNuevoEventoPage() {
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link
                     href={publicMode ? "/eventos" : "/usuarios"}
-                    className="inline-flex items-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                    className="inline-flex items-center rounded-full border border-slate-300 bg-white/95 px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-sky-400 hover:bg-sky-50 hover:text-sky-700"
                   >
                     {publicMode ? "Volver a eventos" : "Volver al panel"}
                   </Link>

@@ -22,16 +22,11 @@ function decodeDataUrlImage(value: string) {
 
 export async function GET(_request: Request, { params }: EventImageParams) {
   const { id } = await params
-  const eventId = Number(id)
-
-  if (!Number.isFinite(eventId)) {
-    notFound()
-  }
 
   const { data } = await supabaseServer
     .from("eventos")
     .select("imagen, estado")
-    .eq("id", eventId)
+    .eq("id", id)
     .maybeSingle()
 
   if (!data || (data.estado && data.estado !== "activo") || !data.imagen) {
