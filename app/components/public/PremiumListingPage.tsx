@@ -280,6 +280,46 @@ export function PremiumListingPage({
                   </div>
                 </div>
               ) : null}
+
+              {premiumExtraTitle || premiumExtraDetail || premiumExtraGallery?.length ? (
+                <div className="mt-6 rounded-[24px] border border-amber-100 bg-amber-50/80 p-6">
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">
+                    Bloque extra
+                  </div>
+                  {premiumExtraTitle ? (
+                    <h3 className="text-2xl font-semibold tracking-tight text-slate-950">
+                      {premiumExtraTitle}
+                    </h3>
+                  ) : null}
+                  {premiumExtraDetail ? (
+                    <p className="mt-3 whitespace-pre-line text-base leading-8 text-slate-700">
+                      {premiumExtraDetail}
+                    </p>
+                  ) : null}
+                  {premiumExtraGallery?.length ? (
+                    <div className="mt-5 grid grid-cols-2 gap-4">
+                      {premiumExtraGallery.map((image, index) => (
+                        <button
+                          type="button"
+                          key={`${image}-${index}`}
+                          onClick={() => {
+                            setSelectedImageIndex(galleryImages.indexOf(image))
+                            setZoomedImage(image)
+                          }}
+                          className="relative aspect-[4/3] overflow-hidden rounded-[22px] border border-amber-200 bg-white"
+                        >
+                          <OptimizedImage
+                            src={image}
+                            alt={`${premiumExtraTitle || title} ${index + 1}`}
+                            sizes="(max-width: 768px) 50vw, 33vw"
+                            className="object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
 
             <div className="bg-white p-6 sm:p-8 lg:p-8">
@@ -378,45 +418,6 @@ export function PremiumListingPage({
                 </div>
               ) : null}
 
-              {premiumExtraTitle || premiumExtraDetail || premiumExtraGallery?.length ? (
-                <div className="mt-5 rounded-[24px] border border-amber-100 bg-amber-50/70 p-6">
-                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">
-                    Bloque extra
-                  </div>
-                  {premiumExtraTitle ? (
-                    <h3 className="text-2xl font-semibold tracking-tight text-slate-950">
-                      {premiumExtraTitle}
-                    </h3>
-                  ) : null}
-                  {premiumExtraDetail ? (
-                    <p className="mt-3 whitespace-pre-line text-base leading-8 text-slate-700">
-                      {premiumExtraDetail}
-                    </p>
-                  ) : null}
-                  {premiumExtraGallery?.length ? (
-                    <div className="mt-5 grid grid-cols-2 gap-4">
-                      {premiumExtraGallery.map((image, index) => (
-                      <button
-                        type="button"
-                        key={`${image}-${index}`}
-                        onClick={() => {
-                          setSelectedImageIndex(galleryImages.indexOf(image))
-                          setZoomedImage(image)
-                        }}
-                        className="relative aspect-[4/3] overflow-hidden rounded-[22px] border border-amber-200 bg-white"
-                      >
-                          <OptimizedImage
-                            src={image}
-                            alt={`${premiumExtraTitle || title} ${index + 1}`}
-                            sizes="(max-width: 768px) 50vw, 33vw"
-                            className="object-cover"
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
             </div>
           </div>
         </section>
