@@ -20,7 +20,7 @@ export default async function InstitucionSharePage({
 
   const { data } = await supabaseServer
     .from("instituciones")
-    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, estado, owner_email")
+    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, direccion, direccion_mapa, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, estado, owner_email")
     .eq("id", Number(id))
     .maybeSingle()
 
@@ -58,6 +58,7 @@ export default async function InstitucionSharePage({
       premiumExtraDetail={data.premium_extra_detalle}
       premiumExtraGallery={data.premium_extra_galeria}
       address={data.direccion}
+      directionsAddress={data.direccion_mapa}
       phone={data.telefono}
       webUrl={data.web_url}
       instagramUrl={data.instagram_url}

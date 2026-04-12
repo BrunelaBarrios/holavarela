@@ -44,6 +44,7 @@ type PremiumListingPageProps = {
   premiumExtraDetail?: string | null
   premiumExtraGallery?: string[] | null
   address?: string | null
+  directionsAddress?: string | null
   phone?: string | null
   contactName?: string | null
   category?: string | null
@@ -70,6 +71,7 @@ export function PremiumListingPage({
   premiumExtraDetail,
   premiumExtraGallery,
   address,
+  directionsAddress,
   phone,
   contactName,
   category,
@@ -112,8 +114,8 @@ export function PremiumListingPage({
       ? `tel:${phone}`
       : whatsappLink(phone)
     : null
-  const directionsUrl = address
-    ? buildJosePedroVarelaDirectionsUrl(address)
+  const directionsUrl = address || directionsAddress
+    ? buildJosePedroVarelaDirectionsUrl(address, directionsAddress)
     : null
 
   const mainGalleryImages = useMemo(

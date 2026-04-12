@@ -2024,7 +2024,11 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     )
                   )
                 }
-                className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
+                  normalizeEventCategory(event.categoria) === "Evento"
+                    ? "border-emerald-200/80"
+                    : "border-white/80"
+                }`}
               >
                 {event.imagen && (
                   <div className="relative h-64 w-full">

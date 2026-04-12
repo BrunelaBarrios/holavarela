@@ -52,6 +52,7 @@ const getSiteUrl = () => {
 }
 
 const getEventUrl = (id: string | number) => `${getSiteUrl()}/eventos/${id}`
+const getEventImageUrl = (id: string | number) => `${getSiteUrl()}/api/eventos/${id}/og-image`
 
 const normalizeEventCategory = (categoria?: string | null) => {
   const value = categoria?.trim()
@@ -77,10 +78,10 @@ async function fetchEventById(id: string) {
     .from("eventos")
     .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email")
     .eq("id", eventId)
+    .or("estado.is.null,estado.eq.activo")
     .maybeSingle()
 
   if (!data) return null
-  if (data.estado && data.estado !== "activo") return null
 
   return data as EventoRecord
 }
@@ -98,7 +99,9 @@ export async function generateMetadata({ params }: EventPageParams): Promise<Met
   const parsedDescription = parseEventDescription(evento.descripcion).baseDescription
   const description =
     parsedDescription || `Mira este evento en Hola Varela: ${evento.titulo}`
-  const imageUrl = evento.imagen || "/logo-varela-grande.png"
+  const imageUrl = evento.imagen
+    ? getEventImageUrl(evento.id)
+    : `${getSiteUrl()}/logo-varela-grande.png`
   const eventUrl = getEventUrl(evento.id)
 
   return {

@@ -15,6 +15,7 @@ type ProfileForm = {
   nombre: string
   descripcion: string
   direccion: string
+  direccionMapa: string
   telefono: string
   responsable: string
   contacto: string
@@ -37,6 +38,7 @@ const initialForm: ProfileForm = {
   nombre: "",
   descripcion: "",
   direccion: "",
+  direccionMapa: "",
   telefono: "",
   responsable: "",
   contacto: "",
@@ -61,6 +63,7 @@ export default function UsuariosPerfilPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [activeSection, setActiveSection] = useState<"base" | "premium">("base")
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -86,6 +89,7 @@ export default function UsuariosPerfilPage() {
           nombre: entity.record.nombre || "",
           descripcion: entity.record.descripcion || "",
           direccion: entity.record.direccion || "",
+          direccionMapa: entity.record.direccion_mapa || "",
           telefono: entity.record.telefono || "",
           responsable: entity.record.responsable || "",
           contacto: entity.record.contacto || "",
@@ -111,12 +115,39 @@ export default function UsuariosPerfilPage() {
     void loadProfile()
   }, [router])
 
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const syncSectionWithHash = () => {
+      setActiveSection(window.location.hash === "#premium" ? "premium" : "base")
+    }
+
+    syncSectionWithHash()
+    window.addEventListener("hashchange", syncSectionWithHash)
+
+    return () => {
+      window.removeEventListener("hashchange", syncSectionWithHash)
+    }
+  }, [])
+
   const imageColumn = useMemo(() => {
     if (!ownedEntity) return "imagen"
     if (ownedEntity.type === "comercio") return "imagen_url"
     if (ownedEntity.type === "institucion") return "foto"
     return "imagen"
   }, [ownedEntity])
+  const supportsExtendedProfile = Boolean(ownedEntity && supportsPremiumProfile(ownedEntity.type))
+  const hasExtendedProfile = Boolean(supportsExtendedProfile && ownedEntity?.record.premium_activo)
+
+  const openSection = (section: "base" | "premium") => {
+    setActiveSection(section)
+
+    if (typeof window === "undefined") return
+
+    const nextHash = section === "premium" ? "#premium" : ""
+    const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`
+    window.history.replaceState(null, "", nextUrl)
+  }
 
   const handleImageChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -195,6 +226,7 @@ export default function UsuariosPerfilPage() {
         ...commonPayload,
         ...premiumPayload,
         direccion: formData.direccion.trim() || null,
+        direccion_mapa: formData.direccionMapa.trim() || null,
         telefono: formData.telefono.trim() || null,
       }
     } else if (ownedEntity.type === "servicio") {
@@ -205,6 +237,7 @@ export default function UsuariosPerfilPage() {
         responsable: formData.responsable.trim() || null,
         contacto: formData.contacto.trim() || null,
         direccion: formData.direccion.trim() || null,
+        direccion_mapa: formData.direccionMapa.trim() || null,
       }
     } else if (ownedEntity.type === "curso") {
       payload = {
@@ -217,6 +250,7 @@ export default function UsuariosPerfilPage() {
         ...commonPayload,
         ...premiumPayload,
         direccion: formData.direccion.trim() || null,
+        direccion_mapa: formData.direccionMapa.trim() || null,
         telefono: formData.telefono.trim() || null,
       }
     }
@@ -249,15 +283,15 @@ export default function UsuariosPerfilPage() {
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6">
-      <div className="mx-auto max-w-6xl space-y-6">
+      <div className="mx-auto max-w-[1500px] space-y-6">
         <section className="overflow-hidden rounded-[36px] border border-slate-200 bg-white shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
-          <div className="grid xl:grid-cols-[0.72fr_1.28fr]">
+          <div className="grid xl:grid-cols-[320px_minmax(0,1fr)]">
             <div className="bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10">
               <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
                 Mi perfil
               </div>
               <h1 className="mt-6 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                Edita tus datos
+                {activeSection === "premium" ? "Version extendida" : "Edita tus datos"}
               </h1>
               <p className="mt-4 text-lg leading-8 text-slate-600">
                 Mantén actualizada la ficha de tu espacio para que el panel y la publicación siempre muestren información correcta.
@@ -291,14 +325,52 @@ export default function UsuariosPerfilPage() {
               </div>
             </div>
 
-            <div className="p-6 sm:p-8 lg:p-10">
+            <div className="p-6 sm:p-8 lg:p-10 xl:p-12">
               {loading ? (
                 <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
                   Cargando perfil...
                 </div>
               ) : ownedEntity ? (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="rounded-[28px] border border-slate-200 bg-slate-50/80 p-5">
+                <form onSubmit={handleSubmit} className="space-y-8">
+                  <div className="rounded-[28px] border border-slate-200 bg-white p-3 shadow-sm">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={() => openSection("base")}
+                        className={`rounded-[22px] px-5 py-4 text-left transition ${
+                          activeSection === "base"
+                            ? "border border-blue-200 bg-blue-50 text-blue-700"
+                            : "border border-transparent bg-slate-50 text-slate-600 hover:bg-slate-100"
+                        }`}
+                      >
+                        <div className="text-sm font-semibold">Ficha base</div>
+                        <div className="mt-1 text-sm leading-6">
+                          Datos principales, contacto, ubicacion, redes e imagen principal.
+                        </div>
+                      </button>
+                      {supportsExtendedProfile ? (
+                        <button
+                          type="button"
+                          onClick={() => openSection("premium")}
+                          className={`rounded-[22px] px-5 py-4 text-left transition ${
+                            activeSection === "premium"
+                              ? "border border-violet-200 bg-violet-50 text-violet-700"
+                              : "border border-transparent bg-slate-50 text-slate-600 hover:bg-slate-100"
+                          }`}
+                        >
+                          <div className="text-sm font-semibold">Version extendida</div>
+                          <div className="mt-1 text-sm leading-6">
+                            {hasExtendedProfile
+                              ? "Galeria destacada y bloque complementario del perfil."
+                              : "Disponible cuando tu plan o admin activa el perfil extendido."}
+                          </div>
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className={activeSection === "base" ? "space-y-8" : "hidden"}>
+                  <div className="rounded-[32px] border border-slate-200 bg-slate-50/80 p-6 sm:p-7">
                     <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                       Datos principales
                     </div>
@@ -375,6 +447,30 @@ export default function UsuariosPerfilPage() {
                         />
                       ) : null}
 
+                      {(ownedEntity.type === "comercio" ||
+                        ownedEntity.type === "servicio" ||
+                        ownedEntity.type === "institucion") ? (
+                        <div className="rounded-[24px] border border-sky-100 bg-sky-50/70 p-5">
+                          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
+                            Como llegar
+                          </div>
+                          <p className="mt-2 text-sm leading-6 text-slate-600">
+                            Usa este campo si quieres abrir un punto mas preciso en Google Maps.
+                            Puedes escribir una referencia completa o pegar un link directo de Google Maps.
+                          </p>
+                          <div className="mt-4">
+                            <TextAreaField
+                              label="Ubicacion precisa para el boton de como llegar"
+                              value={formData.direccionMapa}
+                              onChange={(value) =>
+                                setFormData((current) => ({ ...current, direccionMapa: value }))
+                              }
+                              rows={3}
+                            />
+                          </div>
+                        </div>
+                      ) : null}
+
                       <TextAreaField
                         label="Descripcion"
                         value={formData.descripcion}
@@ -411,7 +507,7 @@ export default function UsuariosPerfilPage() {
                   </div>
 
                   {ownedEntity.type !== "institucion" ? (
-                    <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+                    <div className="rounded-[32px] border border-slate-200 bg-slate-50 p-6">
                       <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                         Suscripcion
                       </div>
@@ -419,7 +515,7 @@ export default function UsuariosPerfilPage() {
                         Gestiona tu plan desde el panel
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-slate-600">
-                        Movimos la suscripcion a una pantalla propia para que editar perfil quede mas simple. Desde ahi puedes revisar tu plan, cambiarlo y abrir Mercado Pago.
+                        La version extendida se administra aparte porque depende del plan que tengas activo.
                       </p>
                       <div className="mt-4">
                         <Link
@@ -430,74 +526,6 @@ export default function UsuariosPerfilPage() {
                         </Link>
                       </div>
                     </div>
-                  ) : null}
-
-                  {ownedEntity && supportsPremiumProfile(ownedEntity.type) ? (
-                    ownedEntity.record.premium_activo ? (
-                      <div className="space-y-4 rounded-[28px] border border-violet-200 bg-violet-50/60 p-5">
-                        <div>
-                          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-500">
-                            Perfil premium
-                          </div>
-                          <h3 className="mt-2 text-xl font-semibold text-slate-950">
-                            Contenido ampliado
-                          </h3>
-                          <p className="mt-2 text-sm leading-6 text-slate-600">
-                            Edita la parte extendida de tu ficha con imagenes grandes y un bloque extra de contenido.
-                          </p>
-                        </div>
-
-                        <TextAreaField
-                          label="Descripcion premium"
-                          value={formData.premiumDetalle}
-                          onChange={(value) =>
-                            setFormData((current) => ({ ...current, premiumDetalle: value }))
-                          }
-                        />
-
-                        <ImageUploadField
-                          label="Imagenes del perfil ampliado"
-                          helper="Estas imagenes se veran grandes y se podran recorrer una a una."
-                          images={formData.premiumGaleria}
-                          onUpload={(event) => void handleGalleryUpload(event, "premiumGaleria")}
-                          onRemove={(index) => removeGalleryImage("premiumGaleria", index)}
-                        />
-
-                        <div className="rounded-[24px] border border-slate-200 bg-white/80 p-5">
-                          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                            Bloque extra
-                          </div>
-                          <div className="mt-4 space-y-4">
-                            <Field
-                              label="Titulo del bloque extra"
-                              value={formData.premiumExtraTitulo}
-                              onChange={(value) =>
-                                setFormData((current) => ({ ...current, premiumExtraTitulo: value }))
-                              }
-                            />
-                            <TextAreaField
-                              label="Descripcion del bloque extra"
-                              value={formData.premiumExtraDetalle}
-                              onChange={(value) =>
-                                setFormData((current) => ({ ...current, premiumExtraDetalle: value }))
-                              }
-                            />
-                            <ImageUploadField
-                              label="Imagenes del bloque extra"
-                              helper="Puedes usar este espacio para mostrar otra coleccion, promo o contenido destacado."
-                              images={formData.premiumExtraGaleria}
-                              onUpload={(event) => void handleGalleryUpload(event, "premiumExtraGaleria")}
-                              onRemove={(index) => removeGalleryImage("premiumExtraGaleria", index)}
-                            />
-                          </div>
-                        </div>
-
-                      </div>
-                    ) : (
-                      <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-600">
-                        El perfil premium aun no esta activo para esta ficha. Cuando lo activen desde admin, vas a poder editar aqui el contenido ampliado.
-                      </div>
-                    )
                   ) : null}
 
                   <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
@@ -531,6 +559,84 @@ export default function UsuariosPerfilPage() {
                       </div>
                     ) : null}
                   </div>
+                  </div>
+
+                  <div className={activeSection === "premium" ? "space-y-8" : "hidden"}>
+                  {ownedEntity && supportsPremiumProfile(ownedEntity.type) ? (
+                    ownedEntity.record.premium_activo ? (
+                      <div className="space-y-6 rounded-[32px] border border-violet-200 bg-violet-50/60 p-6 sm:p-7">
+                        <div>
+                          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-500">
+                            Perfil extendido
+                          </div>
+                          <h3 className="mt-2 text-xl font-semibold text-slate-950">
+                            Contenido ampliado
+                          </h3>
+                          <p className="mt-2 text-sm leading-6 text-slate-600">
+                            Aqui editas solo la parte diferencial del perfil: galeria destacada y bloque complementario.
+                          </p>
+                        </div>
+
+                        <div className="rounded-[28px] border border-violet-100 bg-white/90 p-6">
+                          <div className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-violet-500">
+                            Cabecera del perfil ampliado
+                          </div>
+                          <div className="space-y-5">
+                            <TextAreaField
+                              label="Descripcion destacada"
+                              value={formData.premiumDetalle}
+                              onChange={(value) =>
+                                setFormData((current) => ({ ...current, premiumDetalle: value }))
+                              }
+                            />
+
+                            <ImageUploadField
+                              label="Galeria principal del perfil ampliado"
+                              helper="Estas imagenes se veran grandes al inicio del perfil completo. Se suben optimizadas en WebP, con ancho maximo de 800 px."
+                              images={formData.premiumGaleria}
+                              onUpload={(event) => void handleGalleryUpload(event, "premiumGaleria")}
+                              onRemove={(index) => removeGalleryImage("premiumGaleria", index)}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="rounded-[28px] border border-slate-200 bg-white/90 p-6">
+                          <div className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                            Bloque complementario
+                          </div>
+                          <div className="space-y-5">
+                            <Field
+                              label="Titulo del bloque"
+                              value={formData.premiumExtraTitulo}
+                              onChange={(value) =>
+                                setFormData((current) => ({ ...current, premiumExtraTitulo: value }))
+                              }
+                            />
+                            <TextAreaField
+                              label="Descripcion del bloque"
+                              value={formData.premiumExtraDetalle}
+                              onChange={(value) =>
+                                setFormData((current) => ({ ...current, premiumExtraDetalle: value }))
+                              }
+                            />
+                            <ImageUploadField
+                              label="Imagenes del bloque"
+                              helper="Estas imagenes solo se veran dentro del bloque complementario y tambien se optimizan automaticamente."
+                              images={formData.premiumExtraGaleria}
+                              onUpload={(event) => void handleGalleryUpload(event, "premiumExtraGaleria")}
+                              onRemove={(index) => removeGalleryImage("premiumExtraGaleria", index)}
+                            />
+                          </div>
+                        </div>
+
+                      </div>
+                    ) : (
+                      <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-600">
+                        La version extendida aun no esta activa para esta ficha. Cuando se habilite desde tu plan o desde admin, vas a poder editarla aqui.
+                      </div>
+                    )
+                  ) : null}
+                  </div>
 
                   {error ? <AuthFormStatus tone="error" message={error} /> : null}
                   {success ? <AuthFormStatus tone="success" message={success} /> : null}
@@ -540,7 +646,11 @@ export default function UsuariosPerfilPage() {
                     disabled={saving}
                     className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70"
                   >
-                    {saving ? "Guardando cambios..." : "Guardar perfil"}
+                    {saving
+                      ? "Guardando cambios..."
+                      : activeSection === "premium"
+                        ? "Guardar version extendida"
+                        : "Guardar ficha base"}
                   </button>
                 </form>
               ) : null}
@@ -583,10 +693,12 @@ function TextAreaField({
   label,
   value,
   onChange,
+  rows = 5,
 }: {
   label: string
   value: string
   onChange: (value: string) => void
+  rows?: number
 }) {
   return (
     <div className="space-y-2">
@@ -594,7 +706,7 @@ function TextAreaField({
       <textarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        rows={5}
+        rows={rows}
         className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-400"
       />
     </div>

@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
-import { BarChart3, CalendarDays, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, Menu, PlusCircle, Send, XCircle } from "lucide-react"
+import { BarChart3, CalendarDays, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, Menu, PlusCircle, Send, Trash2, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { AdminConfirmModal } from "../components/AdminConfirmModal"
 import { AuthFormStatus } from "../components/AuthFormStatus"
 import { OptimizedImage } from "../components/OptimizedImage"
 import { formatEventDateRange } from "../lib/eventDates"
@@ -71,6 +72,8 @@ export default function UsuariosHomePage() {
   const [institucion, setInstitucion] = useState<InstitucionForm>(initialInstitucion)
   const [savingOnboarding, setSavingOnboarding] = useState(false)
   const [updatingEventId, setUpdatingEventId] = useState<number | null>(null)
+  const [deletingEventId, setDeletingEventId] = useState<number | null>(null)
+  const [confirmingDeleteEventId, setConfirmingDeleteEventId] = useState<number | null>(null)
   const [actionsOpen, setActionsOpen] = useState(false)
 
   useEffect(() => {
@@ -184,6 +187,33 @@ export default function UsuariosHomePage() {
     setUpdatingEventId(null)
   }
 
+  const handleDeleteEvent = async (eventId: number) => {
+    if (!user?.email) {
+      setError("Necesitas iniciar sesion para gestionar eventos.")
+      return
+    }
+
+    setError("")
+    setConfirmingDeleteEventId(eventId)
+
+    const { error: deleteError } = await supabase
+      .from("eventos")
+      .delete()
+      .eq("id", eventId)
+      .eq("owner_email", user.email)
+
+    if (deleteError) {
+      setError(`No pudimos eliminar el evento: ${deleteError.message}`)
+      setConfirmingDeleteEventId(null)
+      setDeletingEventId(null)
+      return
+    }
+
+    setEvents((current) => current.filter((item) => item.id !== eventId))
+    setConfirmingDeleteEventId(null)
+    setDeletingEventId(null)
+  }
+
   const statusKey = normalizeUserEntityStatus(ownedEntity?.record.estado)
   const statusStyles = getStatusStyles(statusKey)
   const isInstitution = ownedEntity?.type === "institucion"
@@ -258,6 +288,19 @@ export default function UsuariosHomePage() {
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6 lg:px-8">
+      <AdminConfirmModal
+        isOpen={deletingEventId !== null}
+        title="Eliminar evento"
+        description="Vas a borrar este evento desde tu panel. Esta accion no se puede deshacer."
+        confirmLabel="Eliminar"
+        onCancel={() => setDeletingEventId(null)}
+        onConfirm={() => {
+          if (deletingEventId !== null) {
+            void handleDeleteEvent(deletingEventId)
+          }
+        }}
+        isLoading={deletingEventId !== null && confirmingDeleteEventId === deletingEventId}
+      />
       <div className="mx-auto max-w-[1500px] space-y-6">
         {error ? <AuthFormStatus tone="error" message={error} /> : null}
         <section className="rounded-[36px] border border-slate-200 bg-white p-4 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)] sm:p-5">
@@ -280,8 +323,8 @@ export default function UsuariosHomePage() {
                       <div className="absolute right-0 top-full z-20 mt-3 w-[340px] max-h-[70vh] overflow-y-auto rounded-[28px] border border-white/80 bg-white/95 p-4 shadow-[0_20px_50px_-26px_rgba(15,23,42,0.35)] backdrop-blur">
                         <div className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones</div>
                         <div className="space-y-3">
-                          <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description="Actualiza descripción, imagen y datos de contacto." />
-                          {hasPremium ? <QuickLink href="/usuarios/perfil#premium" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-fuchsia-600" />} title="Editar versión extendida" description="Administra el contenido ampliado de tu ficha desde el perfil." /> : null}
+                          <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description="Actualiza la ficha base: contacto, direccion, redes e imagen principal." />
+                          {hasPremium ? <QuickLink href="/usuarios/perfil#premium" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-fuchsia-600" />} title="Editar version extendida" description={isInstitution ? "Administra el contenido ampliado habilitado por admin." : "Administra el contenido ampliado incluido en tu plan."} /> : null}
                           {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
                           <QuickLink href="/usuarios/metricas-holavarela" icon={<BarChart3 className="h-5 w-5 text-slate-400 transition group-hover:text-indigo-600" />} title="Métricas de Hola Varela" description="Conoce visitantes, vistas y actividad general de la plataforma." />
                           <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
@@ -311,7 +354,9 @@ export default function UsuariosHomePage() {
                   hiddenEvents={hiddenEvents}
                   cancelledEvents={cancelledEvents}
                   updatingEventId={updatingEventId}
+                  deletingEventId={deletingEventId}
                   onChangeStatus={handleEventStatusChange}
+                  onDeleteEvent={(eventId) => setDeletingEventId(eventId)}
                 />
               </div>
             </div>
@@ -327,7 +372,7 @@ export default function UsuariosHomePage() {
               <div className="hidden">
                 <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones rápidas</div>
                 <div className="mt-4 space-y-3">
-                  <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description={hasPremium ? "Actualiza datos, imagen y el contenido ampliado de tu ficha." : "Actualiza descripción, imagen y datos de contacto."} />
+                  <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description="Actualiza la ficha base: contacto, direccion, redes e imagen principal." />
                         {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
                         <QuickLink href="/usuarios/metricas-holavarela" icon={<BarChart3 className="h-5 w-5 text-slate-400 transition group-hover:text-indigo-600" />} title="Métricas de Hola Varela" description="Conoce visitantes, vistas y actividad general de la plataforma." />
                         <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
@@ -391,14 +436,18 @@ function UnifiedEventsSection({
   hiddenEvents,
   cancelledEvents,
   updatingEventId,
+  deletingEventId,
   onChangeStatus,
+  onDeleteEvent,
 }: {
   activeEvents: UserOwnedEvent[]
   draftEvents: UserOwnedEvent[]
   hiddenEvents: UserOwnedEvent[]
   cancelledEvents: UserOwnedEvent[]
   updatingEventId: number | null
+  deletingEventId: number | null
   onChangeStatus: (eventId: number, nextStatus: "activo" | "oculto" | "cancelado") => void
+  onDeleteEvent: (eventId: number) => void
 }) {
   return (
     <div className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm sm:p-7">
@@ -433,7 +482,9 @@ function UnifiedEventsSection({
             emptyDescription="Cuando un evento se publica, lo veras aqui."
             events={activeEvents}
             updatingEventId={updatingEventId}
+            deletingEventId={deletingEventId}
             onChangeStatus={onChangeStatus}
+            onDeleteEvent={onDeleteEvent}
           />
           <EventGroup
             label={`Borradores (${draftEvents.length})`}
@@ -442,7 +493,9 @@ function UnifiedEventsSection({
             emptyDescription="Los borradores quedan listos para revisar o completar antes de publicarse."
             events={draftEvents}
             updatingEventId={updatingEventId}
+            deletingEventId={deletingEventId}
             onChangeStatus={onChangeStatus}
+            onDeleteEvent={onDeleteEvent}
             allowDraftResume
           />
           <EventGroup
@@ -452,7 +505,9 @@ function UnifiedEventsSection({
             emptyDescription="Si desactivas la visibilidad de un evento, aparecera aqui."
             events={hiddenEvents}
             updatingEventId={updatingEventId}
+            deletingEventId={deletingEventId}
             onChangeStatus={onChangeStatus}
+            onDeleteEvent={onDeleteEvent}
             allowDraftResume
           />
           <EventGroup
@@ -462,7 +517,9 @@ function UnifiedEventsSection({
             emptyDescription="Los eventos cancelados quedan guardados para que puedas revisarlos o reactivarlos mas adelante."
             events={cancelledEvents}
             updatingEventId={updatingEventId}
+            deletingEventId={deletingEventId}
             onChangeStatus={onChangeStatus}
+            onDeleteEvent={onDeleteEvent}
             allowDraftResume
           />
         </div>
@@ -478,7 +535,9 @@ function EventGroup({
   emptyDescription,
   events,
   updatingEventId,
+  deletingEventId,
   onChangeStatus,
+  onDeleteEvent,
   allowDraftResume = false,
 }: {
   label: string
@@ -487,7 +546,9 @@ function EventGroup({
   emptyDescription: string
   events: UserOwnedEvent[]
   updatingEventId: number | null
+  deletingEventId: number | null
   onChangeStatus: (eventId: number, nextStatus: "activo" | "oculto" | "cancelado") => void
+  onDeleteEvent: (eventId: number) => void
   allowDraftResume?: boolean
 }) {
   const toneClass =
@@ -581,6 +642,16 @@ function EventGroup({
                       Cancelar
                     </button>
                   ) : null}
+
+                  <button
+                    type="button"
+                    disabled={deletingEventId === event.id}
+                    onClick={() => onDeleteEvent(event.id)}
+                    className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 disabled:opacity-60"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Eliminar
+                  </button>
                 </div>
               </div>
             </article>

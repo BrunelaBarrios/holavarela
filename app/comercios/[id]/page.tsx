@@ -13,7 +13,7 @@ export default async function ComercioSharePage({
   const { id } = await params
   const { data } = await supabaseServer
     .from("comercios")
-    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, imagen, imagen_url, usa_whatsapp, estado, owner_email")
+    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, direccion, direccion_mapa, telefono, web_url, instagram_url, facebook_url, imagen, imagen_url, usa_whatsapp, estado, owner_email")
     .eq("id", Number(id))
     .maybeSingle()
 
@@ -51,6 +51,7 @@ export default async function ComercioSharePage({
       premiumExtraDetail={data.premium_extra_detalle}
       premiumExtraGallery={data.premium_extra_galeria}
       address={data.direccion}
+      directionsAddress={data.direccion_mapa}
       phone={data.telefono}
       webUrl={data.web_url}
       instagramUrl={data.instagram_url}

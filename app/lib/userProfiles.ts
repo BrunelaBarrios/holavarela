@@ -33,6 +33,7 @@ export type UserEntityRecord = {
   mp_preapproval_id?: string | null
   created_at?: string | null
   direccion?: string | null
+  direccion_mapa?: string | null
   telefono?: string | null
   imagen?: string | null
   imagen_url?: string | null

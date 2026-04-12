@@ -1,6 +1,8 @@
-const MAX_WIDTH = 1280
-const MAX_HEIGHT = 1280
-const WEBP_QUALITY = 0.78
+const MAX_WIDTH = 800
+const MAX_HEIGHT = 1600
+const INITIAL_WEBP_QUALITY = 0.74
+const MIN_WEBP_QUALITY = 0.42
+const TARGET_FILE_SIZE_BYTES = 200 * 1024
 const MAX_FILE_SIZE_BYTES = 6 * 1024 * 1024
 
 function loadImage(file: File): Promise<HTMLImageElement> {
@@ -50,7 +52,37 @@ export async function fileToDataUrl(file: File): Promise<string> {
 
   context.drawImage(image, 0, 0, width, height)
 
-  const result = canvas.toDataURL("image/webp", WEBP_QUALITY)
+  let currentWidth = width
+  let currentHeight = height
+  let quality = INITIAL_WEBP_QUALITY
+  let result = ""
+
+  while (currentWidth > 0 && currentHeight > 0) {
+    canvas.width = currentWidth
+    canvas.height = currentHeight
+    context.clearRect(0, 0, currentWidth, currentHeight)
+    context.drawImage(image, 0, 0, currentWidth, currentHeight)
+
+    quality = INITIAL_WEBP_QUALITY
+
+    while (quality >= MIN_WEBP_QUALITY) {
+      result = canvas.toDataURL("image/webp", quality)
+      if (!result) {
+        throw new Error("No se pudo convertir la imagen seleccionada.")
+      }
+
+      const estimatedBytes = Math.ceil((result.length * 3) / 4)
+      if (estimatedBytes <= TARGET_FILE_SIZE_BYTES) {
+        return result
+      }
+
+      quality -= 0.08
+    }
+
+    currentWidth = Math.max(1, Math.round(currentWidth * 0.88))
+    currentHeight = Math.max(1, Math.round(currentHeight * 0.88))
+  }
+
   if (!result) {
     throw new Error("No se pudo convertir la imagen seleccionada.")
   }
