@@ -2135,17 +2135,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   }
                   className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
                 >
-                  {curso.imagen && (
-                    <div className="relative h-36 w-full sm:h-56">
-                      <OptimizedImage
-                        src={curso.imagen}
-                        alt={curso.nombre}
-                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                        className="object-cover"
-                      />
-                    </div>
-                  )}
-
                   <div className="p-4 sm:p-5">
                     <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-[22px]">
                       {curso.nombre}
