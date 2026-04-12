@@ -105,7 +105,16 @@ export default async function Page() {
 
   const initialData: HomePageData = {
     featuredBusinesses: featuredBusinesses || [],
-    eventos: (eventosData || []).filter((evento) => isEventCurrentOrUpcoming(evento)).slice(0, 6),
+    eventos: (() => {
+      const activeEvents = eventosData || []
+      const currentOrUpcoming = activeEvents.filter((evento) =>
+        isEventCurrentOrUpcoming(evento)
+      )
+
+      // If date metadata is incomplete or stale, keep the home populated
+      // with active events instead of rendering an empty section.
+      return (currentOrUpcoming.length ? currentOrUpcoming : activeEvents).slice(0, 6)
+    })(),
     cursos: cursos || [],
     servicios: servicios || [],
     instituciones: instituciones || [],
