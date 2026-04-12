@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation"
 import { PremiumListingPage } from "../../components/public/PremiumListingPage"
+import { isEventCurrentOrUpcoming } from "../../lib/eventDates"
 import { supabaseServer } from "../../lib/supabaseServer"
 
 export const revalidate = 7200
@@ -19,7 +20,7 @@ export default async function InstitucionSharePage({
 
   const { data } = await supabaseServer
     .from("instituciones")
-    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, estado")
+    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, estado, owner_email")
     .eq("id", Number(id))
     .maybeSingle()
 
@@ -34,6 +35,15 @@ export default async function InstitucionSharePage({
   if (!hasInstitutionPremium(data)) {
     redirect(`/instituciones?item=${encodeURIComponent(id)}`)
   }
+
+  const { data: relatedEvents } = data.owner_email
+    ? await supabaseServer
+        .from("eventos")
+        .select("id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, descripcion, imagen")
+        .eq("owner_email", data.owner_email)
+        .or("estado.is.null,estado.eq.activo")
+        .order("fecha", { ascending: true })
+    : { data: [] }
 
   return (
     <PremiumListingPage
@@ -53,6 +63,7 @@ export default async function InstitucionSharePage({
       instagramUrl={data.instagram_url}
       facebookUrl={data.facebook_url}
       usesWhatsapp={data.usa_whatsapp}
+      relatedEvents={(relatedEvents || []).filter((event) => isEventCurrentOrUpcoming(event))}
       relatedCourses={[]}
     />
   )

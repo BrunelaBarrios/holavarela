@@ -33,6 +33,8 @@ export type Evento = {
   imagen: string
   estado: string
   usa_whatsapp?: boolean | null
+  ownerLabel?: string | null
+  ownerHref?: string | null
 }
 
 const normalizeEventCategory = (categoria?: string | null) => {
@@ -187,6 +189,25 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
             ? [{ icon: Phone, text: selectedEvento.telefono }]
             : []),
         ]}
+        extraContent={
+          selectedEvento?.ownerLabel && selectedEvento.ownerHref ? (
+            <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-5">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                Organiza
+              </div>
+              <p className="mt-2 text-base font-semibold text-slate-900">
+                {selectedEvento.ownerLabel}
+              </p>
+              <Link
+                href={selectedEvento.ownerHref}
+                className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100"
+              >
+                Ver perfil completo
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          ) : null
+        }
         actions={
           <>
             {selectedEvento?.telefono?.trim() ? (
@@ -349,6 +370,19 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 <p className="mt-1 text-sm text-gray-600">
                   Ubicacion: {evento.ubicacion}
                 </p>
+
+                {evento.ownerLabel && evento.ownerHref ? (
+                  <div className="mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-3 py-2 text-sm text-emerald-800">
+                    <span className="font-semibold">Pertenece a:</span>{" "}
+                    <Link
+                      href={evento.ownerHref}
+                      onClick={(event) => event.stopPropagation()}
+                      className="font-semibold underline decoration-emerald-300 underline-offset-4 transition hover:text-emerald-900"
+                    >
+                      {evento.ownerLabel}
+                    </Link>
+                  </div>
+                ) : null}
 
                 {evento.telefono && (
                   <p className="mt-1 text-sm text-gray-600">

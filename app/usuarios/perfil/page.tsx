@@ -27,8 +27,6 @@ type ProfileForm = {
   premiumExtraTitulo: string
   premiumExtraDetalle: string
   premiumExtraGaleria: string[]
-  premiumCursosActivo: boolean
-  premiumCursosTitulo: string
   usaWhatsapp: boolean
   image: string
 }
@@ -51,8 +49,6 @@ const initialForm: ProfileForm = {
   premiumExtraTitulo: "",
   premiumExtraDetalle: "",
   premiumExtraGaleria: [],
-  premiumCursosActivo: false,
-  premiumCursosTitulo: "",
   usaWhatsapp: true,
   image: "",
 }
@@ -102,8 +98,6 @@ export default function UsuariosPerfilPage() {
           premiumExtraTitulo: entity.record.premium_extra_titulo || "",
           premiumExtraDetalle: entity.record.premium_extra_detalle || "",
           premiumExtraGaleria: entity.record.premium_extra_galeria || [],
-          premiumCursosActivo: entity.record.premium_cursos_activo ?? false,
-          premiumCursosTitulo: entity.record.premium_cursos_titulo || "",
           usaWhatsapp: entity.record.usa_whatsapp ?? true,
           image: entity.record.imagen_url || entity.record.imagen || entity.record.foto || "",
         })
@@ -191,12 +185,6 @@ export default function UsuariosPerfilPage() {
           premium_extra_titulo: formData.premiumExtraTitulo.trim() || null,
           premium_extra_detalle: formData.premiumExtraDetalle.trim() || null,
           premium_extra_galeria: formData.premiumExtraGaleria,
-          premium_cursos_activo:
-            ownedEntity.type === "institucion" ? formData.premiumCursosActivo : undefined,
-          premium_cursos_titulo:
-            ownedEntity.type === "institucion"
-              ? formData.premiumCursosTitulo.trim() || null
-              : undefined,
         }
       : {}
 
@@ -261,9 +249,9 @@ export default function UsuariosPerfilPage() {
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6">
-      <div className="mx-auto max-w-5xl space-y-6">
+      <div className="mx-auto max-w-6xl space-y-6">
         <section className="overflow-hidden rounded-[36px] border border-slate-200 bg-white shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
-          <div className="grid lg:grid-cols-[0.95fr_1.05fr]">
+          <div className="grid xl:grid-cols-[0.72fr_1.28fr]">
             <div className="bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10">
               <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
                 Mi perfil
@@ -310,109 +298,116 @@ export default function UsuariosPerfilPage() {
                 </div>
               ) : ownedEntity ? (
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <Field
-                    label="Nombre"
-                    value={formData.nombre}
-                    onChange={(value) => setFormData((current) => ({ ...current, nombre: value }))}
-                    required
-                  />
-
-                  {ownedEntity.type === "servicio" ? (
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700">Categoria</label>
-                      <select
-                        value={formData.categoria}
-                        onChange={(event) =>
-                          setFormData((current) => ({ ...current, categoria: event.target.value }))
-                        }
-                        className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-400"
-                      >
-                        {serviceCategories.map((category) => (
-                          <option key={category} value={category}>
-                            {category}
-                          </option>
-                        ))}
-                      </select>
+                  <div className="rounded-[28px] border border-slate-200 bg-slate-50/80 p-5">
+                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                      Datos principales
                     </div>
-                  ) : null}
+                    <div className="mt-4 space-y-4">
+                      <Field
+                        label="Nombre"
+                        value={formData.nombre}
+                        onChange={(value) => setFormData((current) => ({ ...current, nombre: value }))}
+                        required
+                      />
 
-                  {ownedEntity.type === "servicio" || ownedEntity.type === "curso" ? (
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <Field
-                        label="Responsable"
-                        value={formData.responsable}
-                        onChange={(value) =>
-                          setFormData((current) => ({ ...current, responsable: value }))
-                        }
+                      {ownedEntity.type === "servicio" ? (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-slate-700">Categoria</label>
+                          <select
+                            value={formData.categoria}
+                            onChange={(event) =>
+                              setFormData((current) => ({ ...current, categoria: event.target.value }))
+                            }
+                            className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-400"
+                          >
+                            {serviceCategories.map((category) => (
+                              <option key={category} value={category}>
+                                {category}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : null}
+
+                      {ownedEntity.type === "servicio" || ownedEntity.type === "curso" ? (
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <Field
+                            label="Responsable"
+                            value={formData.responsable}
+                            onChange={(value) =>
+                              setFormData((current) => ({ ...current, responsable: value }))
+                            }
+                          />
+                          <Field
+                            label="Contacto"
+                            value={formData.contacto}
+                            onChange={(value) =>
+                              setFormData((current) => ({ ...current, contacto: value }))
+                            }
+                          />
+                        </div>
+                      ) : null}
+
+                      {ownedEntity.type === "comercio" || ownedEntity.type === "institucion" ? (
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <Field
+                            label="Direccion"
+                            value={formData.direccion}
+                            onChange={(value) =>
+                              setFormData((current) => ({ ...current, direccion: value }))
+                            }
+                          />
+                          <Field
+                            label="Telefono"
+                            value={formData.telefono}
+                            onChange={(value) =>
+                              setFormData((current) => ({ ...current, telefono: value }))
+                            }
+                          />
+                        </div>
+                      ) : null}
+
+                      {ownedEntity.type === "servicio" ? (
+                        <Field
+                          label="Direccion"
+                          value={formData.direccion}
+                          onChange={(value) => setFormData((current) => ({ ...current, direccion: value }))}
+                        />
+                      ) : null}
+
+                      <TextAreaField
+                        label="Descripcion"
+                        value={formData.descripcion}
+                        onChange={(value) => setFormData((current) => ({ ...current, descripcion: value }))}
                       />
-                      <Field
-                        label="Contacto"
-                        value={formData.contacto}
-                        onChange={(value) =>
-                          setFormData((current) => ({ ...current, contacto: value }))
-                        }
-                      />
+
+                      <div className="grid gap-4 md:grid-cols-3">
+                        <Field
+                          label="Sitio web"
+                          type="url"
+                          value={formData.webUrl}
+                          onChange={(value) =>
+                            setFormData((current) => ({ ...current, webUrl: value }))
+                          }
+                        />
+                        <Field
+                          label="Instagram"
+                          type="url"
+                          value={formData.instagramUrl}
+                          onChange={(value) =>
+                            setFormData((current) => ({ ...current, instagramUrl: value }))
+                          }
+                        />
+                        <Field
+                          label="Facebook"
+                          type="url"
+                          value={formData.facebookUrl}
+                          onChange={(value) =>
+                            setFormData((current) => ({ ...current, facebookUrl: value }))
+                          }
+                        />
+                      </div>
                     </div>
-                  ) : null}
-
-                  {ownedEntity.type === "comercio" || ownedEntity.type === "institucion" ? (
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <Field
-                        label="Direccion"
-                        value={formData.direccion}
-                        onChange={(value) =>
-                          setFormData((current) => ({ ...current, direccion: value }))
-                        }
-                      />
-                      <Field
-                        label="Telefono"
-                        value={formData.telefono}
-                        onChange={(value) =>
-                          setFormData((current) => ({ ...current, telefono: value }))
-                        }
-                      />
-                    </div>
-                  ) : null}
-
-                  {ownedEntity.type === "servicio" ? (
-                    <Field
-                      label="Direccion"
-                      value={formData.direccion}
-                      onChange={(value) => setFormData((current) => ({ ...current, direccion: value }))}
-                    />
-                  ) : null}
-
-                  <TextAreaField
-                    label="Descripcion"
-                    value={formData.descripcion}
-                    onChange={(value) => setFormData((current) => ({ ...current, descripcion: value }))}
-                  />
-
-                  <div className="grid gap-4 md:grid-cols-3">
-                    <Field
-                      label="Sitio web"
-                      type="url"
-                      value={formData.webUrl}
-                      onChange={(value) =>
-                        setFormData((current) => ({ ...current, webUrl: value }))
-                      }
-                    />
-                    <Field
-                      label="Instagram"
-                      type="url"
-                      value={formData.instagramUrl}
-                      onChange={(value) =>
-                        setFormData((current) => ({ ...current, instagramUrl: value }))
-                      }
-                    />
-                    <Field
-                      label="Facebook"
-                      type="url"
-                      value={formData.facebookUrl}
-                      onChange={(value) =>
-                        setFormData((current) => ({ ...current, facebookUrl: value }))
-                      }
-                    />
                   </div>
 
                   {ownedEntity.type !== "institucion" ? (
@@ -497,45 +492,6 @@ export default function UsuariosPerfilPage() {
                           </div>
                         </div>
 
-                        {ownedEntity.type === "institucion" ? (
-                          <div className="rounded-[24px] border border-emerald-200 bg-emerald-50/70 p-5">
-                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
-                              Cursos en perfil premium
-                            </div>
-                            <p className="mt-2 text-sm leading-6 text-slate-600">
-                              Decide si quieres mostrar en tu ficha premium los cursos vinculados a esta institucion.
-                            </p>
-                            <label className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700">
-                              <input
-                                type="checkbox"
-                                checked={formData.premiumCursosActivo}
-                                onChange={(event) =>
-                                  setFormData((current) => ({
-                                    ...current,
-                                    premiumCursosActivo: event.target.checked,
-                                  }))
-                                }
-                                className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                              />
-                              <span>Mostrar cursos relacionados en mi perfil premium</span>
-                            </label>
-                            <div className="mt-4">
-                              <Field
-                                label="Titulo del bloque de cursos"
-                                value={formData.premiumCursosTitulo}
-                                onChange={(value) =>
-                                  setFormData((current) => ({
-                                    ...current,
-                                    premiumCursosTitulo: value,
-                                  }))
-                                }
-                              />
-                            </div>
-                            <p className="mt-2 text-xs text-slate-500">
-                              Si dejas el titulo vacio, se usara "Cursos de esta institucion".
-                            </p>
-                          </div>
-                        ) : null}
                       </div>
                     ) : (
                       <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-600">

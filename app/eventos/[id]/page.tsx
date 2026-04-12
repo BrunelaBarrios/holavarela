@@ -34,6 +34,7 @@ type EventoRecord = {
   imagen?: string | null
   estado?: string | null
   usa_whatsapp?: boolean | null
+  owner_email?: string | null
 }
 
 const getSiteUrl = () => {
@@ -74,7 +75,7 @@ async function fetchEventById(id: string) {
 
   const { data } = await supabaseServer
     .from("eventos")
-    .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp")
+    .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email")
     .eq("id", eventId)
     .maybeSingle()
 
@@ -135,6 +136,15 @@ export default async function EventoSharePage({ params }: EventPageParams) {
 
   const parsedDescription = parseEventDescription(evento.descripcion).baseDescription
   const eventUrl = getEventUrl(evento.id)
+  const { data: ownerInstitution } = evento.owner_email
+    ? await supabaseServer
+        .from("instituciones")
+        .select("id, nombre, owner_email, premium_activo, estado")
+        .eq("owner_email", evento.owner_email)
+        .eq("premium_activo", true)
+        .eq("estado", "activo")
+        .maybeSingle()
+    : { data: null }
   const contactHref = evento.telefono
     ? evento.usa_whatsapp === false
       ? `tel:${evento.telefono}`
@@ -252,6 +262,23 @@ export default async function EventoSharePage({ params }: EventPageParams) {
                   <p className="whitespace-pre-line text-base leading-8 text-slate-700">
                     {parsedDescription}
                   </p>
+                </div>
+              ) : null}
+
+              {ownerInstitution ? (
+                <div className="mt-5 rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-6">
+                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
+                    Pertenece a
+                  </div>
+                  <p className="text-lg font-semibold text-slate-950">
+                    {ownerInstitution.nombre}
+                  </p>
+                  <Link
+                    href={`/instituciones/${ownerInstitution.id}`}
+                    className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100"
+                  >
+                    Ver perfil completo
+                  </Link>
                 </div>
               ) : null}
 

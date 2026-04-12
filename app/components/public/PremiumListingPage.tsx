@@ -131,6 +131,29 @@ export function PremiumListingPage({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [zoomedImage, setZoomedImage] = useState<string | null>(null)
   const selectedImage = galleryImages[selectedImageIndex] || imageSrc || null
+  const eventsSectionEyebrow = kind === "institucion" ? "Actividades" : "Actividad del local"
+  const eventsSectionTitle =
+    kind === "institucion"
+      ? `Proximos eventos y actividades de ${title}`
+      : `Proximos eventos de ${title}`
+  const emptyEventsTitle =
+    kind === "institucion" ? "Todavia no tiene actividades activas" : "Todavia no tiene eventos activos"
+  const emptyEventsDescription =
+    kind === "institucion"
+      ? "Cuando esta institucion publique actividades o eventos activos en Hola Varela, van a aparecer en esta seccion."
+      : "Cuando este perfil publique eventos y queden activos en Hola Varela, van a aparecer en esta seccion."
+
+  const openImageAt = (index: number) => {
+    const safeIndex =
+      index < 0
+        ? Math.max(galleryImages.length - 1, 0)
+        : index >= galleryImages.length
+          ? 0
+          : index
+
+    setSelectedImageIndex(safeIndex)
+    setZoomedImage(galleryImages[safeIndex] || null)
+  }
 
   useEffect(() => {
     void recordSiteVisit(
@@ -145,15 +168,11 @@ export function PremiumListingPage({
   }, [id, kind, section, title])
 
   const goToPrevious = () => {
-    setSelectedImageIndex((current) =>
-      current === 0 ? Math.max(galleryImages.length - 1, 0) : current - 1
-    )
+    openImageAt(selectedImageIndex === 0 ? galleryImages.length - 1 : selectedImageIndex - 1)
   }
 
   const goToNext = () => {
-    setSelectedImageIndex((current) =>
-      current >= galleryImages.length - 1 ? 0 : current + 1
-    )
+    openImageAt(selectedImageIndex >= galleryImages.length - 1 ? 0 : selectedImageIndex + 1)
   }
 
   return (
@@ -174,6 +193,29 @@ export function PremiumListingPage({
             className="relative h-[78vh] w-full max-w-6xl overflow-hidden rounded-[28px] border border-white/10 bg-white/5 shadow-2xl"
             onClick={(event) => event.stopPropagation()}
           >
+            {galleryImages.length > 1 ? (
+              <>
+                <button
+                  type="button"
+                  onClick={goToPrevious}
+                  className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-slate-950/45 p-3 text-white transition hover:bg-slate-950/70"
+                  aria-label="Ver imagen anterior"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button
+                  type="button"
+                  onClick={goToNext}
+                  className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-slate-950/45 p-3 text-white transition hover:bg-slate-950/70"
+                  aria-label="Ver siguiente imagen"
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+                <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/20 bg-slate-950/55 px-4 py-2 text-sm font-medium text-white">
+                  {selectedImageIndex + 1} / {galleryImages.length}
+                </div>
+              </>
+            ) : null}
             <OptimizedImage
               src={zoomedImage}
               alt={title}
@@ -205,7 +247,7 @@ export function PremiumListingPage({
                 {selectedImage ? (
                   <button
                     type="button"
-                    onClick={() => setZoomedImage(selectedImage)}
+                    onClick={() => openImageAt(selectedImageIndex)}
                     className="relative block aspect-[4/3] w-full transition hover:scale-[1.01]"
                     aria-label="Ver imagen más grande"
                   >
@@ -259,10 +301,7 @@ export function PremiumListingPage({
                       <button
                         type="button"
                         key={`${image}-${index}`}
-                        onClick={() => {
-                          setSelectedImageIndex(index)
-                          setZoomedImage(image)
-                        }}
+                        onClick={() => openImageAt(index)}
                         className={`relative aspect-[4/3] overflow-hidden rounded-[24px] border bg-white shadow-sm transition ${
                           selectedImageIndex === index
                             ? "border-blue-400 ring-2 ring-blue-100"
@@ -283,9 +322,6 @@ export function PremiumListingPage({
 
               {premiumExtraTitle || premiumExtraDetail || premiumExtraGallery?.length ? (
                 <div className="mt-6 rounded-[24px] border border-amber-100 bg-amber-50/80 p-6">
-                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">
-                    Bloque extra
-                  </div>
                   {premiumExtraTitle ? (
                     <h3 className="text-2xl font-semibold tracking-tight text-slate-950">
                       {premiumExtraTitle}
@@ -302,10 +338,7 @@ export function PremiumListingPage({
                         <button
                           type="button"
                           key={`${image}-${index}`}
-                          onClick={() => {
-                            setSelectedImageIndex(galleryImages.indexOf(image))
-                            setZoomedImage(image)
-                          }}
+                          onClick={() => openImageAt(galleryImages.indexOf(image))}
                           className="relative aspect-[4/3] overflow-hidden rounded-[22px] border border-amber-200 bg-white"
                         >
                           <OptimizedImage
@@ -422,15 +455,14 @@ export function PremiumListingPage({
           </div>
         </section>
 
-        {kind === "institucion" ? null : (
-          <section id="eventos-del-local" className="mt-8 rounded-[36px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.2)] sm:p-8">
+        <section id="eventos-del-local" className="mt-8 rounded-[36px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.2)] sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Actividad del local
+                  {eventsSectionEyebrow}
                 </div>
                 <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-                  Proximos eventos de {title}
+                  {eventsSectionTitle}
                 </h2>
               </div>
               <Link
@@ -443,9 +475,9 @@ export function PremiumListingPage({
 
             {relatedEvents.length === 0 ? (
               <div className="mt-6 rounded-[28px] border border-dashed border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#f4faf6_100%)] p-8">
-                <h3 className="text-lg font-semibold text-slate-900">Todavia no tiene eventos activos</h3>
+                <h3 className="text-lg font-semibold text-slate-900">{emptyEventsTitle}</h3>
                 <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
-                  Cuando este perfil publique eventos y queden activos en Hola Varela, van a aparecer en esta seccion.
+                  {emptyEventsDescription}
                 </p>
               </div>
             ) : (
@@ -496,7 +528,6 @@ export function PremiumListingPage({
               </div>
             )}
           </section>
-        )}
       </div>
     </main>
   )
