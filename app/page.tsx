@@ -1,6 +1,5 @@
 import { HomePage, type HomePageData, type WeatherData } from "./components/HomePage"
 import { isEventCurrentOrUpcoming } from "./lib/eventDates"
-import { getSupabaseAdmin } from "./lib/supabaseAdmin"
 import { supabaseServer } from "./lib/supabaseServer"
 
 export const revalidate = 3600
@@ -17,8 +16,6 @@ const defaultSobreVarela = {
 }
 
 export default async function Page() {
-  const supabaseAdmin = getSupabaseAdmin()
-
   const weatherPromise = fetch(
     "https://api.open-meteo.com/v1/forecast?latitude=-33.45&longitude=-54.53&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FMontevideo&forecast_days=1",
     {
@@ -92,7 +89,7 @@ export default async function Page() {
       .eq("destacado", true)
       .order("id", { ascending: false })
       .limit(12),
-    supabaseAdmin
+    supabaseServer
       .from("instituciones")
       .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, premium_activo, plan_suscripcion, estado_suscripcion")
       .or("estado.is.null,estado.eq.activo")
