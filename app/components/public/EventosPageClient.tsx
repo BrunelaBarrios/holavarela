@@ -77,7 +77,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
   }, [selectedEventoId])
 
   useEffect(() => {
-    void recordSiteVisit("eventos-page", "Listado de eventos")
+    void recordSiteVisit("eventos-page", "Hoy en Varela")
   }, [])
 
   useEffect(() => {
@@ -267,7 +267,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
               href="/eventos"
               className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
             >
-              Ver todos los eventos
+              Ver todo Hoy en Varela
               <ArrowRight className="h-4 w-4" />
             </Link>
           </>
@@ -279,9 +279,9 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
       <div className="mx-auto max-w-7xl px-6 py-16">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Eventos</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Hoy en Varela</h1>
             <p className="mt-2 text-gray-600">
-              Descubri los proximos eventos de Hola Varela
+              Eventos, avisos, promos y novedades de Hola Varela
             </p>
           </div>
 
@@ -290,7 +290,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
               href="/usuarios/eventos/nuevo?public=1"
               className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
             >
-              Agregar mi evento
+              Sumar mi aviso
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -303,14 +303,14 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por evento, ubicacion o descripcion"
+              placeholder="Buscar por titulo, ubicacion o categoria"
               className="w-full text-sm outline-none"
             />
           </div>
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          {["Todos", "Evento", "Promocion", "Sorteo", "Beneficio", "Consulta"].map((item) => (
+          {["Todos", "Evento", "Avisos", "Promocion", "Sorteo", "Beneficio", "Consulta"].map((item) => (
             <button
               key={item}
               type="button"
@@ -330,8 +330,8 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
           <div className="mt-10 rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
             <p className="text-gray-600">
               {eventos.length === 0
-                ? "Todavia no hay eventos cargados."
-                : "No se encontraron eventos con esos filtros."}
+                ? "Todavia no hay novedades cargadas."
+                : "No se encontraron publicaciones con esos filtros."}
             </p>
           </div>
         ) : (

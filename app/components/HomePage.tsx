@@ -1203,7 +1203,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               href="/usuarios/eventos/nuevo?public=1"
               className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
             >
-              Agregar mi evento
+              Sumar mi aviso
               <ArrowRight className="h-4 w-4" />
             </Link>
 
@@ -1268,7 +1268,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               href="/eventos"
               className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
             >
-              Ver todos los eventos
+              Ver todo Hoy en Varela
               <ArrowRight className="h-4 w-4" />
             </Link>
           </>
@@ -1978,17 +1978,17 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               Hoy en Varela
             </div>
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
-              Proximos eventos
+              Hoy en Varela
             </h2>
             <p className="mt-4 text-xl text-slate-500">
-              Eventos, promos y sorteos activos
+              Eventos, avisos, promos y sorteos activos
             </p>
             <div className="mt-6">
               <Link
                 href="/eventos"
                 className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
               >
-                Ver todos los eventos
+                Ver todo Hoy en Varela
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>

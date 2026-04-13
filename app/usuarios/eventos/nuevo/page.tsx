@@ -33,7 +33,7 @@ type EventForm = {
   submitterPhone: string
 }
 
-const categoriasEvento = ["Evento", "Promocion", "Sorteo", "Beneficio", "Consulta"]
+const categoriasEvento = ["Evento", "Avisos", "Promocion", "Sorteo", "Beneficio", "Consulta"]
 
 const initialForm: EventForm = {
   titulo: "",
@@ -62,7 +62,7 @@ export default function UsuariosNuevoEventoPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [ownerEmail, setOwnerEmail] = useState("")
-  const [editingEventId, setEditingEventId] = useState<number | null>(null)
+  const [editingEventId, setEditingEventId] = useState<string | null>(null)
   const [publicMode, setPublicMode] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -112,7 +112,7 @@ export default function UsuariosNuevoEventoPage() {
           const { data: existingEvent, error: eventError } = await supabase
             .from("eventos")
             .select("*")
-            .eq("id", Number(editId))
+            .eq("id", editId)
             .eq("owner_email", userEmail)
             .maybeSingle()
 
@@ -247,7 +247,7 @@ export default function UsuariosNuevoEventoPage() {
 
     setSuccess(
       publicMode
-        ? "Recibimos tu evento y lo vamos a revisar."
+        ? "Recibimos tu contenido y lo vamos a revisar."
         : editingEventId
           ? "Tu borrador quedo actualizado."
           : "Tu evento quedo guardado como borrador."
@@ -315,21 +315,21 @@ export default function UsuariosNuevoEventoPage() {
             <div className="grid lg:grid-cols-[1.05fr_1.15fr]">
               <div className="bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10">
                 <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-                  {publicMode ? "Envio de evento" : editingEventId ? "Editar borrador" : "Nuevo evento"}
+                  {publicMode ? "Hoy en Varela" : editingEventId ? "Editar borrador" : "Nueva novedad"}
                 </div>
 
                 <div className="mt-6 max-w-2xl">
                   <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
                     {publicMode
-                      ? "Envianos tu evento"
+                      ? "Envianos tu novedad para Hoy en Varela"
                       : editingEventId
                         ? "Continua tu borrador"
-                        : "Carga una novedad para tu perfil"}
+                        : "Carga una novedad para Hoy en Varela"}
                   </h1>
                   <p className="mt-4 text-lg leading-8 text-slate-600">
                     {publicMode
-                      ? "Completa los datos y nos llega para revisarlo antes de publicarlo en Hola Varela."
-                      : "Puedes publicar eventos, promociones, sorteos, beneficios o consultas. Todo entra como borrador para revisarlo antes de mostrarlo."}
+                      ? "Completa los datos y nos llega para revisarlo antes de publicarlo en Hoy en Varela."
+                      : "Puedes publicar eventos, avisos, promociones, sorteos, beneficios o consultas. Todo entra como borrador para revisarlo antes de mostrarlo."}
                   </p>
                 </div>
 
@@ -343,7 +343,7 @@ export default function UsuariosNuevoEventoPage() {
                         <div className="font-semibold text-slate-900">Que conviene cargar aca</div>
                         <p className="mt-2 text-sm leading-6 text-slate-600">
                           {publicMode
-                            ? "Compartenos la informacion principal del evento. Te pedimos tu numero para ponernos en contacto ante cualquier duda."
+                            ? "Compartenos la informacion principal de tu novedad. Te pedimos tu numero para ponernos en contacto ante cualquier duda."
                             : "Actividades especiales, promos del mes, sorteos, beneficios y cualquier novedad puntual de tu espacio."}
                         </p>
                       </div>
@@ -356,7 +356,7 @@ export default function UsuariosNuevoEventoPage() {
                     href={publicMode ? "/eventos" : "/usuarios"}
                     className="inline-flex items-center rounded-full border border-slate-300 bg-white/95 px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-sky-400 hover:bg-sky-50 hover:text-sky-700"
                   >
-                    {publicMode ? "Volver a eventos" : "Volver al panel"}
+                    {publicMode ? "Volver a Hoy en Varela" : "Volver al panel"}
                   </Link>
                 </div>
               </div>

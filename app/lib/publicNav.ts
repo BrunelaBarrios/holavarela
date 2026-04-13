@@ -9,7 +9,7 @@ type PublicNavKey =
 
 const publicNavItems: Record<PublicNavKey, { href: string; label: string }> = {
   inicio: { href: "/#inicio", label: "Inicio" },
-  eventos: { href: "/eventos", label: "Eventos" },
+  eventos: { href: "/eventos", label: "Hoy en Varela" },
   cursos: { href: "/cursos", label: "Cursos y Clases" },
   instituciones: { href: "/instituciones", label: "Instituciones" },
   comercios: { href: "/comercios", label: "Comercios" },
@@ -37,7 +37,7 @@ export function buildPublicNav(active?: PublicNavKey) {
 export function buildHomePublicNav() {
   return [
     { href: "/#inicio", label: "Inicio" },
-    { href: "/#eventos", label: "Eventos" },
+    { href: "/#eventos", label: "Hoy en Varela" },
     { href: "/#cursos", label: "Cursos y Clases" },
     { href: "/#instituciones", label: "Instituciones" },
     { href: "/#comercios", label: "Comercios" },

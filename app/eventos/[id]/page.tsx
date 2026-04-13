@@ -161,7 +161,7 @@ export default async function EventoSharePage({ params }: EventPageParams) {
             href="/eventos"
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
           >
-            Volver a eventos
+            Volver a Hoy en Varela
           </Link>
         </div>
 
