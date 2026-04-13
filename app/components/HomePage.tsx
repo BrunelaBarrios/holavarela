@@ -1207,7 +1207,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               href="/usuarios/eventos/nuevo?public=1"
               className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
             >
-              Sumar mi aviso
+              Sumar nueva actividad
               <ArrowRight className="h-4 w-4" />
             </Link>
 
@@ -2010,93 +2010,113 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {visibleEventos.map((event) => (
-              <div
-                key={event.id}
-                role="button"
-                tabIndex={0}
-                onClick={() =>
-                  handleViewMoreClick(
-                    "eventos",
-                    String(event.id),
-                    event.titulo,
-                    () => setSelectedEvento(event)
-                  )
-                }
-                onKeyDown={(eventKey) =>
-                  handleCardKeyDown(eventKey, () =>
+          {visibleEventos.length === 0 ? (
+            <div className="rounded-[28px] border border-slate-200 bg-white/90 p-8 text-center shadow-sm">
+              <h3 className="text-xl font-semibold text-slate-900">
+                Todavía no hay novedades activas
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-slate-500">
+                Cuando se publiquen eventos, avisos o promos en Hola Varela, van a aparecer en este bloque.
+              </p>
+              <div className="mt-5">
+                <Link
+                  href="/usuarios/eventos/nuevo?public=1"
+                  className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-5 py-3 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+                >
+                  Sumar nueva actividad
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              {visibleEventos.map((event) => (
+                <div
+                  key={event.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() =>
                     handleViewMoreClick(
                       "eventos",
                       String(event.id),
                       event.titulo,
                       () => setSelectedEvento(event)
                     )
-                  )
-                }
-                className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
-                  normalizeEventCategory(event.categoria) === "Evento"
-                    ? "border-emerald-200/80"
-                    : "border-white/80"
-                }`}
-              >
-                {event.imagen && (
-                  <div className="relative h-64 w-full">
-                    <OptimizedImage
-                      src={event.imagen}
-                      alt={event.titulo}
-                      sizes="(max-width: 1024px) 100vw, 33vw"
-                      className="object-cover"
-                    />
-                  </div>
-                )}
-
-                <div className="p-5">
-                  <div className="mb-4 flex items-center gap-2 text-lg text-blue-500">
-                    <CalendarDays className="h-5 w-5" />
-                    <span>{formatEventDateRange(event.fecha, event.fecha_fin, event.fecha_solo_mes ?? false)}</span>
-                  </div>
-
-                  <div className="mb-3 inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
-                    {normalizeEventCategory(event.categoria)}
-                  </div>
-
-                  <h3 className="text-[22px] font-semibold text-slate-900">
-                    {event.titulo}
-                  </h3>
-
-                  <p className="mt-2 text-sm text-slate-500">{event.ubicacion}</p>
-
-                  <div className="mt-4" onClick={(eventLikeWrapper) => eventLikeWrapper.stopPropagation()}>
-                    <EventLikeButton
-                      count={eventLikeCounts[String(event.id)] || 0}
-                      liked={Boolean(likedEvents[String(event.id)])}
-                      onClick={() => void handleEventLike(String(event.id), event.titulo)}
-                      disabled={likingEventId === String(event.id)}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-default disabled:opacity-70"
-                    />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={(eventClick) => {
-                      eventClick.stopPropagation()
+                  }
+                  onKeyDown={(eventKey) =>
+                    handleCardKeyDown(eventKey, () =>
                       handleViewMoreClick(
                         "eventos",
                         String(event.id),
                         event.titulo,
                         () => setSelectedEvento(event)
                       )
-                    }}
-                    className="mt-5 inline-flex items-center gap-2 text-lg font-medium text-blue-500 hover:text-blue-600"
-                  >
-                        Ver más
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+                    )
+                  }
+                  className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
+                    normalizeEventCategory(event.categoria) === "Evento"
+                      ? "border-emerald-200/80"
+                      : "border-white/80"
+                  }`}
+                >
+                  {event.imagen && (
+                    <div className="relative h-64 w-full">
+                      <OptimizedImage
+                        src={event.imagen}
+                        alt={event.titulo}
+                        sizes="(max-width: 1024px) 100vw, 33vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+
+                  <div className="p-5">
+                    <div className="mb-4 flex items-center gap-2 text-lg text-blue-500">
+                      <CalendarDays className="h-5 w-5" />
+                      <span>{formatEventDateRange(event.fecha, event.fecha_fin, event.fecha_solo_mes ?? false)}</span>
+                    </div>
+
+                    <div className="mb-3 inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+                      {normalizeEventCategory(event.categoria)}
+                    </div>
+
+                    <h3 className="text-[22px] font-semibold text-slate-900">
+                      {event.titulo}
+                    </h3>
+
+                    <p className="mt-2 text-sm text-slate-500">{event.ubicacion}</p>
+
+                    <div className="mt-4" onClick={(eventLikeWrapper) => eventLikeWrapper.stopPropagation()}>
+                      <EventLikeButton
+                        count={eventLikeCounts[String(event.id)] || 0}
+                        liked={Boolean(likedEvents[String(event.id)])}
+                        onClick={() => void handleEventLike(String(event.id), event.titulo)}
+                        disabled={likingEventId === String(event.id)}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-default disabled:opacity-70"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(eventClick) => {
+                        eventClick.stopPropagation()
+                        handleViewMoreClick(
+                          "eventos",
+                          String(event.id),
+                          event.titulo,
+                          () => setSelectedEvento(event)
+                        )
+                      }}
+                      className="mt-5 inline-flex items-center gap-2 text-lg font-medium text-blue-500 hover:text-blue-600"
+                    >
+                      Ver más
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
