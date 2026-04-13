@@ -11,10 +11,16 @@ export default async function EventosPage() {
     .or("estado.is.null,estado.eq.activo")
     .order("fecha", { ascending: true })
 
-  const activeEvents = (data || []).filter((evento) => isEventCurrentOrUpcoming(evento))
+  const activeEvents = data || []
+  const currentOrUpcomingEvents = activeEvents.filter((evento) =>
+    isEventCurrentOrUpcoming(evento)
+  )
+  const visibleEvents = currentOrUpcomingEvents.length
+    ? currentOrUpcomingEvents
+    : activeEvents
   const ownerEmails = Array.from(
     new Set(
-      activeEvents
+      visibleEvents
         .map((evento) => evento.owner_email?.trim().toLowerCase())
         .filter(Boolean) as string[]
     )
@@ -39,7 +45,7 @@ export default async function EventosPage() {
     ])
   )
 
-  const enrichedEvents = activeEvents.map((evento) => {
+  const enrichedEvents = visibleEvents.map((evento) => {
     const ownerInfo = evento.owner_email
       ? institutionOwnerMap.get(String(evento.owner_email).toLowerCase())
       : undefined
