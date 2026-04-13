@@ -7,6 +7,7 @@ import {
   Building2,
   Calendar,
   CreditCard,
+  Gift,
   GraduationCap,
   Mail,
   ShieldAlert,
@@ -20,6 +21,15 @@ type StatCard = {
   title: string
   value: number
   icon: typeof Store
+  color: string
+  action: () => void
+}
+
+type ConfigCard = {
+  id: string
+  title: string
+  description: string
+  icon: typeof Mail
   color: string
   action: () => void
 }
@@ -214,6 +224,25 @@ export default function AdminDashboardPage() {
     },
   ]
 
+  const configCards: ConfigCard[] = [
+    {
+      id: "sitio",
+      title: "Sitio",
+      description: "Edita textos generales y contenido institucional de la home.",
+      icon: Building2,
+      color: "bg-slate-800",
+      action: () => router.push("/admin/sitio"),
+    },
+    {
+      id: "sorteos",
+      title: "Sorteos",
+      description: "Activa campañas, cambia el popup y define comercios participantes.",
+      icon: Gift,
+      color: "bg-emerald-600",
+      action: () => router.push("/admin/sorteos"),
+    },
+  ]
+
   return (
     <div className="mx-auto max-w-7xl">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -290,6 +319,36 @@ export default function AdminDashboardPage() {
                       <span className="text-2xl font-semibold text-slate-900">{stat.value}</span>
                     </div>
                     <h3 className="text-base font-semibold text-slate-900">{stat.title}</h3>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+                Configuración
+              </p>
+              <h2 className="text-2xl font-semibold text-slate-900">Accesos de superadmin</h2>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {configCards.map((card) => {
+                const Icon = card.icon
+                return (
+                  <button
+                    key={card.id}
+                    onClick={card.action}
+                    className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-white hover:shadow-sm"
+                  >
+                    <div className="mb-3 flex items-center justify-between">
+                      <div className={`${card.color} rounded-xl p-3 text-white`}>
+                        <Icon className="h-6 w-6" />
+                      </div>
+                    </div>
+                    <h3 className="text-base font-semibold text-slate-900">{card.title}</h3>
+                    <p className="mt-2 text-sm text-slate-500">{card.description}</p>
                   </button>
                 )
               })}

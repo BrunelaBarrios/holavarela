@@ -5,10 +5,12 @@ const SWEEPSTAKES_ENTRIES_TABLE = "sorteo_participaciones"
 
 type SweepstakesConfigRow = {
   id: number
+  titulo: string | null
   activo: boolean | null
   descripcion: string | null
   comercio_id_1: number | null
   comercio_id_2: number | null
+  updated_at?: string | null
 }
 
 type SweepstakesCommerceRow = {
@@ -26,6 +28,8 @@ export type SweepstakesCommerce = {
 }
 
 export type SweepstakesConfig = {
+  id: number
+  title: string
   description: string
   commerces: SweepstakesCommerce[]
 }
@@ -40,15 +44,16 @@ type SupabaseErrorLike = {
 }
 
 export function isMissingSweepstakesSchemaError(error: SupabaseErrorLike | null | undefined) {
-  return error?.code === "42P01"
+  return error?.code === "42P01" || error?.code === "42703"
 }
 
 export async function fetchSweepstakesConfig() {
   const { data, error } = await supabase
     .from(SWEEPSTAKES_CONFIG_TABLE)
-    .select("id, activo, descripcion, comercio_id_1, comercio_id_2")
-    .eq("id", 1)
-    .maybeSingle()
+    .select("id, titulo, activo, descripcion, comercio_id_1, comercio_id_2, updated_at")
+    .eq("activo", true)
+    .order("updated_at", { ascending: false })
+    .limit(1)
 
   if (error) {
     if (!isMissingSweepstakesSchemaError(error)) {
@@ -58,7 +63,7 @@ export async function fetchSweepstakesConfig() {
     return { config: null as SweepstakesConfig | null, error }
   }
 
-  const row = data as SweepstakesConfigRow | null
+  const row = ((data || []) as SweepstakesConfigRow[])[0] || null
   if (!row?.activo || !row.descripcion?.trim()) {
     return { config: null as SweepstakesConfig | null, error: null }
   }
@@ -70,6 +75,8 @@ export async function fetchSweepstakesConfig() {
   if (commerceIds.length === 0) {
     return {
       config: {
+        id: row.id,
+        title: row.titulo?.trim() || "Participá con tus corazones",
         description: row.descripcion.trim(),
         commerces: [],
       },
@@ -100,6 +107,8 @@ export async function fetchSweepstakesConfig() {
 
   return {
     config: {
+      id: row.id,
+      title: row.titulo?.trim() || "Participá con tus corazones",
       description: row.descripcion.trim(),
       commerces: commerceIds
         .map((commerceId) => commerceMap.get(commerceId))
@@ -109,12 +118,17 @@ export async function fetchSweepstakesConfig() {
   }
 }
 
-export async function hasSweepstakesEntry(browserKey: string) {
-  const { data, error } = await supabase
+export async function hasSweepstakesEntry(browserKey: string, sorteoId?: number | null) {
+  let query = supabase
     .from(SWEEPSTAKES_ENTRIES_TABLE)
     .select("id")
     .eq("browser_key", browserKey)
-    .maybeSingle()
+
+  if (sorteoId) {
+    query = query.eq("sorteo_id", sorteoId)
+  }
+
+  const { data, error } = await query.maybeSingle()
 
   if (error) {
     if (!isMissingSweepstakesSchemaError(error)) {
@@ -131,6 +145,7 @@ export async function hasSweepstakesEntry(browserKey: string) {
 }
 
 export async function createSweepstakesEntry(params: {
+  sorteoId: number
   browserKey: string
   nombre: string
   telefono: string
@@ -138,6 +153,7 @@ export async function createSweepstakesEntry(params: {
 }) {
   const { error } = await supabase.from(SWEEPSTAKES_ENTRIES_TABLE).insert([
     {
+      sorteo_id: params.sorteoId,
       browser_key: params.browserKey,
       nombre: params.nombre.trim(),
       telefono: params.telefono.trim(),

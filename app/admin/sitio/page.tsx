@@ -1,5 +1,6 @@
 'use client'
 
+import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { FileText, ImageIcon, Save } from "lucide-react"
 import { OptimizedImage } from "../../components/OptimizedImage"
@@ -17,10 +18,21 @@ type SitioForm = {
 }
 
 type SorteoPopupForm = {
+  titulo: string
   activo: boolean
   descripcion: string
   comercio1Id: string
   comercio2Id: string
+}
+
+type SorteoCampaign = {
+  id: number
+  titulo: string
+  activo: boolean
+  descripcion: string
+  comercio1Id: string
+  comercio2Id: string
+  updatedAt?: string | null
 }
 
 type ComercioOption = {
@@ -42,6 +54,7 @@ const initialForm: SitioForm = {
 }
 
 const initialSorteoForm: SorteoPopupForm = {
+  titulo: "",
   activo: false,
   descripcion: "",
   comercio1Id: "",
@@ -51,6 +64,8 @@ const initialSorteoForm: SorteoPopupForm = {
 export default function AdminSitioPage() {
   const [formData, setFormData] = useState<SitioForm>(initialForm)
   const [sorteoForm, setSorteoForm] = useState<SorteoPopupForm>(initialSorteoForm)
+  const [sorteos, setSorteos] = useState<SorteoCampaign[]>([])
+  const [selectedSorteoId, setSelectedSorteoId] = useState<number | null>(null)
   const [comercios, setComercios] = useState<ComercioOption[]>([])
   const [loading, setLoading] = useState(false)
   const [savingSorteo, setSavingSorteo] = useState(false)
@@ -61,6 +76,24 @@ export default function AdminSitioPage() {
   const [sorteoSaveError, setSorteoSaveError] = useState("")
   const [sorteoSchemaReady, setSorteoSchemaReady] = useState(true)
   const [sorteoEntriesCount, setSorteoEntriesCount] = useState<number | null>(null)
+
+  const buildSorteoCampaign = (item: {
+    id: number
+    titulo?: string | null
+    activo?: boolean | null
+    descripcion?: string | null
+    comercio_id_1?: number | null
+    comercio_id_2?: number | null
+    updated_at?: string | null
+  }): SorteoCampaign => ({
+    id: item.id,
+    titulo: item.titulo?.trim() || `Sorteo #${item.id}`,
+    activo: Boolean(item.activo),
+    descripcion: item.descripcion || "",
+    comercio1Id: item.comercio_id_1 ? String(item.comercio_id_1) : "",
+    comercio2Id: item.comercio_id_2 ? String(item.comercio_id_2) : "",
+    updatedAt: item.updated_at || null,
+  })
 
   const selectedSorteoComercios = useMemo(() => {
     const ids = Array.from(
@@ -76,7 +109,7 @@ export default function AdminSitioPage() {
     const cargarConfiguracion = async () => {
       const [
         { data, error },
-        { data: configData, error: configError },
+        { data: configRows, error: configError },
         { data: comerciosData, error: comerciosError },
         { count: entriesCount, error: entriesError },
       ] = await Promise.all([
@@ -87,9 +120,8 @@ export default function AdminSitioPage() {
           .maybeSingle(),
         supabase
           .from("sorteo_popup_config")
-          .select("activo, descripcion, comercio_id_1, comercio_id_2")
-          .eq("id", 1)
-          .maybeSingle(),
+          .select("id, titulo, activo, descripcion, comercio_id_1, comercio_id_2, updated_at")
+          .order("updated_at", { ascending: false }),
         supabase
           .from("comercios")
           .select("id, nombre, imagen, imagen_url")
@@ -120,13 +152,33 @@ export default function AdminSitioPage() {
         } else {
           setSorteoSaveError(`No se pudo cargar el popup del sorteo: ${configError.message}`)
         }
-      } else if (configData) {
-        setSorteoForm({
-          activo: Boolean(configData.activo),
-          descripcion: configData.descripcion || "",
-          comercio1Id: configData.comercio_id_1 ? String(configData.comercio_id_1) : "",
-          comercio2Id: configData.comercio_id_2 ? String(configData.comercio_id_2) : "",
-        })
+      } else {
+        const mappedSorteos = ((configRows || []) as Array<{
+          id: number
+          titulo?: string | null
+          activo?: boolean | null
+          descripcion?: string | null
+          comercio_id_1?: number | null
+          comercio_id_2?: number | null
+          updated_at?: string | null
+        }>).map(buildSorteoCampaign)
+
+        setSorteos(mappedSorteos)
+
+        if (mappedSorteos.length > 0) {
+          const first = mappedSorteos[0]
+          setSelectedSorteoId(first.id)
+          setSorteoForm({
+            titulo: first.titulo,
+            activo: first.activo,
+            descripcion: first.descripcion,
+            comercio1Id: first.comercio1Id,
+            comercio2Id: first.comercio2Id,
+          })
+        } else {
+          setSelectedSorteoId(null)
+          setSorteoForm(initialSorteoForm)
+        }
       }
 
       if (entriesError) {
@@ -391,12 +443,22 @@ export default function AdminSitioPage() {
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-slate-900">
-                  Popup del sorteo
+                  Sorteos
                 </h2>
                 <p className="text-sm text-slate-500">
-                  Se muestra cuando una persona suma 3 corazones en eventos.
+                  Este bloque quedó como acceso rápido. La gestión principal ahora vive en la sección dedicada de sorteos.
                 </p>
               </div>
+            </div>
+
+            <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              <span>Usa el panel nuevo para crear campañas, activar una sola y editar comercios participantes.</span>
+              <Link
+                href="/admin/sorteos"
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white transition hover:bg-emerald-500"
+              >
+                Abrir Sorteos
+              </Link>
             </div>
 
             {!sorteoSchemaReady ? (
@@ -550,9 +612,9 @@ export default function AdminSitioPage() {
                 <ImageIcon className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">Vista previa del popup</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Acceso a Sorteos</h2>
                 <p className="text-sm text-slate-500">
-                  Así se verá cuando alguien llegue al tercer corazón.
+                  La configuración completa ahora se hace desde la pantalla exclusiva de sorteos.
                 </p>
               </div>
             </div>
@@ -562,11 +624,19 @@ export default function AdminSitioPage() {
                 Sorteo Hola Varela
               </div>
               <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">
-                Participá con tus corazones
+                Gestión centralizada
               </h3>
               <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">
-                {sorteoForm.descripcion || "Todavía no agregaste una descripción para el popup del sorteo."}
+                Crea sorteos nuevos, deja uno activo y configura qué comercios aparecen en el popup desde el panel dedicado.
               </p>
+              <div className="mt-5">
+                <Link
+                  href="/admin/sorteos"
+                  className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-5 py-3 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50"
+                >
+                  Abrir panel de sorteos
+                </Link>
+              </div>
 
               {selectedSorteoComercios.length ? (
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">

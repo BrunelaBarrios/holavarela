@@ -1513,6 +1513,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       {sweepstakesPopup.config ? (
         <SweepstakesPopup
           open={sweepstakesPopup.open}
+          title={sweepstakesPopup.config.title}
           description={sweepstakesPopup.config.description}
           commerces={sweepstakesPopup.config.commerces}
           loading={sweepstakesPopup.submitting}

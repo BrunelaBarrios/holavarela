@@ -46,7 +46,7 @@ export function useSweepstakesPopup() {
 
     const browserKey = result.browserKey || getEventLikesBrowserKey()
 
-    const existingEntry = await hasSweepstakesEntry(browserKey)
+    const existingEntry = await hasSweepstakesEntry(browserKey, config.id)
     if (existingEntry.exists) return
 
     setSubmitError("")
@@ -59,13 +59,14 @@ export function useSweepstakesPopup() {
     setSubmitting(true)
     setSubmitError("")
 
-    const likeResult = await hasSweepstakesEntry(browserKey)
+    const likeResult = await hasSweepstakesEntry(browserKey, config?.id)
     if (likeResult.exists) {
       setSubmitting(false)
       return { ok: true }
     }
 
     const entryResult = await createSweepstakesEntry({
+      sorteoId: config?.id || 0,
       browserKey,
       nombre,
       telefono,

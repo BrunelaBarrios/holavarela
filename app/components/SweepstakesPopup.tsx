@@ -8,6 +8,7 @@ import type { SweepstakesCommerce } from "../lib/sweepstakes"
 
 type SweepstakesPopupProps = {
   open: boolean
+  title?: string
   description: string
   commerces: SweepstakesCommerce[]
   loading?: boolean
@@ -18,6 +19,7 @@ type SweepstakesPopupProps = {
 
 export function SweepstakesPopup({
   open,
+  title = "Participá con tus corazones",
   description,
   commerces,
   loading = false,
@@ -65,7 +67,7 @@ export function SweepstakesPopup({
               Sorteo Hola Varela
             </div>
             <h2 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-              Participá con tus corazones
+              {title}
             </h2>
             <p className="mt-4 whitespace-pre-line text-base leading-8 text-slate-700">
               {description}

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link"
-import { useEffect, useMemo, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, MapPin, Phone, UserRound } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
@@ -140,6 +140,8 @@ export function PremiumListingPage({
   const [activeGallery, setActiveGallery] = useState<GalleryKind>("main")
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [zoomedImage, setZoomedImage] = useState<string | null>(null)
+  const touchStartXRef = useRef<number | null>(null)
+  const touchDeltaXRef = useRef(0)
   const currentGalleryImages = activeGallery === "extra" ? extraGalleryImages : mainGalleryImages
   const selectedImage =
     currentGalleryImages[selectedImageIndex] ||
@@ -198,6 +200,33 @@ export function PremiumListingPage({
     )
   }
 
+  const handleZoomTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+    touchStartXRef.current = event.touches[0]?.clientX ?? null
+    touchDeltaXRef.current = 0
+  }
+
+  const handleZoomTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartXRef.current === null) return
+    touchDeltaXRef.current = (event.touches[0]?.clientX ?? 0) - touchStartXRef.current
+  }
+
+  const handleZoomTouchEnd = () => {
+    if (touchStartXRef.current === null || currentGalleryImages.length <= 1) {
+      touchStartXRef.current = null
+      touchDeltaXRef.current = 0
+      return
+    }
+
+    if (touchDeltaXRef.current <= -50) {
+      goToNext()
+    } else if (touchDeltaXRef.current >= 50) {
+      goToPrevious()
+    }
+
+    touchStartXRef.current = null
+    touchDeltaXRef.current = 0
+  }
+
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)]">
       {zoomedImage ? (
@@ -215,6 +244,9 @@ export function PremiumListingPage({
           <div
             className="relative h-[78vh] w-full max-w-6xl overflow-hidden rounded-[28px] border border-white/10 bg-white/5 shadow-2xl"
             onClick={(event) => event.stopPropagation()}
+            onTouchStart={handleZoomTouchStart}
+            onTouchMove={handleZoomTouchMove}
+            onTouchEnd={handleZoomTouchEnd}
           >
             {currentGalleryImages.length > 1 ? (
               <>

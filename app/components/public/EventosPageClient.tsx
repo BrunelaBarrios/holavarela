@@ -170,6 +170,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
       {sweepstakesPopup.config ? (
         <SweepstakesPopup
           open={sweepstakesPopup.open}
+          title={sweepstakesPopup.config.title}
           description={sweepstakesPopup.config.description}
           commerces={sweepstakesPopup.config.commerces}
           loading={sweepstakesPopup.submitting}

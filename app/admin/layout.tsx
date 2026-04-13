@@ -13,6 +13,7 @@ import {
   CreditCard,
   FileText,
   GraduationCap,
+  Gift,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -40,6 +41,7 @@ const menuItems = [
   { href: "/admin/usuarios", icon: Users, label: "Usuarios", roles: ["superadmin", "admin"] },
   { href: "/admin/suscripciones", icon: CreditCard, label: "Suscripciones", roles: ["superadmin", "admin"] },
   { href: "/admin/sitio", icon: FileText, label: "Sitio", roles: ["superadmin"] },
+  { href: "/admin/sorteos", icon: Gift, label: "Sorteos", roles: ["superadmin"] },
   { href: "/admin/radio", icon: Radio, label: "Radio", roles: ["superadmin"] },
   { href: "/admin/administradores", icon: BadgeCheck, label: "Administradores", roles: ["superadmin"] },
   { href: "/admin/actividad", icon: Activity, label: "Actividad", roles: ["superadmin"] },
@@ -70,11 +72,11 @@ const menuGroups = [
   {
     id: "configuracion",
     label: "Configuracion",
-    items: ["/admin/sitio", "/admin/radio", "/admin/administradores", "/admin/actividad"],
+    items: ["/admin/sitio", "/admin/sorteos", "/admin/radio", "/admin/administradores", "/admin/actividad"],
   },
 ]
 
-const superAdminOnlyPrefixes = ["/admin/sitio", "/admin/radio", "/admin/administradores", "/admin/actividad"]
+const superAdminOnlyPrefixes = ["/admin/sitio", "/admin/sorteos", "/admin/radio", "/admin/administradores", "/admin/actividad"]
 
 export default function AdminLayout({
   children,
