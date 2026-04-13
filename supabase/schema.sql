@@ -470,3 +470,70 @@ on public.content_visits
 for select
 to anon, authenticated
 using (true);
+
+create table if not exists public.sorteo_popup_config (
+  id integer primary key,
+  activo boolean not null default false,
+  descripcion text not null default '',
+  comercio_id_1 bigint references public.comercios(id) on delete set null,
+  comercio_id_2 bigint references public.comercios(id) on delete set null,
+  updated_at timestamp with time zone default now()
+);
+
+create table if not exists public.sorteo_participaciones (
+  id bigint generated always as identity primary key,
+  browser_key text not null unique,
+  nombre text not null,
+  telefono text not null,
+  total_likes integer not null default 0,
+  created_at timestamp with time zone default now()
+);
+
+alter table public.sorteo_popup_config enable row level security;
+alter table public.sorteo_participaciones enable row level security;
+
+drop policy if exists "Allow public read on sorteo_popup_config"
+on public.sorteo_popup_config;
+
+create policy "Allow public read on sorteo_popup_config"
+on public.sorteo_popup_config
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Allow public insert on sorteo_popup_config"
+on public.sorteo_popup_config;
+
+create policy "Allow public insert on sorteo_popup_config"
+on public.sorteo_popup_config
+for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists "Allow public update on sorteo_popup_config"
+on public.sorteo_popup_config;
+
+create policy "Allow public update on sorteo_popup_config"
+on public.sorteo_popup_config
+for update
+to anon, authenticated
+using (true)
+with check (true);
+
+drop policy if exists "Allow public read on sorteo_participaciones"
+on public.sorteo_participaciones;
+
+create policy "Allow public read on sorteo_participaciones"
+on public.sorteo_participaciones
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Allow public insert on sorteo_participaciones"
+on public.sorteo_participaciones;
+
+create policy "Allow public insert on sorteo_participaciones"
+on public.sorteo_participaciones
+for insert
+to anon, authenticated
+with check (true);

@@ -98,14 +98,32 @@ export const recordEventLike = async (
 
   if (error) {
     if (error.code === "23505") {
-      return { status: "exists" as const }
+      const { count } = await supabase
+        .from(EVENT_LIKES_TABLE)
+        .select("*", { count: "exact", head: true })
+        .eq("browser_key", browserKey)
+
+      return {
+        status: "exists" as const,
+        browserKey,
+        totalLikes: count || 0,
+      }
     }
 
     console.error("No se pudo registrar el corazón del evento:", error)
     return { status: "error" as const }
   }
 
-  return { status: "liked" as const }
+  const { count } = await supabase
+    .from(EVENT_LIKES_TABLE)
+    .select("*", { count: "exact", head: true })
+    .eq("browser_key", browserKey)
+
+  return {
+    status: "liked" as const,
+    browserKey,
+    totalLikes: count || 0,
+  }
 }
 
 export const buildEventLikeTotal = (rows: EventLikeMetricRow[]) => rows.length

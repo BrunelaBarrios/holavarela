@@ -10,12 +10,14 @@ import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
+import { SweepstakesPopup } from "../SweepstakesPopup"
 import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { formatEventDateRange } from "../../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../../lib/eventLikes"
 import { parseEventDescription } from "../../lib/eventSubmissionMeta"
 import { buildPublicNav } from "../../lib/publicNav"
 import { recordViewMore } from "../../lib/viewMoreTracking"
+import { useSweepstakesPopup } from "../../lib/useSweepstakesPopup"
 
 export type Evento = {
   id: string
@@ -56,6 +58,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
       ? null
       : new URLSearchParams(window.location.search).get("item")
   )
+  const sweepstakesPopup = useSweepstakesPopup()
 
   const getShareUrl = (id: string) => {
     if (typeof window === "undefined") return `/eventos/${id}`
@@ -126,6 +129,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
       }))
     }
 
+    await sweepstakesPopup.handleLikeResult(result)
     setLikingEventId(null)
   }
 
@@ -163,6 +167,18 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
 
   return (
     <main className="min-h-screen bg-white">
+      {sweepstakesPopup.config ? (
+        <SweepstakesPopup
+          open={sweepstakesPopup.open}
+          description={sweepstakesPopup.config.description}
+          commerces={sweepstakesPopup.config.commerces}
+          loading={sweepstakesPopup.submitting}
+          error={sweepstakesPopup.submitError}
+          onClose={sweepstakesPopup.closePopup}
+          onSubmit={sweepstakesPopup.submitEntry}
+        />
+      ) : null}
+
       <PublicDetailModal
         open={Boolean(selectedEvento)}
         onClose={() => setSelectedEventoId(null)}

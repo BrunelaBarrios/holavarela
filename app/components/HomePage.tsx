@@ -18,9 +18,11 @@ import { OptimizedImage } from "./OptimizedImage"
 import { PrimaryExternalLinkButton } from "./PrimaryExternalLinkButton"
 import { PublicHeader } from "./PublicHeader"
 import { ShareButton } from "./ShareButton"
+import { SweepstakesPopup } from "./SweepstakesPopup"
 import { formatEventDateRange } from "../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
 import { parseEventDescription } from "../lib/eventSubmissionMeta"
+import { useSweepstakesPopup } from "../lib/useSweepstakesPopup"
 import { recordContentVisit, recordSiteVisit } from "../lib/contentVisits"
 import { buildHomePublicNav } from "../lib/publicNav"
 import { recordViewMore, type ViewMoreSection } from "../lib/viewMoreTracking"
@@ -408,6 +410,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [shouldLoadRadioWidget, setShouldLoadRadioWidget] = useState(false)
   const eventsSectionRef = useRef<HTMLElement | null>(null)
   const radioSectionRef = useRef<HTMLElement | null>(null)
+  const sweepstakesPopup = useSweepstakesPopup()
 
   const featuredBusinessPageCount = Math.max(
     1,
@@ -637,6 +640,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       }))
     }
 
+    await sweepstakesPopup.handleLikeResult(result)
     setLikingEventId(null)
   }
 
@@ -1505,6 +1509,18 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
           </div>
         </div>
       )}
+
+      {sweepstakesPopup.config ? (
+        <SweepstakesPopup
+          open={sweepstakesPopup.open}
+          description={sweepstakesPopup.config.description}
+          commerces={sweepstakesPopup.config.commerces}
+          loading={sweepstakesPopup.submitting}
+          error={sweepstakesPopup.submitError}
+          onClose={sweepstakesPopup.closePopup}
+          onSubmit={sweepstakesPopup.submitEntry}
+        />
+      ) : null}
 
       <PublicHeader
         items={buildHomePublicNav()}
