@@ -4,13 +4,13 @@ import Link from "next/link"
 import { useState } from "react"
 import { ArrowRight, X } from "lucide-react"
 import { OptimizedImage } from "./OptimizedImage"
-import type { SweepstakesCommerce } from "../lib/sweepstakes"
+import type { SweepstakesParticipant } from "../lib/sweepstakes"
 
 type SweepstakesPopupProps = {
   open: boolean
   title?: string
   description: string
-  commerces: SweepstakesCommerce[]
+  participants: SweepstakesParticipant[]
   loading?: boolean
   error?: string
   onClose: () => void
@@ -21,7 +21,7 @@ export function SweepstakesPopup({
   open,
   title = "Participá con tus corazones",
   description,
-  commerces,
+  participants,
   loading = false,
   error = "",
   onClose,
@@ -73,23 +73,23 @@ export function SweepstakesPopup({
               {description}
             </p>
 
-            {commerces.length ? (
+            {participants.length ? (
               <div className="mt-6">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  Comercios participantes
+                  Participantes
                 </div>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {commerces.map((commerce) => (
+                  {participants.map((participant) => (
                     <Link
-                      key={commerce.id}
-                      href={commerce.href}
+                      key={`${participant.type}-${participant.id}`}
+                      href={participant.href}
                       className="overflow-hidden rounded-[24px] border border-white/80 bg-white/90 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                     >
                       <div className="relative h-36 w-full bg-slate-100">
-                        {commerce.imageSrc ? (
+                        {participant.imageSrc ? (
                           <OptimizedImage
-                            src={commerce.imageSrc}
-                            alt={commerce.nombre}
+                            src={participant.imageSrc}
+                            alt={participant.nombre}
                             sizes="(max-width: 768px) 100vw, 25vw"
                             className="object-cover"
                           />
@@ -101,10 +101,10 @@ export function SweepstakesPopup({
                       </div>
                       <div className="p-4">
                         <div className="text-base font-semibold text-slate-900">
-                          {commerce.nombre}
+                          {participant.nombre}
                         </div>
                         <div className="mt-2 inline-flex items-center gap-2 text-sm font-medium text-emerald-700">
-                          Ver comercio
+                          Ver ficha
                           <ArrowRight className="h-4 w-4" />
                         </div>
                       </div>

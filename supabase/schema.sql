@@ -476,6 +476,10 @@ create table if not exists public.sorteo_popup_config (
   titulo text not null default '',
   activo boolean not null default false,
   descripcion text not null default '',
+  participante_tipo_1 text,
+  participante_id_1 bigint,
+  participante_tipo_2 text,
+  participante_id_2 bigint,
   comercio_id_1 bigint references public.comercios(id) on delete set null,
   comercio_id_2 bigint references public.comercios(id) on delete set null,
   created_at timestamp with time zone default now(),
@@ -497,6 +501,18 @@ add column if not exists titulo text not null default '';
 
 alter table public.sorteo_popup_config
 add column if not exists created_at timestamp with time zone default now();
+
+alter table public.sorteo_popup_config
+add column if not exists participante_tipo_1 text;
+
+alter table public.sorteo_popup_config
+add column if not exists participante_id_1 bigint;
+
+alter table public.sorteo_popup_config
+add column if not exists participante_tipo_2 text;
+
+alter table public.sorteo_popup_config
+add column if not exists participante_id_2 bigint;
 
 alter table public.sorteo_participaciones
 add column if not exists sorteo_id bigint references public.sorteo_popup_config(id) on delete cascade;

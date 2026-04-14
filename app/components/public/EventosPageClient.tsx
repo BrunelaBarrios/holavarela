@@ -172,7 +172,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
           open={sweepstakesPopup.open}
           title={sweepstakesPopup.config.title}
           description={sweepstakesPopup.config.description}
-          commerces={sweepstakesPopup.config.commerces}
+          participants={sweepstakesPopup.config.participants}
           loading={sweepstakesPopup.submitting}
           error={sweepstakesPopup.submitError}
           onClose={sweepstakesPopup.closePopup}

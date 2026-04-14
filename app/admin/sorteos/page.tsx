@@ -1,17 +1,19 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { Gift, Plus, Save } from "lucide-react"
+import { Copy, Gift, Plus, QrCode, Save } from "lucide-react"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { isMissingSweepstakesSchemaError } from "../../lib/sweepstakes"
+
+type SorteoParticipantType = "comercio" | "servicio" | "institucion"
 
 type SorteoForm = {
   titulo: string
   activo: boolean
   descripcion: string
-  comercio1Id: string
-  comercio2Id: string
+  participante1Key: string
+  participante2Key: string
 }
 
 type SorteoCampaign = {
@@ -19,42 +21,95 @@ type SorteoCampaign = {
   titulo: string
   activo: boolean
   descripcion: string
-  comercio1Id: string
-  comercio2Id: string
+  participante1Key: string
+  participante2Key: string
   updatedAt: string | null
 }
 
-type ComercioOption = {
+type ParticipantOption = {
+  key: string
+  type: SorteoParticipantType
   id: number
   nombre: string
+  label: string
 }
 
 const createEmptyForm = (): SorteoForm => ({
   titulo: "",
   activo: false,
   descripcion: "",
-  comercio1Id: "",
-  comercio2Id: "",
+  participante1Key: "",
+  participante2Key: "",
 })
+
+const PUBLIC_SITE_URL = "https://www.holavarela.uy"
+
+function buildSweepstakesPublicUrl(sorteoId?: number | null) {
+  return sorteoId ? `${PUBLIC_SITE_URL}/sorteo/${sorteoId}` : `${PUBLIC_SITE_URL}/sorteo`
+}
+
+function buildSweepstakesQrUrl(sorteoId?: number | null) {
+  const publicUrl = buildSweepstakesPublicUrl(sorteoId)
+  return `https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&data=${encodeURIComponent(publicUrl)}`
+}
 
 function buildCampaign(item: {
   id: number
   titulo?: string | null
   activo?: boolean | null
   descripcion?: string | null
+  participante_tipo_1?: SorteoParticipantType | null
+  participante_id_1?: number | null
+  participante_tipo_2?: SorteoParticipantType | null
+  participante_id_2?: number | null
   comercio_id_1?: number | null
   comercio_id_2?: number | null
   updated_at?: string | null
 }): SorteoCampaign {
+  const participante1Key =
+    item.participante_tipo_1 && item.participante_id_1
+      ? `${item.participante_tipo_1}:${item.participante_id_1}`
+      : item.comercio_id_1
+        ? `comercio:${item.comercio_id_1}`
+        : ""
+
+  const participante2Key =
+    item.participante_tipo_2 && item.participante_id_2
+      ? `${item.participante_tipo_2}:${item.participante_id_2}`
+      : item.comercio_id_2
+        ? `comercio:${item.comercio_id_2}`
+        : ""
+
   return {
     id: item.id,
     titulo: item.titulo?.trim() || `Sorteo #${item.id}`,
     activo: Boolean(item.activo),
     descripcion: item.descripcion || "",
-    comercio1Id: item.comercio_id_1 ? String(item.comercio_id_1) : "",
-    comercio2Id: item.comercio_id_2 ? String(item.comercio_id_2) : "",
+    participante1Key,
+    participante2Key,
     updatedAt: item.updated_at || null,
   }
+}
+
+function buildParticipantKey(type: SorteoParticipantType, id: number) {
+  return `${type}:${id}`
+}
+
+function parseParticipantKey(
+  value: string
+): { type: SorteoParticipantType; id: number } | null {
+  const [type, rawId] = value.split(":")
+  if (
+    (type !== "comercio" && type !== "servicio" && type !== "institucion") ||
+    !rawId
+  ) {
+    return null
+  }
+
+  const id = Number(rawId)
+  if (!Number.isFinite(id)) return null
+
+  return { type, id }
 }
 
 export default function AdminSorteosPage() {
@@ -64,22 +119,31 @@ export default function AdminSorteosPage() {
   const [campaigns, setCampaigns] = useState<SorteoCampaign[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [form, setForm] = useState<SorteoForm>(createEmptyForm())
-  const [comercios, setComercios] = useState<ComercioOption[]>([])
+  const [participantOptions, setParticipantOptions] = useState<ParticipantOption[]>([])
   const [entriesCount, setEntriesCount] = useState<number>(0)
   const [saveMessage, setSaveMessage] = useState("")
   const [saveError, setSaveError] = useState("")
+  const [shareMessage, setShareMessage] = useState("")
 
   const selectedCampaign = useMemo(
     () => campaigns.find((item) => item.id === selectedId) || null,
     [campaigns, selectedId]
   )
 
-  const selectedComercioLabels = useMemo(() => {
-    const byId = new Map(comercios.map((item) => [String(item.id), item.nombre]))
-    return [form.comercio1Id, form.comercio2Id]
+  const selectedParticipantLabels = useMemo(() => {
+    const byKey = new Map(participantOptions.map((item) => [item.key, item.label]))
+    return [form.participante1Key, form.participante2Key]
       .filter((value, index, array) => Boolean(value) && array.indexOf(value) === index)
-      .map((id) => byId.get(id) || "Comercio")
-  }, [comercios, form.comercio1Id, form.comercio2Id])
+      .map((key) => byKey.get(key) || "Participante")
+  }, [participantOptions, form.participante1Key, form.participante2Key])
+  const selectedSweepstakesPublicUrl = useMemo(
+    () => buildSweepstakesPublicUrl(selectedId),
+    [selectedId]
+  )
+  const selectedSweepstakesQrUrl = useMemo(
+    () => buildSweepstakesQrUrl(selectedId),
+    [selectedId]
+  )
 
   const applyCampaign = (campaign: SorteoCampaign | null) => {
     if (!campaign) {
@@ -93,8 +157,8 @@ export default function AdminSorteosPage() {
       titulo: campaign.titulo,
       activo: campaign.activo,
       descripcion: campaign.descripcion,
-      comercio1Id: campaign.comercio1Id,
-      comercio2Id: campaign.comercio2Id,
+      participante1Key: campaign.participante1Key,
+      participante2Key: campaign.participante2Key,
     })
   }
 
@@ -102,14 +166,26 @@ export default function AdminSorteosPage() {
     const [
       { data: configRows, error: configError },
       { data: comerciosRows, error: comerciosError },
+      { data: serviciosRows, error: serviciosError },
+      { data: institucionesRows, error: institucionesError },
       { count, error: entriesError },
     ] = await Promise.all([
       supabase
         .from("sorteo_popup_config")
-        .select("id, titulo, activo, descripcion, comercio_id_1, comercio_id_2, updated_at")
+        .select("id, titulo, activo, descripcion, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at")
         .order("updated_at", { ascending: false }),
       supabase
         .from("comercios")
+        .select("id, nombre")
+        .or("estado.is.null,estado.eq.activo")
+        .order("nombre", { ascending: true }),
+      supabase
+        .from("servicios")
+        .select("id, nombre")
+        .or("estado.is.null,estado.eq.activo")
+        .order("nombre", { ascending: true }),
+      supabase
+        .from("instituciones")
         .select("id, nombre")
         .or("estado.is.null,estado.eq.activo")
         .order("nombre", { ascending: true }),
@@ -129,10 +205,38 @@ export default function AdminSorteosPage() {
     }
 
     setSchemaReady(true)
-    setComercios((comerciosRows || []) as ComercioOption[])
+    const nextParticipantOptions: ParticipantOption[] = [
+      ...((comerciosRows || []) as Array<{ id: number; nombre: string }>).map((item) => ({
+        key: buildParticipantKey("comercio", item.id),
+        type: "comercio" as const,
+        id: item.id,
+        nombre: item.nombre,
+        label: `Comercio: ${item.nombre}`,
+      })),
+      ...((serviciosRows || []) as Array<{ id: number; nombre: string }>).map((item) => ({
+        key: buildParticipantKey("servicio", item.id),
+        type: "servicio" as const,
+        id: item.id,
+        nombre: item.nombre,
+        label: `Servicio: ${item.nombre}`,
+      })),
+      ...((institucionesRows || []) as Array<{ id: number; nombre: string }>).map((item) => ({
+        key: buildParticipantKey("institucion", item.id),
+        type: "institucion" as const,
+        id: item.id,
+        nombre: item.nombre,
+        label: `Institucion: ${item.nombre}`,
+      })),
+    ]
+    setParticipantOptions(nextParticipantOptions)
 
-    if (comerciosError) {
-      setSaveError(`No se pudo cargar comercios: ${comerciosError.message}`)
+    const loadErrors = [comerciosError, serviciosError, institucionesError]
+      .filter(Boolean)
+      .map((error) => error?.message)
+      .join(" | ")
+
+    if (loadErrors) {
+      setSaveError(`No se pudieron cargar participantes: ${loadErrors}`)
     }
 
     if (!entriesError) {
@@ -144,6 +248,10 @@ export default function AdminSorteosPage() {
       titulo?: string | null
       activo?: boolean | null
       descripcion?: string | null
+      participante_tipo_1?: SorteoParticipantType | null
+      participante_id_1?: number | null
+      participante_tipo_2?: SorteoParticipantType | null
+      participante_id_2?: number | null
       comercio_id_1?: number | null
       comercio_id_2?: number | null
       updated_at?: string | null
@@ -162,7 +270,11 @@ export default function AdminSorteosPage() {
   }
 
   useEffect(() => {
-    void loadData()
+    const timeoutId = window.setTimeout(() => {
+      void loadData()
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [])
 
   const handleNew = () => {
@@ -174,7 +286,37 @@ export default function AdminSorteosPage() {
   const handleSelect = (campaign: SorteoCampaign) => {
     setSaveMessage("")
     setSaveError("")
+    setShareMessage("")
     applyCampaign(campaign)
+  }
+
+  const handleCopyPublicLink = async () => {
+    try {
+      await navigator.clipboard.writeText(selectedSweepstakesPublicUrl)
+      setShareMessage(
+        selectedId ? `Link del sorteo #${selectedId} copiado.` : "Link del sorteo copiado."
+      )
+    } catch {
+      setShareMessage(`Copia manualmente este link: ${selectedSweepstakesPublicUrl}`)
+    }
+  }
+
+  const handleDownloadQr = () => {
+    if (typeof window === "undefined") return
+
+    const link = window.document.createElement("a")
+    link.href = selectedSweepstakesQrUrl
+    link.download = selectedId
+      ? `qr-sorteo-hola-varela-${selectedId}.png`
+      : "qr-sorteo-hola-varela.png"
+    link.target = "_blank"
+    link.rel = "noopener noreferrer"
+    link.click()
+    setShareMessage(
+      selectedId
+        ? `Se abrio el QR del sorteo #${selectedId} para descargar.`
+        : "Se abrio el QR del sorteo para descargar."
+    )
   }
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -189,10 +331,10 @@ export default function AdminSorteosPage() {
       return
     }
 
-    const selectedComercio1 = form.comercio1Id ? Number(form.comercio1Id) : null
-    const selectedComercio2 =
-      form.comercio2Id && form.comercio2Id !== form.comercio1Id
-        ? Number(form.comercio2Id)
+    const selectedParticipant1 = parseParticipantKey(form.participante1Key)
+    const selectedParticipant2 =
+      form.participante2Key && form.participante2Key !== form.participante1Key
+        ? parseParticipantKey(form.participante2Key)
         : null
 
     if (form.activo) {
@@ -212,8 +354,12 @@ export default function AdminSorteosPage() {
       titulo: form.titulo.trim() || "Sorteo Hola Varela",
       activo: form.activo,
       descripcion: form.descripcion.trim(),
-      comercio_id_1: selectedComercio1,
-      comercio_id_2: selectedComercio2,
+      participante_tipo_1: selectedParticipant1?.type || null,
+      participante_id_1: selectedParticipant1?.id || null,
+      participante_tipo_2: selectedParticipant2?.type || null,
+      participante_id_2: selectedParticipant2?.id || null,
+      comercio_id_1: selectedParticipant1?.type === "comercio" ? selectedParticipant1.id : null,
+      comercio_id_2: selectedParticipant2?.type === "comercio" ? selectedParticipant2.id : null,
       updated_at: new Date().toISOString(),
     }
 
@@ -257,7 +403,7 @@ export default function AdminSorteosPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-slate-900">Sorteos</h1>
         <p className="mt-2 text-slate-500">
-          Crea campañas, activa una sola a la vez y define qué comercios aparecen en el popup.
+          Crea campañas, activa una sola a la vez y define qué fichas aparecen en el popup.
         </p>
       </div>
 
@@ -315,6 +461,9 @@ export default function AdminSorteosPage() {
                         <div className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">
                           ID {campaign.id}
                         </div>
+                        <div className="mt-2 text-xs text-slate-500 break-all">
+                          {buildSweepstakesPublicUrl(campaign.id)}
+                        </div>
                       </div>
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${
@@ -359,6 +508,39 @@ export default function AdminSorteosPage() {
                   {saveMessage}
                 </div>
               ) : null}
+
+              {shareMessage ? (
+                <div className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+                  {shareMessage}
+                </div>
+              ) : null}
+
+              <div className="flex flex-wrap gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <button
+                  type="button"
+                  onClick={() => void handleCopyPublicLink()}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copiar link sorteo
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadQr}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100"
+                >
+                  <QrCode className="h-4 w-4" />
+                  Descargar QR
+                </button>
+                <a
+                  href={selectedSweepstakesPublicUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100"
+                >
+                  Ver pagina publica
+                </a>
+              </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
@@ -405,19 +587,19 @@ export default function AdminSorteosPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Comercio participante 1
+                    Participante 1
                   </label>
                   <select
-                    value={form.comercio1Id}
+                    value={form.participante1Key}
                     onChange={(event) =>
-                      setForm((current) => ({ ...current, comercio1Id: event.target.value }))
+                      setForm((current) => ({ ...current, participante1Key: event.target.value }))
                     }
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
                   >
                     <option value="">Sin seleccionar</option>
-                    {comercios.map((comercio) => (
-                      <option key={`comercio-1-${comercio.id}`} value={comercio.id}>
-                        {comercio.nombre}
+                    {participantOptions.map((participant) => (
+                      <option key={`participant-1-${participant.key}`} value={participant.key}>
+                        {participant.label}
                       </option>
                     ))}
                   </select>
@@ -425,19 +607,19 @@ export default function AdminSorteosPage() {
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Comercio participante 2
+                    Participante 2
                   </label>
                   <select
-                    value={form.comercio2Id}
+                    value={form.participante2Key}
                     onChange={(event) =>
-                      setForm((current) => ({ ...current, comercio2Id: event.target.value }))
+                      setForm((current) => ({ ...current, participante2Key: event.target.value }))
                     }
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
                   >
                     <option value="">Sin seleccionar</option>
-                    {comercios.map((comercio) => (
-                      <option key={`comercio-2-${comercio.id}`} value={comercio.id}>
-                        {comercio.nombre}
+                    {participantOptions.map((participant) => (
+                      <option key={`participant-2-${participant.key}`} value={participant.key}>
+                        {participant.label}
                       </option>
                     ))}
                   </select>
@@ -455,9 +637,9 @@ export default function AdminSorteosPage() {
                   {form.descripcion.trim() || "Todavía no agregaste una descripción para este popup."}
                 </p>
 
-                {selectedComercioLabels.length ? (
+                {selectedParticipantLabels.length ? (
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {selectedComercioLabels.map((label) => (
+                    {selectedParticipantLabels.map((label) => (
                       <span
                         key={label}
                         className="rounded-full border border-white/80 bg-white/90 px-3 py-2 text-sm font-medium text-slate-700"

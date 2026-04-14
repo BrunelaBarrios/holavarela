@@ -402,38 +402,54 @@ export default function UsuariosPerfilPage() {
                       ) : null}
 
                       {ownedEntity.type === "servicio" || ownedEntity.type === "curso" ? (
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <Field
-                            label="Responsable"
-                            value={formData.responsable}
-                            onChange={(value) =>
-                              setFormData((current) => ({ ...current, responsable: value }))
-                            }
-                          />
-                          <Field
-                            label="Contacto"
-                            value={formData.contacto}
-                            onChange={(value) =>
-                              setFormData((current) => ({ ...current, contacto: value }))
+                        <div className="space-y-4">
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <Field
+                              label="Responsable"
+                              value={formData.responsable}
+                              onChange={(value) =>
+                                setFormData((current) => ({ ...current, responsable: value }))
+                              }
+                            />
+                            <Field
+                              label="Contacto"
+                              value={formData.contacto}
+                              onChange={(value) =>
+                                setFormData((current) => ({ ...current, contacto: value }))
+                              }
+                            />
+                          </div>
+                          <WhatsappToggle
+                            checked={formData.usaWhatsapp}
+                            onChange={(checked) =>
+                              setFormData((current) => ({ ...current, usaWhatsapp: checked }))
                             }
                           />
                         </div>
                       ) : null}
 
                       {ownedEntity.type === "comercio" || ownedEntity.type === "institucion" ? (
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <Field
-                            label="Direccion"
-                            value={formData.direccion}
-                            onChange={(value) =>
-                              setFormData((current) => ({ ...current, direccion: value }))
-                            }
-                          />
-                          <Field
-                            label="Telefono"
-                            value={formData.telefono}
-                            onChange={(value) =>
-                              setFormData((current) => ({ ...current, telefono: value }))
+                        <div className="space-y-4">
+                          <div className="grid gap-4 md:grid-cols-2">
+                            <Field
+                              label="Direccion"
+                              value={formData.direccion}
+                              onChange={(value) =>
+                                setFormData((current) => ({ ...current, direccion: value }))
+                              }
+                            />
+                            <Field
+                              label="Telefono"
+                              value={formData.telefono}
+                              onChange={(value) =>
+                                setFormData((current) => ({ ...current, telefono: value }))
+                              }
+                            />
+                          </div>
+                          <WhatsappToggle
+                            checked={formData.usaWhatsapp}
+                            onChange={(checked) =>
+                              setFormData((current) => ({ ...current, usaWhatsapp: checked }))
                             }
                           />
                         </div>
@@ -527,18 +543,6 @@ export default function UsuariosPerfilPage() {
                       </div>
                     </div>
                   ) : null}
-
-                  <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
-                    <input
-                      type="checkbox"
-                      checked={formData.usaWhatsapp}
-                      onChange={(event) =>
-                        setFormData((current) => ({ ...current, usaWhatsapp: event.target.checked }))
-                      }
-                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span>Este contacto tiene WhatsApp</span>
-                  </label>
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-700">Imagen principal</label>
@@ -710,6 +714,26 @@ function TextAreaField({
         className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-400"
       />
     </div>
+  )
+}
+
+function WhatsappToggle({
+  checked,
+  onChange,
+}: {
+  checked: boolean
+  onChange: (checked: boolean) => void
+}) {
+  return (
+    <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+      />
+      <span>Este contacto tiene WhatsApp</span>
+    </label>
   )
 }
 

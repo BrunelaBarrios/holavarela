@@ -405,7 +405,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [isContactLeadOpen, setIsContactLeadOpen] = useState(false)
   const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(null)
   const [zoomedImage, setZoomedImage] = useState<{ src: string; alt: string } | null>(null)
-  const [servicePage, setServicePage] = useState(0)
   const [shouldLoadEventLikes, setShouldLoadEventLikes] = useState(false)
   const [shouldLoadRadioWidget, setShouldLoadRadioWidget] = useState(false)
   const eventsSectionRef = useRef<HTMLElement | null>(null)
@@ -420,20 +419,34 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     () => getScheduledRotationPage(featuredBusinessPageCount),
     [featuredBusinessPageCount]
   )
-  const orderedServicios = useMemo(
-    () =>
-      [...servicios].sort((a, b) => Number(isFeaturedListing(b)) - Number(isFeaturedListing(a))),
-    [servicios]
+  const featuredServiciosForHome = useMemo(() => {
+    const highlighted = allServicios.filter((item) => isFeaturedListing(item))
+    if (highlighted.length > 0) return highlighted
+
+    const featuredFromHomeFeed = servicios.filter((item) => isFeaturedListing(item))
+    if (featuredFromHomeFeed.length > 0) return featuredFromHomeFeed
+
+    return servicios
+  }, [allServicios, servicios])
+  const servicePageCount = Math.max(
+    1,
+    Math.ceil(featuredServiciosForHome.length / ITEMS_PER_ROTATION)
   )
-  const servicePageCount = Math.max(1, Math.ceil(orderedServicios.length / ITEMS_PER_ROTATION))
-  const safeServicePage = servicePage % servicePageCount
+  const shouldRotateServicios = featuredServiciosForHome.length > ITEMS_PER_ROTATION
+  const scheduledServicePage = useMemo(
+    () => getScheduledRotationPage(servicePageCount),
+    [servicePageCount]
+  )
   const visibleFeaturedBusinesses = useMemo(
     () => sliceRotatingItems(featuredBusinesses, scheduledFeaturedBusinessPage),
     [featuredBusinesses, scheduledFeaturedBusinessPage]
   )
   const visibleServicios = useMemo(
-    () => sliceRotatingItems(orderedServicios, safeServicePage),
-    [orderedServicios, safeServicePage]
+    () =>
+      shouldRotateServicios
+        ? sliceRotatingItems(featuredServiciosForHome, scheduledServicePage)
+        : featuredServiciosForHome.slice(0, ITEMS_PER_ROTATION),
+    [featuredServiciosForHome, scheduledServicePage, shouldRotateServicios]
   )
   const visibleEventos = useMemo(() => eventos.slice(0, 8), [eventos])
   const visibleCursos = useMemo(() => cursos.slice(0, 8), [cursos])
@@ -441,14 +454,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
   const weather = initialData.weather
   const weatherLabel = weather ? WEATHER_LABELS[weather.weatherCode] || "Clima actual" : null
-
-  useEffect(() => {
-    if (servicePageCount <= 1) return
-    const intervalId = window.setInterval(() => {
-      setServicePage((current) => (current + 1) % servicePageCount)
-    }, 7500)
-    return () => window.clearInterval(intervalId)
-  }, [servicePageCount])
 
   useEffect(() => {
     if (shouldLoadEventLikes) return
@@ -1515,7 +1520,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
           open={sweepstakesPopup.open}
           title={sweepstakesPopup.config.title}
           description={sweepstakesPopup.config.description}
-          commerces={sweepstakesPopup.config.commerces}
+              participants={sweepstakesPopup.config.participants}
           loading={sweepstakesPopup.submitting}
           error={sweepstakesPopup.submitError}
           onClose={sweepstakesPopup.closePopup}
@@ -1957,25 +1962,13 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       </div>
               ))}
             </div>
-            {servicePageCount > 1 ? (
+            {shouldRotateServicios ? (
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                 <div className="text-sm text-slate-500">
-                  Mostrando {safeServicePage + 1} de {servicePageCount}
+                  Mostrando tanda {scheduledServicePage + 1} de {servicePageCount}
                 </div>
-                <div className="flex items-center gap-2">
-                  {Array.from({ length: servicePageCount }).map((_, index) => (
-                    <button
-                      key={`service-page-${index}`}
-                      type="button"
-                      onClick={() => setServicePage(index)}
-                      className={`h-2.5 rounded-full transition ${
-                        safeServicePage === index
-                          ? "w-8 bg-slate-900"
-                          : "w-2.5 bg-slate-300 hover:bg-slate-400"
-                      }`}
-                      aria-label={`Ver tanda ${index + 1} de servicios`}
-                    />
-                  ))}
+                <div className="text-sm text-slate-500">
+                  La rotacion cambia cada 48 horas
                 </div>
               </div>
             ) : null}
