@@ -18,7 +18,7 @@ type PublicHeaderProps = {
 }
 
 export function PublicHeader({
-  items,
+  items = [],
   borderClassName = "border-slate-200",
   backgroundClassName = "bg-white/95",
 }: PublicHeaderProps) {

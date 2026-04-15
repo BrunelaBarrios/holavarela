@@ -75,7 +75,7 @@ export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] text-slate-900">
-      <PublicHeader />
+      <PublicHeader items={[]} />
 
       <section className="px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
