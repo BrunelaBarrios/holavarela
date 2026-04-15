@@ -19,7 +19,7 @@ export default async function Page() {
   const weatherPromise = fetch(
     "https://api.open-meteo.com/v1/forecast?latitude=-33.45&longitude=-54.53&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FMontevideo&forecast_days=1",
     {
-      next: { revalidate: 3600 },
+      next: { revalidate: 120 },
     }
   )
     .then(async (response) => {
