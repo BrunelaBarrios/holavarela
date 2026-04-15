@@ -5,7 +5,12 @@ import { useEffect, useState } from "react"
 import { ArrowRight, Gift, Phone, UserRound } from "lucide-react"
 import { OptimizedImage } from "./OptimizedImage"
 import { PublicHeader } from "./PublicHeader"
-import { createSweepstakesEntry, fetchSweepstakesConfig, fetchSweepstakesConfigById, hasSweepstakesEntry, type SweepstakesConfig } from "../lib/sweepstakes"
+import {
+  createSweepstakesEntry,
+  fetchSweepstakesConfig,
+  fetchSweepstakesConfigById,
+  type SweepstakesConfig,
+} from "../lib/sweepstakes"
 import { getEventLikesBrowserKey } from "../lib/eventLikes"
 
 export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
@@ -24,6 +29,7 @@ export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
       const result = sorteoId
         ? await fetchSweepstakesConfigById(sorteoId)
         : await fetchSweepstakesConfig()
+
       if (!active) return
 
       setConfig(result.config)
@@ -46,19 +52,12 @@ export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
     setError("")
     setMessage("")
 
-    const existingEntry = await hasSweepstakesEntry(browserKey, config.id)
-    if (existingEntry.exists) {
-      setSubmitting(false)
-      setMessage("Ya estabas participando. Gracias por sumarte a Hola Varela.")
-      return
-    }
-
     const result = await createSweepstakesEntry({
       sorteoId: config.id,
       browserKey,
       nombre,
       telefono,
-      totalLikes: 0,
+      totalLikes: 3,
     })
 
     if (result.status === "error") {
@@ -118,7 +117,7 @@ export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
                 {config.participants.length ? (
                   <div className="mt-8">
                     <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      Participan
+                      Premios de
                     </div>
                     <div className="mt-4 grid gap-4 sm:grid-cols-2">
                       {config.participants.map((participant) => (
