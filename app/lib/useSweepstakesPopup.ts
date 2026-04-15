@@ -5,7 +5,6 @@ import { getEventLikesBrowserKey } from "./eventLikes"
 import {
   createSweepstakesEntry,
   fetchSweepstakesConfig,
-  hasSweepstakesEntry,
   type SweepstakesConfig,
 } from "./sweepstakes"
 
@@ -22,6 +21,7 @@ export function useSweepstakesPopup() {
   const [open, setOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
+  const [currentTotalLikes, setCurrentTotalLikes] = useState(0)
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -42,13 +42,11 @@ export function useSweepstakesPopup() {
     if (!config) return
 
     const totalLikes = result.totalLikes || 0
-    if (totalLikes !== SWEEPSTAKES_THRESHOLD) return
 
-    const browserKey = result.browserKey || getEventLikesBrowserKey()
+    if (totalLikes < SWEEPSTAKES_THRESHOLD) return
+    if (totalLikes % SWEEPSTAKES_THRESHOLD !== 0) return
 
-    const existingEntry = await hasSweepstakesEntry(browserKey, config.id)
-    if (existingEntry.exists) return
-
+    setCurrentTotalLikes(totalLikes)
     setSubmitError("")
     setOpen(true)
   }
@@ -59,18 +57,12 @@ export function useSweepstakesPopup() {
     setSubmitting(true)
     setSubmitError("")
 
-    const likeResult = await hasSweepstakesEntry(browserKey, config?.id)
-    if (likeResult.exists) {
-      setSubmitting(false)
-      return { ok: true }
-    }
-
     const entryResult = await createSweepstakesEntry({
       sorteoId: config?.id || 0,
       browserKey,
       nombre,
       telefono,
-      totalLikes: SWEEPSTAKES_THRESHOLD,
+      totalLikes: currentTotalLikes,
     })
 
     if (entryResult.status === "error") {

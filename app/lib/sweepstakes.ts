@@ -42,16 +42,14 @@ export type SweepstakesConfig = {
   participants: SweepstakesParticipant[]
 }
 
-type SweepstakesEntryRow = {
-  id: number
-}
-
 type SupabaseErrorLike = {
   code?: string
   message?: string
 }
 
-export function isMissingSweepstakesSchemaError(error: SupabaseErrorLike | null | undefined) {
+export function isMissingSweepstakesSchemaError(
+  error: SupabaseErrorLike | null | undefined
+) {
   return error?.code === "42P01" || error?.code === "42703"
 }
 
@@ -97,9 +95,11 @@ async function buildSweepstakesConfigFromRow(row: SweepstakesConfigRow | null) {
   const commerceIds = participantRefs
     .filter((item) => item.type === "comercio")
     .map((item) => item.id)
+
   const serviceIds = participantRefs
     .filter((item) => item.type === "servicio")
     .map((item) => item.id)
+
   const institutionIds = participantRefs
     .filter((item) => item.type === "institucion")
     .map((item) => item.id)
@@ -110,13 +110,22 @@ async function buildSweepstakesConfigFromRow(row: SweepstakesConfigRow | null) {
     { data: institutionRows, error: institutionError },
   ] = await Promise.all([
     commerceIds.length
-      ? supabase.from("comercios").select("id, nombre, imagen, imagen_url").in("id", commerceIds)
+      ? supabase
+          .from("comercios")
+          .select("id, nombre, imagen, imagen_url")
+          .in("id", commerceIds)
       : Promise.resolve({ data: [], error: null }),
     serviceIds.length
-      ? supabase.from("servicios").select("id, nombre, imagen").in("id", serviceIds)
+      ? supabase
+          .from("servicios")
+          .select("id, nombre, imagen")
+          .in("id", serviceIds)
       : Promise.resolve({ data: [], error: null }),
     institutionIds.length
-      ? supabase.from("instituciones").select("id, nombre, foto").in("id", institutionIds)
+      ? supabase
+          .from("instituciones")
+          .select("id, nombre, foto")
+          .in("id", institutionIds)
       : Promise.resolve({ data: [], error: null }),
   ])
 
@@ -180,7 +189,9 @@ async function buildSweepstakesConfigFromRow(row: SweepstakesConfigRow | null) {
 export async function fetchSweepstakesConfig() {
   const { data, error } = await supabase
     .from(SWEEPSTAKES_CONFIG_TABLE)
-    .select("id, titulo, activo, descripcion, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at")
+    .select(
+      "id, titulo, activo, descripcion, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
+    )
     .eq("activo", true)
     .order("updated_at", { ascending: false })
     .limit(1)
@@ -200,7 +211,9 @@ export async function fetchSweepstakesConfig() {
 export async function fetchSweepstakesConfigById(sorteoId: number) {
   const { data, error } = await supabase
     .from(SWEEPSTAKES_CONFIG_TABLE)
-    .select("id, titulo, activo, descripcion, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at")
+    .select(
+      "id, titulo, activo, descripcion, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
+    )
     .eq("id", sorteoId)
     .maybeSingle()
 
@@ -215,32 +228,6 @@ export async function fetchSweepstakesConfigById(sorteoId: number) {
   return buildSweepstakesConfigFromRow((data as SweepstakesConfigRow | null) || null)
 }
 
-export async function hasSweepstakesEntry(browserKey: string, sorteoId?: number | null) {
-  let query = supabase
-    .from(SWEEPSTAKES_ENTRIES_TABLE)
-    .select("id")
-    .eq("browser_key", browserKey)
-
-  if (sorteoId) {
-    query = query.eq("sorteo_id", sorteoId)
-  }
-
-  const { data, error } = await query.maybeSingle()
-
-  if (error) {
-    if (!isMissingSweepstakesSchemaError(error)) {
-      console.error("No se pudo verificar la participacion del sorteo:", error)
-    }
-
-    return { exists: false, error }
-  }
-
-  return {
-    exists: Boolean((data as SweepstakesEntryRow | null)?.id),
-    error: null,
-  }
-}
-
 export async function createSweepstakesEntry(params: {
   sorteoId: number
   browserKey: string
@@ -248,21 +235,26 @@ export async function createSweepstakesEntry(params: {
   telefono: string
   totalLikes: number
 }) {
-  const { error } = await supabase.from(SWEEPSTAKES_ENTRIES_TABLE).insert([
-    {
-      sorteo_id: params.sorteoId,
-      browser_key: params.browserKey,
-      nombre: params.nombre.trim(),
-      telefono: params.telefono.trim(),
-      total_likes: params.totalLikes,
-    },
-  ])
+  if (params.totalLikes < 3) {
+    return {
+      status: "error" as const,
+      error: { message: "Necesitas al menos 3 corazones para participar." },
+    }
+  }
+
+  const { error } = await supabase
+    .from(SWEEPSTAKES_ENTRIES_TABLE)
+    .insert([
+      {
+        sorteo_id: params.sorteoId,
+        browser_key: params.browserKey,
+        nombre: params.nombre.trim(),
+        telefono: params.telefono.trim(),
+        total_likes: params.totalLikes,
+      },
+    ])
 
   if (error) {
-    if (error.code === "23505") {
-      return { status: "exists" as const }
-    }
-
     if (!isMissingSweepstakesSchemaError(error)) {
       console.error("No se pudo guardar la participacion del sorteo:", error)
     }
