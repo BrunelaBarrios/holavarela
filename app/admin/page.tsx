@@ -7,6 +7,7 @@ import {
   Building2,
   Calendar,
   CreditCard,
+  Gamepad2,
   Gift,
   GraduationCap,
   Mail,
@@ -246,6 +247,14 @@ export default function AdminDashboardPage() {
       color: "bg-emerald-600",
       action: () => router.push("/admin/sorteos"),
     },
+    {
+      id: "desafios",
+      title: "Desafios",
+      description: "Ve participantes, puntajes y realiza sorteos aleatorios de los juegos.",
+      icon: Gamepad2,
+      color: "bg-blue-600",
+      action: () => router.push("/admin/desafios"),
+    },
   ]
 
   return (
@@ -338,7 +347,7 @@ export default function AdminDashboardPage() {
               <h2 className="text-2xl font-semibold text-slate-900">Accesos de superadmin</h2>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
               {configCards.map((card) => {
                 const Icon = card.icon
                 return (

@@ -343,7 +343,7 @@ export default function UsuariosNuevoEventoPage() {
                         <div className="font-semibold text-slate-900">Que conviene cargar aca</div>
                         <p className="mt-2 text-sm leading-6 text-slate-600">
                           {publicMode
-                            ? "Compartenos la informacion principal de tu novedad. Te pedimos tu numero para ponernos en contacto ante cualquier duda."
+                            ? "Publica eventos, beneficios, sorteos o promos, charlas, avisos y consultas relacionadas con la ciudad."
                             : "Actividades especiales, promos del mes, sorteos, beneficios y cualquier novedad puntual de tu espacio."}
                         </p>
                       </div>

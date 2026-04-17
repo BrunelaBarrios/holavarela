@@ -30,6 +30,7 @@ import { recordViewMore, type ViewMoreSection } from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
 import {
   ArrowRight,
+  Building2,
   CalendarDays,
   Cloud,
   CloudDrizzle,
@@ -575,24 +576,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
   const weather = initialData.weather
   const weatherLabel = weather ? WEATHER_LABELS[weather.weatherCode] || "Clima actual" : null
-
-  useEffect(() => {
-    const premiumHrefs = [
-      ...visibleFeaturedBusinesses
-        .filter((item) => item.premium_activo)
-        .map((item) => `/comercios/${item.id}`),
-      ...visibleServicios
-        .filter((item) => item.premium_activo)
-        .map((item) => `/servicios/${item.id}`),
-      ...visibleInstituciones
-        .filter((item) => hasInstitutionPremium(item))
-        .map((item) => `/instituciones/${item.id}`),
-    ]
-
-    premiumHrefs.forEach((href) => {
-      router.prefetch(href)
-    })
-  }, [router, visibleFeaturedBusinesses, visibleInstituciones, visibleServicios])
 
   useEffect(() => {
     if (eventos.length === 0) return
@@ -1731,8 +1714,15 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     </button>
                   </div>
                 ) : (
-                  <div className="flex min-h-[320px] items-center justify-center text-slate-400">
-                    Sin imagen
+                  <div className="flex min-h-[320px] items-center justify-center bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_50%,#f8fafc_100%)] text-slate-500">
+                    <div className="flex flex-col items-center text-center">
+                      <div className="flex h-20 w-20 items-center justify-center rounded-[28px] border border-cyan-100 bg-white text-cyan-700 shadow-sm">
+                        <Building2 className="h-10 w-10" />
+                      </div>
+                      <div className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                        Institucion
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -2546,18 +2536,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   }
                   className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(6,182,212,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
                 >
-                  {institucion.foto && (
-                    <div className="relative h-36 w-full sm:h-56">
-                      <OptimizedImage
-                        src={institucion.foto}
-                        alt={institucion.nombre}
-                        sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 20vw"
-                        quality={60}
-                        className="object-cover"
-                      />
+                  <div className="flex items-center gap-3 border-b border-slate-100 bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_55%,#f8fafc_100%)] px-4 py-4 sm:px-5">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-100 bg-white text-cyan-700 shadow-sm">
+                      <Building2 className="h-6 w-6" />
                     </div>
-                  )}
-
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 sm:text-xs">
+                      Institucion
+                    </div>
+                  </div>
                   <div className="p-4 sm:p-5">
                     <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-[22px]">
                       {institucion.nombre}

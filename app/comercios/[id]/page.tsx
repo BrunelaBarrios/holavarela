@@ -3,7 +3,8 @@ import { PremiumListingPage } from "../../components/public/PremiumListingPage"
 import { isEventCurrentOrUpcoming } from "../../lib/eventDates"
 import { supabaseServer } from "../../lib/supabaseServer"
 
-export const revalidate = 7200
+// Premium detail pages are stable enough for a longer cache window.
+export const revalidate = 43200
 
 export default async function ComercioSharePage({
   params,

@@ -572,3 +572,107 @@ on public.sorteo_participaciones
 for insert
 to anon, authenticated
 with check (true);
+
+create table if not exists public.desafio_participaciones (
+  id bigint generated always as identity primary key,
+  browser_key text not null,
+  nombre text not null,
+  telefono text not null,
+  puntaje_total integer not null default 0,
+  puntos_sopa integer not null default 0,
+  puntos_memoria integer not null default 0,
+  puntos_pelicula integer not null default 0,
+  sopa_nombre text,
+  memoria_nombre text,
+  pelicula_nombre text,
+  created_at timestamp with time zone default now()
+);
+
+create table if not exists public.desafio_sorteos (
+  id bigint generated always as identity primary key,
+  cantidad_ganadores integer not null default 1,
+  created_at timestamp with time zone default now()
+);
+
+create table if not exists public.desafio_sorteo_ganadores (
+  id bigint generated always as identity primary key,
+  sorteo_id bigint not null references public.desafio_sorteos(id) on delete cascade,
+  participacion_id bigint not null references public.desafio_participaciones(id) on delete cascade,
+  entregado boolean not null default false,
+  entregado_at timestamp with time zone,
+  created_at timestamp with time zone default now()
+);
+
+alter table public.desafio_sorteo_ganadores
+  add column if not exists entregado boolean not null default false;
+
+alter table public.desafio_sorteo_ganadores
+  add column if not exists entregado_at timestamp with time zone;
+
+alter table public.desafio_participaciones enable row level security;
+alter table public.desafio_sorteos enable row level security;
+alter table public.desafio_sorteo_ganadores enable row level security;
+
+drop policy if exists "Allow public read on desafio_participaciones"
+on public.desafio_participaciones;
+
+create policy "Allow public read on desafio_participaciones"
+on public.desafio_participaciones
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Allow public insert on desafio_participaciones"
+on public.desafio_participaciones;
+
+create policy "Allow public insert on desafio_participaciones"
+on public.desafio_participaciones
+for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists "Allow public read on desafio_sorteos"
+on public.desafio_sorteos;
+
+create policy "Allow public read on desafio_sorteos"
+on public.desafio_sorteos
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Allow public insert on desafio_sorteos"
+on public.desafio_sorteos;
+
+create policy "Allow public insert on desafio_sorteos"
+on public.desafio_sorteos
+for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists "Allow public read on desafio_sorteo_ganadores"
+on public.desafio_sorteo_ganadores;
+
+create policy "Allow public read on desafio_sorteo_ganadores"
+on public.desafio_sorteo_ganadores
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Allow public insert on desafio_sorteo_ganadores"
+on public.desafio_sorteo_ganadores;
+
+create policy "Allow public insert on desafio_sorteo_ganadores"
+on public.desafio_sorteo_ganadores
+for insert
+to anon, authenticated
+with check (true);
+
+drop policy if exists "Allow public update on desafio_sorteo_ganadores"
+on public.desafio_sorteo_ganadores;
+
+create policy "Allow public update on desafio_sorteo_ganadores"
+on public.desafio_sorteo_ganadores
+for update
+to anon, authenticated
+using (true)
+with check (true);

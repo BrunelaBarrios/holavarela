@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { cache } from "react"
 import { CalendarDays, MapPin, Phone, Share2 } from "lucide-react"
 import { ContactActionLink } from "../../components/ContactActionLink"
 import { ExternalLinksButtons } from "../../components/ExternalLinksButtons"
@@ -12,7 +13,8 @@ import { parseEventDescription } from "../../lib/eventSubmissionMeta"
 import { buildPublicNav } from "../../lib/publicNav"
 import { supabaseServer } from "../../lib/supabaseServer"
 
-export const revalidate = 7200
+// Shared event pages are SEO-sensitive but stable enough for longer caching.
+export const revalidate = 21600
 
 type EventPageParams = {
   params: Promise<{ id: string }>
@@ -70,7 +72,7 @@ const whatsappLink = (telefono: string) => {
   return `https://wa.me/${numero}`
 }
 
-async function fetchEventById(id: string) {
+const fetchEventById = cache(async (id: string) => {
   const { data } = await supabaseServer
     .from("eventos")
     .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email")
@@ -81,7 +83,7 @@ async function fetchEventById(id: string) {
   if (!data) return null
 
   return data as EventoRecord
-}
+})
 
 export async function generateMetadata({ params }: EventPageParams): Promise<Metadata> {
   const { id } = await params

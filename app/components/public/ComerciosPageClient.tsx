@@ -118,15 +118,6 @@ export function ComerciosPageClient({
     )
   }, [comercios, search])
 
-  useEffect(() => {
-    comerciosFiltrados
-      .filter((comercio) => comercio.premium_activo)
-      .slice(0, 12)
-      .forEach((comercio) => {
-        router.prefetch(`/comercios/${comercio.id}`)
-      })
-  }, [comerciosFiltrados, router])
-
   return (
     <main className="min-h-screen bg-white">
       <PublicDetailModal

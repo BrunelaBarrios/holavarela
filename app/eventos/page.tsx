@@ -2,7 +2,8 @@ import { EventosPageClient } from "../components/public/EventosPageClient"
 import { isEventCurrentOrUpcoming } from "../lib/eventDates"
 import { supabaseServer } from "../lib/supabaseServer"
 
-export const revalidate = 3600
+// Events need freshness, but hourly ISR was more expensive than necessary.
+export const revalidate = 14400
 
 export default async function EventosPage() {
   const { data } = await supabaseServer

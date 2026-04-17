@@ -1,7 +1,8 @@
 import { ComerciosPageClient } from "../components/public/ComerciosPageClient"
 import { supabaseServer } from "../lib/supabaseServer"
 
-export const revalidate = 3600
+// Public listings change occasionally, so a longer cache window is enough.
+export const revalidate = 43200
 
 export default async function ComerciosPage() {
   const { data } = await supabaseServer

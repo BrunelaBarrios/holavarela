@@ -5,6 +5,7 @@ import { Copy, Download, Gift, Plus, QrCode, Save, Search } from "lucide-react"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { isMissingSweepstakesSchemaError } from "../../lib/sweepstakes"
+import { printCouponsPdf } from "../../lib/couponPrint"
 
 type SorteoParticipantType = "comercio" | "servicio" | "institucion"
 
@@ -422,6 +423,34 @@ export default function AdminSorteosPage() {
     window.URL.revokeObjectURL(url)
   }
 
+  const handlePrintCouponsPdf = () => {
+    if (visibleEntries.length === 0) return
+
+    printCouponsPdf({
+      documentTitle:
+        entryScope === "all" || !selectedCampaign
+          ? "cupones-sorteos-hola-varela"
+          : `cupones-sorteo-${selectedCampaign.id}`,
+      heading:
+        entryScope === "all" || !selectedCampaign
+          ? "Cupones de participantes - Sorteos Hola Varela"
+          : `Cupones de participantes - ${selectedCampaign.titulo}`,
+      subheading:
+        "Listos para imprimir o guardar como PDF y recortar para el sorteo.",
+      items: visibleEntries.map((entry) => ({
+        title: entry.nombre,
+        subtitle: entry.telefono,
+        meta: `Corazones: ${entry.totalLikes}\n${
+          entry.sorteoId
+            ? campaigns.find((campaign) => campaign.id === entry.sorteoId)?.titulo ||
+              `Sorteo #${entry.sorteoId}`
+            : "Sin sorteo"
+        }`,
+        footer: "Hola Varela - Sorteos",
+      })),
+    })
+  }
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setSaving(true)
@@ -795,7 +824,7 @@ export default function AdminSorteosPage() {
                 ) : null}
               </div>
 
-              <div className="mb-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_auto]">
+              <div className="mb-5 grid gap-3 xl:grid-cols-[minmax(0,1fr)_220px_auto_auto]">
                 <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
                   <Search className="h-4 w-4 text-slate-400" />
                   <input
@@ -826,6 +855,15 @@ export default function AdminSorteosPage() {
                 >
                   <Download className="h-4 w-4" />
                   Exportar CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrintCouponsPdf}
+                  disabled={visibleEntries.length === 0}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Download className="h-4 w-4" />
+                  Descargar PDF cupones
                 </button>
               </div>
 

@@ -121,15 +121,6 @@ export function ServiciosPageClient({
     }
   }
 
-  useEffect(() => {
-    serviciosFiltrados
-      .filter((servicio) => servicio.premium_activo)
-      .slice(0, 12)
-      .forEach((servicio) => {
-        router.prefetch(`/servicios/${servicio.id}`)
-      })
-  }, [router, serviciosFiltrados])
-
   return (
     <main className="min-h-screen bg-white">
       <PublicDetailModal

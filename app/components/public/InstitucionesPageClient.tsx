@@ -1,9 +1,8 @@
 'use client'
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
-import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
+import { ArrowRight, Building2, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
@@ -41,7 +40,6 @@ export function InstitucionesPageClient({
 }: {
   initialInstituciones: Institucion[]
 }) {
-  const router = useRouter()
   const [instituciones] = useState<Institucion[]>(initialInstituciones)
   const [search, setSearch] = useState("")
   const [selectedInstitucion, setSelectedInstitucion] = useState<Institucion | null>(null)
@@ -125,15 +123,6 @@ export function InstitucionesPageClient({
       action()
     }
   }
-
-  useEffect(() => {
-    institucionesFiltradas
-      .filter((institucion) => hasInstitutionPremium(institucion))
-      .slice(0, 12)
-      .forEach((institucion) => {
-        router.prefetch(`/instituciones/${institucion.id}`)
-      })
-  }, [institucionesFiltradas, router])
 
   return (
     <main className="min-h-screen bg-white">
@@ -287,7 +276,7 @@ export function InstitucionesPageClient({
                 }
                 className="cursor-pointer overflow-hidden rounded-xl border border-gray-200 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
               >
-                {institucion.foto && (
+                {institucion.foto ? (
                   <div className="relative h-56 w-full">
                     <OptimizedImage
                       src={institucion.foto}
@@ -295,6 +284,17 @@ export function InstitucionesPageClient({
                       sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 20vw"
                       className="object-cover"
                     />
+                  </div>
+                ) : (
+                  <div className="flex h-56 w-full items-center justify-center bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_50%,#f8fafc_100%)]">
+                    <div className="flex flex-col items-center text-center">
+                      <div className="flex h-20 w-20 items-center justify-center rounded-[28px] border border-cyan-100 bg-white text-cyan-700 shadow-sm">
+                        <Building2 className="h-10 w-10" />
+                      </div>
+                      <div className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                        Institucion
+                      </div>
+                    </div>
                   </div>
                 )}
 

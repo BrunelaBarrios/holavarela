@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 
-export const revalidate = 7200
+// Redirect-only detail route does not need frequent regeneration.
+export const revalidate = 43200
 
 export default async function CursoSharePage({
   params,
