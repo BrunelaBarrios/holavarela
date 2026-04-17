@@ -21,7 +21,7 @@ export default async function InstitucionSharePage({
 
   const { data } = await supabaseServer
     .from("instituciones")
-    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, direccion, direccion_mapa, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, estado, owner_email")
+    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, premium_cursos_activo, premium_cursos_titulo, direccion, direccion_mapa, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, estado, owner_email")
     .eq("id", Number(id))
     .maybeSingle()
 
@@ -48,7 +48,7 @@ export default async function InstitucionSharePage({
         supabaseServer
           .from("cursos")
           .select("id, nombre, descripcion, responsable, contacto, imagen, estado")
-          .eq("owner_email", data.owner_email)
+          .eq("institucion_id", data.id)
           .eq("estado", "activo")
           .order("id", { ascending: false }),
       ])
@@ -77,8 +77,10 @@ export default async function InstitucionSharePage({
       facebookUrl={data.facebook_url}
       usesWhatsapp={data.usa_whatsapp}
       relatedEvents={(relatedEvents || []).filter((event) => isEventCurrentOrUpcoming(event))}
-      relatedCourses={relatedCourses || []}
-      relatedCoursesTitle={`Cursos, clases y talleres de ${data.nombre}`}
+      relatedCourses={data.premium_cursos_activo ? relatedCourses || [] : []}
+      relatedCoursesTitle={
+        data.premium_cursos_titulo?.trim() || `Cursos, clases y talleres de ${data.nombre}`
+      }
     />
   )
 }

@@ -197,7 +197,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                 onKeyDown={(event) => handleCardKeyDown(event, () => handleOpenCurso(curso))}
                 className="cursor-pointer overflow-hidden rounded-xl border border-gray-200 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
-                {curso.imagen && (
+                {curso.imagen ? (
                   <div className="relative h-56 w-full">
                     <OptimizedImage
                       src={curso.imagen}
@@ -205,6 +205,12 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                       sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
                       className="object-cover"
                     />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 border-b border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#dcfce7_52%,#f0fdf4_100%)] px-5 py-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-emerald-100 bg-white text-emerald-700 shadow-sm">
+                      <GraduationCap className="h-6 w-6" />
+                    </div>
                   </div>
                 )}
 

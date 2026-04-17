@@ -2458,8 +2458,13 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       )
                     )
                   }
-                  className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                  className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(34,197,94,0.3)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                 >
+                  <div className="flex items-center gap-3 border-b border-slate-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#dcfce7_52%,#f0fdf4_100%)] px-4 py-4 sm:px-5">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-emerald-100 bg-white text-emerald-700 shadow-sm">
+                      <GraduationCap className="h-6 w-6" />
+                    </div>
+                  </div>
                   <div className="p-4 sm:p-5">
                     <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-[22px]">
                       {curso.nombre}

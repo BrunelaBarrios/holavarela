@@ -1,13 +1,11 @@
 'use client'
 
-import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { FileText, ImageIcon, Save } from "lucide-react"
 import { OptimizedImage } from "../../components/OptimizedImage"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
-import { isMissingSweepstakesSchemaError } from "../../lib/sweepstakes"
 
 type SitioForm = {
   titulo: string
@@ -15,31 +13,6 @@ type SitioForm = {
   texto_2: string
   texto_3: string
   imagen_url: string
-}
-
-type SorteoPopupForm = {
-  titulo: string
-  activo: boolean
-  descripcion: string
-  comercio1Id: string
-  comercio2Id: string
-}
-
-type SorteoCampaign = {
-  id: number
-  titulo: string
-  activo: boolean
-  descripcion: string
-  comercio1Id: string
-  comercio2Id: string
-  updatedAt?: string | null
-}
-
-type ComercioOption = {
-  id: number
-  nombre: string
-  imagen: string | null
-  imagen_url?: string | null
 }
 
 const initialForm: SitioForm = {
@@ -53,84 +26,20 @@ const initialForm: SitioForm = {
   imagen_url: "",
 }
 
-const initialSorteoForm: SorteoPopupForm = {
-  titulo: "",
-  activo: false,
-  descripcion: "",
-  comercio1Id: "",
-  comercio2Id: "",
-}
-
 export default function AdminSitioPage() {
   const [formData, setFormData] = useState<SitioForm>(initialForm)
-  const [sorteoForm, setSorteoForm] = useState<SorteoPopupForm>(initialSorteoForm)
-  const [sorteos, setSorteos] = useState<SorteoCampaign[]>([])
-  const [selectedSorteoId, setSelectedSorteoId] = useState<number | null>(null)
-  const [comercios, setComercios] = useState<ComercioOption[]>([])
   const [loading, setLoading] = useState(false)
-  const [savingSorteo, setSavingSorteo] = useState(false)
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [saveMessage, setSaveMessage] = useState("")
   const [saveError, setSaveError] = useState("")
-  const [sorteoSaveMessage, setSorteoSaveMessage] = useState("")
-  const [sorteoSaveError, setSorteoSaveError] = useState("")
-  const [sorteoSchemaReady, setSorteoSchemaReady] = useState(true)
-  const [sorteoEntriesCount, setSorteoEntriesCount] = useState<number | null>(null)
-
-  const buildSorteoCampaign = (item: {
-    id: number
-    titulo?: string | null
-    activo?: boolean | null
-    descripcion?: string | null
-    comercio_id_1?: number | null
-    comercio_id_2?: number | null
-    updated_at?: string | null
-  }): SorteoCampaign => ({
-    id: item.id,
-    titulo: item.titulo?.trim() || `Sorteo #${item.id}`,
-    activo: Boolean(item.activo),
-    descripcion: item.descripcion || "",
-    comercio1Id: item.comercio_id_1 ? String(item.comercio_id_1) : "",
-    comercio2Id: item.comercio_id_2 ? String(item.comercio_id_2) : "",
-    updatedAt: item.updated_at || null,
-  })
-
-  const selectedSorteoComercios = useMemo(() => {
-    const ids = Array.from(
-      new Set([sorteoForm.comercio1Id, sorteoForm.comercio2Id].filter(Boolean))
-    )
-    const byId = new Map(comercios.map((comercio) => [String(comercio.id), comercio]))
-    return ids
-      .map((id) => byId.get(id))
-      .filter((value): value is ComercioOption => Boolean(value))
-  }, [comercios, sorteoForm.comercio1Id, sorteoForm.comercio2Id])
 
   useEffect(() => {
     const cargarConfiguracion = async () => {
-      const [
-        { data, error },
-        { data: configRows, error: configError },
-        { data: comerciosData, error: comerciosError },
-        { count: entriesCount, error: entriesError },
-      ] = await Promise.all([
-        supabase
-          .from("sitio")
-          .select("titulo, texto_1, texto_2, texto_3, imagen_url")
-          .eq("id", 1)
-          .maybeSingle(),
-        supabase
-          .from("sorteo_popup_config")
-          .select("id, titulo, activo, descripcion, comercio_id_1, comercio_id_2, updated_at")
-          .order("updated_at", { ascending: false }),
-        supabase
-          .from("comercios")
-          .select("id, nombre, imagen, imagen_url")
-          .or("estado.is.null,estado.eq.activo")
-          .order("nombre", { ascending: true }),
-        supabase
-          .from("sorteo_participaciones")
-          .select("*", { count: "exact", head: true }),
-      ])
+      const { data, error } = await supabase
+        .from("sitio")
+        .select("titulo, texto_1, texto_2, texto_3, imagen_url")
+        .eq("id", 1)
+        .maybeSingle()
 
       if (!error && data) {
         setFormData({
@@ -142,57 +51,10 @@ export default function AdminSitioPage() {
         })
       }
 
-      if (!comerciosError) {
-        setComercios((comerciosData || []) as ComercioOption[])
-      }
-
-      if (configError) {
-        if (isMissingSweepstakesSchemaError(configError)) {
-          setSorteoSchemaReady(false)
-        } else {
-          setSorteoSaveError(`No se pudo cargar el popup del sorteo: ${configError.message}`)
-        }
-      } else {
-        const mappedSorteos = ((configRows || []) as Array<{
-          id: number
-          titulo?: string | null
-          activo?: boolean | null
-          descripcion?: string | null
-          comercio_id_1?: number | null
-          comercio_id_2?: number | null
-          updated_at?: string | null
-        }>).map(buildSorteoCampaign)
-
-        setSorteos(mappedSorteos)
-
-        if (mappedSorteos.length > 0) {
-          const first = mappedSorteos[0]
-          setSelectedSorteoId(first.id)
-          setSorteoForm({
-            titulo: first.titulo,
-            activo: first.activo,
-            descripcion: first.descripcion,
-            comercio1Id: first.comercio1Id,
-            comercio2Id: first.comercio2Id,
-          })
-        } else {
-          setSelectedSorteoId(null)
-          setSorteoForm(initialSorteoForm)
-        }
-      }
-
-      if (entriesError) {
-        if (isMissingSweepstakesSchemaError(entriesError)) {
-          setSorteoSchemaReady(false)
-        }
-      } else {
-        setSorteoEntriesCount(entriesCount || 0)
-      }
-
       setIsInitialLoading(false)
     }
 
-    cargarConfiguracion()
+    void cargarConfiguracion()
   }, [])
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -242,49 +104,6 @@ export default function AdminSitioPage() {
     setLoading(false)
   }
 
-  const handleSorteoSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setSavingSorteo(true)
-    setSorteoSaveMessage("")
-    setSorteoSaveError("")
-
-    if (!sorteoSchemaReady) {
-      setSorteoSaveError("Primero necesitas correr el SQL del sorteo en Supabase para activar este bloque.")
-      setSavingSorteo(false)
-      return
-    }
-
-    const comercio1Id = sorteoForm.comercio1Id ? Number(sorteoForm.comercio1Id) : null
-    const comercio2Id =
-      sorteoForm.comercio2Id && sorteoForm.comercio2Id !== sorteoForm.comercio1Id
-        ? Number(sorteoForm.comercio2Id)
-        : null
-
-    const { error } = await supabase.from("sorteo_popup_config").upsert({
-      id: 1,
-      activo: sorteoForm.activo,
-      descripcion: sorteoForm.descripcion.trim(),
-      comercio_id_1: comercio1Id,
-      comercio_id_2: comercio2Id,
-    })
-
-    if (error) {
-      setSorteoSaveError(`No se pudo guardar el popup del sorteo: ${error.message}`)
-      setSavingSorteo(false)
-      return
-    }
-
-    await logAdminActivity({
-      action: "Editar",
-      section: "Sitio",
-      target: "Popup del sorteo",
-      details: "Actualizó la descripción del popup y los comercios participantes.",
-    })
-
-    setSorteoSaveMessage("Popup del sorteo guardado correctamente.")
-    setSavingSorteo(false)
-  }
-
   if (isInitialLoading) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">
@@ -305,121 +124,121 @@ export default function AdminSitioPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-6">
+        <div>
           <form
             onSubmit={handleSubmit}
             className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
           >
-          <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-xl bg-blue-600 p-3 text-white">
-              <FileText className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-slate-900">
-                Sobre Varela
-              </h2>
-              <p className="text-sm text-slate-500">
-                Cambia el texto y la imagen del bloque institucional.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {saveError && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                {saveError}
+            <div className="mb-6 flex items-center gap-3">
+              <div className="rounded-xl bg-blue-600 p-3 text-white">
+                <FileText className="h-5 w-5" />
               </div>
-            )}
-
-            {saveMessage && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                {saveMessage}
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">
+                  Sobre Varela
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Cambia el texto y la imagen del bloque institucional.
+                </p>
               </div>
-            )}
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-900">
-                Titulo
-              </label>
-              <input
-                type="text"
-                value={formData.titulo}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, titulo: e.target.value }))
-                }
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
-                required
-              />
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-900">
-                Primer parrafo
-              </label>
-              <textarea
-                value={formData.texto_1}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, texto_1: e.target.value }))
-                }
-                className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
-                required
-              />
-            </div>
+            <div className="space-y-4">
+              {saveError ? (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {saveError}
+                </div>
+              ) : null}
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-900">
-                Segundo parrafo
-              </label>
-              <textarea
-                value={formData.texto_2}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, texto_2: e.target.value }))
-                }
-                className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
-                required
-              />
-            </div>
+              {saveMessage ? (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  {saveMessage}
+                </div>
+              ) : null}
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-900">
-                Tercer parrafo
-              </label>
-              <textarea
-                value={formData.texto_3}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, texto_3: e.target.value }))
-                }
-                className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-900">
-                Foto desde tu computadora
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:font-medium file:text-blue-600 hover:file:bg-blue-100"
-              />
-              <p className="mt-2 text-sm text-slate-500">
-                Selecciona la imagen que queres mostrar en la home.
-              </p>
-              {formData.imagen_url && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFormData((prev) => ({ ...prev, imagen_url: "" }))
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-900">
+                  Titulo
+                </label>
+                <input
+                  type="text"
+                  value={formData.titulo}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, titulo: e.target.value }))
                   }
-                  className="mt-3 text-sm font-medium text-red-600 transition hover:text-red-500"
-                >
-                  Quitar foto
-                </button>
-              )}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-900">
+                  Primer parrafo
+                </label>
+                <textarea
+                  value={formData.texto_1}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, texto_1: e.target.value }))
+                  }
+                  className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-900">
+                  Segundo parrafo
+                </label>
+                <textarea
+                  value={formData.texto_2}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, texto_2: e.target.value }))
+                  }
+                  className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-900">
+                  Tercer parrafo
+                </label>
+                <textarea
+                  value={formData.texto_3}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, texto_3: e.target.value }))
+                  }
+                  className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-900">
+                  Foto desde tu computadora
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:font-medium file:text-blue-600 hover:file:bg-blue-100"
+                />
+                <p className="mt-2 text-sm text-slate-500">
+                  Selecciona la imagen que quieres mostrar en la home.
+                </p>
+                {formData.imagen_url ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, imagen_url: "" }))
+                    }
+                    className="mt-3 text-sm font-medium text-red-600 transition hover:text-red-500"
+                  >
+                    Quitar foto
+                  </button>
+                ) : null}
+              </div>
             </div>
-          </div>
 
             <div className="mt-6">
               <button
@@ -432,248 +251,42 @@ export default function AdminSitioPage() {
               </button>
             </div>
           </form>
-
-          <form
-            onSubmit={handleSorteoSubmit}
-            className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-          >
-            <div className="mb-6 flex items-center gap-3">
-              <div className="rounded-xl bg-emerald-600 p-3 text-white">
-                <ImageIcon className="h-5 w-5" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">
-                  Sorteos
-                </h2>
-                <p className="text-sm text-slate-500">
-                  Este bloque quedó como acceso rápido. La gestión principal ahora vive en la sección dedicada de sorteos.
-                </p>
-              </div>
-            </div>
-
-            <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-              <span>Usa el panel nuevo para crear campañas, activar una sola y editar comercios participantes.</span>
-              <Link
-                href="/admin/sorteos"
-                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white transition hover:bg-emerald-500"
-              >
-                Abrir Sorteos
-              </Link>
-            </div>
-
-            {!sorteoSchemaReady ? (
-              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Este bloque necesita que corras el SQL nuevo del sorteo en Supabase.
-              </div>
-            ) : null}
-
-            <div className="space-y-4">
-              {sorteoSaveError ? (
-                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                  {sorteoSaveError}
-                </div>
-              ) : null}
-
-              {sorteoSaveMessage ? (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                  {sorteoSaveMessage}
-                </div>
-              ) : null}
-
-              <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={sorteoForm.activo}
-                  onChange={(event) =>
-                    setSorteoForm((prev) => ({ ...prev, activo: event.target.checked }))
-                  }
-                  className="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <span>Activar popup del sorteo</span>
-              </label>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Descripción del popup
-                </label>
-                <textarea
-                  value={sorteoForm.descripcion}
-                  onChange={(event) =>
-                    setSorteoForm((prev) => ({ ...prev, descripcion: event.target.value }))
-                  }
-                  className="h-32 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
-                  placeholder="Ejemplo: Participá del sorteo de Hola Varela completando tu nombre y teléfono. Estos comercios son parte de la propuesta."
-                />
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Comercio participante 1
-                  </label>
-                  <select
-                    value={sorteoForm.comercio1Id}
-                    onChange={(event) =>
-                      setSorteoForm((prev) => ({ ...prev, comercio1Id: event.target.value }))
-                    }
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
-                  >
-                    <option value="">Sin seleccionar</option>
-                    {comercios.map((comercio) => (
-                      <option key={`sorteo-comercio-1-${comercio.id}`} value={comercio.id}>
-                        {comercio.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Comercio participante 2
-                  </label>
-                  <select
-                    value={sorteoForm.comercio2Id}
-                    onChange={(event) =>
-                      setSorteoForm((prev) => ({ ...prev, comercio2Id: event.target.value }))
-                    }
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
-                  >
-                    <option value="">Sin seleccionar</option>
-                    {comercios.map((comercio) => (
-                      <option key={`sorteo-comercio-2-${comercio.id}`} value={comercio.id}>
-                        {comercio.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                Participaciones registradas:{" "}
-                <span className="font-semibold text-slate-900">
-                  {sorteoEntriesCount ?? 0}
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <button
-                type="submit"
-                disabled={savingSorteo}
-                className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 font-medium text-white transition hover:bg-emerald-500 disabled:opacity-60"
-              >
-                <Save className="h-5 w-5" />
-                {savingSorteo ? "Guardando..." : "Guardar popup"}
-              </button>
-            </div>
-          </form>
         </div>
 
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-xl bg-slate-900 p-3 text-white">
-              <ImageIcon className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-slate-900">Vista previa</h2>
-              <p className="text-sm text-slate-500">
-                Asi se vera el bloque en la home.
-              </p>
-            </div>
-          </div>
-
-          {formData.imagen_url ? (
-            <div className="relative mb-5 h-64 w-full overflow-hidden rounded-2xl">
-              <OptimizedImage
-                src={formData.imagen_url}
-                alt={formData.titulo}
-                sizes="100vw"
-                className="object-cover"
-              />
-            </div>
-          ) : (
-            <div className="mb-5 flex h-64 w-full items-center justify-center rounded-2xl bg-slate-100 text-center text-slate-500">
-              Sin foto cargada
-            </div>
-          )}
-
-          <h3 className="text-2xl font-semibold text-slate-900">{formData.titulo}</h3>
-          <div className="mt-4 space-y-4 text-sm leading-7 text-slate-500">
-            <p>{formData.texto_1}</p>
-            <p>{formData.texto_2}</p>
-            <p>{formData.texto_3}</p>
-          </div>
-          </div>
-
+        <div>
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center gap-3">
-              <div className="rounded-xl bg-emerald-600 p-3 text-white">
+              <div className="rounded-xl bg-slate-900 p-3 text-white">
                 <ImageIcon className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">Acceso a Sorteos</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Vista previa</h2>
                 <p className="text-sm text-slate-500">
-                  La configuración completa ahora se hace desde la pantalla exclusiva de sorteos.
+                  Asi se vera el bloque en la home.
                 </p>
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] p-5">
-              <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
-                Sorteo Hola Varela
+            {formData.imagen_url ? (
+              <div className="relative mb-5 h-64 w-full overflow-hidden rounded-2xl">
+                <OptimizedImage
+                  src={formData.imagen_url}
+                  alt={formData.titulo}
+                  sizes="100vw"
+                  className="object-cover"
+                />
               </div>
-              <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">
-                Gestión centralizada
-              </h3>
-              <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">
-                Crea sorteos nuevos, deja uno activo y configura qué comercios aparecen en el popup desde el panel dedicado.
-              </p>
-              <div className="mt-5">
-                <Link
-                  href="/admin/sorteos"
-                  className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-white px-5 py-3 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-50"
-                >
-                  Abrir panel de sorteos
-                </Link>
+            ) : (
+              <div className="mb-5 flex h-64 w-full items-center justify-center rounded-2xl bg-slate-100 text-center text-slate-500">
+                Sin foto cargada
               </div>
+            )}
 
-              {selectedSorteoComercios.length ? (
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  {selectedSorteoComercios.map((comercio) => {
-                    const imageSrc = comercio.imagen_url || comercio.imagen || null
-
-                    return (
-                      <div
-                        key={`preview-sorteo-${comercio.id}`}
-                        className="overflow-hidden rounded-[24px] border border-white/80 bg-white/90 shadow-sm"
-                      >
-                        <div className="relative h-32 w-full bg-slate-100">
-                          {imageSrc ? (
-                            <OptimizedImage
-                              src={imageSrc}
-                              alt={comercio.nombre}
-                              sizes="(max-width: 768px) 100vw, 25vw"
-                              className="object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full items-center justify-center text-sm text-slate-400">
-                              Sin foto
-                            </div>
-                          )}
-                        </div>
-                        <div className="p-4 text-sm font-semibold text-slate-900">
-                          {comercio.nombre}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-white/80 px-4 py-6 text-center text-sm text-slate-500">
-                  Selecciona uno o dos comercios para mostrarlos dentro del popup.
-                </div>
-              )}
+            <h3 className="text-2xl font-semibold text-slate-900">{formData.titulo}</h3>
+            <div className="mt-4 space-y-4 text-sm leading-7 text-slate-500">
+              <p>{formData.texto_1}</p>
+              <p>{formData.texto_2}</p>
+              <p>{formData.texto_3}</p>
             </div>
           </div>
         </div>
