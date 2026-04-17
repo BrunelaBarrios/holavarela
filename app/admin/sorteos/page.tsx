@@ -172,6 +172,10 @@ export default function AdminSorteosPage() {
       return `${entry.nombre} ${entry.telefono}`.toLowerCase().includes(normalizedSearch)
     })
   }, [entries, entryScope, entrySearch, selectedCampaign])
+  const selectedCampaignEntriesCount = useMemo(() => {
+    if (!selectedCampaign) return 0
+    return entries.filter((entry) => entry.sorteoId === selectedCampaign.id).length
+  }, [entries, selectedCampaign])
 
   const applyCampaign = (campaign: SorteoCampaign | null) => {
     if (!campaign) {
@@ -786,7 +790,7 @@ export default function AdminSorteosPage() {
                   <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
                     {entryScope === "all"
                       ? `${visibleEntries.length} cupones`
-                      : `${entries.filter((entry) => entry.sorteoId === selectedCampaign.id).length} cupones`}
+                      : `${selectedCampaignEntriesCount} cupones`}
                   </div>
                 ) : null}
               </div>
@@ -829,7 +833,7 @@ export default function AdminSorteosPage() {
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
                   Elige un sorteo de la lista para ver quienes fueron completando el cupon.
                 </div>
-              ) : entries.filter((entry) => entry.sorteoId === selectedCampaign.id).length === 0 ? (
+              ) : entryScope !== "all" && selectedCampaignEntriesCount === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
                   Todavia no hay participaciones para este sorteo.
                 </div>
