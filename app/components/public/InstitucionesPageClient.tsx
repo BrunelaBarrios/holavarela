@@ -291,9 +291,6 @@ export function InstitucionesPageClient({
                       <div className="flex h-20 w-20 items-center justify-center rounded-[28px] border border-cyan-100 bg-white text-cyan-700 shadow-sm">
                         <Building2 className="h-10 w-10" />
                       </div>
-                      <div className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                        Institucion
-                      </div>
                     </div>
                   </div>
                 )}

@@ -47,6 +47,14 @@ type WordSearchVariant = {
   }>
 }
 
+type WordPlacement = {
+  word: string
+  row: number
+  col: number
+  rowStep: number
+  colStep: number
+}
+
 const CHALLENGES: ChallengeMeta[] = [
   {
     key: "sopa",
@@ -415,35 +423,104 @@ function getStepDirection(fromIndex: number, toIndex: number, columnCount: numbe
   return { rowStep, colStep }
 }
 
+function createSeededRandom(seedText: string) {
+  let seed = 0
+
+  for (let index = 0; index < seedText.length; index += 1) {
+    seed = (seed * 31 + seedText.charCodeAt(index)) >>> 0
+  }
+
+  return () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0
+    return seed / 4294967296
+  }
+}
+
+function canPlaceWord(grid: string[][], size: number, placement: WordPlacement) {
+  return placement.word.split("").every((letter, letterIndex) => {
+    const row = placement.row + placement.rowStep * letterIndex
+    const col = placement.col + placement.colStep * letterIndex
+
+    if (row < 0 || row >= size || col < 0 || col >= size) {
+      return false
+    }
+
+    const currentValue = grid[row][col]
+    return !currentValue || currentValue === letter
+  })
+}
+
+function applyWordPlacement(grid: string[][], placement: WordPlacement) {
+  placement.word.split("").forEach((letter, letterIndex) => {
+    const row = placement.row + placement.rowStep * letterIndex
+    const col = placement.col + placement.colStep * letterIndex
+    grid[row][col] = letter
+  })
+}
+
 function buildWordSearchGrid(variant: WordSearchVariant) {
-  const size = 9
+  const size = 10
   const filler = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-  const grid = Array.from({ length: size }, (_, rowIndex) =>
-    Array.from(
-      { length: size },
-      (_, colIndex) => filler[(rowIndex * size + colIndex) % filler.length]
-    )
-  )
+  const grid = Array.from({ length: size }, () => Array.from({ length: size }, () => ""))
+  const random = createSeededRandom(variant.name)
+  const placedWords = new Set<string>()
+
+  const directions = [
+    { rowStep: 0, colStep: 1 },
+    { rowStep: 1, colStep: 0 },
+    { rowStep: 1, colStep: 1 },
+    { rowStep: 1, colStep: -1 },
+    { rowStep: 0, colStep: -1 },
+    { rowStep: -1, colStep: 0 },
+    { rowStep: -1, colStep: -1 },
+    { rowStep: -1, colStep: 1 },
+  ]
 
   variant.placements.forEach((placement) => {
-    placement.word.split("").forEach((letter, letterIndex) => {
-      const row = placement.row + placement.rowStep * letterIndex
-      const col = placement.col + placement.colStep * letterIndex
-
-      if (row < 0 || row >= size || col < 0 || col >= size) {
-        throw new Error(`La palabra ${placement.word} se sale de la grilla.`)
-      }
-
-      const currentValue = grid[row][col]
-      if (currentValue !== filler[(row * size + col) % filler.length] && currentValue !== letter) {
-        throw new Error(`La palabra ${placement.word} entra en conflicto en ${row},${col}.`)
-      }
-
-      grid[row][col] = letter
-    })
+    if (canPlaceWord(grid, size, placement)) {
+      applyWordPlacement(grid, placement)
+      placedWords.add(placement.word)
+    }
   })
 
-  return grid
+  variant.targets.forEach((word) => {
+    if (placedWords.has(word)) return
+
+    const candidateDirections = [...directions].sort(() => random() - 0.5)
+    let placed = false
+
+    for (const direction of candidateDirections) {
+      for (let attempt = 0; attempt < 80; attempt += 1) {
+        const row = Math.floor(random() * size)
+        const col = Math.floor(random() * size)
+        const placement = {
+          word,
+          row,
+          col,
+          rowStep: direction.rowStep,
+          colStep: direction.colStep,
+        }
+
+        if (!canPlaceWord(grid, size, placement)) {
+          continue
+        }
+
+        applyWordPlacement(grid, placement)
+        placed = true
+        break
+      }
+
+      if (placed) break
+    }
+
+    if (!placed) {
+      throw new Error(`No se pudo ubicar la palabra ${word} en la sopa.`)
+    }
+  })
+
+  return grid.map((row, rowIndex) =>
+    row.map((value, colIndex) => value || filler[(rowIndex * size + colIndex) % filler.length])
+  )
 }
 
 function ScoreCard({ label, value }: { label: string; value: string | number }) {

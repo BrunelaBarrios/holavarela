@@ -1719,9 +1719,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       <div className="flex h-20 w-20 items-center justify-center rounded-[28px] border border-cyan-100 bg-white text-cyan-700 shadow-sm">
                         <Building2 className="h-10 w-10" />
                       </div>
-                      <div className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                        Institucion
-                      </div>
                     </div>
                   </div>
                 )}
@@ -2540,9 +2537,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-100 bg-white text-cyan-700 shadow-sm">
                       <Building2 className="h-6 w-6" />
                     </div>
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500 sm:text-xs">
-                      Institucion
-                    </div>
                   </div>
                   <div className="p-4 sm:p-5">
                     <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-[22px]">
@@ -2697,11 +2691,11 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       </footer>
 
       {isSweepstakesHintVisible ? (
-        <div className="fixed bottom-4 left-4 right-4 z-[70] sm:bottom-5 sm:left-auto sm:right-5 sm:max-w-[280px]">
+        <div className="fixed bottom-5 left-4 right-4 z-[70] sm:bottom-7 sm:left-auto sm:right-7 sm:max-w-[300px] lg:bottom-8 lg:right-8 lg:max-w-[320px]">
           <button
             type="button"
             onClick={() => setIsSweepstakesHintOpen(true)}
-            className="w-full rounded-[24px] border border-rose-200 bg-[linear-gradient(135deg,#fff1f5_0%,#ffffff_100%)] px-3 py-3 pr-12 text-left shadow-[0_24px_60px_-24px_rgba(244,63,94,0.4)] transition hover:-translate-y-0.5 hover:shadow-[0_30px_70px_-24px_rgba(244,63,94,0.45)] sm:rounded-[26px] sm:px-4 sm:py-4"
+            className="w-full rounded-[24px] border border-rose-200 bg-[linear-gradient(135deg,#fff1f5_0%,#ffffff_100%)] px-3 py-3 pr-12 text-left shadow-[0_24px_60px_-24px_rgba(244,63,94,0.4)] transition hover:-translate-y-0.5 hover:shadow-[0_30px_70px_-24px_rgba(244,63,94,0.45)] sm:rounded-[26px] sm:px-4 sm:py-4 lg:px-5 lg:py-4"
             aria-label="Ver como participar del sorteo del 9 de Mayo"
           >
             <div className="flex items-start gap-2.5 sm:gap-3">
