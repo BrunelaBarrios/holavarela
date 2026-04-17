@@ -389,8 +389,18 @@ function hasInstitutionPremium(item: {
 }
 
 function sliceRotatingItems<T>(items: T[], page: number, pageSize = ITEMS_PER_ROTATION) {
+  if (items.length <= pageSize) {
+    return items.slice(0, pageSize)
+  }
+
   const start = page * pageSize
-  return items.slice(start, start + pageSize)
+  const visibleItems: T[] = []
+
+  for (let index = 0; index < pageSize; index += 1) {
+    visibleItems.push(items[(start + index) % items.length])
+  }
+
+  return visibleItems
 }
 
 function getScheduledRotationPage(totalPages: number, rotationDays = FEATURED_ROTATION_DAYS) {
