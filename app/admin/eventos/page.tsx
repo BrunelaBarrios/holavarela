@@ -236,12 +236,19 @@ export default function AdminEventosPage() {
     if (!file) return
 
     try {
-      const imageDataUrl = await fileToDataUrl(file)
+      // Main images are compressed before saving to reduce payload and reads.
+      const imageDataUrl = await fileToDataUrl(file, {
+        maxWidth: 720,
+        maxHeight: 1440,
+        targetFileSizeBytes: 160 * 1024,
+      })
       setFormData((prev) => ({ ...prev, imagen: imageDataUrl }))
     } catch (error) {
       setSaveError(
         error instanceof Error ? error.message : "No se pudo cargar la imagen."
       )
+    } finally {
+      e.target.value = ""
     }
   }
 
@@ -350,10 +357,12 @@ export default function AdminEventosPage() {
       }
 
     if (editingEvento) {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("eventos")
         .update(payload)
         .eq("id", editingEvento.id)
+        .select("*")
+        .single()
 
       if (error) {
         setSaveError(`Error al actualizar evento: ${error.message}`)
@@ -366,8 +375,22 @@ export default function AdminEventosPage() {
         section: "Eventos",
         target: formData.titulo || "Sin titulo",
       })
+
+      if (data) {
+        setEventos((prev) =>
+          prev.map((item) =>
+            item.id === editingEvento.id
+              ? { ...data, share_count: item.share_count || 0 }
+              : item
+          )
+        )
+      }
     } else {
-      const { error } = await supabase.from("eventos").insert([payload])
+      const { data, error } = await supabase
+        .from("eventos")
+        .insert([payload])
+        .select("*")
+        .single()
 
       if (error) {
         setSaveError(`Error al guardar evento: ${error.message}`)
@@ -380,9 +403,12 @@ export default function AdminEventosPage() {
         section: "Eventos",
         target: formData.titulo || "Sin titulo",
       })
+
+      if (data) {
+        setEventos((prev) => [{ ...data, share_count: 0 }, ...prev])
+      }
     }
 
-    await cargarEventos()
     resetForm()
     setLoading(false)
   }

@@ -8,16 +8,12 @@ import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { buildShareCountMap } from "../../lib/shareTracking"
-import { subscriptionPlans, type SubscriptionPlanKey } from "../../lib/subscriptionPlans"
-import { getSubscriptionStatusBadge, getSubscriptionStatusLabel, type SubscriptionStatusKey } from "../../lib/subscriptionStatus"
 import { buildWhatsappCountMap } from "../../lib/whatsappTracking"
 
 type Curso = {
   id: number
   nombre: string
   descripcion: string
-  plan_suscripcion?: SubscriptionPlanKey | null
-  estado_suscripcion?: SubscriptionStatusKey | null
   institucion_id?: number | null
   responsable: string
   contacto: string
@@ -34,7 +30,7 @@ type Curso = {
 
 type CursoForm = Omit<
   Curso,
-  "id" | "plan_suscripcion" | "estado_suscripcion" | "share_count" | "whatsapp_count"
+  "id" | "share_count" | "whatsapp_count"
 >
 
 type InstitucionOption = {
@@ -681,16 +677,6 @@ export default function AdminCursosPage() {
                   Destacado
                 </div>
               )}
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                  <span>{subscriptionPlans[curso.plan_suscripcion || "presencia"].shortLabel}</span>
-                </div>
-                <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${getSubscriptionStatusBadge(curso.estado_suscripcion)}`}>
-                  <span>{getSubscriptionStatusLabel(curso.estado_suscripcion)}</span>
-                </div>
-              </div>
-
               <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                 <Share2 className="h-3.5 w-3.5" />
                 {curso.share_count || 0} compartidos

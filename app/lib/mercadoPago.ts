@@ -89,7 +89,7 @@ export function parseExternalReference(reference?: string | null) {
   const id = Number(idRaw)
 
   if (!type || !idRaw || Number.isNaN(id)) return null
-  if (type !== "comercio" && type !== "servicio" && type !== "curso") return null
+  if (type !== "comercio" && type !== "servicio") return null
 
   return {
     type,

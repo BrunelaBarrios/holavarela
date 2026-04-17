@@ -10,7 +10,7 @@ import { AuthFormStatus } from "../components/AuthFormStatus"
 import { OptimizedImage } from "../components/OptimizedImage"
 import { recordSiteVisit } from "../lib/contentVisits"
 import { formatEventDateRange } from "../lib/eventDates"
-import { buildUserProfileFields, fetchUserOwnedEvents, findUserOwnedEntity, getUserProfileImageSrc, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, type UserEntityType, type UserOwnedEntity, type UserOwnedEvent } from "../lib/userProfiles"
+import { buildUserProfileFields, fetchUserOwnedEvents, findUserOwnedEntity, getUserProfileImageSrc, normalizeUserEntityStatus, supportsPremiumProfile, supportsSubscription, userEntityLabels, type UserEntityType, type UserOwnedEntity, type UserOwnedEvent } from "../lib/userProfiles"
 import { supabase } from "../supabase"
 
 type ExternalLinksForm = { webUrl: string; instagramUrl: string; facebookUrl: string }
@@ -145,7 +145,7 @@ export default function UsuariosHomePage() {
       return
     }
     setSavingOnboarding(false)
-    if (entityType === "institucion") {
+    if (!supportsSubscription(entityType)) {
       router.replace("/usuarios")
       router.refresh()
       return
@@ -241,7 +241,7 @@ export default function UsuariosHomePage() {
           <section className="bg-[radial-gradient(circle_at_top_left,#d8f3df_0%,#edf8f1_42%,#eef5ff_100%)] p-8 sm:p-10">
             <div className="inline-flex rounded-full bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Primer ingreso</div>
             <h1 className="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl">Completa tu espacio</h1>
-            <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">Esta es la primera vez que entras con tu cuenta. Completa primero los datos de tu perfil y después te llevamos a suscripción para continuar.</p>
+            <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">Esta es la primera vez que entras con tu cuenta. Completa primero los datos de tu perfil y luego seguimos con el siguiente paso según el tipo de ficha.</p>
               <div className="mt-8 space-y-4">
               <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
                 <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Cuenta conectada</div>
@@ -250,7 +250,7 @@ export default function UsuariosHomePage() {
               <div className="rounded-[24px] border border-white/70 bg-white/80 p-5 backdrop-blur">
                 <div className="text-sm font-medium text-slate-900">Que vas a poder hacer despues</div>
                 <div className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                  <p>Completar la suscripcion y continuar con el alta de tu espacio.</p>
+                  <p>Completar el alta de tu espacio y, si corresponde, seguir con la suscripción.</p>
                   <p>Ver tu negocio cargado y editar sus datos.</p>
                   <p>Subir eventos y revisar cuales estan activos o en borrador.</p>
                 </div>
@@ -283,7 +283,7 @@ export default function UsuariosHomePage() {
 
               {entityType === "institucion" ? <div className="space-y-4 rounded-[24px] border border-slate-200 bg-slate-50 p-5"><Field label="Nombre de la institucion" value={institucion.nombre} onChange={(value) => setInstitucion((current) => ({ ...current, nombre: value }))} required /><div className="grid gap-4 md:grid-cols-2"><Field label="Direccion" value={institucion.direccion} onChange={(value) => setInstitucion((current) => ({ ...current, direccion: value }))} /><Field label="Telefono" value={institucion.telefono} onChange={(value) => setInstitucion((current) => ({ ...current, telefono: value }))} /></div><TextAreaField label="Descripcion" value={institucion.descripcion} onChange={(value) => setInstitucion((current) => ({ ...current, descripcion: value }))} /><ExternalLinksFields webUrl={institucion.webUrl} instagramUrl={institucion.instagramUrl} facebookUrl={institucion.facebookUrl} onWebChange={(value) => setInstitucion((current) => ({ ...current, webUrl: value }))} onInstagramChange={(value) => setInstitucion((current) => ({ ...current, instagramUrl: value }))} onFacebookChange={(value) => setInstitucion((current) => ({ ...current, facebookUrl: value }))} /><CheckboxField label="Este telefono tiene WhatsApp" checked={institucion.usaWhatsapp} onChange={(checked) => setInstitucion((current) => ({ ...current, usaWhatsapp: checked }))} /></div> : null}
 
-              <button type="submit" disabled={savingOnboarding} className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70">{savingOnboarding ? "Guardando..." : entityType === "institucion" ? "Guardar y entrar al panel" : "Guardar y continuar a suscripcion"}</button>
+              <button type="submit" disabled={savingOnboarding} className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70">{savingOnboarding ? "Guardando..." : supportsSubscription(entityType) ? "Guardar y continuar a suscripcion" : "Guardar y entrar al panel"}</button>
             </form>
           </section>
         </div>
@@ -330,7 +330,7 @@ export default function UsuariosHomePage() {
                         <div className="space-y-3">
                           <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description="Actualiza la ficha base: contacto, direccion, redes e imagen principal." />
                           {hasPremium ? <QuickLink href="/usuarios/perfil#premium" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-fuchsia-600" />} title="Editar version extendida" description={isInstitution ? "Administra el contenido ampliado habilitado por admin." : "Administra el contenido ampliado incluido en tu plan."} /> : null}
-                          {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
+                          {ownedEntity && supportsSubscription(ownedEntity.type) ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
                           <QuickLink href="/usuarios/metricas-holavarela" icon={<BarChart3 className="h-5 w-5 text-slate-400 transition group-hover:text-indigo-600" />} title="Métricas de Hola Varela" description="Conoce visitantes, vistas y actividad general de la plataforma." />
                           <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
                           <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contraseña" description="Hazlo de forma segura validando tu clave actual." />
@@ -378,7 +378,7 @@ export default function UsuariosHomePage() {
                 <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones rápidas</div>
                 <div className="mt-4 space-y-3">
                   <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description="Actualiza la ficha base: contacto, direccion, redes e imagen principal." />
-                        {!isInstitution ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
+                        {ownedEntity && supportsSubscription(ownedEntity.type) ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
                         <QuickLink href="/usuarios/metricas-holavarela" icon={<BarChart3 className="h-5 w-5 text-slate-400 transition group-hover:text-indigo-600" />} title="Métricas de Hola Varela" description="Conoce visitantes, vistas y actividad general de la plataforma." />
                         <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
                   <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contraseña" description="Hazlo de forma segura validando tu clave actual." />

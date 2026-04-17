@@ -67,7 +67,7 @@ export default async function Page() {
       .order("fecha", { ascending: true }),
     supabaseServer
       .from("cursos")
-      .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, destacado, plan_suscripcion, usa_whatsapp")
+      .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, destacado, usa_whatsapp")
       .or("estado.is.null,estado.eq.activo")
       .order("id", { ascending: false })
       .limit(8),
@@ -86,7 +86,7 @@ export default async function Page() {
       .limit(24),
     supabaseServer
       .from("cursos")
-      .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, destacado, plan_suscripcion, usa_whatsapp")
+      .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, destacado, usa_whatsapp")
       .or("estado.is.null,estado.eq.activo")
       .eq("destacado", true)
       .order("id", { ascending: false })

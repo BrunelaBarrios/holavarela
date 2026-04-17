@@ -123,7 +123,6 @@ type Curso = {
   facebook_url?: string | null
   imagen: string | null
   destacado?: boolean | null
-  plan_suscripcion?: string | null
   usa_whatsapp?: boolean | null
 }
 

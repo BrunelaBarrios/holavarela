@@ -195,12 +195,19 @@ export default function AdminComerciosPage() {
     if (!file) return
 
     try {
-      const imageDataUrl = await fileToDataUrl(file)
+      // Main images are compressed before saving to reduce payload and reads.
+      const imageDataUrl = await fileToDataUrl(file, {
+        maxWidth: 720,
+        maxHeight: 1440,
+        targetFileSizeBytes: 160 * 1024,
+      })
       setFormData((prev) => ({ ...prev, imagen_url: imageDataUrl }))
     } catch (error) {
       setSaveError(
         error instanceof Error ? error.message : "No se pudo cargar la imagen."
       )
+    } finally {
+      e.target.value = ""
     }
   }
 
@@ -212,7 +219,15 @@ export default function AdminComerciosPage() {
     if (files.length === 0) return
 
     try {
-      const nextImages = await Promise.all(files.map((file) => fileToDataUrl(file)))
+      const nextImages = await Promise.all(
+        files.map((file) =>
+          fileToDataUrl(file, {
+            maxWidth: 560,
+            maxHeight: 1120,
+            targetFileSizeBytes: 120 * 1024,
+          })
+        )
+      )
       setFormData((prev) => {
         const currentImages = prev[field]
           .split(/\r?\n/)
@@ -228,6 +243,8 @@ export default function AdminComerciosPage() {
       setSaveError(
         error instanceof Error ? error.message : "No se pudieron cargar las imagenes premium."
       )
+    } finally {
+      e.target.value = ""
     }
   }
 
@@ -335,10 +352,12 @@ export default function AdminComerciosPage() {
       }
 
     if (editingComercio) {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("comercios")
         .update(payload)
         .eq("id", editingComercio.id)
+        .select("*")
+        .single()
 
       if (error) {
         const message = `Error al actualizar comercio: ${error.message}${error.details ? ` - ${error.details}` : ""}`
@@ -352,8 +371,27 @@ export default function AdminComerciosPage() {
         section: "Comercios",
         target: formData.nombre || "Sin nombre",
       })
+
+      // Keep admin state in sync without reloading the full table and counters.
+      if (data) {
+        setComercios((prev) =>
+          prev.map((item) =>
+            item.id === editingComercio.id
+              ? {
+                  ...data,
+                  share_count: item.share_count || 0,
+                  whatsapp_count: item.whatsapp_count || 0,
+                }
+              : item
+          )
+        )
+      }
     } else {
-      const { error } = await supabase.from("comercios").insert([payload])
+      const { data, error } = await supabase
+        .from("comercios")
+        .insert([payload])
+        .select("*")
+        .single()
 
       if (error) {
         const message = `Error al guardar comercio: ${error.message}${error.details ? ` - ${error.details}` : ""}`
@@ -367,9 +405,15 @@ export default function AdminComerciosPage() {
         section: "Comercios",
         target: formData.nombre || "Sin nombre",
       })
+
+      if (data) {
+        setComercios((prev) => [
+          { ...data, share_count: 0, whatsapp_count: 0 },
+          ...prev,
+        ])
+      }
     }
 
-    await cargarComercios()
     setVisibleCount((prev) => Math.max(prev, ITEMS_PER_PAGE))
     resetForm()
     setLoading(false)

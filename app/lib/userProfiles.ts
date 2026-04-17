@@ -115,6 +115,10 @@ export function supportsPremiumProfile(type: UserEntityType) {
   return type === "comercio" || type === "servicio" || type === "institucion"
 }
 
+export function supportsSubscription(type: UserEntityType) {
+  return type === "comercio" || type === "servicio"
+}
+
 export function normalizeUserEntityStatus(status?: string | null) {
   if (status === "oculto") return "oculto"
   if (status === "borrador") return "borrador"

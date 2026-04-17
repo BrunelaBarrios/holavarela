@@ -19,7 +19,7 @@ import {
 import { supabase } from "../../supabase"
 
 type SubscriptionPlanKey = "presencia" | "destacado" | "destacado_plus"
-type EntityType = "comercio" | "servicio" | "curso"
+type EntityType = "comercio" | "servicio"
 
 type SubscriptionItem = {
   id: number
@@ -38,7 +38,6 @@ const subscriptionPlanOptions: { key: SubscriptionPlanKey; label: string }[] = [
 const entityLabels: Record<EntityType, string> = {
   comercio: "Comercio",
   servicio: "Servicio",
-  curso: "Curso",
 }
 
 const siteFieldSelection = `
@@ -77,7 +76,6 @@ export default function AdminSuscripcionesPage() {
       { data: siteData, error: siteError },
       { data: comercios, error: comerciosError },
       { data: servicios, error: serviciosError },
-      { data: cursos, error: cursosError },
     ] = await Promise.all([
       supabase.from("sitio").select(siteFieldSelection).eq("id", 1).maybeSingle(),
       supabase
@@ -88,18 +86,13 @@ export default function AdminSuscripcionesPage() {
         .from("servicios")
         .select("id, nombre, plan_suscripcion, estado_suscripcion")
         .order("nombre", { ascending: true }),
-      supabase
-        .from("cursos")
-        .select("id, nombre, plan_suscripcion, estado_suscripcion")
-        .order("nombre", { ascending: true }),
     ])
 
-    if (siteError || comerciosError || serviciosError || cursosError) {
+    if (siteError || comerciosError || serviciosError) {
       setError(
         siteError?.message ||
           comerciosError?.message ||
           serviciosError?.message ||
-          cursosError?.message ||
           "No pudimos cargar las suscripciones."
       )
       setLoading(false)
@@ -110,7 +103,6 @@ export default function AdminSuscripcionesPage() {
     setItems([
       ...((comercios || []).map((item) => ({ ...item, entityType: "comercio" as const }))),
       ...((servicios || []).map((item) => ({ ...item, entityType: "servicio" as const }))),
-      ...((cursos || []).map((item) => ({ ...item, entityType: "curso" as const }))),
     ])
     setLoading(false)
   }
@@ -169,9 +161,7 @@ export default function AdminSuscripcionesPage() {
     const table =
       item.entityType === "comercio"
         ? "comercios"
-        : item.entityType === "servicio"
-          ? "servicios"
-          : "cursos"
+        : "servicios"
 
     const payload = {
       ...changes,

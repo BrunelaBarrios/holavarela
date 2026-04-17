@@ -155,12 +155,19 @@ export default function AdminInstitucionesPage() {
     if (!file) return
 
     try {
-      const imageDataUrl = await fileToDataUrl(file)
+      // Main images are compressed before saving to reduce payload and reads.
+      const imageDataUrl = await fileToDataUrl(file, {
+        maxWidth: 720,
+        maxHeight: 1440,
+        targetFileSizeBytes: 160 * 1024,
+      })
       setFormData((prev) => ({ ...prev, foto: imageDataUrl }))
     } catch (error) {
       setSaveError(
         error instanceof Error ? error.message : "No se pudo cargar la imagen."
       )
+    } finally {
+      e.target.value = ""
     }
   }
 
@@ -186,10 +193,12 @@ export default function AdminInstitucionesPage() {
     }
 
     if (editingInstitucion) {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("instituciones")
         .update(payload)
         .eq("id", editingInstitucion.id)
+        .select("*")
+        .single()
 
       if (error) {
       setSaveError(`Error al actualizar institución: ${error.message}`)
@@ -202,8 +211,18 @@ export default function AdminInstitucionesPage() {
         section: "Instituciones",
         target: formData.nombre,
       })
+
+      if (data) {
+        setInstituciones((prev) =>
+          prev.map((item) => (item.id === editingInstitucion.id ? data : item))
+        )
+      }
     } else {
-      const { error } = await supabase.from("instituciones").insert([payload])
+      const { data, error } = await supabase
+        .from("instituciones")
+        .insert([payload])
+        .select("*")
+        .single()
 
       if (error) {
         setSaveError(`Error al guardar institución: ${error.message}`)
@@ -216,9 +235,12 @@ export default function AdminInstitucionesPage() {
         section: "Instituciones",
         target: formData.nombre,
       })
+
+      if (data) {
+        setInstituciones((prev) => [data, ...prev])
+      }
     }
 
-    await cargarInstituciones()
     resetForm()
     setLoading(false)
   }

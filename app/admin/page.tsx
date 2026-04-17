@@ -76,7 +76,6 @@ export default function AdminDashboardPage() {
         { count: pendingPasswordRequests },
         { count: pendingComercios },
         { count: pendingServicios },
-        { count: pendingCursos },
       ] = await Promise.all([
         supabase.from("comercios").select("*", { count: "exact", head: true }),
         supabase.from("eventos").select("*", { count: "exact", head: true }),
@@ -102,10 +101,6 @@ export default function AdminDashboardPage() {
           .from("servicios")
           .select("*", { count: "exact", head: true })
           .eq("estado_suscripcion", "pendiente"),
-        supabase
-          .from("cursos")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "pendiente"),
       ])
 
       setComerciosCount(comercios || 0)
@@ -118,9 +113,7 @@ export default function AdminDashboardPage() {
       setNewEventosCount(newEventos || 0)
       setNewContactosCount(newContactos || 0)
       setPendingPasswordRequestsCount(pendingPasswordRequests || 0)
-      setPendingSubscriptionsCount(
-        (pendingComercios || 0) + (pendingServicios || 0) + (pendingCursos || 0)
-      )
+      setPendingSubscriptionsCount((pendingComercios || 0) + (pendingServicios || 0))
       setLoading(false)
     }
 

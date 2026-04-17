@@ -7,12 +7,11 @@ import {
   parseExternalReference,
 } from "../../../lib/mercadoPago"
 
-type EntityTable = "comercios" | "servicios" | "cursos"
+type EntityTable = "comercios" | "servicios"
 
 const tableByType = {
   comercio: "comercios",
   servicio: "servicios",
-  curso: "cursos",
 } as const
 
 async function updateEntityByReference(params: {
@@ -49,7 +48,7 @@ async function updateEntityByEmail(params: {
   statusKey: string
 }) {
   const supabaseAdmin = getSupabaseAdmin()
-  const tables: EntityTable[] = ["comercios", "servicios", "cursos"]
+  const tables: EntityTable[] = ["comercios", "servicios"]
 
   for (const table of tables) {
     const { data } = await supabaseAdmin

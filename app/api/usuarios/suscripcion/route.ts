@@ -4,8 +4,8 @@ import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
 import { subscriptionPlans, type SubscriptionPlanKey } from "../../../lib/subscriptionPlans"
 import { updateMercadoPagoPreapproval } from "../../../lib/mercadoPago"
 
-type EntityType = "comercio" | "servicio" | "curso"
-type EntityTable = "comercios" | "servicios" | "cursos"
+type EntityType = "comercio" | "servicio"
+type EntityTable = "comercios" | "servicios"
 
 type ActionPayload =
   | { action: "save_plan"; planKey: SubscriptionPlanKey }
@@ -48,7 +48,6 @@ async function findOwnedEntity(email: string) {
   const configs: Array<{ type: EntityType; table: EntityTable }> = [
     { type: "comercio", table: "comercios" },
     { type: "servicio", table: "servicios" },
-    { type: "curso", table: "cursos" },
   ]
 
   for (const config of configs) {

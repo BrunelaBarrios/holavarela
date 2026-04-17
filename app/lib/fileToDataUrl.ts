@@ -1,9 +1,17 @@
-const MAX_WIDTH = 800
-const MAX_HEIGHT = 1600
-const INITIAL_WEBP_QUALITY = 0.74
-const MIN_WEBP_QUALITY = 0.42
-const TARGET_FILE_SIZE_BYTES = 200 * 1024
+const DEFAULT_MAX_WIDTH = 720
+const DEFAULT_MAX_HEIGHT = 1440
+const DEFAULT_INITIAL_WEBP_QUALITY = 0.72
+const DEFAULT_MIN_WEBP_QUALITY = 0.4
+const DEFAULT_TARGET_FILE_SIZE_BYTES = 160 * 1024
 const MAX_FILE_SIZE_BYTES = 6 * 1024 * 1024
+
+type FileToDataUrlOptions = {
+  maxWidth?: number
+  maxHeight?: number
+  initialQuality?: number
+  minQuality?: number
+  targetFileSizeBytes?: number
+}
 
 function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -24,7 +32,10 @@ function loadImage(file: File): Promise<HTMLImageElement> {
   })
 }
 
-export async function fileToDataUrl(file: File): Promise<string> {
+export async function fileToDataUrl(
+  file: File,
+  options: FileToDataUrlOptions = {}
+): Promise<string> {
   if (!file.type.startsWith("image/")) {
     throw new Error("Selecciona un archivo de imagen valido.")
   }
@@ -34,8 +45,15 @@ export async function fileToDataUrl(file: File): Promise<string> {
   }
 
   const image = await loadImage(file)
-  const widthRatio = MAX_WIDTH / Math.max(image.width || 1, 1)
-  const heightRatio = MAX_HEIGHT / Math.max(image.height || 1, 1)
+  const maxWidth = options.maxWidth ?? DEFAULT_MAX_WIDTH
+  const maxHeight = options.maxHeight ?? DEFAULT_MAX_HEIGHT
+  const initialQuality = options.initialQuality ?? DEFAULT_INITIAL_WEBP_QUALITY
+  const minQuality = options.minQuality ?? DEFAULT_MIN_WEBP_QUALITY
+  const targetFileSizeBytes =
+    options.targetFileSizeBytes ?? DEFAULT_TARGET_FILE_SIZE_BYTES
+
+  const widthRatio = maxWidth / Math.max(image.width || 1, 1)
+  const heightRatio = maxHeight / Math.max(image.height || 1, 1)
   const scale = Math.min(1, widthRatio, heightRatio)
 
   const width = Math.max(1, Math.round(image.width * scale))
@@ -54,7 +72,7 @@ export async function fileToDataUrl(file: File): Promise<string> {
 
   let currentWidth = width
   let currentHeight = height
-  let quality = INITIAL_WEBP_QUALITY
+  let quality = initialQuality
   let result = ""
 
   while (currentWidth > 0 && currentHeight > 0) {
@@ -63,16 +81,16 @@ export async function fileToDataUrl(file: File): Promise<string> {
     context.clearRect(0, 0, currentWidth, currentHeight)
     context.drawImage(image, 0, 0, currentWidth, currentHeight)
 
-    quality = INITIAL_WEBP_QUALITY
+    quality = initialQuality
 
-    while (quality >= MIN_WEBP_QUALITY) {
+    while (quality >= minQuality) {
       result = canvas.toDataURL("image/webp", quality)
       if (!result) {
         throw new Error("No se pudo convertir la imagen seleccionada.")
       }
 
       const estimatedBytes = Math.ceil((result.length * 3) / 4)
-      if (estimatedBytes <= TARGET_FILE_SIZE_BYTES) {
+      if (estimatedBytes <= targetFileSizeBytes) {
         return result
       }
 

@@ -15,6 +15,7 @@ import {
 } from "../../lib/subscriptionStatus"
 import {
   findUserOwnedEntity,
+  supportsSubscription,
   userEntityLabels,
   type UserOwnedEntity,
 } from "../../lib/userProfiles"
@@ -79,7 +80,7 @@ export default function UsuariosSuscripcionPage() {
           supabase.from("sitio").select(siteFieldSelection).eq("id", 1).maybeSingle(),
         ])
 
-        if (!entity || entity.type === "institucion") {
+        if (!entity || !supportsSubscription(entity.type)) {
           router.replace("/usuarios")
           return
         }

@@ -249,12 +249,19 @@ export default function AdminServiciosPage() {
     if (!file) return
 
     try {
-      const imageDataUrl = await fileToDataUrl(file)
+      // Main images are compressed before saving to reduce payload and reads.
+      const imageDataUrl = await fileToDataUrl(file, {
+        maxWidth: 720,
+        maxHeight: 1440,
+        targetFileSizeBytes: 160 * 1024,
+      })
       setFormData((prev) => ({ ...prev, imagen: imageDataUrl }))
     } catch (error) {
       setSaveError(
         error instanceof Error ? error.message : "No se pudo cargar la imagen."
       )
+    } finally {
+      e.target.value = ""
     }
   }
 
@@ -265,7 +272,15 @@ export default function AdminServiciosPage() {
     if (files.length === 0) return
 
     try {
-      const nextImages = await Promise.all(files.map((file) => fileToDataUrl(file)))
+      const nextImages = await Promise.all(
+        files.map((file) =>
+          fileToDataUrl(file, {
+            maxWidth: 560,
+            maxHeight: 1120,
+            targetFileSizeBytes: 120 * 1024,
+          })
+        )
+      )
       setFormData((prev) => {
         const currentImages = prev.premium_galeria
           .split(/\r?\n/)
@@ -326,10 +341,12 @@ export default function AdminServiciosPage() {
       }
 
     if (editingServicio) {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("servicios")
         .update(payload)
         .eq("id", editingServicio.id)
+        .select("*")
+        .single()
 
       if (error) {
         setSaveError(`Error al actualizar servicio: ${error.message}`)
@@ -342,8 +359,26 @@ export default function AdminServiciosPage() {
         section: "Servicios",
         target: formData.nombre || "Sin nombre",
       })
+
+      if (data) {
+        setServicios((prev) =>
+          prev.map((item) =>
+            item.id === editingServicio.id
+              ? {
+                  ...data,
+                  share_count: item.share_count || 0,
+                  whatsapp_count: item.whatsapp_count || 0,
+                }
+              : item
+          )
+        )
+      }
     } else {
-      const { error } = await supabase.from("servicios").insert([payload])
+      const { data, error } = await supabase
+        .from("servicios")
+        .insert([payload])
+        .select("*")
+        .single()
 
       if (error) {
         setSaveError(`Error al guardar servicio: ${error.message}`)
@@ -356,9 +391,15 @@ export default function AdminServiciosPage() {
         section: "Servicios",
         target: formData.nombre || "Sin nombre",
       })
+
+      if (data) {
+        setServicios((prev) => [
+          { ...data, share_count: 0, whatsapp_count: 0 },
+          ...prev,
+        ])
+      }
     }
 
-    await cargarServicios()
     resetForm()
     setLoading(false)
   }
