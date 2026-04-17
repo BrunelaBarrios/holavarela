@@ -332,6 +332,7 @@ const WELCOME_PROMOTION_ENABLED = false
 const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
 const DELAYED_PROMO_SESSION_KEY = "guia-varela-delayed-promo-shown-v1"
+const DELAYED_PROMO_LAST_KEY = "guia-varela-delayed-promo-last-key"
 const SWEEPSTAKES_HINT_DISMISSED_SESSION_KEY = "guia-varela-sweepstakes-hint-dismissed-v1"
 const DELAYED_PROMO_UPDATE_EVENT = "delayed-promo-config-updated"
 
@@ -371,6 +372,7 @@ const SOCIAL_LINKS = [
 
 const ITEMS_PER_ROTATION = 8
 const FEATURED_ROTATION_DAYS = 2
+const DELAYED_PROMO_ROTATION_ITEMS = 4
 
 function isFeaturedListing(item: {
   destacado?: boolean | null
@@ -409,6 +411,35 @@ function getScheduledRotationPage(totalPages: number, rotationDays = FEATURED_RO
 
   const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24))
   return Math.floor(daysSinceEpoch / rotationDays) % totalPages
+}
+
+function getInitialDelayedPromo(
+  items: DelayedPromo[],
+  configuredItemKey: string
+): DelayedPromo | null {
+  if (items.length === 0 || typeof window === "undefined") return null
+
+  if (configuredItemKey) {
+    return items.find((item) => item.key === configuredItemKey) || null
+  }
+
+  const totalPages = Math.max(1, Math.ceil(items.length / DELAYED_PROMO_ROTATION_ITEMS))
+  const scheduledPage = getScheduledRotationPage(totalPages, 1)
+  const dailyPool = sliceRotatingItems(
+    items,
+    scheduledPage,
+    Math.min(DELAYED_PROMO_ROTATION_ITEMS, items.length)
+  )
+
+  if (dailyPool.length === 0) return null
+
+  const lastShownKey = window.localStorage.getItem(DELAYED_PROMO_LAST_KEY)
+  const lastIndex = dailyPool.findIndex((item) => item.key === lastShownKey)
+  const nextIndex = lastIndex >= 0 ? (lastIndex + 1) % dailyPool.length : 0
+  const nextItem = dailyPool[nextIndex] || dailyPool[0]
+
+  window.localStorage.setItem(DELAYED_PROMO_LAST_KEY, nextItem.key)
+  return nextItem
 }
 
 export function HomePage({ initialData }: { initialData: HomePageData }) {
@@ -499,7 +530,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const visibleCursos = useMemo(() => cursos.slice(0, 8), [cursos])
   const visibleInstituciones = useMemo(() => instituciones.slice(0, 10), [instituciones])
   const delayedPromoOptions = useMemo<DelayedPromo[]>(() => {
-    const comercioOptions = featuredBusinesses.map((item) => ({
+    const comercioOptions = featuredBusinesses
+      .filter((item) => isFeaturedListing(item))
+      .map((item) => ({
       key: `comercio:${item.id}`,
       kind: "comercio" as const,
       title: item.nombre,
@@ -510,7 +543,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       href: item.premium_activo ? `/comercios/${item.id}` : `/comercios?item=${item.id}`,
     }))
 
-    const servicioOptions = allServicios.map((item) => ({
+    const servicioOptions = allServicios
+      .filter((item) => isFeaturedListing(item))
+      .map((item) => ({
       key: `servicio:${item.id}`,
       kind: "servicio" as const,
       title: item.nombre,
@@ -521,7 +556,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       href: item.premium_activo ? `/servicios/${item.id}` : `/servicios?item=${item.id}`,
     }))
 
-    const cursoOptions = allCursos.map((item) => ({
+    const cursoOptions = allCursos
+      .filter((item) => item.destacado)
+      .map((item) => ({
       key: `curso:${item.id}`,
       kind: "curso" as const,
       title: item.nombre,
@@ -535,18 +572,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     return [...comercioOptions, ...servicioOptions, ...cursoOptions]
   }, [allCursos, allServicios, featuredBusinesses])
 
-  const delayedPromo = useMemo<DelayedPromo | null>(() => {
-    if (delayedPromoOptions.length === 0) return null
-
-    if (delayedPromoConfig.itemKey) {
-      const configuredItem = delayedPromoOptions.find(
-        (item) => item.key === delayedPromoConfig.itemKey
-      )
-      if (configuredItem) return configuredItem
-    }
-
-    return delayedPromoOptions[0] || null
-  }, [delayedPromoConfig.itemKey, delayedPromoOptions])
 
   const weather = initialData.weather
   const weatherLabel = weather ? WEATHER_LABELS[weather.weatherCode] || "Clima actual" : null
@@ -672,6 +697,11 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       window.removeEventListener("storage", loadDelayedPromoConfig)
     }
   }, [])
+
+  const delayedPromo = useMemo(
+    () => getInitialDelayedPromo(delayedPromoOptions, delayedPromoConfig.itemKey),
+    [delayedPromoConfig.itemKey, delayedPromoOptions]
+  )
 
   useEffect(() => {
     if (!WELCOME_PROMOTION_ENABLED) return

@@ -688,18 +688,6 @@ export default function AdminMetricasPage() {
 
             <div className="grid gap-6">
               <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                  Trafico general
-                </div>
-                <h2 className="mt-4 text-2xl font-semibold text-slate-950">Visitantes y page views</h2>
-                <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
-                  Para trafico total del sitio usamos como referencia Vercel Analytics. El contador interno
-                  de visitas no estaba reflejando bien la realidad, asi que este panel queda enfocado en
-                  actividad interna confiable de la plataforma.
-                </p>
-              </section>
-
-              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="mb-5">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                     Actividad reciente
