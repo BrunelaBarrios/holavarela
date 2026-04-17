@@ -2,21 +2,9 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { ArrowLeft, BarChart3, Eye, FileText, MessageCircle } from "lucide-react"
+import { ArrowLeft, BarChart3, MessageCircle } from "lucide-react"
 import { supabase } from "../../supabase"
-
-type VisitRow = {
-  section: string | null
-  item_id: string | null
-  item_title: string | null
-  browser_key: string | null
-  created_at: string | null
-}
-
-type BrowserVisitRow = {
-  browser_key: string | null
-  created_at: string | null
-}
+import { recordSiteVisit } from "../../lib/contentVisits"
 
 type InteractionRow = {
   created_at: string | null
@@ -32,17 +20,11 @@ type RecentMessage = {
   value: number
 }
 
-const BASELINE_SITE_VISITORS_30D = 752
-const BASELINE_SITE_PAGE_VIEWS_30D = 3601
-
 const getIsoDaysAgo = (days: number) => {
   const date = new Date()
   date.setDate(date.getDate() - days)
   return date.toISOString()
 }
-
-const countUniqueBrowsers = (rows: Array<{ browser_key: string | null }>) =>
-  new Set(rows.map((row) => row.browser_key).filter((key): key is string => Boolean(key))).size
 
 const withFallback = async <T,>(
   promiseLike: PromiseLike<{ data: T[] | null; error: unknown }>,
@@ -58,8 +40,6 @@ const withFallback = async <T,>(
 
 export default function UsuariosMetricasHolaVarelaPage() {
   const [loading, setLoading] = useState(true)
-  const [visitors30Days, setVisitors30Days] = useState(BASELINE_SITE_VISITORS_30D)
-  const [pageViews30Days, setPageViews30Days] = useState(BASELINE_SITE_PAGE_VIEWS_30D)
   const [recentMessages, setRecentMessages] = useState<RecentMessage[]>([])
   const [recentActivity, setRecentActivity] = useState<RecentActivity>({
     interactions15Days: 0,
@@ -68,18 +48,15 @@ export default function UsuariosMetricasHolaVarelaPage() {
 
   useEffect(() => {
     const loadMetrics = async () => {
-      const since30 = getIsoDaysAgo(30)
       const since15 = getIsoDaysAgo(15)
       const since2 = getIsoDaysAgo(2)
 
       const [
-        visitRows30,
         shareRows15,
         whatsappRows15,
         viewMoreRows15,
         externalRows15,
         likesRows15,
-        visitRows48,
         contactRows48,
         likesRows48,
         eventRows48,
@@ -88,10 +65,6 @@ export default function UsuariosMetricasHolaVarelaPage() {
         courseRows48,
         institutionRows48,
       ] = await Promise.all([
-        withFallback<VisitRow>(
-          supabase.from("content_visits").select("section, item_id, item_title, browser_key, created_at").gte("created_at", since30),
-          "las visitas de 30 dias"
-        ),
         withFallback<InteractionRow>(
           supabase.from("share_events").select("created_at").gte("created_at", since15),
           "los compartidos de 15 dias"
@@ -111,10 +84,6 @@ export default function UsuariosMetricasHolaVarelaPage() {
         withFallback<InteractionRow>(
           supabase.from("event_likes").select("created_at").gte("created_at", since15),
           "los likes de 15 dias"
-        ),
-        withFallback<BrowserVisitRow>(
-          supabase.from("content_visits").select("browser_key, created_at").eq("section", "site_pages").gte("created_at", since2),
-          "las visitas de 48 horas"
         ),
         withFallback<InteractionRow>(
           supabase.from("contacto_solicitudes").select("created_at").gte("created_at", since2),
@@ -146,10 +115,6 @@ export default function UsuariosMetricasHolaVarelaPage() {
         ),
       ])
 
-      const siteVisitRows30 = visitRows30.filter((row) => row.section === "site_pages")
-
-      setVisitors30Days(BASELINE_SITE_VISITORS_30D + countUniqueBrowsers(siteVisitRows30))
-      setPageViews30Days(BASELINE_SITE_PAGE_VIEWS_30D + siteVisitRows30.length)
       setRecentActivity({
         interactions15Days:
           shareRows15.length +
@@ -160,7 +125,6 @@ export default function UsuariosMetricasHolaVarelaPage() {
         whatsapp15Days: whatsappRows15.length,
       })
 
-      const visitors48 = countUniqueBrowsers(visitRows48)
       const listings48 =
         commerceRows48.length +
         serviceRows48.length +
@@ -169,10 +133,6 @@ export default function UsuariosMetricasHolaVarelaPage() {
 
       setRecentMessages(
         [
-          {
-            label: `${visitors48} ${visitors48 === 1 ? "nueva visita al sitio" : "nuevas visitas al sitio"}`,
-            value: visitors48,
-          },
           {
             label: `${contactRows48.length} ${contactRows48.length === 1 ? "mensaje nuevo" : "mensajes nuevos"}`,
             value: contactRows48.length,
@@ -196,6 +156,10 @@ export default function UsuariosMetricasHolaVarelaPage() {
     }
 
     void loadMetrics()
+  }, [])
+
+  useEffect(() => {
+    void recordSiteVisit("usuarios-metricas", "Metricas Hola Varela")
   }, [])
 
   return (
@@ -228,21 +192,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <MetricCard
-                label="Visitantes del sitio"
-                value={visitors30Days}
-                description="Visitantes unicos ultimos 30 dias"
-                icon={<Eye className="h-5 w-5 text-sky-700" />}
-                tone="bg-sky-100"
-              />
-              <MetricCard
-                label="Vistas del sitio"
-                value={pageViews30Days}
-                description="Registros de visita ultimos 30 dias"
-                icon={<FileText className="h-5 w-5 text-violet-700" />}
-                tone="bg-violet-100"
-              />
+            <section className="grid gap-4 md:grid-cols-2">
               <MetricCard
                 label="Actividad reciente"
                 value={recentActivity.interactions15Days}
@@ -260,6 +210,21 @@ export default function UsuariosMetricasHolaVarelaPage() {
             </section>
 
             <div className="grid gap-6">
+              <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  Trafico general
+                </div>
+                <h2 className="mt-4 text-2xl font-semibold text-slate-950">Visitantes y vistas del sitio</h2>
+                <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
+                  Para trafico total del sitio estamos tomando como referencia el panel de Vercel Analytics,
+                  porque el contador interno de visitas no estaba reflejando bien la realidad de la web.
+                </p>
+                <div className="mt-5 rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-500">
+                  Aqui dejamos solo metricas internas confiables de Hola Varela: contactos, likes, compartidos,
+                  aperturas y movimiento de contenido.
+                </div>
+              </section>
+
               <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="mb-5">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">

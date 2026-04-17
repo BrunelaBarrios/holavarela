@@ -8,6 +8,7 @@ type OptimizedImageProps = {
   sizes: string
   className?: string
   priority?: boolean
+  quality?: number
 }
 
 const DEFAULT_QUALITY = 72
@@ -52,6 +53,7 @@ export function OptimizedImage({
   sizes,
   className,
   priority = false,
+  quality,
 }: OptimizedImageProps) {
   return (
     <Image
@@ -60,6 +62,7 @@ export function OptimizedImage({
       fill
       sizes={sizes}
       priority={priority}
+      quality={quality}
       loading={priority ? "eager" : "lazy"}
       loader={isSupabaseStorageUrl(src) ? supabaseLoader : undefined}
       unoptimized={src.startsWith("data:")}

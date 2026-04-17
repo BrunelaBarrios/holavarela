@@ -24,6 +24,7 @@ import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
 import { parseEventDescription } from "../lib/eventSubmissionMeta"
 import { useSweepstakesPopup } from "../lib/useSweepstakesPopup"
 import { recordContentVisit, recordSiteVisit } from "../lib/contentVisits"
+import { DELAYED_PROMO_STORAGE_KEY, RADIO_STORAGE_KEY } from "../lib/localStorageKeys"
 import { buildHomePublicNav } from "../lib/publicNav"
 import { recordViewMore, type ViewMoreSection } from "../lib/viewMoreTracking"
 import { supabase } from "../supabase"
@@ -35,6 +36,8 @@ import {
   CloudRain,
   CloudSun,
   GraduationCap,
+  Heart,
+  Megaphone,
   Mail,
   MapPin,
   Phone,
@@ -231,6 +234,16 @@ type WelcomeHighlight = {
   usesWhatsapp?: boolean
 }
 
+type DelayedPromo = {
+  key: string
+  kind: "comercio" | "servicio" | "curso"
+  title: string
+  description: string
+  image: string | null
+  subtitle?: string | null
+  href: string
+}
+
 const buildWelcomeItems = (
   featuredBusinesses: Comercio[],
   allServicios: Servicio[],
@@ -308,7 +321,6 @@ const defaultSobreVarela: SobreVarelaConfig = {
   imagen_url: null,
 }
 
-const RADIO_STORAGE_KEY = "guia-varela-radio-config"
 const defaultRadioConfig: RadioConfig = {
   title: "Delta FM 88.3",
   description: "Escucha Delta FM 88.3 en vivo desde Jose Pedro Varela.",
@@ -319,6 +331,20 @@ const defaultRadioConfig: RadioConfig = {
 const WELCOME_PROMOTION_ENABLED = false
 const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
+const DELAYED_PROMO_SESSION_KEY = "guia-varela-delayed-promo-shown-v1"
+const DELAYED_PROMO_UPDATE_EVENT = "delayed-promo-config-updated"
+
+type DelayedPromoConfig = {
+  enabled: boolean
+  delaySeconds: number
+  itemKey: string
+}
+
+const defaultDelayedPromoConfig: DelayedPromoConfig = {
+  enabled: true,
+  delaySeconds: 60,
+  itemKey: "",
+}
 const initialContactLeadForm: ContactLeadForm = {
   nombre: "",
   telefono: "",
@@ -403,9 +429,13 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   }, [])
   const [contactLeadLoading, setContactLeadLoading] = useState(false)
   const [isContactLeadOpen, setIsContactLeadOpen] = useState(false)
+  const [isSweepstakesHintOpen, setIsSweepstakesHintOpen] = useState(false)
+  const [isDelayedPromoOpen, setIsDelayedPromoOpen] = useState(false)
+  const [delayedPromoConfig, setDelayedPromoConfig] = useState<DelayedPromoConfig>(
+    defaultDelayedPromoConfig
+  )
   const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(null)
   const [zoomedImage, setZoomedImage] = useState<{ src: string; alt: string } | null>(null)
-  const [shouldLoadEventLikes, setShouldLoadEventLikes] = useState(false)
   const [shouldLoadRadioWidget, setShouldLoadRadioWidget] = useState(false)
   const eventsSectionRef = useRef<HTMLElement | null>(null)
   const radioSectionRef = useRef<HTMLElement | null>(null)
@@ -451,35 +481,79 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const visibleEventos = useMemo(() => eventos.slice(0, 8), [eventos])
   const visibleCursos = useMemo(() => cursos.slice(0, 8), [cursos])
   const visibleInstituciones = useMemo(() => instituciones.slice(0, 10), [instituciones])
+  const delayedPromoOptions = useMemo<DelayedPromo[]>(() => {
+    const comercioOptions = featuredBusinesses.map((item) => ({
+      key: `comercio:${item.id}`,
+      kind: "comercio" as const,
+      title: item.nombre,
+      description:
+        item.descripcion || "Descubre este comercio destacado dentro de Hola Varela.",
+      image: item.imagen_url || item.imagen || null,
+      subtitle: item.direccion || null,
+      href: item.premium_activo ? `/comercios/${item.id}` : `/comercios?item=${item.id}`,
+    }))
+
+    const servicioOptions = allServicios.map((item) => ({
+      key: `servicio:${item.id}`,
+      kind: "servicio" as const,
+      title: item.nombre,
+      description:
+        item.descripcion || "Conoce este servicio destacado recomendado dentro de la plataforma.",
+      image: item.imagen || null,
+      subtitle: item.categoria || null,
+      href: item.premium_activo ? `/servicios/${item.id}` : `/servicios?item=${item.id}`,
+    }))
+
+    const cursoOptions = allCursos.map((item) => ({
+      key: `curso:${item.id}`,
+      kind: "curso" as const,
+      title: item.nombre,
+      description:
+        item.descripcion || "Mira esta propuesta destacada para aprender o sumarte a una clase.",
+      image: item.imagen || null,
+      subtitle: item.responsable || null,
+      href: `/cursos?item=${item.id}`,
+    }))
+
+    return [...comercioOptions, ...servicioOptions, ...cursoOptions]
+  }, [allCursos, allServicios, featuredBusinesses])
+
+  const delayedPromo = useMemo<DelayedPromo | null>(() => {
+    if (delayedPromoOptions.length === 0) return null
+
+    if (delayedPromoConfig.itemKey) {
+      const configuredItem = delayedPromoOptions.find(
+        (item) => item.key === delayedPromoConfig.itemKey
+      )
+      if (configuredItem) return configuredItem
+    }
+
+    return delayedPromoOptions[0] || null
+  }, [delayedPromoConfig.itemKey, delayedPromoOptions])
 
   const weather = initialData.weather
   const weatherLabel = weather ? WEATHER_LABELS[weather.weatherCode] || "Clima actual" : null
 
   useEffect(() => {
-    if (shouldLoadEventLikes) return
+    const premiumHrefs = [
+      ...visibleFeaturedBusinesses
+        .filter((item) => item.premium_activo)
+        .map((item) => `/comercios/${item.id}`),
+      ...visibleServicios
+        .filter((item) => item.premium_activo)
+        .map((item) => `/servicios/${item.id}`),
+      ...visibleInstituciones
+        .filter((item) => hasInstitutionPremium(item))
+        .map((item) => `/instituciones/${item.id}`),
+    ]
 
-    const section = eventsSectionRef.current
-    if (!section) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          setShouldLoadEventLikes(true)
-          observer.disconnect()
-        }
-      },
-      {
-        rootMargin: "280px 0px",
-      }
-    )
-
-    observer.observe(section)
-
-    return () => observer.disconnect()
-  }, [shouldLoadEventLikes])
+    premiumHrefs.forEach((href) => {
+      router.prefetch(href)
+    })
+  }, [router, visibleFeaturedBusinesses, visibleInstituciones, visibleServicios])
 
   useEffect(() => {
-    if (!shouldLoadEventLikes || eventos.length === 0) return
+    if (eventos.length === 0) return
 
     const loadEventLikes = async () => {
       const eventIds = eventos.map((evento) => String(evento.id))
@@ -489,7 +563,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     }
 
     void loadEventLikes()
-  }, [eventos, shouldLoadEventLikes])
+  }, [eventos])
 
   useEffect(() => {
     if (shouldLoadRadioWidget || !radio.isLive) return
@@ -547,6 +621,42 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   }, [])
 
   useEffect(() => {
+    const loadDelayedPromoConfig = () => {
+      if (typeof window === "undefined") return
+
+      const raw = window.localStorage.getItem(DELAYED_PROMO_STORAGE_KEY)
+      if (!raw) {
+        setDelayedPromoConfig(defaultDelayedPromoConfig)
+        return
+      }
+
+      try {
+        const parsed = JSON.parse(raw) as Partial<DelayedPromoConfig>
+        setDelayedPromoConfig({
+          enabled: parsed.enabled ?? defaultDelayedPromoConfig.enabled,
+          delaySeconds:
+            typeof parsed.delaySeconds === "number" && Number.isFinite(parsed.delaySeconds)
+              ? Math.max(5, parsed.delaySeconds)
+              : defaultDelayedPromoConfig.delaySeconds,
+          itemKey: parsed.itemKey?.trim() || "",
+        })
+      } catch {
+        window.localStorage.removeItem(DELAYED_PROMO_STORAGE_KEY)
+        setDelayedPromoConfig(defaultDelayedPromoConfig)
+      }
+    }
+
+    loadDelayedPromoConfig()
+    window.addEventListener(DELAYED_PROMO_UPDATE_EVENT, loadDelayedPromoConfig)
+    window.addEventListener("storage", loadDelayedPromoConfig)
+
+    return () => {
+      window.removeEventListener(DELAYED_PROMO_UPDATE_EVENT, loadDelayedPromoConfig)
+      window.removeEventListener("storage", loadDelayedPromoConfig)
+    }
+  }, [])
+
+  useEffect(() => {
     if (!WELCOME_PROMOTION_ENABLED) return
 
     const timeoutId = window.setTimeout(() => {
@@ -561,6 +671,19 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
     return () => window.clearTimeout(timeoutId)
   }, [initialData.allCursos, initialData.allServicios, initialData.featuredBusinesses])
+
+  useEffect(() => {
+    if (!delayedPromoConfig.enabled || !delayedPromo) return
+    if (typeof window === "undefined") return
+    if (window.sessionStorage.getItem(DELAYED_PROMO_SESSION_KEY) === "true") return
+
+    const timeoutId = window.setTimeout(() => {
+      window.sessionStorage.setItem(DELAYED_PROMO_SESSION_KEY, "true")
+      setIsDelayedPromoOpen(true)
+    }, delayedPromoConfig.delaySeconds * 1000)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [delayedPromo, delayedPromoConfig.delaySeconds, delayedPromoConfig.enabled])
 
   const WeatherIcon = useMemo(() => {
     if (!weather) return CloudSun
@@ -719,9 +842,131 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const contactLeadSubmitHint =
     "Te vamos a contactar usando el teléfono que nos compartas."
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#f2f7f5_48%,#ffffff_100%)] text-slate-900">
-      {zoomedImage ? (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/92 p-4">
+      <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#f2f7f5_48%,#ffffff_100%)] text-slate-900">
+        {isDelayedPromoOpen && delayedPromo ? (
+          <div
+            className="fixed inset-0 z-[84] overflow-y-auto bg-slate-950/55 px-3 py-4 sm:p-4"
+            onClick={() => setIsDelayedPromoOpen(false)}
+          >
+            <div className="mx-auto flex min-h-full max-w-3xl items-center justify-center py-2 sm:py-4">
+              <div
+                className="w-full overflow-hidden rounded-[28px] border border-white/10 bg-white shadow-2xl sm:rounded-[34px]"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="grid lg:grid-cols-[0.95fr_1.05fr]">
+                  <div className="relative min-h-[180px] bg-[radial-gradient(circle_at_top_left,#e7f3ff_0%,#f6fbff_42%,#ffffff_100%)] sm:min-h-[220px] lg:min-h-[260px]">
+                    {delayedPromo.image ? (
+                      <OptimizedImage
+                        src={delayedPromo.image}
+                        alt={delayedPromo.title}
+                        sizes="(max-width: 1024px) 100vw, 45vw"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full min-h-[180px] items-center justify-center text-slate-400 sm:min-h-[220px] lg:min-h-[260px]">
+                        Sin imagen
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4 sm:p-6 lg:p-8">
+                    <div className="inline-flex rounded-full bg-amber-100 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-800 sm:px-4 sm:py-2 sm:text-xs">
+                      Publicidad
+                    </div>
+                    <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-700 sm:mt-4 sm:text-xs">
+                      <Megaphone className="h-3.5 w-3.5" />
+                      Comercio recomendado
+                    </div>
+                    <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:mt-5 sm:text-3xl">
+                      {delayedPromo.title}
+                    </h2>
+                    {delayedPromo.subtitle ? (
+                      <p className="mt-2 text-sm font-medium text-slate-500 sm:mt-3">
+                        {delayedPromo.subtitle}
+                      </p>
+                    ) : null}
+                    <p className="mt-3 text-sm leading-7 text-slate-700 sm:mt-4 sm:text-base sm:leading-8">
+                      {delayedPromo.description}
+                    </p>
+                    <div className="mt-5 rounded-[20px] border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600 sm:mt-6 sm:rounded-[24px] sm:p-4 sm:leading-7">
+                      Esta tarjeta es una promocion destacada. Puedes entrar a ver el comercio o cerrarla y seguir navegando.
+                    </div>
+                    <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:flex-wrap">
+                      <Link
+                        href={delayedPromo.href}
+                        onClick={() => setIsDelayedPromoOpen(false)}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600 sm:w-auto"
+                      >
+                        Ver comercio
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setIsDelayedPromoOpen(false)}
+                        className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 sm:w-auto"
+                      >
+                        Cerrar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {isSweepstakesHintOpen ? (
+          <div className="fixed inset-0 z-[85] overflow-y-auto bg-slate-950/55 px-3 py-4 sm:p-4" onClick={() => setIsSweepstakesHintOpen(false)}>
+            <div className="mx-auto flex min-h-full max-w-2xl items-center justify-center py-2 sm:py-4">
+              <div
+                className="w-full overflow-hidden rounded-[26px] border border-white/10 bg-white shadow-2xl sm:rounded-[32px]"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="bg-[radial-gradient(circle_at_top_left,#ffe2ea_0%,#fff4f7_42%,#f5f8ff_100%)] p-4 sm:p-6 lg:p-8">
+                  <div className="inline-flex rounded-full bg-white/85 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-700 sm:px-4 sm:py-2 sm:text-xs">
+                    Sorteo 9 de Mayo
+                  </div>
+                  <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:mt-5 sm:text-4xl">
+                    Participa dando 3 corazones
+                  </h2>
+                  <div className="mt-4 space-y-3 text-sm leading-7 text-slate-700 sm:mt-5 sm:space-y-4 sm:text-base sm:leading-8">
+                    <p>
+                      Busca las publicaciones de <span className="font-semibold">Hoy en Varela</span> y toca el boton de corazones.
+                    </p>
+                    <p>
+                      Cuando llegues a <span className="font-semibold">3 corazones</span>, se abre el popup del sorteo para dejar tu nombre y telefono.
+                    </p>
+                    <p>
+                      El sorteo es el <span className="font-semibold">9 de Mayo</span>. Puedes participar desde la web, de forma simple y rapida.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:p-6 lg:p-8">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSweepstakesHintOpen(false)
+                      eventsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+                    }}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-rose-600 sm:w-auto"
+                  >
+                    Ir a dar corazones
+                    <Heart className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsSweepstakesHintOpen(false)}
+                    className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 sm:w-auto"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {zoomedImage ? (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/92 p-4">
           <button
             type="button"
             onClick={() => setZoomedImage(null)}
@@ -1012,6 +1257,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           src={image}
                           alt={`${selectedComercio.nombre} ${index + 1}`}
                           sizes="(max-width: 768px) 50vw, 25vw"
+                          quality={64}
                           className="object-cover"
                         />
                       </div>
@@ -1112,6 +1358,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           src={image}
                           alt={`${selectedServicio.nombre} ${index + 1}`}
                           sizes="(max-width: 768px) 50vw, 25vw"
+                          quality={64}
                           className="object-cover"
                         />
                       </div>
@@ -1263,7 +1510,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
             {selectedEvento ? (
               <EventLikeButton
-                count={eventLikeCounts[String(selectedEvento.id)] || 0}
+                count={eventLikeCounts[String(selectedEvento.id)]}
                 liked={Boolean(likedEvents[String(selectedEvento.id)])}
                 onClick={() =>
                   void handleEventLike(String(selectedEvento.id), selectedEvento.titulo)
@@ -1685,7 +1932,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       <OptimizedImage
                         src={imageSrc}
                         alt={business.nombre}
-                        sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                        sizes="(max-width: 640px) 50vw, (max-width: 1280px) 25vw, 25vw"
+                        quality={60}
                         className="object-cover"
                       />
                     </div>
@@ -1850,7 +2098,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                             <OptimizedImage
                               src={servicio.imagen}
                               alt={servicio.nombre}
-                              sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                              sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 25vw"
+                              quality={60}
                               className="object-cover"
                             />
                           </div>
@@ -2059,6 +2308,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         src={event.imagen}
                         alt={event.titulo}
                         sizes="(max-width: 1024px) 100vw, 33vw"
+                        quality={62}
                         className="object-cover"
                       />
                     </div>
@@ -2082,7 +2332,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
                     <div className="mt-4" onClick={(eventLikeWrapper) => eventLikeWrapper.stopPropagation()}>
                       <EventLikeButton
-                        count={eventLikeCounts[String(event.id)] || 0}
+                        count={eventLikeCounts[String(event.id)]}
                         liked={Boolean(likedEvents[String(event.id)])}
                         onClick={() => void handleEventLike(String(event.id), event.titulo)}
                         disabled={likingEventId === String(event.id)}
@@ -2242,7 +2492,8 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       <OptimizedImage
                         src={institucion.foto}
                         alt={institucion.nombre}
-                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 20vw"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1280px) 33vw, 20vw"
+                        quality={60}
                         className="object-cover"
                       />
                     </div>
@@ -2399,6 +2650,30 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
         </div>
       </footer>
+
+      <button
+        type="button"
+        onClick={() => setIsSweepstakesHintOpen(true)}
+        className="fixed bottom-4 left-4 right-4 z-[70] rounded-[24px] border border-rose-200 bg-[linear-gradient(135deg,#fff1f5_0%,#ffffff_100%)] px-3 py-3 text-left shadow-[0_24px_60px_-24px_rgba(244,63,94,0.4)] transition hover:-translate-y-0.5 hover:shadow-[0_30px_70px_-24px_rgba(244,63,94,0.45)] sm:bottom-5 sm:left-auto sm:right-5 sm:max-w-[280px] sm:px-4 sm:py-4 sm:rounded-[26px]"
+        aria-label="Ver como participar del sorteo del 9 de Mayo"
+      >
+        <div className="flex items-start gap-2.5 sm:gap-3">
+          <div className="rounded-2xl bg-rose-100 p-2.5 text-rose-600 sm:p-3">
+            <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
+          </div>
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-rose-600 sm:text-xs sm:tracking-[0.18em]">
+              9 de Mayo
+            </div>
+            <div className="mt-1 text-sm font-semibold text-slate-900 sm:text-base">
+              Sorteo con 3 corazones
+            </div>
+            <p className="mt-1 text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">
+              Toca aqui y te explicamos como participar.
+            </p>
+          </div>
+        </div>
+      </button>
     </div>
   )
 }

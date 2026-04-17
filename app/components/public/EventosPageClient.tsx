@@ -251,7 +251,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
             ) : null}
             {selectedEvento ? (
               <EventLikeButton
-                count={eventLikeCounts[String(selectedEvento.id)] || 0}
+                count={eventLikeCounts[String(selectedEvento.id)]}
                 liked={Boolean(likedEvents[String(selectedEvento.id)])}
                 onClick={() =>
                   void handleEventLike(String(selectedEvento.id), selectedEvento.titulo)
@@ -368,6 +368,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                       src={evento.imagen}
                       alt={evento.titulo}
                       sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                      quality={62}
                       className="object-cover"
                     />
                   </div>
@@ -413,7 +414,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
 
                 <div className="mt-4" onClick={(event) => event.stopPropagation()}>
                   <EventLikeButton
-                    count={eventLikeCounts[String(evento.id)] || 0}
+                    count={eventLikeCounts[String(evento.id)]}
                     liked={Boolean(likedEvents[String(evento.id)])}
                     onClick={() => void handleEventLike(String(evento.id), evento.titulo)}
                     disabled={likingEventId === String(evento.id)}

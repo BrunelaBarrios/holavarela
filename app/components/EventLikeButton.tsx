@@ -3,7 +3,7 @@
 import { Heart } from "lucide-react"
 
 type EventLikeButtonProps = {
-  count: number
+  count?: number | null
   liked: boolean
   onClick: () => void
   disabled?: boolean
@@ -17,6 +17,8 @@ export function EventLikeButton({
   disabled = false,
   className = "",
 }: EventLikeButtonProps) {
+  const hasLoadedCount = typeof count === "number"
+
   return (
     <button
       type="button"
@@ -28,7 +30,7 @@ export function EventLikeButton({
       <Heart
         className={`h-4 w-4 ${liked ? "fill-current" : ""}`}
       />
-      {count}
+      {hasLoadedCount ? count : ""}
     </button>
   )
 }

@@ -30,6 +30,8 @@ type RelatedCourse = {
   nombre: string
   descripcion?: string | null
   responsable?: string | null
+  contacto?: string | null
+  imagen?: string | null
 }
 
 type PremiumListingPageProps = {
@@ -159,6 +161,12 @@ export function PremiumListingPage({
     kind === "institucion"
       ? "Cuando esta institucion publique actividades o eventos activos en Hola Varela, van a aparecer en esta seccion."
       : "Cuando este perfil publique eventos y queden activos en Hola Varela, van a aparecer en esta seccion."
+  const coursesSectionEyebrow = kind === "institucion" ? "Cursos y talleres" : "Cursos del perfil"
+  const coursesSectionTitle =
+    relatedCoursesTitle ||
+    (kind === "institucion"
+      ? `Cursos y talleres de ${title}`
+      : `Cursos y clases de ${title}`)
 
   const openImageAt = (index: number, gallery: GalleryKind = "main") => {
     const images = gallery === "extra" ? extraGalleryImages : mainGalleryImages
@@ -587,6 +595,73 @@ export function PremiumListingPage({
               </div>
             )}
           </section>
+
+        {relatedCourses.length > 0 ? (
+          <section className="mt-8 rounded-[36px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.2)] sm:p-8">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  {coursesSectionEyebrow}
+                </div>
+                <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+                  {coursesSectionTitle}
+                </h2>
+              </div>
+              <Link
+                href="/cursos"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+              >
+                Ver todos los cursos
+              </Link>
+            </div>
+
+            <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {relatedCourses.map((course) => (
+                <article
+                  key={course.id}
+                  className="overflow-hidden rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-sm"
+                >
+                  {course.imagen ? (
+                    <div className="relative h-48 w-full">
+                      <OptimizedImage
+                        src={course.imagen}
+                        alt={course.nombre}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        className="object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex h-48 items-center justify-center bg-slate-100 text-slate-400">
+                      Sin imagen
+                    </div>
+                  )}
+                  <div className="p-5">
+                    <h3 className="text-xl font-semibold text-slate-900">{course.nombre}</h3>
+                    {course.responsable ? (
+                      <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+                        <UserRound className="h-4 w-4 text-slate-400" />
+                        <span>{course.responsable}</span>
+                      </div>
+                    ) : null}
+                    {course.descripcion ? (
+                      <p className="mt-4 line-clamp-4 whitespace-pre-line text-sm leading-7 text-slate-500">
+                        {course.descripcion}
+                      </p>
+                    ) : null}
+                    <div className="mt-5">
+                      <Link
+                        href={`/cursos?item=${course.id}`}
+                        className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+                      >
+                        Ver curso
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
     </main>
   )

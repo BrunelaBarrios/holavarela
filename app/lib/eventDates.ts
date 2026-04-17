@@ -1,6 +1,34 @@
+const EVENT_TIME_ZONE = "America/Montevideo"
+
 const parseEventDate = (value: string) => {
   const date = new Date(`${value}T00:00:00`)
   return Number.isNaN(date.getTime()) ? null : date
+}
+
+const toDateKey = (date: Date, timeZone = EVENT_TIME_ZONE) => {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  })
+  const parts = formatter.formatToParts(date)
+  const year = parts.find((part) => part.type === "year")?.value
+  const month = parts.find((part) => part.type === "month")?.value
+  const day = parts.find((part) => part.type === "day")?.value
+
+  if (!year || !month || !day) {
+    return date.toISOString().slice(0, 10)
+  }
+
+  return `${year}-${month}-${day}`
+}
+
+export const getTodayInMontevideo = () => toDateKey(new Date())
+
+const getMonthEndDate = (year: number, month: number) => {
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate()
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`
 }
 
 const formatLongDate = (value: string, locale = "es-UY") => {
@@ -34,7 +62,7 @@ export const buildMonthEventRange = (monthValue: string) => {
   if (!year || !month || month < 1 || month > 12) return null
 
   const startDate = `${yearRaw}-${monthRaw}-01`
-  const endDate = new Date(year, month, 0).toISOString().slice(0, 10)
+  const endDate = getMonthEndDate(year, month)
 
   return { startDate, endDate }
 }
@@ -84,26 +112,16 @@ export const isEventCurrentOrUpcoming = ({
   fecha_solo_mes?: boolean | null
 }) => {
   if (!fecha) return false
-
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-
-  const start = parseEventDate(fecha)
-  if (!start) return false
+  const today = getTodayInMontevideo()
 
   if (fecha_solo_mes) {
-    const monthEnd = new Date(start.getFullYear(), start.getMonth() + 1, 0)
-    monthEnd.setHours(23, 59, 59, 999)
-    return monthEnd >= today
+    const monthRange = buildMonthEventRange(fecha.slice(0, 7))
+    return Boolean(monthRange && monthRange.endDate >= today)
   }
 
   if (fecha_fin) {
-    const end = parseEventDate(fecha_fin)
-    if (end) {
-      end.setHours(23, 59, 59, 999)
-      return end >= today
-    }
+    return fecha_fin >= today
   }
 
-  return start >= today
+  return fecha >= today
 }

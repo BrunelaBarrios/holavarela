@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react"
 import {
   ArrowLeft,
   BarChart3,
-  Eye,
   FileText,
   Heart,
   MessageCircle,
@@ -36,6 +35,7 @@ import {
   emptyViewMoreTotals,
   type ViewMoreTotals,
 } from "../../lib/viewMoreTracking"
+import { recordSiteVisit } from "../../lib/contentVisits"
 
 type MetricRow = {
   section: string | null
@@ -47,19 +47,6 @@ type ExternalLinkMetricRow = MetricRow & {
 }
 
 type EventLikeMetricRow = {
-  created_at: string | null
-}
-
-type VisitRow = {
-  section: string | null
-  item_id: string | null
-  item_title: string | null
-  browser_key: string | null
-  created_at: string | null
-}
-
-type BrowserVisitRow = {
-  browser_key: string | null
   created_at: string | null
 }
 
@@ -100,9 +87,6 @@ const LINK_TYPE_LABELS: Record<string, string> = {
   facebook: "Facebook",
 }
 
-const BASELINE_SITE_VISITORS_30D = 752
-const BASELINE_SITE_PAGE_VIEWS_30D = 3601
-
 const formatDayKey = (date: Date) => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, "0")
@@ -126,9 +110,6 @@ const getIsoDaysAgo = (days: number) => {
   date.setDate(date.getDate() - days)
   return date.toISOString()
 }
-
-const countUniqueBrowsers = (rows: Array<{ browser_key: string | null }>) =>
-  new Set(rows.map((row) => row.browser_key).filter((key): key is string => Boolean(key))).size
 
 const buildDailyTrend = (
   shareRows: MetricRow[],
@@ -295,8 +276,6 @@ export default function AdminMetricasPage() {
   )
   const [eventLikeTotal, setEventLikeTotal] = useState(0)
   const [dailyTrend, setDailyTrend] = useState<TrendPoint[]>([])
-  const [visitors30Days, setVisitors30Days] = useState(BASELINE_SITE_VISITORS_30D)
-  const [pageViews30Days, setPageViews30Days] = useState(BASELINE_SITE_PAGE_VIEWS_30D)
   const [recentMessages, setRecentMessages] = useState<RecentMessage[]>([])
   const [recentSiteActivity, setRecentSiteActivity] = useState<RecentSiteActivity>({
     interactions15Days: 0,
@@ -312,13 +291,11 @@ export default function AdminMetricasPage() {
         { data: viewMoreRows },
         { data: externalLinkRows },
         { data: eventLikeRows },
-        visitRows30,
         shareRows15,
         whatsappRows15,
         viewMoreRows15,
         externalRows15,
         likesRows15,
-        visitRows48,
         contactRows48,
         likesRows48,
         eventRows48,
@@ -332,13 +309,6 @@ export default function AdminMetricasPage() {
         supabase.from("view_more_clicks").select("section, created_at"),
         supabase.from("external_link_clicks").select("section, link_type, created_at"),
         supabase.from("event_likes").select("created_at"),
-        withFallback<VisitRow>(
-          supabase
-            .from("content_visits")
-            .select("section, item_id, item_title, browser_key, created_at")
-            .gte("created_at", getIsoDaysAgo(30)),
-          "las visitas de 30 dias"
-        ),
         withFallback<InteractionRow>(
           supabase.from("share_events").select("created_at").gte("created_at", getIsoDaysAgo(15)),
           "los compartidos de 15 dias"
@@ -367,14 +337,6 @@ export default function AdminMetricasPage() {
         withFallback<InteractionRow>(
           supabase.from("event_likes").select("created_at").gte("created_at", getIsoDaysAgo(15)),
           "los likes de 15 dias"
-        ),
-        withFallback<BrowserVisitRow>(
-          supabase
-            .from("content_visits")
-            .select("browser_key, created_at")
-            .eq("section", "site_pages")
-            .gte("created_at", getIsoDaysAgo(2)),
-          "las visitas de 48 horas"
         ),
         withFallback<InteractionRow>(
           supabase
@@ -431,16 +393,12 @@ export default function AdminMetricasPage() {
         )
       )
 
-      const siteVisitRows30 = visitRows30.filter((row) => row.section === "site_pages")
-      const visitors48 = countUniqueBrowsers(visitRows48)
       const listings48 =
         commerceRows48.length +
         serviceRows48.length +
         courseRows48.length +
         institutionRows48.length
 
-      setVisitors30Days(BASELINE_SITE_VISITORS_30D + countUniqueBrowsers(siteVisitRows30))
-      setPageViews30Days(BASELINE_SITE_PAGE_VIEWS_30D + siteVisitRows30.length)
       setRecentSiteActivity({
         interactions15Days:
           shareRows15.length +
@@ -452,10 +410,6 @@ export default function AdminMetricasPage() {
       })
       setRecentMessages(
         [
-          {
-            label: `${visitors48} ${visitors48 === 1 ? "nueva visita al sitio" : "nuevas visitas al sitio"}`,
-            value: visitors48,
-          },
           {
             label: `${contactRows48.length} ${contactRows48.length === 1 ? "mensaje nuevo" : "mensajes nuevos"}`,
             value: contactRows48.length,
@@ -478,6 +432,10 @@ export default function AdminMetricasPage() {
     }
 
     void loadMetrics()
+  }, [])
+
+  useEffect(() => {
+    void recordSiteVisit("admin-metricas", "Metricas admin")
   }, [])
 
   const totalShare = useMemo(
@@ -532,7 +490,7 @@ export default function AdminMetricasPage() {
       <div className="mb-8 flex flex-wrap gap-3">
         {[
           { id: "interacciones" as const, label: "Interacciones" },
-          { id: "vista_usuario" as const, label: "Vista usuario" },
+          { id: "vista_usuario" as const, label: "Resumen interno" },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -711,21 +669,7 @@ export default function AdminMetricasPage() {
         </>
         ) : (
           <div className="space-y-8">
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <MetricCard
-                title="Visitantes del sitio"
-                value={visitors30Days}
-                helper="Visitantes unicos ultimos 30 dias"
-                icon={<Eye className="h-5 w-5 text-sky-700" />}
-                tone="bg-sky-100 text-sky-700"
-              />
-              <MetricCard
-                title="Vistas del sitio"
-                value={pageViews30Days}
-                helper="Registros de visita ultimos 30 dias"
-                icon={<FileText className="h-5 w-5 text-violet-700" />}
-                tone="bg-violet-100 text-violet-700"
-              />
+            <section className="grid gap-4 md:grid-cols-2">
               <MetricCard
                 title="Actividad reciente"
                 value={recentSiteActivity.interactions15Days}
@@ -743,6 +687,18 @@ export default function AdminMetricasPage() {
             </section>
 
             <div className="grid gap-6">
+              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                  Trafico general
+                </div>
+                <h2 className="mt-4 text-2xl font-semibold text-slate-950">Visitantes y page views</h2>
+                <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
+                  Para trafico total del sitio usamos como referencia Vercel Analytics. El contador interno
+                  de visitas no estaba reflejando bien la realidad, asi que este panel queda enfocado en
+                  actividad interna confiable de la plataforma.
+                </p>
+              </section>
+
               <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="mb-5">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">

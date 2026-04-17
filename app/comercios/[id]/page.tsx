@@ -29,14 +29,25 @@ export default async function ComercioSharePage({
     redirect(`/comercios?item=${encodeURIComponent(id)}`)
   }
 
-  const { data: relatedEvents } = data.owner_email
-    ? await supabaseServer
-        .from("eventos")
-        .select("id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, descripcion, imagen")
-        .eq("owner_email", data.owner_email)
-        .or("estado.is.null,estado.eq.activo")
-        .order("fecha", { ascending: true })
-    : { data: [] }
+  const [relatedEventsResult, relatedCoursesResult] = data.owner_email
+    ? await Promise.all([
+        supabaseServer
+          .from("eventos")
+          .select("id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, descripcion, imagen")
+          .eq("owner_email", data.owner_email)
+          .or("estado.is.null,estado.eq.activo")
+          .order("fecha", { ascending: true }),
+        supabaseServer
+          .from("cursos")
+          .select("id, nombre, descripcion, responsable, contacto, imagen, estado")
+          .eq("owner_email", data.owner_email)
+          .eq("estado", "activo")
+          .order("id", { ascending: false }),
+      ])
+    : [{ data: [] }, { data: [] }]
+
+  const relatedEvents = relatedEventsResult.data || []
+  const relatedCourses = relatedCoursesResult.data || []
 
   return (
     <PremiumListingPage
@@ -58,6 +69,7 @@ export default async function ComercioSharePage({
       facebookUrl={data.facebook_url}
       usesWhatsapp={data.usa_whatsapp}
       relatedEvents={(relatedEvents || []).filter((event) => isEventCurrentOrUpcoming(event))}
+      relatedCourses={relatedCourses || []}
     />
   )
 }

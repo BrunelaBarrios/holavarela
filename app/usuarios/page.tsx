@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { AdminConfirmModal } from "../components/AdminConfirmModal"
 import { AuthFormStatus } from "../components/AuthFormStatus"
 import { OptimizedImage } from "../components/OptimizedImage"
+import { recordSiteVisit } from "../lib/contentVisits"
 import { formatEventDateRange } from "../lib/eventDates"
 import { buildUserProfileFields, fetchUserOwnedEvents, findUserOwnedEntity, getUserProfileImageSrc, normalizeUserEntityStatus, supportsPremiumProfile, userEntityLabels, type UserEntityType, type UserOwnedEntity, type UserOwnedEvent } from "../lib/userProfiles"
 import { supabase } from "../supabase"
@@ -97,6 +98,10 @@ export default function UsuariosHomePage() {
     }
     void loadSession()
   }, [router])
+
+  useEffect(() => {
+    void recordSiteVisit("usuarios-dashboard", "Panel de usuario")
+  }, [])
 
   const handleLogout = async () => {
     const { error: signOutError } = await supabase.auth.signOut()

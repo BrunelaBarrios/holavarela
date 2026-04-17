@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation"
 import { AdminConfirmModal } from "../../../components/AdminConfirmModal"
 import { AuthFormStatus } from "../../../components/AuthFormStatus"
 import { OptimizedImage } from "../../../components/OptimizedImage"
-import { buildMonthEventRange } from "../../../lib/eventDates"
+import { buildMonthEventRange, getTodayInMontevideo } from "../../../lib/eventDates"
 import { buildEventDescription, parseEventDescription } from "../../../lib/eventSubmissionMeta"
 import { fileToDataUrl } from "../../../lib/fileToDataUrl"
 import { findUserOwnedEntity } from "../../../lib/userProfiles"
@@ -170,7 +170,7 @@ export default function UsuariosNuevoEventoPage() {
     setError("")
     setSuccess("")
 
-    const today = new Date().toISOString().slice(0, 10)
+    const today = getTodayInMontevideo()
     const monthRange = formData.fechaSoloMes
       ? buildMonthEventRange(formData.mesReferencia)
       : null

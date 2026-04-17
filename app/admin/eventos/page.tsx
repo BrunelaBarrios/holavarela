@@ -7,7 +7,7 @@ import { OptimizedImage } from "../../components/OptimizedImage"
 import { buildShareCountMap } from "../../lib/shareTracking"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
-import { buildMonthEventRange, formatEventDateRange } from "../../lib/eventDates"
+import { buildMonthEventRange, formatEventDateRange, getTodayInMontevideo } from "../../lib/eventDates"
 import { buildEventDescription, parseEventDescription } from "../../lib/eventSubmissionMeta"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 
@@ -84,7 +84,7 @@ export default function AdminEventosPage() {
   const [saveError, setSaveError] = useState("")
   const [deletingEvento, setDeletingEvento] = useState<Evento | null>(null)
   const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
-  const today = new Date().toISOString().slice(0, 10)
+  const today = getTodayInMontevideo()
 
   const isPastEvent = (evento: Evento) => {
     const endDate = evento.fecha_fin || evento.fecha

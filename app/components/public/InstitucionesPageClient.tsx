@@ -1,6 +1,7 @@
 'use client'
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
 import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
@@ -40,6 +41,7 @@ export function InstitucionesPageClient({
 }: {
   initialInstituciones: Institucion[]
 }) {
+  const router = useRouter()
   const [instituciones] = useState<Institucion[]>(initialInstituciones)
   const [search, setSearch] = useState("")
   const [selectedInstitucion, setSelectedInstitucion] = useState<Institucion | null>(null)
@@ -123,6 +125,15 @@ export function InstitucionesPageClient({
       action()
     }
   }
+
+  useEffect(() => {
+    institucionesFiltradas
+      .filter((institucion) => hasInstitutionPremium(institucion))
+      .slice(0, 12)
+      .forEach((institucion) => {
+        router.prefetch(`/instituciones/${institucion.id}`)
+      })
+  }, [institucionesFiltradas, router])
 
   return (
     <main className="min-h-screen bg-white">

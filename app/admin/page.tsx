@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react"
 import { supabase } from "../supabase"
+import { recordSiteVisit } from "../lib/contentVisits"
 
 type StatCard = {
   id: string
@@ -123,6 +124,10 @@ export default function AdminDashboardPage() {
     }
 
     void cargarDashboard()
+  }, [])
+
+  useEffect(() => {
+    void recordSiteVisit("admin-dashboard", "Panel de admin")
   }, [])
 
   const priorityCards: PriorityCard[] = [
