@@ -216,13 +216,8 @@ export default function UsuariosMetricasHolaVarelaPage() {
                 </div>
                 <h2 className="mt-4 text-2xl font-semibold text-slate-950">Visitantes y vistas del sitio</h2>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
-                  Para trafico total del sitio estamos tomando como referencia el panel de Vercel Analytics,
-                  porque el contador interno de visitas no estaba reflejando bien la realidad de la web.
+                  Resumen general del movimiento y las visitas dentro de Hola Varela.
                 </p>
-                <div className="mt-5 rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-500">
-                  Aqui dejamos solo metricas internas confiables de Hola Varela: contactos, likes, compartidos,
-                  aperturas y movimiento de contenido.
-                </div>
               </section>
 
               <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">

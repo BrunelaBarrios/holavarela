@@ -99,17 +99,6 @@ export function ServiciosPageClient({
     )
   }, [servicios, search])
 
-  const serviciosAgrupados = useMemo(() => {
-    return serviciosFiltrados.reduce<Record<string, Servicio[]>>((acc, servicio) => {
-      const categoria = servicio.categoria?.trim() || "Otros"
-      if (!acc[categoria]) {
-        acc[categoria] = []
-      }
-      acc[categoria].push(servicio)
-      return acc
-    }, {})
-  }, [serviciosFiltrados])
-
   const handleOpenServicio = (servicio: Servicio) => {
     void recordViewMore("servicios", String(servicio.id), servicio.nombre)
     void recordContentVisit("servicios", String(servicio.id), servicio.nombre)
@@ -279,160 +268,146 @@ export function ServiciosPageClient({
             </p>
           </div>
         ) : (
-          <div className="mt-8 space-y-10">
-            {Object.entries(serviciosAgrupados).map(([categoria, items]) => (
-              <section key={categoria}>
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="h-px flex-1 bg-amber-100" />
-                  <h2 className="rounded-full bg-amber-50 px-4 py-2 text-sm font-semibold uppercase tracking-[0.18em] text-amber-700">
-                    {categoria}
-                  </h2>
-                  <div className="h-px flex-1 bg-amber-100" />
-                </div>
+          <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            {serviciosFiltrados.map((servicio) => (
+              <div
+                key={servicio.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  if (servicio.premium_activo) {
+                    handleOpenPremiumProfile(servicio)
+                    return
+                  }
 
-                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-                  {items.map((servicio) => (
-                    <div
-                      key={servicio.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => {
-                        if (servicio.premium_activo) {
-                          handleOpenPremiumProfile(servicio)
-                          return
-                        }
+                  handleOpenServicio(servicio)
+                }}
+                onKeyDown={(event) =>
+                  handleCardKeyDown(event, () => {
+                    if (servicio.premium_activo) {
+                      handleOpenPremiumProfile(servicio)
+                      return
+                    }
 
-                        handleOpenServicio(servicio)
-                      }}
-                      onKeyDown={(event) =>
-                        handleCardKeyDown(event, () => {
-                          if (servicio.premium_activo) {
-                            handleOpenPremiumProfile(servicio)
-                            return
-                          }
+                    handleOpenServicio(servicio)
+                  })
+                }
+                className={`cursor-pointer overflow-hidden rounded-xl border shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${servicio.premium_activo ? "border-violet-200 bg-violet-50/20" : "border-gray-200"}`}
+              >
+                {servicio.imagen && (
+                  <div className="relative h-56 w-full">
+                    <OptimizedImage
+                      src={servicio.imagen}
+                      alt={servicio.nombre}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                      className="object-cover"
+                    />
+                  </div>
+                )}
 
-                          handleOpenServicio(servicio)
-                        })
-                      }
-                      className={`cursor-pointer overflow-hidden rounded-xl border shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${servicio.premium_activo ? "border-violet-200 bg-violet-50/20" : "border-gray-200"}`}
-                    >
-                      {servicio.imagen && (
-                        <div className="relative h-56 w-full">
-                          <OptimizedImage
-                            src={servicio.imagen}
-                            alt={servicio.nombre}
-                            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                            className="object-cover"
-                          />
-                        </div>
-                      )}
+                <div className="p-5">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {servicio.nombre}
+                  </h3>
 
-                      <div className="p-5">
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {servicio.nombre}
-                        </h3>
+                  {servicio.descripcion && (
+                    <p className="line-clamp-3 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
+                      {servicio.descripcion}
+                    </p>
+                  )}
 
-                        {servicio.descripcion && (
-                          <p className="line-clamp-3 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
-                            {servicio.descripcion}
-                          </p>
-                        )}
-
-                        <div className="mt-4 space-y-2 text-sm text-gray-600">
-                          {servicio.responsable && (
-                            <div className="flex items-center gap-2">
-                              <UserRound className="h-4 w-4" />
-                              <span>{servicio.responsable}</span>
-                            </div>
-                          )}
-
-                          {servicio.contacto && (
-                            <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4" />
-                              <span>{servicio.contacto}</span>
-                            </div>
-                          )}
-
-                          {servicio.direccion && (
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4" />
-                              <span>{servicio.direccion}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="mt-5 flex flex-wrap gap-3">
-                          {servicio.premium_activo ? (
-                            <Link
-                              href={`/servicios/${servicio.id}`}
-                              onClick={(event) => {
-                                event.stopPropagation()
-                                handleOpenPremiumProfile(servicio)
-                              }}
-                              className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
-                            >
-                              Ver perfil completo
-                              <ArrowRight className="h-4 w-4" />
-                            </Link>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation()
-                                handleOpenServicio(servicio)
-                              }}
-                              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                            >
-                              Ver mas
-                              <ArrowRight className="h-4 w-4" />
-                            </button>
-                          )}
-
-                            {servicio.contacto && servicio.usa_whatsapp !== false ? (
-                              <ContactActionLink
-                                href={getContactHref(servicio.contacto, servicio.usa_whatsapp)}
-                                mode="whatsapp"
-                                section="servicios"
-                                itemId={String(servicio.id)}
-                                itemTitle={servicio.nombre}
-                                onClick={(event) => event.stopPropagation()}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
-                              >
-                                Contactar
-                              </ContactActionLink>
-                            ) : (
-                              <PrimaryExternalLinkButton
-                                webUrl={servicio.web_url}
-                                instagramUrl={servicio.instagram_url}
-                                facebookUrl={servicio.facebook_url}
-                                section="servicios"
-                                itemId={String(servicio.id)}
-                                itemTitle={servicio.nombre}
-                                onClick={(event) => event.stopPropagation()}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
-                              />
-                            )}
-
-                          <div onClick={(event) => event.stopPropagation()}>
-                            <ShareButton
-                              title={servicio.nombre}
-                              text={servicio.descripcion || undefined}
-                              url={getShareUrl(servicio.id)}
-                              section="servicios"
-                              itemId={String(servicio.id)}
-                              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                            />
-                          </div>
-                        </div>
+                  <div className="mt-4 space-y-2 text-sm text-gray-600">
+                    {servicio.responsable && (
+                      <div className="flex items-center gap-2">
+                        <UserRound className="h-4 w-4" />
+                        <span>{servicio.responsable}</span>
                       </div>
+                    )}
+
+                    {servicio.contacto && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        <span>{servicio.contacto}</span>
+                      </div>
+                    )}
+
+                    {servicio.direccion && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        <span>{servicio.direccion}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    {servicio.premium_activo ? (
+                      <Link
+                        href={`/servicios/${servicio.id}`}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          handleOpenPremiumProfile(servicio)
+                        }}
+                        className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
+                      >
+                        Ver perfil completo
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          handleOpenServicio(servicio)
+                        }}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                      >
+                        Ver mas
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    )}
+
+                    {servicio.contacto && servicio.usa_whatsapp !== false ? (
+                      <ContactActionLink
+                        href={getContactHref(servicio.contacto, servicio.usa_whatsapp)}
+                        mode="whatsapp"
+                        section="servicios"
+                        itemId={String(servicio.id)}
+                        itemTitle={servicio.nombre}
+                        onClick={(event) => event.stopPropagation()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
+                      >
+                        Contactar
+                      </ContactActionLink>
+                    ) : (
+                      <PrimaryExternalLinkButton
+                        webUrl={servicio.web_url}
+                        instagramUrl={servicio.instagram_url}
+                        facebookUrl={servicio.facebook_url}
+                        section="servicios"
+                        itemId={String(servicio.id)}
+                        itemTitle={servicio.nombre}
+                        onClick={(event) => event.stopPropagation()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+                      />
+                    )}
+
+                    <div onClick={(event) => event.stopPropagation()}>
+                      <ShareButton
+                        title={servicio.nombre}
+                        text={servicio.descripcion || undefined}
+                        url={getShareUrl(servicio.id)}
+                        section="servicios"
+                        itemId={String(servicio.id)}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                      />
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </section>
+              </div>
             ))}
           </div>
         )}
