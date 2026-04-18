@@ -8,7 +8,7 @@ import { ExternalLinksButtons } from "../../components/ExternalLinksButtons"
 import { OptimizedImage } from "../../components/OptimizedImage"
 import { PublicHeader } from "../../components/PublicHeader"
 import { ShareButton } from "../../components/ShareButton"
-import { formatEventDateRange } from "../../lib/eventDates"
+import { formatEventDateRange, isEventCurrentOrUpcoming } from "../../lib/eventDates"
 import { parseEventDescription } from "../../lib/eventSubmissionMeta"
 import { buildPublicNav } from "../../lib/publicNav"
 import { supabaseServer } from "../../lib/supabaseServer"
@@ -150,6 +150,10 @@ export default async function EventoSharePage({ params }: EventPageParams) {
   const evento = await fetchEventById(id)
 
   if (!evento) {
+    notFound()
+  }
+
+  if (!isEventCurrentOrUpcoming(evento)) {
     notFound()
   }
 

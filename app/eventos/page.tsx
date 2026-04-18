@@ -1,5 +1,6 @@
 import { EventosPageClient } from "../components/public/EventosPageClient"
 import type { Evento } from "../components/public/EventosPageClient"
+import { isEventCurrentOrUpcoming } from "../lib/eventDates"
 import { supabaseServer } from "../lib/supabaseServer"
 
 // Events need freshness, but hourly ISR was more expensive than necessary.
@@ -84,8 +85,10 @@ export default async function EventosPage() {
     ])
   )
 
-  // Public events view shows all active items, not only upcoming ones.
-  const enrichedEvents = activeEvents.map((evento) => {
+  // Public listings only surface current or upcoming events.
+  const enrichedEvents = activeEvents
+    .filter((evento) => isEventCurrentOrUpcoming(evento))
+    .map((evento) => {
     const ownerInfo =
       (typeof evento.institucion_id === "number"
         ? institutionIdMap.get(evento.institucion_id)

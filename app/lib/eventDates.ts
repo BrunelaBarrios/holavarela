@@ -26,6 +26,12 @@ const toDateKey = (date: Date, timeZone = EVENT_TIME_ZONE) => {
 
 export const getTodayInMontevideo = () => toDateKey(new Date())
 
+export const getDateKeyDaysAgo = (days: number, timeZone = EVENT_TIME_ZONE) => {
+  const date = new Date()
+  date.setDate(date.getDate() - Math.max(0, Math.trunc(days)))
+  return toDateKey(date, timeZone)
+}
+
 const getMonthEndDate = (year: number, month: number) => {
   const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate()
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`
@@ -124,4 +130,27 @@ export const isEventCurrentOrUpcoming = ({
   }
 
   return fecha >= today
+}
+
+export const isEventExpiredBefore = (
+  {
+    fecha,
+    fecha_fin,
+    fecha_solo_mes,
+  }: {
+    fecha?: string | null
+    fecha_fin?: string | null
+    fecha_solo_mes?: boolean | null
+  },
+  limitDate: string
+) => {
+  if (!fecha) return false
+
+  if (fecha_solo_mes) {
+    const monthRange = buildMonthEventRange(fecha.slice(0, 7))
+    return Boolean(monthRange && monthRange.endDate < limitDate)
+  }
+
+  const endDate = fecha_fin || fecha
+  return endDate < limitDate
 }

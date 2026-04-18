@@ -6,7 +6,6 @@ import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { OptimizedImage } from "../../components/OptimizedImage"
 import { buildShareCountMap } from "../../lib/shareTracking"
 import { supabase } from "../../supabase"
-import { logAdminActivity } from "../../lib/adminActivity"
 import { buildMonthEventRange, formatEventDateRange, getTodayInMontevideo } from "../../lib/eventDates"
 import { buildEventDescription, parseEventDescription } from "../../lib/eventSubmissionMeta"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
@@ -85,6 +84,23 @@ export default function AdminEventosPage() {
   const [deletingEvento, setDeletingEvento] = useState<Evento | null>(null)
   const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
   const today = getTodayInMontevideo()
+
+  const runAdminAction = async (body: unknown) => {
+    const response = await fetch("/api/admin/eventos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+
+    const result = await response.json()
+    if (!response.ok) {
+      throw new Error(result.error || "No pudimos guardar el evento.")
+    }
+
+    return result
+  }
 
   const isPastEvent = (evento: Evento) => {
     const endDate = evento.fecha_fin || evento.fecha
@@ -172,63 +188,40 @@ export default function AdminEventosPage() {
   }
 
   const handleDelete = async (id: number) => {
-    const evento = eventos.find((item) => item.id === id)
-    if (!evento) return
-
-    const { error } = await supabase.from("eventos").delete().eq("id", id)
-
-    if (error) {
-      setSaveError(`Error al eliminar evento: ${error.message}`)
+    try {
+      await runAdminAction({ action: "delete", id })
+      setEventos((prev) => prev.filter((item) => item.id !== id))
+      setDeletingEvento(null)
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudo eliminar el evento."
+      )
       return
     }
-
-    setEventos((prev) => prev.filter((item) => item.id !== id))
-    setDeletingEvento(null)
-    await logAdminActivity({
-      action: "Eliminar",
-      section: "Eventos",
-      target: evento?.titulo || `ID ${id}`,
-    })
   }
 
   const handleDuplicate = async (evento: Evento) => {
     setLoading(true)
     setSaveError("")
+    try {
+      const result = await runAdminAction({
+        action: "duplicate",
+        id: evento.id,
+      })
 
-    const payload = {
-      titulo: `${evento.titulo} (copia)`,
-      categoria: normalizeAdminEventCategory(evento.categoria),
-      fecha: evento.fecha,
-      fecha_fin: evento.fecha_fin || null,
-      fecha_solo_mes: evento.fecha_solo_mes ?? false,
-      ubicacion: evento.ubicacion,
-      telefono: evento.telefono || null,
-      web_url: evento.web_url?.trim() || null,
-      instagram_url: evento.instagram_url?.trim() || null,
-      facebook_url: evento.facebook_url?.trim() || null,
-      descripcion: evento.descripcion,
-      imagen: evento.imagen || null,
-      estado: "borrador",
-      usa_whatsapp: evento.usa_whatsapp ?? true,
-      owner_email: evento.owner_email || null,
-    }
-
-    const { error } = await supabase.from("eventos").insert([payload])
-
-    if (error) {
-      setSaveError(`Error al duplicar evento: ${error.message}`)
+      const data = result.record as Evento | undefined
+      if (data) {
+        setEventos((prev) => [{ ...data, share_count: 0 }, ...prev])
+      } else {
+        await cargarEventos()
+      }
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudo duplicar el evento."
+      )
+    } finally {
       setLoading(false)
-      return
     }
-
-    await logAdminActivity({
-      action: "Duplicar a borrador",
-      section: "Eventos",
-      target: evento.titulo,
-    })
-
-    await cargarEventos()
-    setLoading(false)
   }
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -253,37 +246,26 @@ export default function AdminEventosPage() {
   }
 
   const toggleVisibility = async (evento: Evento) => {
-    const nextEstado =
-      evento.estado === "oculto" || evento.estado === "borrador"
-        ? "activo"
-        : "oculto"
+    try {
+      const result = await runAdminAction({
+        action: "toggle_visibility",
+        id: evento.id,
+      })
 
-    const { error } = await supabase
-      .from("eventos")
-      .update({ estado: nextEstado })
-      .eq("id", evento.id)
-
-    if (error) {
-      setSaveError(`Error al cambiar visibilidad: ${error.message}`)
+      const updated = result.record as Evento
+      setEventos((prev) =>
+        prev.map((item) =>
+          item.id === evento.id
+            ? { ...updated, share_count: item.share_count || 0 }
+            : item
+        )
+      )
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudo cambiar la visibilidad."
+      )
       return
     }
-
-    setEventos((prev) =>
-      prev.map((item) =>
-        item.id === evento.id ? { ...item, estado: nextEstado } : item
-      )
-    )
-
-    await logAdminActivity({
-      action:
-        nextEstado === "activo"
-          ? evento.estado === "borrador"
-            ? "Publicar borrador"
-            : "Mostrar"
-          : "Ocultar",
-      section: "Eventos",
-      target: evento.titulo,
-    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -356,27 +338,15 @@ export default function AdminEventosPage() {
         usa_whatsapp: hasPhone ? formData.usaWhatsapp : false,
       }
 
-    if (editingEvento) {
-      const { data, error } = await supabase
-        .from("eventos")
-        .update(payload)
-        .eq("id", editingEvento.id)
-        .select("*")
-        .single()
-
-      if (error) {
-        setSaveError(`Error al actualizar evento: ${error.message}`)
-        setLoading(false)
-        return
-      }
-
-      await logAdminActivity({
-        action: isDraft ? "Guardar borrador" : "Editar",
-        section: "Eventos",
-        target: formData.titulo || "Sin titulo",
+    try {
+      const result = await runAdminAction({
+        action: "save",
+        id: editingEvento?.id,
+        payload,
       })
+      const data = result.record as Evento | undefined
 
-      if (data) {
+      if (editingEvento && data) {
         setEventos((prev) =>
           prev.map((item) =>
             item.id === editingEvento.id
@@ -384,33 +354,18 @@ export default function AdminEventosPage() {
               : item
           )
         )
-      }
-    } else {
-      const { data, error } = await supabase
-        .from("eventos")
-        .insert([payload])
-        .select("*")
-        .single()
-
-      if (error) {
-        setSaveError(`Error al guardar evento: ${error.message}`)
-        setLoading(false)
-        return
-      }
-
-      await logAdminActivity({
-        action: isDraft ? "Crear borrador" : "Crear",
-        section: "Eventos",
-        target: formData.titulo || "Sin titulo",
-      })
-
-      if (data) {
+      } else if (data) {
         setEventos((prev) => [{ ...data, share_count: 0 }, ...prev])
       }
-    }
 
-    resetForm()
-    setLoading(false)
+      resetForm()
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudo guardar el evento."
+      )
+    } finally {
+      setLoading(false)
+    }
   }
 
   const hasPhone = formData.telefono.trim().length > 0

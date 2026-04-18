@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react"
 import { Eye, EyeOff, GraduationCap, MessageCircle, Pencil, Phone, Plus, Share2, Star, Trash2, UserRound, X } from "lucide-react"
 import { OptimizedImage } from "../../components/OptimizedImage"
 import { supabase } from "../../supabase"
-import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { buildShareCountMap } from "../../lib/shareTracking"
@@ -61,6 +60,23 @@ export default function AdminCursosPage() {
   const [deletingCurso, setDeletingCurso] = useState<Curso | null>(null)
   const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
   const [instituciones, setInstituciones] = useState<InstitucionOption[]>([])
+
+  const runAdminAction = async (body: unknown) => {
+    const response = await fetch("/api/admin/cursos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+
+    const result = await response.json()
+    if (!response.ok) {
+      throw new Error(result.error || "No pudimos guardar el curso o clase.")
+    }
+
+    return result
+  }
 
   const cargarCursos = async () => {
     const [
@@ -133,61 +149,57 @@ export default function AdminCursosPage() {
   }
 
   const toggleFeatured = async (curso: Curso) => {
-    const { error } = await supabase
-      .from("cursos")
-      .update({ destacado: !curso.destacado })
-      .eq("id", curso.id)
+    try {
+      const result = await runAdminAction({
+        action: "toggle_featured",
+        id: curso.id,
+      })
 
-    if (error) {
-      setSaveError(`Error al cambiar destacado: ${error.message}`)
+      const updated = result.record as Curso
+      setCursos((prev) =>
+        prev.map((item) =>
+          item.id === curso.id
+            ? {
+                ...updated,
+                share_count: item.share_count || 0,
+                whatsapp_count: item.whatsapp_count || 0,
+              }
+            : item
+        )
+      )
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudo cambiar el destacado."
+      )
       return
     }
-
-    setCursos((prev) =>
-      prev.map((item) =>
-        item.id === curso.id ? { ...item, destacado: !curso.destacado } : item
-      )
-    )
-
-    await logAdminActivity({
-      action: !curso.destacado ? "Destacar" : "Quitar destacado",
-      section: "Cursos",
-      target: curso.nombre,
-    })
   }
 
   const toggleVisibility = async (curso: Curso) => {
-    const nextEstado =
-      curso.estado === "oculto" || curso.estado === "borrador"
-        ? "activo"
-        : "oculto"
+    try {
+      const result = await runAdminAction({
+        action: "toggle_visibility",
+        id: curso.id,
+      })
 
-    const { error } = await supabase
-      .from("cursos")
-      .update({ estado: nextEstado })
-      .eq("id", curso.id)
-
-    if (error) {
-      setSaveError(`Error al cambiar visibilidad: ${error.message}`)
+      const updated = result.record as Curso
+      setCursos((prev) =>
+        prev.map((item) =>
+          item.id === curso.id
+            ? {
+                ...updated,
+                share_count: item.share_count || 0,
+                whatsapp_count: item.whatsapp_count || 0,
+              }
+            : item
+        )
+      )
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudo cambiar la visibilidad."
+      )
       return
     }
-
-    setCursos((prev) =>
-      prev.map((item) =>
-        item.id === curso.id ? { ...item, estado: nextEstado } : item
-      )
-    )
-
-    await logAdminActivity({
-      action:
-        nextEstado === "activo"
-          ? curso.estado === "borrador"
-            ? "Publicar borrador"
-            : "Mostrar"
-          : "Ocultar",
-      section: "Cursos",
-      target: curso.nombre,
-    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -222,42 +234,40 @@ export default function AdminCursosPage() {
         usa_whatsapp: hasContact ? formData.usa_whatsapp : false,
       }
 
-    if (editingCurso) {
-      const { error } = await supabase
-        .from("cursos")
-        .update(payload)
-        .eq("id", editingCurso.id)
+    try {
+      const result = await runAdminAction({
+        action: "save",
+        id: editingCurso?.id,
+        payload,
+      })
+      const data = result.record as Curso | undefined
 
-      if (error) {
-        setSaveError(`Error al actualizar curso: ${error.message}`)
-        setLoading(false)
-        return
+      if (editingCurso && data) {
+        setCursos((prev) =>
+          prev.map((item) =>
+            item.id === editingCurso.id
+              ? {
+                  ...data,
+                  share_count: item.share_count || 0,
+                  whatsapp_count: item.whatsapp_count || 0,
+                }
+              : item
+          )
+        )
+      } else if (data) {
+        setCursos((prev) => [{ ...data, share_count: 0, whatsapp_count: 0 }, ...prev])
+      } else {
+        await cargarCursos()
       }
 
-      await logAdminActivity({
-        action: isDraft ? "Guardar borrador" : "Editar",
-        section: "Cursos",
-        target: formData.nombre || "Sin nombre",
-      })
-    } else {
-      const { error } = await supabase.from("cursos").insert([payload])
-
-      if (error) {
-        setSaveError(`Error al guardar curso: ${error.message}`)
-        setLoading(false)
-        return
-      }
-
-      await logAdminActivity({
-        action: isDraft ? "Crear borrador" : "Crear",
-        section: "Cursos",
-        target: formData.nombre || "Sin nombre",
-      })
+      resetForm()
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudo guardar el curso o clase."
+      )
+    } finally {
+      setLoading(false)
     }
-
-    await cargarCursos()
-    resetForm()
-    setLoading(false)
   }
 
   const hasContact = formData.contacto.trim().length > 0
@@ -288,7 +298,11 @@ export default function AdminCursosPage() {
     if (!file) return
 
     try {
-      const imageDataUrl = await fileToDataUrl(file)
+      const imageDataUrl = await fileToDataUrl(file, {
+        maxWidth: 720,
+        maxHeight: 1440,
+        targetFileSizeBytes: 160 * 1024,
+      })
       setFormData((prev) => ({ ...prev, imagen: imageDataUrl }))
     } catch (error) {
       setSaveError(
@@ -298,22 +312,16 @@ export default function AdminCursosPage() {
   }
 
   const handleDelete = async (id: number) => {
-    const curso = cursos.find((item) => item.id === id)
-
-    const { error } = await supabase.from("cursos").delete().eq("id", id)
-
-    if (error) {
-      setSaveError(`Error al eliminar curso: ${error.message}`)
+    try {
+      await runAdminAction({ action: "delete", id })
+      setCursos((prev) => prev.filter((item) => item.id !== id))
+      setDeletingCurso(null)
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudo eliminar el curso."
+      )
       return
     }
-
-    setCursos((prev) => prev.filter((item) => item.id !== id))
-    setDeletingCurso(null)
-    await logAdminActivity({
-      action: "Eliminar",
-      section: "Cursos",
-      target: curso?.nombre || `ID ${id}`,
-    })
   }
 
   return (

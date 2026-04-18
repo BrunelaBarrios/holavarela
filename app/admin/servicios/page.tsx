@@ -9,7 +9,6 @@ import { subscriptionPlans, type SubscriptionPlanKey } from "../../lib/subscript
 import { getSubscriptionStatusBadge, getSubscriptionStatusLabel, type SubscriptionStatusKey } from "../../lib/subscriptionStatus"
 import { buildWhatsappCountMap } from "../../lib/whatsappTracking"
 import { supabase } from "../../supabase"
-import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 
 type Servicio = {
@@ -86,6 +85,23 @@ export default function AdminServiciosPage() {
   const [saveError, setSaveError] = useState("")
   const [deletingServicio, setDeletingServicio] = useState<Servicio | null>(null)
   const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
+
+  const runAdminAction = async (body: unknown) => {
+    const response = await fetch("/api/admin/servicios", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    })
+
+    const result = await response.json()
+    if (!response.ok) {
+      throw new Error(result.error || "No pudimos guardar el servicio.")
+    }
+
+    return result
+  }
 
   const cargarServicios = async () => {
     const [
@@ -165,83 +181,70 @@ export default function AdminServiciosPage() {
   }
 
   const handleDelete = async (id: number) => {
-    const servicio = servicios.find((item) => item.id === id)
-    if (!servicio) return
-
-    const { error } = await supabase.from("servicios").delete().eq("id", id)
-
-    if (error) {
-      setSaveError(`Error al eliminar servicio: ${error.message}`)
+    try {
+      await runAdminAction({ action: "delete", id })
+      setServicios((prev) => prev.filter((item) => item.id !== id))
+      setDeletingServicio(null)
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudo eliminar el servicio."
+      )
       return
     }
-
-    setServicios((prev) => prev.filter((item) => item.id !== id))
-    setDeletingServicio(null)
-    await logAdminActivity({
-      action: "Eliminar",
-      section: "Servicios",
-      target: servicio?.nombre || `ID ${id}`,
-    })
   }
 
   const toggleFeatured = async (servicio: Servicio) => {
-    const { error } = await supabase
-      .from("servicios")
-      .update({ destacado: !servicio.destacado })
-      .eq("id", servicio.id)
+    try {
+      const result = await runAdminAction({
+        action: "toggle_featured",
+        id: servicio.id,
+      })
 
-    if (error) {
-      setSaveError(`Error al cambiar destacado: ${error.message}`)
+      const updated = result.record as Servicio
+      setServicios((prev) =>
+        prev.map((item) =>
+          item.id === servicio.id
+            ? {
+                ...updated,
+                share_count: item.share_count || 0,
+                whatsapp_count: item.whatsapp_count || 0,
+              }
+            : item
+        )
+      )
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudo cambiar el destacado."
+      )
       return
     }
-
-    setServicios((prev) =>
-      prev.map((item) =>
-        item.id === servicio.id
-          ? { ...item, destacado: !servicio.destacado }
-          : item
-      )
-    )
-
-    await logAdminActivity({
-      action: !servicio.destacado ? "Destacar" : "Quitar destacado",
-      section: "Servicios",
-      target: servicio.nombre,
-    })
   }
 
   const toggleVisibility = async (servicio: Servicio) => {
-    const nextEstado =
-      servicio.estado === "oculto" || servicio.estado === "borrador"
-        ? "activo"
-        : "oculto"
+    try {
+      const result = await runAdminAction({
+        action: "toggle_visibility",
+        id: servicio.id,
+      })
 
-    const { error } = await supabase
-      .from("servicios")
-      .update({ estado: nextEstado })
-      .eq("id", servicio.id)
-
-    if (error) {
-      setSaveError(`Error al cambiar visibilidad: ${error.message}`)
+      const updated = result.record as Servicio
+      setServicios((prev) =>
+        prev.map((item) =>
+          item.id === servicio.id
+            ? {
+                ...updated,
+                share_count: item.share_count || 0,
+                whatsapp_count: item.whatsapp_count || 0,
+              }
+            : item
+        )
+      )
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudo cambiar la visibilidad."
+      )
       return
     }
-
-    setServicios((prev) =>
-      prev.map((item) =>
-        item.id === servicio.id ? { ...item, estado: nextEstado } : item
-      )
-    )
-
-    await logAdminActivity({
-      action:
-        nextEstado === "activo"
-          ? servicio.estado === "borrador"
-            ? "Publicar borrador"
-            : "Mostrar"
-          : "Ocultar",
-      section: "Servicios",
-      target: servicio.nombre,
-    })
   }
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -340,27 +343,15 @@ export default function AdminServiciosPage() {
         usa_whatsapp: hasContact ? formData.usa_whatsapp : false,
       }
 
-    if (editingServicio) {
-      const { data, error } = await supabase
-        .from("servicios")
-        .update(payload)
-        .eq("id", editingServicio.id)
-        .select("*")
-        .single()
-
-      if (error) {
-        setSaveError(`Error al actualizar servicio: ${error.message}`)
-        setLoading(false)
-        return
-      }
-
-      await logAdminActivity({
-        action: isDraft ? "Guardar borrador" : "Editar",
-        section: "Servicios",
-        target: formData.nombre || "Sin nombre",
+    try {
+      const result = await runAdminAction({
+        action: "save",
+        id: editingServicio?.id,
+        payload,
       })
+      const data = result.record as Servicio | undefined
 
-      if (data) {
+      if (editingServicio && data) {
         setServicios((prev) =>
           prev.map((item) =>
             item.id === editingServicio.id
@@ -372,36 +363,21 @@ export default function AdminServiciosPage() {
               : item
           )
         )
-      }
-    } else {
-      const { data, error } = await supabase
-        .from("servicios")
-        .insert([payload])
-        .select("*")
-        .single()
-
-      if (error) {
-        setSaveError(`Error al guardar servicio: ${error.message}`)
-        setLoading(false)
-        return
-      }
-
-      await logAdminActivity({
-        action: isDraft ? "Crear borrador" : "Crear",
-        section: "Servicios",
-        target: formData.nombre || "Sin nombre",
-      })
-
-      if (data) {
+      } else if (data) {
         setServicios((prev) => [
           { ...data, share_count: 0, whatsapp_count: 0 },
           ...prev,
         ])
       }
-    }
 
-    resetForm()
-    setLoading(false)
+      resetForm()
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudo guardar el servicio."
+      )
+    } finally {
+      setLoading(false)
+    }
   }
 
   const hasContact = formData.contacto.trim().length > 0
