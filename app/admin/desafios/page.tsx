@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { Download, Search, Shuffle, Trophy } from "lucide-react"
+import { Copy, Download, ExternalLink, QrCode, Search, Shuffle, Trophy } from "lucide-react"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { isMissingChallengesSchemaError } from "../../lib/challengeGame"
@@ -36,6 +36,18 @@ type ChallengeDraw = {
   createdAt: string | null
 }
 
+const PUBLIC_SITE_URL = "https://www.holavarela.uy"
+
+function buildChallengePublicUrl() {
+  return `${PUBLIC_SITE_URL}/juga-y-gana`
+}
+
+function buildChallengeQrUrl() {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&data=${encodeURIComponent(
+    buildChallengePublicUrl()
+  )}`
+}
+
 function shuffleEntries<T>(items: T[]) {
   const copy = [...items]
   for (let index = copy.length - 1; index > 0; index -= 1) {
@@ -48,6 +60,7 @@ function shuffleEntries<T>(items: T[]) {
 export default function AdminDesafiosPage() {
   const [loading, setLoading] = useState(true)
   const [schemaReady, setSchemaReady] = useState(true)
+  const [schemaMessage, setSchemaMessage] = useState("")
   const [entries, setEntries] = useState<ChallengeEntry[]>([])
   const [draws, setDraws] = useState<ChallengeDraw[]>([])
   const [winners, setWinners] = useState<ChallengeWinner[]>([])
@@ -56,6 +69,10 @@ export default function AdminDesafiosPage() {
   const [drawing, setDrawing] = useState(false)
   const [message, setMessage] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
+  const [shareMessage, setShareMessage] = useState("")
+
+  const challengePublicUrl = buildChallengePublicUrl()
+  const challengeQrUrl = buildChallengeQrUrl()
 
   const loadData = async () => {
     const [
@@ -83,6 +100,7 @@ export default function AdminDesafiosPage() {
     if (schemaError) {
       if (isMissingChallengesSchemaError(schemaError)) {
         setSchemaReady(false)
+        setSchemaMessage(schemaError.message || "Falta actualizar las tablas de desafios.")
       } else {
         setErrorMessage(`No se pudieron cargar los desafios: ${schemaError.message}`)
       }
@@ -91,6 +109,7 @@ export default function AdminDesafiosPage() {
     }
 
     setSchemaReady(true)
+    setSchemaMessage("")
     setEntries(
       ((entriesRows || []) as Array<Record<string, unknown>>).map((entry) => ({
         id: Number(entry.id),
@@ -172,6 +191,27 @@ export default function AdminDesafiosPage() {
       }
     >
   }, [entries, latestDraw, latestWinnerRows])
+
+  const handleCopyPublicLink = async () => {
+    try {
+      await navigator.clipboard.writeText(challengePublicUrl)
+      setShareMessage("Link del juego copiado.")
+    } catch {
+      setShareMessage(`Copia manualmente este link: ${challengePublicUrl}`)
+    }
+  }
+
+  const handleDownloadQr = () => {
+    if (typeof window === "undefined") return
+
+    const link = window.document.createElement("a")
+    link.href = challengeQrUrl
+    link.download = "qr-juga-y-gana-hola-varela.png"
+    link.target = "_blank"
+    link.rel = "noopener noreferrer"
+    link.click()
+    setShareMessage("Se abrio el QR del juego para descargar.")
+  }
 
   const handleExportCsv = () => {
     if (typeof window === "undefined" || visibleEntries.length === 0) return
@@ -362,10 +402,65 @@ export default function AdminDesafiosPage() {
 
       {!schemaReady ? (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
-          Primero corre el SQL actualizado en Supabase para crear las tablas de desafios.
+          {schemaMessage
+            ? `Falta actualizar el esquema de desafios en Supabase: ${schemaMessage}`
+            : "Primero corre el SQL actualizado en Supabase para crear las tablas de desafios."}
         </div>
       ) : (
         <div className="space-y-6">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Acceso rapido
+                </div>
+                <h2 className="mt-1 text-xl font-semibold text-slate-900">
+                  Link y QR del juego
+                </h2>
+                <p className="mt-2 text-sm text-slate-500">
+                  Usa este acceso para compartir la experiencia de desafios en ferias, eventos o actividades.
+                </p>
+                <div className="mt-3 break-all rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                  {challengePublicUrl}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => void handleCopyPublicLink()}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copiar link
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadQr}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  <QrCode className="h-4 w-4" />
+                  Descargar QR
+                </button>
+                <a
+                  href={challengePublicUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Ver pagina publica
+                </a>
+              </div>
+            </div>
+
+            {shareMessage ? (
+              <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+                {shareMessage}
+              </div>
+            ) : null}
+          </section>
+
           <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
