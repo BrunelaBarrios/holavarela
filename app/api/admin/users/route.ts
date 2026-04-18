@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
-import { ADMIN_DEFAULT_CREDENTIALS } from "../../../lib/adminAuth"
+import type { NextRequest } from "next/server"
+import { readAdminSessionFromRequest } from "../../../lib/adminSession"
 import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
 
 type OwnerType = "comercio" | "servicio" | "curso" | "institucion"
@@ -7,8 +8,6 @@ type OwnerType = "comercio" | "servicio" | "curso" | "institucion"
 type CreateUserPayload = {
   email?: string
   password?: string
-  adminUsername?: string
-  adminPassword?: string
   ownerType?: OwnerType | ""
   ownerId?: number | null
 }
@@ -19,8 +18,6 @@ type UpdateUserPayload = {
   currentEmail?: string
   email?: string
   password?: string
-  adminUsername?: string
-  adminPassword?: string
   ownerType?: OwnerType | ""
   ownerId?: number | null
   requestId?: number | null
@@ -30,8 +27,6 @@ type DeleteUserPayload = {
   id?: number
   userId?: string | null
   email?: string
-  adminUsername?: string
-  adminPassword?: string
 }
 
 type LinkedOwner = {
@@ -53,28 +48,13 @@ function resolveTable(ownerType: OwnerType) {
   }
 }
 
-async function validateAdminCredentials(username: string, password: string) {
-  const supabaseAdmin = getSupabaseAdmin()
-
-  if (
-    username === ADMIN_DEFAULT_CREDENTIALS.username &&
-    password === ADMIN_DEFAULT_CREDENTIALS.password
-  ) {
-    return { valid: true }
+async function requireAdminSession(request: NextRequest) {
+  const session = await readAdminSessionFromRequest(request)
+  if (!session) {
+    return null
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("administradores")
-    .select("usuario, contrasena, activo")
-    .eq("usuario", username)
-    .eq("activo", true)
-    .maybeSingle()
-
-  if (error) throw error
-
-  return {
-    valid: Boolean(data && data.contrasena === password),
-  }
+  return session
 }
 
 async function getLinkedOwnerByEmail(email: string) {
@@ -199,20 +179,23 @@ async function syncOwnerAssignment({
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const adminSession = await requireAdminSession(request)
+    if (!adminSession) {
+      return NextResponse.json({ error: "Sesion admin requerida." }, { status: 401 })
+    }
+
     const supabaseAdmin = getSupabaseAdmin()
     const body = (await request.json()) as CreateUserPayload
     const email = body.email?.trim().toLowerCase() || ""
     const password = body.password || ""
-    const adminUsername = body.adminUsername?.trim() || ""
-    const adminPassword = body.adminPassword || ""
     const ownerType = body.ownerType || ""
     const ownerId = body.ownerId ? Number(body.ownerId) : null
     const hasLinkedOwner = Boolean(ownerType && ownerId)
     const linkedOwnerType = hasLinkedOwner ? (ownerType as OwnerType) : null
 
-    if (!email || !password || !adminUsername || !adminPassword) {
+    if (!email || !password) {
       return NextResponse.json(
         { error: "Faltan datos para crear el usuario." },
         { status: 400 }
@@ -230,14 +213,6 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "La asignacion del perfil quedo incompleta." },
         { status: 400 }
-      )
-    }
-
-    const adminValidation = await validateAdminCredentials(adminUsername, adminPassword)
-    if (!adminValidation.valid) {
-      return NextResponse.json(
-        { error: "La contrasena del administrador no es valida." },
-        { status: 401 }
       )
     }
 
@@ -312,8 +287,13 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
   try {
+    const adminSession = await requireAdminSession(request)
+    if (!adminSession) {
+      return NextResponse.json({ error: "Sesion admin requerida." }, { status: 401 })
+    }
+
     const supabaseAdmin = getSupabaseAdmin()
     const body = (await request.json()) as UpdateUserPayload
     const id = body.id ? Number(body.id) : 0
@@ -321,14 +301,12 @@ export async function PATCH(request: Request) {
     const currentEmail = body.currentEmail?.trim().toLowerCase() || ""
     const email = body.email?.trim().toLowerCase() || ""
     const nextPassword = body.password || ""
-    const adminUsername = body.adminUsername?.trim() || ""
-    const adminPassword = body.adminPassword || ""
     const ownerType = body.ownerType || ""
     const ownerId = body.ownerId ? Number(body.ownerId) : null
     const requestId = body.requestId ? Number(body.requestId) : null
     const linkedOwnerType = ownerType ? (ownerType as OwnerType) : null
 
-    if (!id || !currentEmail || !email || !adminUsername || !adminPassword) {
+    if (!id || !currentEmail || !email) {
       return NextResponse.json(
         { error: "Faltan datos para actualizar el usuario." },
         { status: 400 }
@@ -346,14 +324,6 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         { error: "La asignacion del perfil quedo incompleta." },
         { status: 400 }
-      )
-    }
-
-    const adminValidation = await validateAdminCredentials(adminUsername, adminPassword)
-    if (!adminValidation.valid) {
-      return NextResponse.json(
-        { error: "La contrasena del administrador no es valida." },
-        { status: 401 }
       )
     }
 
@@ -425,7 +395,7 @@ export async function PATCH(request: Request) {
         .update({
           status: "resolved",
           resolved_at: new Date().toISOString(),
-          resolved_by: adminUsername,
+          resolved_by: adminSession.username,
           user_id: userId,
         })
         .eq("id", requestId)
@@ -444,28 +414,23 @@ export async function PATCH(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
+    const adminSession = await requireAdminSession(request)
+    if (!adminSession) {
+      return NextResponse.json({ error: "Sesion admin requerida." }, { status: 401 })
+    }
+
     const supabaseAdmin = getSupabaseAdmin()
     const body = (await request.json()) as DeleteUserPayload
     const id = body.id ? Number(body.id) : 0
     const userId = body.userId?.trim() || null
     const email = body.email?.trim().toLowerCase() || ""
-    const adminUsername = body.adminUsername?.trim() || ""
-    const adminPassword = body.adminPassword || ""
 
-    if (!id || !email || !adminUsername || !adminPassword) {
+    if (!id || !email) {
       return NextResponse.json(
         { error: "Faltan datos para borrar el usuario." },
         { status: 400 }
-      )
-    }
-
-    const adminValidation = await validateAdminCredentials(adminUsername, adminPassword)
-    if (!adminValidation.valid) {
-      return NextResponse.json(
-        { error: "La contrasena del administrador no es valida." },
-        { status: 401 }
       )
     }
 
@@ -498,7 +463,7 @@ export async function DELETE(request: Request) {
       .update({
         status: "resolved",
         resolved_at: new Date().toISOString(),
-        resolved_by: adminUsername,
+        resolved_by: adminSession.username,
         user_id: userId,
       })
       .eq("email", email)

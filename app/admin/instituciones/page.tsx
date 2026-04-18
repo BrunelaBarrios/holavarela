@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import { Building2, Eye, EyeOff, Pencil, Plus, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { supabase } from "../../supabase"
-import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 
 type Institucion = {
@@ -99,55 +98,48 @@ export default function AdminInstitucionesPage() {
   }
 
   const handleDelete = async (id: number) => {
-    const institucion = instituciones.find((item) => item.id === id)
-    const { error } = await supabase.from("instituciones").delete().eq("id", id)
+    const response = await fetch("/api/admin/instituciones", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "delete",
+        id,
+      }),
+    })
+    const result = (await response.json()) as { error?: string }
 
-    if (error) {
-      setSaveError(`Error al eliminar institución: ${error.message}`)
+    if (!response.ok) {
+      setSaveError(result.error || "No pudimos eliminar la institucion.")
       return
     }
 
     setInstituciones((prev) => prev.filter((item) => item.id !== id))
     setDeletingInstitucion(null)
-    await logAdminActivity({
-      action: "Eliminar",
-      section: "Instituciones",
-      target: institucion?.nombre || `ID ${id}`,
-    })
   }
 
   const toggleVisibility = async (institucion: Institucion) => {
-    const nextEstado =
-      institucion.estado === "oculto" || institucion.estado === "borrador"
-        ? "activo"
-        : "oculto"
+    const response = await fetch("/api/admin/instituciones", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "toggle_visibility",
+        id: institucion.id,
+      }),
+    })
+    const result = (await response.json()) as { error?: string; record?: Institucion }
 
-    const { error } = await supabase
-      .from("instituciones")
-      .update({ estado: nextEstado })
-      .eq("id", institucion.id)
-
-    if (error) {
-      setSaveError(`Error al cambiar visibilidad: ${error.message}`)
+    if (!response.ok || !result.record) {
+      setSaveError(result.error || "No pudimos cambiar la visibilidad.")
       return
     }
 
     setInstituciones((prev) =>
-      prev.map((item) =>
-        item.id === institucion.id ? { ...item, estado: nextEstado } : item
-      )
+      prev.map((item) => (item.id === institucion.id ? result.record! : item))
     )
-
-    await logAdminActivity({
-      action:
-        nextEstado === "activo"
-          ? institucion.estado === "borrador"
-            ? "Publicar borrador"
-            : "Mostrar"
-          : "Ocultar",
-      section: "Instituciones",
-      target: institucion.nombre,
-    })
   }
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,53 +184,36 @@ export default function AdminInstitucionesPage() {
       premium_cursos_titulo: formData.premium_cursos_titulo?.trim() || null,
     }
 
+    const response = await fetch("/api/admin/instituciones", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "save",
+        id: editingInstitucion?.id,
+        payload,
+      }),
+    })
+    const result = (await response.json()) as { error?: string; record?: Institucion }
+
+    if (!response.ok || !result.record) {
+      setSaveError(
+        result.error ||
+          (editingInstitucion
+            ? "No pudimos actualizar la institucion."
+            : "No pudimos guardar la institucion.")
+      )
+      setLoading(false)
+      return
+    }
+
     if (editingInstitucion) {
-      const { data, error } = await supabase
-        .from("instituciones")
-        .update(payload)
-        .eq("id", editingInstitucion.id)
-        .select("*")
-        .single()
-
-      if (error) {
-      setSaveError(`Error al actualizar institución: ${error.message}`)
-        setLoading(false)
-        return
-      }
-
-      await logAdminActivity({
-        action: "Editar",
-        section: "Instituciones",
-        target: formData.nombre,
-      })
-
-      if (data) {
-        setInstituciones((prev) =>
-          prev.map((item) => (item.id === editingInstitucion.id ? data : item))
-        )
-      }
+      setInstituciones((prev) =>
+        prev.map((item) => (item.id === editingInstitucion.id ? result.record! : item))
+      )
     } else {
-      const { data, error } = await supabase
-        .from("instituciones")
-        .insert([payload])
-        .select("*")
-        .single()
-
-      if (error) {
-        setSaveError(`Error al guardar institución: ${error.message}`)
-        setLoading(false)
-        return
-      }
-
-      await logAdminActivity({
-        action: "Crear",
-        section: "Instituciones",
-        target: formData.nombre,
-      })
-
-      if (data) {
-        setInstituciones((prev) => [data, ...prev])
-      }
+      setInstituciones((prev) => [result.record!, ...prev])
     }
 
     resetForm()
@@ -249,7 +224,7 @@ export default function AdminInstitucionesPage() {
     <div className="mx-auto max-w-7xl">
       <AdminConfirmModal
         isOpen={Boolean(deletingInstitucion)}
-        title="Eliminar institución"
+        title="Eliminar institucion"
         description={`Vas a eliminar "${deletingInstitucion?.nombre || ""}". Esta accion no se puede deshacer.`}
         confirmLabel="Eliminar"
         onCancel={() => setDeletingInstitucion(null)}
@@ -271,7 +246,7 @@ export default function AdminInstitucionesPage() {
           className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-3 font-medium text-white transition hover:bg-cyan-500"
         >
           <Plus className="h-5 w-5" />
-          Agregar institución
+          Agregar institucion
         </button>
       </div>
 
@@ -280,7 +255,7 @@ export default function AdminInstitucionesPage() {
           <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-xl">
             <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
               <h2 className="text-xl font-semibold text-slate-900">
-                {editingInstitucion ? "Editar institución" : "Agregar institución"}
+                {editingInstitucion ? "Editar institucion" : "Agregar institucion"}
               </h2>
               <button
                 onClick={resetForm}
@@ -314,7 +289,7 @@ export default function AdminInstitucionesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Dirección
+                  Direccion
                 </label>
                 <input
                   type="text"
@@ -328,7 +303,7 @@ export default function AdminInstitucionesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Teléfono
+                  Telefono
                 </label>
                 <input
                   type="text"
@@ -410,7 +385,7 @@ export default function AdminInstitucionesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Descripción
+                  Descripcion
                 </label>
                 <textarea
                   value={formData.descripcion || ""}
@@ -486,7 +461,7 @@ export default function AdminInstitucionesPage() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={formData.foto}
-                      alt="Vista previa de la institución"
+                      alt="Vista previa de la institucion"
                       className="h-40 w-full rounded-2xl object-cover"
                     />
                     <button
@@ -509,8 +484,8 @@ export default function AdminInstitucionesPage() {
                   {loading
                     ? "Guardando..."
                     : editingInstitucion
-                      ? "Guardar Cambios"
-                      : "Agregar institución"}
+                      ? "Guardar cambios"
+                      : "Agregar institucion"}
                 </button>
 
                 <button
@@ -631,13 +606,13 @@ export default function AdminInstitucionesPage() {
             No hay instituciones
           </h3>
           <p className="mb-4 text-slate-500">
-            Comenzá agregando la primera institución
+            Comenza agregando la primera institucion
           </p>
           <button
             onClick={() => setIsFormOpen(true)}
             className="rounded-xl bg-cyan-600 px-6 py-3 font-medium text-white transition hover:bg-cyan-500"
           >
-            Agregar institución
+            Agregar institucion
           </button>
         </div>
       )}

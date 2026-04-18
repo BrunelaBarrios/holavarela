@@ -3,11 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { LockKeyhole, Radio, UserRound } from "lucide-react"
-import { supabase } from "../../supabase"
-import {
-  ADMIN_DEFAULT_CREDENTIALS,
-  saveAdminSession,
-} from "../../lib/adminAuth"
+import { saveAdminSession } from "../../lib/adminAuth"
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -21,44 +17,28 @@ export default function AdminLoginPage() {
     setError("")
     setLoading(true)
 
-    if (
-      username === ADMIN_DEFAULT_CREDENTIALS.username &&
-      password === ADMIN_DEFAULT_CREDENTIALS.password
-    ) {
-      saveAdminSession({
-        username: ADMIN_DEFAULT_CREDENTIALS.username,
-        name: ADMIN_DEFAULT_CREDENTIALS.name,
-        role: ADMIN_DEFAULT_CREDENTIALS.role,
-      })
-      router.push("/admin")
-      return
+    const response = await fetch("/api/admin/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    })
+
+    const result = (await response.json()) as {
+      error?: string
+      session?: { username: string; name: string; role: "superadmin" | "admin" }
     }
 
-    const { data, error } = await supabase
-      .from("administradores")
-      .select("usuario, nombre, contrasena, rol, activo")
-      .eq("usuario", username)
-      .eq("activo", true)
-      .maybeSingle()
-
-    if (error) {
-      setError(`No se pudo iniciar sesion: ${error.message}`)
+    if (!response.ok || !result.session) {
+      setError(result.error || "No se pudo iniciar sesion.")
       setLoading(false)
       return
     }
 
-    if (data && data.contrasena === password) {
-      saveAdminSession({
-        username: data.usuario,
-        name: data.nombre || data.usuario,
-        role: data.rol === "superadmin" ? "superadmin" : "admin",
-      })
-      router.push("/admin")
-      return
-    }
-
-    setError("Usuario o contrasena incorrectos.")
-    setLoading(false)
+    saveAdminSession(result.session)
+    router.push("/admin")
+    router.refresh()
   }
 
   return (

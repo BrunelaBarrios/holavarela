@@ -12,6 +12,9 @@ function hasInstitutionPremium(data: {
   return Boolean(data.premium_activo)
 }
 
+const hasMissingInstitutionIdColumn = (message?: string | null) =>
+  Boolean(message && message.toLowerCase().includes("institucion_id"))
+
 export default async function InstitucionSharePage({
   params,
 }: {
@@ -41,19 +44,28 @@ export default async function InstitucionSharePage({
     ? `institucion_id.eq.${data.id},owner_email.eq.${data.owner_email}`
     : `institucion_id.eq.${data.id}`
 
-  const [relatedEventsResult, relatedCoursesResult] = await Promise.all([
-    supabaseServer
-      .from("eventos")
-      .select("id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, descripcion, imagen, estado")
-      .or(eventRelationFilter)
-      .order("fecha", { ascending: true }),
-    supabaseServer
-      .from("cursos")
-      .select("id, nombre, descripcion, responsable, contacto, imagen, estado")
-      .eq("institucion_id", data.id)
-      .eq("estado", "activo")
-      .order("id", { ascending: false }),
-  ])
+  const relatedEventsWithInstitutionResult = await supabaseServer
+    .from("eventos")
+    .select("id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, descripcion, imagen, estado, institucion_id")
+    .or(eventRelationFilter)
+    .order("fecha", { ascending: true })
+  const relatedEventsResult =
+    relatedEventsWithInstitutionResult.error &&
+    hasMissingInstitutionIdColumn(relatedEventsWithInstitutionResult.error.message) &&
+    data.owner_email
+      ? await supabaseServer
+          .from("eventos")
+          .select("id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, descripcion, imagen, estado")
+          .eq("owner_email", data.owner_email)
+          .order("fecha", { ascending: true })
+      : relatedEventsWithInstitutionResult
+
+  const relatedCoursesResult = await supabaseServer
+    .from("cursos")
+    .select("id, nombre, descripcion, responsable, contacto, imagen, estado")
+    .eq("institucion_id", data.id)
+    .eq("estado", "activo")
+    .order("id", { ascending: false })
 
   const relatedEvents = (relatedEventsResult.data || []).filter(
     (event) => !event.estado || event.estado === "activo"

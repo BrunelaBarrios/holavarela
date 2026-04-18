@@ -2,6 +2,7 @@ import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
   compress: true,
+  poweredByHeader: false,
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
@@ -9,17 +10,31 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**",
       },
-      {
-        protocol: "http",
-        hostname: "**",
-      },
     ],
   },
   async headers() {
+    const csp = [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "frame-ancestors 'none'",
+      "object-src 'none'",
+      "form-action 'self'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self' data:",
+      "style-src 'self' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vitals.vercel-insights.com",
+      "connect-src 'self' https: wss:",
+      "upgrade-insecure-requests",
+    ].join("; ")
+
     return [
       {
         source: "/:path*",
         headers: [
+          {
+            key: "Content-Security-Policy",
+            value: csp,
+          },
           {
             key: "X-Frame-Options",
             value: "DENY",
@@ -39,6 +54,10 @@ const nextConfig: NextConfig = {
           {
             key: "Cross-Origin-Opener-Policy",
             value: "same-origin",
+          },
+          {
+            key: "Cross-Origin-Resource-Policy",
+            value: "same-site",
           },
           {
             key: "Strict-Transport-Security",

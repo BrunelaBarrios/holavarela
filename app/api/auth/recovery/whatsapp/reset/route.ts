@@ -3,6 +3,7 @@ import {
   registerRecoveryAttempt,
   verifyRecoveryToken,
 } from "../../../../../lib/passwordRecovery"
+import { consumeRateLimit, getClientIp } from "../../../../../lib/rateLimit"
 import { getSupabaseAdmin } from "../../../../../lib/supabaseAdmin"
 
 function getClientMeta(request: Request) {
@@ -17,6 +18,19 @@ function getClientMeta(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const rateLimit = consumeRateLimit({
+      key: `recovery-whatsapp-reset:${getClientIp(request)}`,
+      limit: 6,
+      windowMs: 15 * 60 * 1000,
+    })
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Demasiados intentos. Espera unos minutos antes de cambiar la contrasena." },
+        { status: 429 }
+      )
+    }
+
     const supabaseAdmin = getSupabaseAdmin()
     const { token, password } = (await request.json()) as {
       token?: string

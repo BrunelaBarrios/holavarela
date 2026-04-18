@@ -27,6 +27,7 @@ import {
 import {
   clearAdminSession,
   getAdminSession,
+  saveAdminSession,
   type AdminRole,
 } from "../lib/adminAuth"
 
@@ -86,13 +87,14 @@ export default function AdminLayout({
   const pathname = usePathname()
   const router = useRouter()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isCheckingSession, setIsCheckingSession] = useState(true)
+  const [session, setSession] = useState(() => getAdminSession())
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     panel: true,
     contenido: true,
     gestion: false,
     configuracion: false,
   })
-  const session = getAdminSession()
   const adminRole: AdminRole = session?.role || "admin"
   const adminName = session?.name || ""
   const isLoginPage = pathname === "/admin/login" || pathname === "/admin/loginV"
@@ -100,10 +102,10 @@ export default function AdminLayout({
   const isSuperAdminOnlyRoute = superAdminOnlyPrefixes.some((prefix) =>
     pathname.startsWith(prefix)
   )
-  const shouldRedirectToLogin = !isLoggedIn && !isLoginPage
-  const shouldRedirectToDashboard = isLoggedIn && isLoginPage
+  const shouldRedirectToLogin = !isCheckingSession && !isLoggedIn && !isLoginPage
+  const shouldRedirectToDashboard = !isCheckingSession && isLoggedIn && isLoginPage
   const shouldRedirectByRole =
-    session?.role !== "superadmin" && isSuperAdminOnlyRoute
+    !isCheckingSession && session?.role !== "superadmin" && isSuperAdminOnlyRoute
   const visibleMenuItems = menuItems.filter((item) => item.roles.includes(adminRole))
   const groupedMenuItems = menuGroups
     .map((group) => ({
@@ -113,6 +115,45 @@ export default function AdminLayout({
         .filter((item): item is (typeof menuItems)[number] => Boolean(item)),
     }))
     .filter((group) => group.items.length > 0)
+
+  useEffect(() => {
+    let mounted = true
+
+    const syncSession = async () => {
+      try {
+        const response = await fetch("/api/admin/session", {
+          cache: "no-store",
+        })
+        const result = (await response.json()) as {
+          session?: { username: string; name: string; role: AdminRole } | null
+        }
+
+        if (!mounted) return
+
+        if (result.session) {
+          saveAdminSession(result.session)
+          setSession(result.session)
+        } else {
+          clearAdminSession()
+          setSession(null)
+        }
+      } catch {
+        if (!mounted) return
+        clearAdminSession()
+        setSession(null)
+      } finally {
+        if (mounted) {
+          setIsCheckingSession(false)
+        }
+      }
+    }
+
+    void syncSession()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   useEffect(() => {
     if (shouldRedirectToLogin) {
@@ -130,7 +171,7 @@ export default function AdminLayout({
     }
   }, [router, shouldRedirectByRole, shouldRedirectToDashboard, shouldRedirectToLogin])
 
-  if (shouldRedirectToLogin || shouldRedirectToDashboard || shouldRedirectByRole) {
+  if (isCheckingSession || shouldRedirectToLogin || shouldRedirectToDashboard || shouldRedirectByRole) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-100">
         <div className="rounded-2xl border border-slate-200 bg-white px-6 py-4 text-slate-600 shadow-sm">
@@ -283,6 +324,9 @@ export default function AdminLayout({
                 onClick={() => {
                   setIsSidebarOpen(false)
                   clearAdminSession()
+                  void fetch("/api/admin/session", {
+                    method: "DELETE",
+                  })
                   router.push("/admin/login")
                 }}
                 className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-red-600 transition hover:bg-red-50"

@@ -9,7 +9,6 @@ import { subscriptionPlans, type SubscriptionPlanKey } from "../../lib/subscript
 import { getSubscriptionStatusBadge, getSubscriptionStatusLabel, type SubscriptionStatusKey } from "../../lib/subscriptionStatus"
 import { buildWhatsappCountMap } from "../../lib/whatsappTracking"
 import { supabase } from "../../supabase"
-import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 
 type Comercio = {
@@ -171,23 +170,25 @@ export default function AdminComerciosPage() {
   }
 
   const handleDelete = async (id: number) => {
-    const comercio = comercios.find((item) => item.id === id)
-    if (!comercio) return
+    const response = await fetch("/api/admin/comercios", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "delete",
+        id,
+      }),
+    })
+    const result = (await response.json()) as { error?: string }
 
-    const { error } = await supabase.from("comercios").delete().eq("id", id)
-
-    if (error) {
-      setSaveError(`Error al eliminar comercio: ${error.message}`)
+    if (!response.ok) {
+      setSaveError(result.error || "No pudimos eliminar el comercio.")
       return
     }
 
     setComercios((prev) => prev.filter((item) => item.id !== id))
     setDeletingComercio(null)
-    await logAdminActivity({
-      action: "Eliminar",
-      section: "Comercios",
-      target: comercio?.nombre || `ID ${id}`,
-    })
   }
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,63 +250,71 @@ export default function AdminComerciosPage() {
   }
 
   const toggleFeatured = async (comercio: Comercio) => {
-    const { error } = await supabase
-      .from("comercios")
-      .update({ destacado: !comercio.destacado })
-      .eq("id", comercio.id)
+    const response = await fetch("/api/admin/comercios", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "toggle_featured",
+        id: comercio.id,
+      }),
+    })
+    const result = (await response.json()) as { error?: string; record?: Comercio }
 
-    if (error) {
-      alert(`Error al cambiar destacado: ${error.message}`)
+    if (!response.ok || !result.record) {
+      setSaveError(result.error || "No pudimos cambiar el destacado.")
       return
     }
+
+    const normalizedRecord: Comercio = result.record
 
     setComercios((prev) =>
       prev.map((item) =>
         item.id === comercio.id
-          ? { ...item, destacado: !comercio.destacado }
+          ? {
+              ...item,
+              ...normalizedRecord,
+              share_count: item.share_count || 0,
+              whatsapp_count: item.whatsapp_count || 0,
+            }
           : item
       )
     )
-
-    await logAdminActivity({
-      action: !comercio.destacado ? "Destacar" : "Quitar destacado",
-      section: "Comercios",
-      target: comercio.nombre,
-    })
   }
 
   const toggleVisibility = async (comercio: Comercio) => {
-    const nextEstado =
-      comercio.estado === "oculto" || comercio.estado === "borrador"
-        ? "activo"
-        : "oculto"
+    const response = await fetch("/api/admin/comercios", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "toggle_visibility",
+        id: comercio.id,
+      }),
+    })
+    const result = (await response.json()) as { error?: string; record?: Comercio }
 
-    const { error } = await supabase
-      .from("comercios")
-      .update({ estado: nextEstado })
-      .eq("id", comercio.id)
-
-    if (error) {
-      setSaveError(`Error al cambiar visibilidad: ${error.message}`)
+    if (!response.ok || !result.record) {
+      setSaveError(result.error || "No pudimos cambiar la visibilidad.")
       return
     }
 
+    const normalizedRecord: Comercio = result.record
+
     setComercios((prev) =>
       prev.map((item) =>
-        item.id === comercio.id ? { ...item, estado: nextEstado } : item
+        item.id === comercio.id
+          ? {
+              ...item,
+              ...normalizedRecord,
+              share_count: item.share_count || 0,
+              whatsapp_count: item.whatsapp_count || 0,
+            }
+          : item
       )
     )
-
-    await logAdminActivity({
-      action:
-        nextEstado === "activo"
-          ? comercio.estado === "borrador"
-            ? "Publicar borrador"
-            : "Mostrar"
-          : "Ocultar",
-      section: "Comercios",
-      target: comercio.nombre,
-    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -352,66 +361,62 @@ export default function AdminComerciosPage() {
       }
 
     if (editingComercio) {
-      const { data, error } = await supabase
-        .from("comercios")
-        .update(payload)
-        .eq("id", editingComercio.id)
-        .select("*")
-        .single()
+      const response = await fetch("/api/admin/comercios", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "save",
+          id: editingComercio.id,
+          payload,
+        }),
+      })
+      const result = (await response.json()) as { error?: string; record?: Comercio }
 
-      if (error) {
-        const message = `Error al actualizar comercio: ${error.message}${error.details ? ` - ${error.details}` : ""}`
-        setSaveError(message)
+      if (!response.ok || !result.record) {
+        setSaveError(result.error || "No pudimos actualizar el comercio.")
         setLoading(false)
         return
       }
-
-      await logAdminActivity({
-        action: isDraft ? "Guardar borrador" : "Editar",
-        section: "Comercios",
-        target: formData.nombre || "Sin nombre",
-      })
 
       // Keep admin state in sync without reloading the full table and counters.
-      if (data) {
-        setComercios((prev) =>
-          prev.map((item) =>
-            item.id === editingComercio.id
-              ? {
-                  ...data,
-                  share_count: item.share_count || 0,
-                  whatsapp_count: item.whatsapp_count || 0,
-                }
-              : item
-          )
+      const normalizedRecord: Comercio = result.record
+      setComercios((prev) =>
+        prev.map((item) =>
+          item.id === editingComercio.id
+            ? {
+                ...normalizedRecord,
+                share_count: item.share_count || 0,
+                whatsapp_count: item.whatsapp_count || 0,
+              }
+            : item
         )
-      }
+      )
     } else {
-      const { data, error } = await supabase
-        .from("comercios")
-        .insert([payload])
-        .select("*")
-        .single()
+      const response = await fetch("/api/admin/comercios", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "save",
+          payload,
+        }),
+      })
+      const result = (await response.json()) as { error?: string; record?: Comercio }
 
-      if (error) {
-        const message = `Error al guardar comercio: ${error.message}${error.details ? ` - ${error.details}` : ""}`
-        setSaveError(message)
+      if (!response.ok || !result.record) {
+        setSaveError(result.error || "No pudimos guardar el comercio.")
         setLoading(false)
         return
       }
 
-      await logAdminActivity({
-        action: isDraft ? "Crear borrador" : "Crear",
-        section: "Comercios",
-        target: formData.nombre || "Sin nombre",
-      })
-
-      if (data) {
-        setComercios((prev) => [
-          { ...data, share_count: 0, whatsapp_count: 0 },
-          ...prev,
-        ])
-      }
+      const normalizedRecord: Comercio = result.record
+      setComercios((prev) => [
+        { ...normalizedRecord, share_count: 0, whatsapp_count: 0 },
+        ...prev,
+      ])
     }
 
     setVisibleCount((prev) => Math.max(prev, ITEMS_PER_PAGE))

@@ -4,6 +4,8 @@ const DEFAULT_INITIAL_WEBP_QUALITY = 0.72
 const DEFAULT_MIN_WEBP_QUALITY = 0.4
 const DEFAULT_TARGET_FILE_SIZE_BYTES = 160 * 1024
 const MAX_FILE_SIZE_BYTES = 6 * 1024 * 1024
+const MAX_IMAGE_PIXELS = 14_000_000
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"])
 
 type FileToDataUrlOptions = {
   maxWidth?: number
@@ -36,8 +38,8 @@ export async function fileToDataUrl(
   file: File,
   options: FileToDataUrlOptions = {}
 ): Promise<string> {
-  if (!file.type.startsWith("image/")) {
-    throw new Error("Selecciona un archivo de imagen valido.")
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    throw new Error("Usa una imagen JPG, PNG, WEBP o AVIF.")
   }
 
   if (file.size > MAX_FILE_SIZE_BYTES) {
@@ -45,6 +47,10 @@ export async function fileToDataUrl(
   }
 
   const image = await loadImage(file)
+  if ((image.width || 0) * (image.height || 0) > MAX_IMAGE_PIXELS) {
+    throw new Error("La imagen es demasiado grande. Prueba con una version mas liviana.")
+  }
+
   const maxWidth = options.maxWidth ?? DEFAULT_MAX_WIDTH
   const maxHeight = options.maxHeight ?? DEFAULT_MAX_HEIGHT
   const initialQuality = options.initialQuality ?? DEFAULT_INITIAL_WEBP_QUALITY

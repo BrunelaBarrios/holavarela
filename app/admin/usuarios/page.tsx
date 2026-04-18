@@ -14,7 +14,6 @@ import {
   X,
 } from "lucide-react"
 import { supabase } from "../../supabase"
-import { getAdminSession } from "../../lib/adminAuth"
 import { logAdminActivity } from "../../lib/adminActivity"
 
 type OwnerType = "comercio" | "servicio" | "curso" | "institucion"
@@ -93,8 +92,6 @@ export default function AdminUsuariosPage() {
   const [deleteTarget, setDeleteTarget] = useState<UsuarioRegistrado | null>(null)
   const [deleteAdminPassword, setDeleteAdminPassword] = useState("")
   const [deleting, setDeleting] = useState(false)
-
-  const adminSession = getAdminSession()
 
   const cargarUsuarios = async () => {
     const { data, error: loadError } = await supabase
@@ -287,12 +284,6 @@ export default function AdminUsuariosPage() {
     setError("")
     setSaving(true)
 
-    if (!adminSession?.username) {
-      setError("No encontramos la sesion admin actual.")
-      setSaving(false)
-      return
-    }
-
     const isCreate = formMode === "create"
     const response = await fetch("/api/admin/users", {
       method: isCreate ? "POST" : "PATCH",
@@ -307,8 +298,6 @@ export default function AdminUsuariosPage() {
         password: formData.password || undefined,
         ownerType: formData.ownerType || null,
         ownerId: formData.ownerId ? Number(formData.ownerId) : null,
-        adminUsername: adminSession.username,
-        adminPassword: formData.adminPassword,
         requestId: formData.requestId,
       }),
     })
@@ -343,7 +332,7 @@ export default function AdminUsuariosPage() {
   }
 
   const handleDelete = async () => {
-    if (!deleteTarget || !adminSession?.username) {
+    if (!deleteTarget) {
       return
     }
 
@@ -359,8 +348,6 @@ export default function AdminUsuariosPage() {
         id: deleteTarget.id,
         userId: deleteTarget.user_id,
         email: deleteTarget.email,
-        adminUsername: adminSession.username,
-        adminPassword: deleteAdminPassword,
       }),
     })
 

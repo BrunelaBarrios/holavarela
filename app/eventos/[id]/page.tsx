@@ -73,17 +73,33 @@ const whatsappLink = (telefono: string) => {
   return `https://wa.me/${numero}`
 }
 
+const EVENT_BASE_SELECT =
+  "id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email"
+
+const hasMissingInstitutionIdColumn = (message?: string | null) =>
+  Boolean(message && message.toLowerCase().includes("institucion_id"))
+
 const fetchEventById = cache(async (id: string) => {
-  const { data } = await supabaseServer
+  const eventWithInstitutionResult = await supabaseServer
     .from("eventos")
-    .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email, institucion_id")
+    .select(`${EVENT_BASE_SELECT}, institucion_id`)
     .eq("id", id)
     .or("estado.is.null,estado.eq.activo")
     .maybeSingle()
+  const eventResult =
+    eventWithInstitutionResult.error &&
+    hasMissingInstitutionIdColumn(eventWithInstitutionResult.error.message)
+      ? await supabaseServer
+          .from("eventos")
+          .select(EVENT_BASE_SELECT)
+          .eq("id", id)
+          .or("estado.is.null,estado.eq.activo")
+          .maybeSingle()
+      : eventWithInstitutionResult
 
-  if (!data) return null
+  if (!eventResult.data) return null
 
-  return data as EventoRecord
+  return eventResult.data as EventoRecord
 })
 
 export async function generateMetadata({ params }: EventPageParams): Promise<Metadata> {

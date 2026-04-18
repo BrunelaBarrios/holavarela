@@ -1,12 +1,3 @@
-export const ADMIN_SESSION_KEY = "guia-varela-admin-session"
-
-export const ADMIN_DEFAULT_CREDENTIALS = {
-  username: "admin",
-  password: "333Varela2026",
-  name: "Superadministrador",
-  role: "superadmin" as const,
-}
-
 export type AdminRole = "superadmin" | "admin"
 
 export type AdminSession = {
@@ -15,19 +6,13 @@ export type AdminSession = {
   role: AdminRole
 }
 
+const ADMIN_SESSION_STORAGE_KEY = "hola-varela-admin-session"
+
 export function getAdminSession(): AdminSession | null {
   if (typeof window === "undefined") return null
 
-  const raw = window.localStorage.getItem(ADMIN_SESSION_KEY)
+  const raw = window.localStorage.getItem(ADMIN_SESSION_STORAGE_KEY)
   if (!raw) return null
-
-  if (raw === "true") {
-    return {
-      username: ADMIN_DEFAULT_CREDENTIALS.username,
-      name: ADMIN_DEFAULT_CREDENTIALS.name,
-      role: ADMIN_DEFAULT_CREDENTIALS.role,
-    }
-  }
 
   try {
     return JSON.parse(raw) as AdminSession
@@ -37,9 +22,11 @@ export function getAdminSession(): AdminSession | null {
 }
 
 export function saveAdminSession(session: AdminSession) {
-  window.localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session))
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(ADMIN_SESSION_STORAGE_KEY, JSON.stringify(session))
 }
 
 export function clearAdminSession() {
-  window.localStorage.removeItem(ADMIN_SESSION_KEY)
+  if (typeof window === "undefined") return
+  window.localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY)
 }

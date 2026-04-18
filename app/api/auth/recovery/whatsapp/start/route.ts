@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdmin } from "../../../../../lib/supabaseAdmin"
 import { registerRecoveryAttempt } from "../../../../../lib/passwordRecovery"
+import { consumeRateLimit, getClientIp } from "../../../../../lib/rateLimit"
 import { startWhatsAppVerification } from "../../../../../lib/twilioVerify"
 
 function getClientMeta(request: Request) {
@@ -15,6 +16,19 @@ function getClientMeta(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const rateLimit = consumeRateLimit({
+      key: `recovery-whatsapp-start:${getClientIp(request)}`,
+      limit: 5,
+      windowMs: 10 * 60 * 1000,
+    })
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Demasiados intentos. Espera unos minutos para volver a pedir el codigo." },
+        { status: 429 }
+      )
+    }
+
     const supabaseAdmin = getSupabaseAdmin()
     const { email } = (await request.json()) as { email?: string }
     const normalizedEmail = email?.trim().toLowerCase() || ""

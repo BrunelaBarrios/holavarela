@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin"
+import { consumeRateLimit, getClientIp } from "../../../../lib/rateLimit"
 
 type RecoveryRequestPayload = {
   email?: string
@@ -20,6 +21,19 @@ function getClientMeta(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const rateLimit = consumeRateLimit({
+      key: `recovery-request:${getClientIp(request)}`,
+      limit: 6,
+      windowMs: 15 * 60 * 1000,
+    })
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Demasiadas solicitudes seguidas. Intenta nuevamente en unos minutos." },
+        { status: 429 }
+      )
+    }
+
     const supabaseAdmin = getSupabaseAdmin()
     const body = (await request.json()) as RecoveryRequestPayload
     const email = body.email?.trim().toLowerCase() || ""

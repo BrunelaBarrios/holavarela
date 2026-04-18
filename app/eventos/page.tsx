@@ -1,34 +1,48 @@
 import { EventosPageClient } from "../components/public/EventosPageClient"
-import { isEventCurrentOrUpcoming } from "../lib/eventDates"
+import type { Evento } from "../components/public/EventosPageClient"
 import { supabaseServer } from "../lib/supabaseServer"
 
 // Events need freshness, but hourly ISR was more expensive than necessary.
 export const revalidate = 14400
 
+const EVENT_BASE_SELECT =
+  "id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email"
+
+const hasMissingInstitutionIdColumn = (message?: string | null) =>
+  Boolean(message && message.toLowerCase().includes("institucion_id"))
+
 export default async function EventosPage() {
-  const { data } = await supabaseServer
+  const eventsWithInstitutionResult = await supabaseServer
     .from("eventos")
-    .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email, institucion_id")
+    .select(`${EVENT_BASE_SELECT}, institucion_id`)
     .or("estado.is.null,estado.eq.activo")
     .order("fecha", { ascending: true })
+  const eventsResult =
+    eventsWithInstitutionResult.error &&
+    hasMissingInstitutionIdColumn(eventsWithInstitutionResult.error.message)
+      ? await supabaseServer
+          .from("eventos")
+          .select(EVENT_BASE_SELECT)
+          .or("estado.is.null,estado.eq.activo")
+          .order("fecha", { ascending: true })
+      : eventsWithInstitutionResult
 
-  const activeEvents = data || []
-  const currentOrUpcomingEvents = activeEvents.filter((evento) =>
-    isEventCurrentOrUpcoming(evento)
-  )
-  const visibleEvents = currentOrUpcomingEvents.length
-    ? currentOrUpcomingEvents
-    : activeEvents
+  const activeEvents = (eventsResult.data || []) as Array<
+    Evento & {
+      owner_email?: string | null
+      institucion_id?: number | null
+    }
+  >
   const ownerEmails = Array.from(
     new Set(
-      visibleEvents
+      activeEvents
         .map((evento) => evento.owner_email?.trim().toLowerCase())
         .filter(Boolean) as string[]
     )
   )
   const institutionIds = Array.from(
     new Set(
-      visibleEvents
+      activeEvents
         .map((evento) => evento.institucion_id)
         .filter((value): value is number => typeof value === "number")
     )
@@ -70,7 +84,8 @@ export default async function EventosPage() {
     ])
   )
 
-  const enrichedEvents = visibleEvents.map((evento) => {
+  // Public events view shows all active items, not only upcoming ones.
+  const enrichedEvents = activeEvents.map((evento) => {
     const ownerInfo =
       (typeof evento.institucion_id === "number"
         ? institutionIdMap.get(evento.institucion_id)
@@ -86,5 +101,5 @@ export default async function EventosPage() {
     }
   })
 
-  return <EventosPageClient initialEventos={enrichedEvents} />
+  return <EventosPageClient initialEventos={enrichedEvents as Evento[]} />
 }

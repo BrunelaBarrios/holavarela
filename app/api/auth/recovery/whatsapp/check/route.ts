@@ -5,6 +5,7 @@ import {
   registerRecoveryAttempt,
 } from "../../../../../lib/passwordRecovery"
 import { getSupabaseAdmin } from "../../../../../lib/supabaseAdmin"
+import { consumeRateLimit, getClientIp } from "../../../../../lib/rateLimit"
 
 function getClientMeta(request: Request) {
   return {
@@ -18,6 +19,19 @@ function getClientMeta(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const rateLimit = consumeRateLimit({
+      key: `recovery-whatsapp-check:${getClientIp(request)}`,
+      limit: 8,
+      windowMs: 10 * 60 * 1000,
+    })
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Demasiados intentos de validacion. Espera unos minutos e intenta otra vez." },
+        { status: 429 }
+      )
+    }
+
     const supabaseAdmin = getSupabaseAdmin()
     const { email, code } = (await request.json()) as {
       email?: string

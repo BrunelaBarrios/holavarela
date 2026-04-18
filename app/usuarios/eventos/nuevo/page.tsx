@@ -68,6 +68,9 @@ export default function UsuariosNuevoEventoPage() {
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
+  const hasMissingInstitutionIdColumn = (message?: string | null) =>
+    Boolean(message && message.toLowerCase().includes("institucion_id"))
+
   useEffect(() => {
     const loadContext = async () => {
       const publicFlag =
@@ -239,11 +242,25 @@ export default function UsuariosNuevoEventoPage() {
         publicMode || ownedEntity?.type !== "institucion" ? null : ownedEntity.record.id,
     }
 
-    const eventMutation = editingEventId
-      ? supabase.from("eventos").update(payload).eq("id", editingEventId).eq("owner_email", ownerEmail)
-      : supabase.from("eventos").insert([payload])
+    const runEventSave = (
+      payloadToSave: typeof payload | Omit<typeof payload, "institucion_id">
+    ) =>
+      editingEventId
+        ? supabase
+            .from("eventos")
+            .update(payloadToSave)
+            .eq("id", editingEventId)
+            .eq("owner_email", ownerEmail)
+        : supabase.from("eventos").insert([payloadToSave])
 
-    const { error: saveError } = await eventMutation
+    let { error: saveError } = await runEventSave(payload)
+
+    if (saveError && hasMissingInstitutionIdColumn(saveError.message)) {
+      const legacyPayload = Object.fromEntries(
+        Object.entries(payload).filter(([key]) => key !== "institucion_id")
+      ) as Omit<typeof payload, "institucion_id">
+      ;({ error: saveError } = await runEventSave(legacyPayload))
+    }
 
     if (saveError) {
       setError(`No pudimos guardar el evento: ${saveError.message}`)
