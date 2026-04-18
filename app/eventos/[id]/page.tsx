@@ -37,6 +37,7 @@ type EventoRecord = {
   estado?: string | null
   usa_whatsapp?: boolean | null
   owner_email?: string | null
+  institucion_id?: number | null
 }
 
 const getSiteUrl = () => {
@@ -75,7 +76,7 @@ const whatsappLink = (telefono: string) => {
 const fetchEventById = cache(async (id: string) => {
   const { data } = await supabaseServer
     .from("eventos")
-    .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email")
+    .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email, institucion_id")
     .eq("id", id)
     .or("estado.is.null,estado.eq.activo")
     .maybeSingle()
@@ -138,15 +139,27 @@ export default async function EventoSharePage({ params }: EventPageParams) {
 
   const parsedDescription = parseEventDescription(evento.descripcion).baseDescription
   const eventUrl = getEventUrl(evento.id)
-  const { data: ownerInstitution } = evento.owner_email
-    ? await supabaseServer
-        .from("instituciones")
-        .select("id, nombre, owner_email, premium_activo, estado")
-        .eq("owner_email", evento.owner_email)
-        .eq("premium_activo", true)
-        .eq("estado", "activo")
-        .maybeSingle()
-    : { data: null }
+  const { data: ownerInstitutionById } =
+    typeof evento.institucion_id === "number"
+      ? await supabaseServer
+          .from("instituciones")
+          .select("id, nombre, owner_email, premium_activo, estado")
+          .eq("id", evento.institucion_id)
+          .eq("premium_activo", true)
+          .eq("estado", "activo")
+          .maybeSingle()
+      : { data: null }
+  const { data: ownerInstitutionByEmail } =
+    !ownerInstitutionById && evento.owner_email
+      ? await supabaseServer
+          .from("instituciones")
+          .select("id, nombre, owner_email, premium_activo, estado")
+          .eq("owner_email", evento.owner_email)
+          .eq("premium_activo", true)
+          .eq("estado", "activo")
+          .maybeSingle()
+      : { data: null }
+  const ownerInstitution = ownerInstitutionById || ownerInstitutionByEmail
   const contactHref = evento.telefono
     ? evento.usa_whatsapp === false
       ? `tel:${evento.telefono}`

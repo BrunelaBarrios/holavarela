@@ -8,7 +8,7 @@ export const revalidate = 14400
 export default async function EventosPage() {
   const { data } = await supabaseServer
     .from("eventos")
-    .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email")
+    .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email, institucion_id")
     .or("estado.is.null,estado.eq.activo")
     .order("fecha", { ascending: true })
 
@@ -26,8 +26,15 @@ export default async function EventosPage() {
         .filter(Boolean) as string[]
     )
   )
+  const institutionIds = Array.from(
+    new Set(
+      visibleEvents
+        .map((evento) => evento.institucion_id)
+        .filter((value): value is number => typeof value === "number")
+    )
+  )
 
-  const { data: instituciones } = ownerEmails.length
+  const { data: institutionsByEmail } = ownerEmails.length
     ? await supabaseServer
         .from("instituciones")
         .select("id, nombre, owner_email, premium_activo, estado")
@@ -35,10 +42,27 @@ export default async function EventosPage() {
         .eq("premium_activo", true)
         .eq("estado", "activo")
     : { data: [] }
+  const { data: institutionsById } = institutionIds.length
+    ? await supabaseServer
+        .from("instituciones")
+        .select("id, nombre, owner_email, premium_activo, estado")
+        .in("id", institutionIds)
+        .eq("premium_activo", true)
+        .eq("estado", "activo")
+    : { data: [] }
 
   const institutionOwnerMap = new Map(
-    (instituciones || []).map((institucion) => [
+    (institutionsByEmail || []).map((institucion) => [
       String(institucion.owner_email || "").toLowerCase(),
+      {
+        ownerLabel: institucion.nombre,
+        ownerHref: `/instituciones/${institucion.id}`,
+      },
+    ])
+  )
+  const institutionIdMap = new Map(
+    (institutionsById || []).map((institucion) => [
+      institucion.id,
       {
         ownerLabel: institucion.nombre,
         ownerHref: `/instituciones/${institucion.id}`,
@@ -47,9 +71,13 @@ export default async function EventosPage() {
   )
 
   const enrichedEvents = visibleEvents.map((evento) => {
-    const ownerInfo = evento.owner_email
-      ? institutionOwnerMap.get(String(evento.owner_email).toLowerCase())
-      : undefined
+    const ownerInfo =
+      (typeof evento.institucion_id === "number"
+        ? institutionIdMap.get(evento.institucion_id)
+        : undefined) ||
+      (evento.owner_email
+        ? institutionOwnerMap.get(String(evento.owner_email).toLowerCase())
+        : undefined)
 
     return {
       ...evento,

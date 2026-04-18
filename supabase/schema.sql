@@ -116,6 +116,9 @@ alter table public.eventos
 add column if not exists owner_email text;
 
 alter table public.eventos
+add column if not exists institucion_id bigint;
+
+alter table public.eventos
 add column if not exists web_url text;
 
 alter table public.eventos

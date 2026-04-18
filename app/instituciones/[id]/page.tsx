@@ -37,24 +37,27 @@ export default async function InstitucionSharePage({
     redirect(`/instituciones?item=${encodeURIComponent(id)}`)
   }
 
-  const [relatedEventsResult, relatedCoursesResult] = data.owner_email
-    ? await Promise.all([
-        supabaseServer
-          .from("eventos")
-          .select("id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, descripcion, imagen")
-          .eq("owner_email", data.owner_email)
-          .or("estado.is.null,estado.eq.activo")
-          .order("fecha", { ascending: true }),
-        supabaseServer
-          .from("cursos")
-          .select("id, nombre, descripcion, responsable, contacto, imagen, estado")
-          .eq("institucion_id", data.id)
-          .eq("estado", "activo")
-          .order("id", { ascending: false }),
-      ])
-    : [{ data: [] }, { data: [] }]
+  const eventRelationFilter = data.owner_email
+    ? `institucion_id.eq.${data.id},owner_email.eq.${data.owner_email}`
+    : `institucion_id.eq.${data.id}`
 
-  const relatedEvents = relatedEventsResult.data || []
+  const [relatedEventsResult, relatedCoursesResult] = await Promise.all([
+    supabaseServer
+      .from("eventos")
+      .select("id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, descripcion, imagen, estado")
+      .or(eventRelationFilter)
+      .order("fecha", { ascending: true }),
+    supabaseServer
+      .from("cursos")
+      .select("id, nombre, descripcion, responsable, contacto, imagen, estado")
+      .eq("institucion_id", data.id)
+      .eq("estado", "activo")
+      .order("id", { ascending: false }),
+  ])
+
+  const relatedEvents = (relatedEventsResult.data || []).filter(
+    (event) => !event.estado || event.estado === "activo"
+  )
   const relatedCourses = relatedCoursesResult.data || []
 
   return (

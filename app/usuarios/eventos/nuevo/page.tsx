@@ -11,7 +11,7 @@ import { OptimizedImage } from "../../../components/OptimizedImage"
 import { buildMonthEventRange, getTodayInMontevideo } from "../../../lib/eventDates"
 import { buildEventDescription, parseEventDescription } from "../../../lib/eventSubmissionMeta"
 import { fileToDataUrl } from "../../../lib/fileToDataUrl"
-import { findUserOwnedEntity } from "../../../lib/userProfiles"
+import { findUserOwnedEntity, type UserOwnedEntity } from "../../../lib/userProfiles"
 import { supabase } from "../../../supabase"
 
 type EventForm = {
@@ -62,6 +62,7 @@ export default function UsuariosNuevoEventoPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [ownerEmail, setOwnerEmail] = useState("")
+  const [ownedEntity, setOwnedEntity] = useState<UserOwnedEntity | null>(null)
   const [editingEventId, setEditingEventId] = useState<string | null>(null)
   const [publicMode, setPublicMode] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -102,6 +103,7 @@ export default function UsuariosNuevoEventoPage() {
           return
         }
 
+        setOwnedEntity(entity)
         setOwnerEmail(userEmail)
 
         const editId =
@@ -231,6 +233,10 @@ export default function UsuariosNuevoEventoPage() {
       estado: "borrador",
       usa_whatsapp: formData.usaWhatsapp,
       owner_email: publicMode ? null : ownerEmail,
+      // Institutions keep a stable relation via institucion_id so premium pages
+      // can show their events even if owner_email changes or is missing.
+      institucion_id:
+        publicMode || ownedEntity?.type !== "institucion" ? null : ownedEntity.record.id,
     }
 
     const eventMutation = editingEventId
