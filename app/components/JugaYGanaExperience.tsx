@@ -372,10 +372,207 @@ const MOVIE_CHALLENGES = [
     title: "SONIC",
     hint: "Un erizo azul super rapido enfrenta a un cientifico loco.",
   },
+  {
+    title: "SPIDERMAN",
+    hint: "Un joven heroe lanza telaranas y protege su ciudad.",
+  },
+  {
+    title: "BATMAN",
+    hint: "Un vigilante oscuro combate el crimen en Gotham.",
+  },
+  {
+    title: "SUPERMAN",
+    hint: "Un heroe venido de otro planeta protege la Tierra.",
+  },
+  {
+    title: "JOKER",
+    hint: "La historia de un personaje perturbador que cae en la locura.",
+  },
+  {
+    title: "HARRYPOTTER",
+    hint: "Un mago joven estudia en una escuela muy especial.",
+  },
+  {
+    title: "ELHOBBIT",
+    hint: "Una aventura fantastica con un anillo y criaturas sorprendentes.",
+  },
+  {
+    title: "ELPADRINO",
+    hint: "Un clasico sobre familia, poder y mafia.",
+  },
+  {
+    title: "FORRESTGUMP",
+    hint: "Un hombre vive momentos historicos con una mirada muy particular.",
+  },
+  {
+    title: "JURASSICPARK",
+    hint: "Un parque tematico revive dinosaurios.",
+  },
+  {
+    title: "KINGKONG",
+    hint: "Un enorme gorila se convierte en leyenda.",
+  },
+  {
+    title: "GODZILLA",
+    hint: "Un monstruo gigante emerge para sembrar caos.",
+  },
+  {
+    title: "RAPIDOSYFURIOSOS",
+    hint: "Velocidad, autos y carreras llenas de accion.",
+  },
+  {
+    title: "MISIONIMPOSIBLE",
+    hint: "Un agente arriesga todo en operaciones extremas.",
+  },
+  {
+    title: "TOPGUN",
+    hint: "Pilotos de combate entrenan al limite.",
+  },
+  {
+    title: "CASAFANTASMAS",
+    hint: "Un grupo atrapa seres sobrenaturales en la ciudad.",
+  },
+  {
+    title: "VOLVERALFUTURO",
+    hint: "Un auto especial lleva a sus protagonistas a otras epocas.",
+  },
+  {
+    title: "INDIANAJONES",
+    hint: "Un arqueologo vive aventuras buscando reliquias historicas.",
+  },
+  {
+    title: "STARWARS",
+    hint: "Una saga galactica con jedis, naves y una gran fuerza.",
+  },
+  {
+    title: "ET",
+    hint: "Un pequeno extraterrestre quiere volver a su casa.",
+  },
+  {
+    title: "ELMASKARA",
+    hint: "Una mascara transforma a un hombre comun en alguien disparatado.",
+  },
+  {
+    title: "ACEVENTURA",
+    hint: "Un detective muy excéntrico busca animales perdidos.",
+  },
+  {
+    title: "MIPOBREANGELITO",
+    hint: "Un nino queda solo en casa y enfrenta a dos ladrones.",
+  },
+  {
+    title: "MATILDA",
+    hint: "Una nina muy inteligente descubre poderes especiales.",
+  },
+  {
+    title: "CHARLIEYLAFABRICA",
+    hint: "Un nino entra en una fabrica de chocolate inolvidable.",
+  },
+  {
+    title: "ELGRINCH",
+    hint: "Un personaje verde intenta arruinar la Navidad.",
+  },
+  {
+    title: "LAMASCARADEZORRO",
+    hint: "Un heroe enmascarado deja su marca con la espada.",
+  },
+  {
+    title: "NACHOLIBRE",
+    hint: "Un cocinero sueña con ser luchador.",
+  },
+  {
+    title: "ESCUELADEROCK",
+    hint: "Un musico arma una banda con sus estudiantes.",
+  },
+  {
+    title: "LEGALMENTERUBIA",
+    hint: "Una joven demuestra que puede brillar en la facultad de derecho.",
+  },
+  {
+    title: "DIABLOVISTEALAMODA",
+    hint: "Una asistente entra al exigente mundo de la moda.",
+  },
+  {
+    title: "HOMBRESDENEGRO",
+    hint: "Agentes secretos controlan la presencia extraterrestre.",
+  },
+  {
+    title: "BUSCANDONUNCAJAMAS",
+    hint: "Un nino que no quiere crecer lidera una aventura fantastica.",
+  },
+  {
+    title: "PETERPAN",
+    hint: "Un chico vuela hacia un lugar donde nadie crece.",
+  },
+  {
+    title: "LILOYSTITCH",
+    hint: "Una nina hawaiana adopta una criatura muy traviesa.",
+  },
+  {
+    title: "TARZAN",
+    hint: "Un joven criado en la selva descubre su origen.",
+  },
+  {
+    title: "HERCULES",
+    hint: "Un heroe mitologico busca demostrar su verdadero valor.",
+  },
+  {
+    title: "PINOCHO",
+    hint: "Un muneco de madera sueña con ser un nino real.",
+  },
+  {
+    title: "CENICIENTA",
+    hint: "Un zapatito cambia el destino de una joven.",
+  },
+  {
+    title: "LABELLAYLABESTIA",
+    hint: "Una historia romantica en un castillo encantado.",
+  },
+  {
+    title: "BLANCANIEVES",
+    hint: "Una princesa encuentra ayuda en siete companeros.",
+  },
+  {
+    title: "LOSINCREIBLES",
+    hint: "Una familia de superheroes intenta volver a la accion.",
+  },
+  {
+    title: "BICHOS",
+    hint: "Insectos pequenos buscan defender a su colonia.",
+  },
+  {
+    title: "TURBO",
+    hint: "Un caracol suena con correr a gran velocidad.",
+  },
+  {
+    title: "BOLT",
+    hint: "Un perro actor cree tener superpoderes.",
+  },
+  {
+    title: "ELGATOCONBOTAS",
+    hint: "Un felino espadachin vive aventuras con mucho estilo.",
+  },
+  {
+    title: "DRAGONBALLSUPER",
+    hint: "Guerreros poderosos pelean por universos enteros.",
+  },
+  {
+    title: "KARATEKID",
+    hint: "Un joven aprende defensa y disciplina con un maestro especial.",
+  },
+  {
+    title: "RAMBO",
+    hint: "Un exsoldado sobrevive en situaciones extremas.",
+  },
+  {
+    title: "TERMINATOR",
+    hint: "Una maquina llega del futuro para cambiar la historia.",
+  },
 ]
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 const MAX_MOVIE_ERRORS = 6
+const MAX_MOVIE_ROUNDS = 4
 
 function shuffleArray<T>(items: T[]) {
   const copy = [...items]
@@ -384,6 +581,17 @@ function shuffleArray<T>(items: T[]) {
     ;[copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]]
   }
   return copy
+}
+
+function getNextDifferentMovieIndex(currentIndex: number, total: number) {
+  if (total <= 1) return currentIndex
+
+  let nextIndex = Math.floor(Math.random() * total)
+  while (nextIndex === currentIndex) {
+    nextIndex = Math.floor(Math.random() * total)
+  }
+
+  return nextIndex
 }
 
 function createMemoryDeck(values: string[]) {
@@ -576,6 +784,10 @@ export function JugaYGanaExperience() {
   )
   const [guessedLetters, setGuessedLetters] = useState<string[]>([])
   const [wrongLetters, setWrongLetters] = useState<string[]>([])
+  const [movieRoundCompleted, setMovieRoundCompleted] = useState(false)
+  const [movieRoundPoints, setMovieRoundPoints] = useState(0)
+  const [movieRoundsCompleted, setMovieRoundsCompleted] = useState(0)
+  const [movieTitlesCompleted, setMovieTitlesCompleted] = useState<string[]>([])
 
   const [participantName, setParticipantName] = useState("")
   const [participantPhone, setParticipantPhone] = useState("")
@@ -608,6 +820,12 @@ export function JugaYGanaExperience() {
     setMemoryVariantIndex(nextAssignment.memoryVariantIndex)
     setMemoryCards(createMemoryDeck(MEMORY_VARIANTS[nextAssignment.memoryVariantIndex]))
     setMovieChallengeIndex(nextAssignment.movieChallengeIndex)
+    setGuessedLetters([])
+    setWrongLetters([])
+    setMovieRoundCompleted(false)
+    setMovieRoundPoints(0)
+    setMovieRoundsCompleted(0)
+    setMovieTitlesCompleted([])
   }
 
   const selectedWord = wordSelection
@@ -641,7 +859,8 @@ export function JugaYGanaExperience() {
   const wordSearchFinished = completedChallenges.sopa
   const wordSearchTimedOut = wordTimeLeft === 0
   const memoryFinished = completedChallenges.memoria || memoryTimeLeft === 0
-  const movieFailed = !completedChallenges.pelicula && wrongLetters.length >= MAX_MOVIE_ERRORS
+  const movieFailed = !movieRoundCompleted && wrongLetters.length >= MAX_MOVIE_ERRORS
+  const canPlayAnotherMovie = movieRoundCompleted && movieRoundsCompleted < MAX_MOVIE_ROUNDS
 
   useEffect(() => {
     if (stage !== "play" || activeChallenge?.key !== "sopa") return
@@ -828,7 +1047,7 @@ export function JugaYGanaExperience() {
   }
 
   const handleGuessLetter = (letter: string) => {
-    if (completedChallenges.pelicula || movieFailed) return
+    if (movieRoundCompleted || movieFailed) return
     if (guessedLetters.includes(letter) || wrongLetters.includes(letter)) return
 
     if (movieChallenge.title.includes(letter)) {
@@ -846,10 +1065,14 @@ export function JugaYGanaExperience() {
           Math.max(0, MAX_MOVIE_ERRORS - wrongLetters.length) * 4 +
           movieChallenge.title.replace(/ /g, "").length
 
+        setMovieRoundCompleted(true)
+        setMovieRoundPoints(moviePoints)
+        setMovieRoundsCompleted((current) => current + 1)
+        setMovieTitlesCompleted((current) => [...current, movieChallenge.title])
         setCompletedChallenges((prev) => ({ ...prev, pelicula: true }))
         setEarnedPoints((prev) => ({
           ...prev,
-          pelicula: moviePoints,
+          pelicula: prev.pelicula + moviePoints,
         }))
       }
       return
@@ -859,10 +1082,25 @@ export function JugaYGanaExperience() {
   }
 
   const resetMovieGame = () => {
+    setMovieChallengeIndex((current) =>
+      getNextDifferentMovieIndex(current, MOVIE_CHALLENGES.length)
+    )
     setGuessedLetters([])
     setWrongLetters([])
-    setCompletedChallenges((prev) => ({ ...prev, pelicula: false }))
-    setEarnedPoints((prev) => ({ ...prev, pelicula: 0 }))
+    setMovieRoundCompleted(false)
+    setMovieRoundPoints(0)
+  }
+
+  const handlePlayAnotherMovie = () => {
+    if (!canPlayAnotherMovie) return
+
+    setMovieChallengeIndex((current) =>
+      getNextDifferentMovieIndex(current, MOVIE_CHALLENGES.length)
+    )
+    setGuessedLetters([])
+    setWrongLetters([])
+    setMovieRoundCompleted(false)
+    setMovieRoundPoints(0)
   }
 
   const handleContinue = () => {
@@ -892,7 +1130,7 @@ export function JugaYGanaExperience() {
         puntos_pelicula: earnedPoints.pelicula,
         sopa_nombre: activeWordSearch.name,
         memoria_nombre: `Memoria ${memoryVariantIndex + 1}`,
-        pelicula_nombre: movieChallenge.title,
+        pelicula_nombre: movieTitlesCompleted.join(" | "),
       },
     ])
 
@@ -994,11 +1232,17 @@ export function JugaYGanaExperience() {
                   maskedTitle={maskedMovieTitle}
                   guessedLetters={guessedLetters}
                   wrongLetters={wrongLetters}
-                  completed={completedChallenges.pelicula}
+                  completed={movieRoundCompleted}
                   failed={movieFailed}
                   earnedPoints={earnedPoints.pelicula}
+                  movieRoundPoints={movieRoundPoints}
+                  movieRoundsCompleted={movieRoundsCompleted}
+                  maxMovieRounds={MAX_MOVIE_ROUNDS}
+                  canPlayAnotherMovie={canPlayAnotherMovie}
                   onGuessLetter={handleGuessLetter}
                   onReset={resetMovieGame}
+                  onPlayAnotherMovie={handlePlayAnotherMovie}
+                  onFinish={handleContinue}
                 />
               ) : null}
               {stage === "form" ? (
@@ -1026,15 +1270,17 @@ export function JugaYGanaExperience() {
                   <div className="text-sm text-slate-500">
                     Puntaje acumulado: <span className="font-semibold text-slate-900">{totalPoints}</span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleContinue}
-                    disabled={!completedChallenges[activeChallenge.key]}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {activeChallengeIndex === CHALLENGES.length - 1 ? "Ir al formulario" : "Continuar"}
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
+                  {activeChallenge?.key !== "pelicula" || !movieRoundCompleted ? (
+                    <button
+                      type="button"
+                      onClick={handleContinue}
+                      disabled={!completedChallenges[activeChallenge.key]}
+                      className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {activeChallengeIndex === CHALLENGES.length - 1 ? "Terminar" : "Continuar"}
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -1273,8 +1519,14 @@ function MoviePanel(props: {
   completed: boolean
   failed: boolean
   earnedPoints: number
+  movieRoundPoints: number
+  movieRoundsCompleted: number
+  maxMovieRounds: number
+  canPlayAnotherMovie: boolean
   onGuessLetter: (letter: string) => void
   onReset: () => void
+  onPlayAnotherMovie: () => void
+  onFinish: () => void
 }) {
   return (
     <div>
@@ -1316,14 +1568,38 @@ function MoviePanel(props: {
         })}
       </div>
       <div className="mt-6">
-        <button type="button" onClick={props.onReset} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
-          <RefreshCcw className="h-4 w-4" />
-          Cambiar pelicula
-        </button>
+        {!props.completed ? (
+          <button type="button" onClick={props.onReset} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+            <RefreshCcw className="h-4 w-4" />
+            Cambiar pelicula
+          </button>
+        ) : null}
       </div>
       {props.completed ? (
         <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm leading-7 text-emerald-800">
-          Adivinanza resuelta. Sumaste {props.earnedPoints} puntos.
+          Adivinanza resuelta. Sumaste {props.movieRoundPoints} puntos en esta pelicula y llevas {props.earnedPoints} en total.
+        </div>
+      ) : null}
+      {props.completed ? (
+        <div className="mt-4 flex flex-wrap gap-3">
+          {props.canPlayAnotherMovie ? (
+            <button
+              type="button"
+              onClick={props.onPlayAnotherMovie}
+              className="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-5 py-3 text-sm font-semibold text-sky-700 transition hover:border-sky-300 hover:bg-sky-100"
+            >
+              Seguir con otra pelicula
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={props.onFinish}
+            className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600"
+          >
+            {props.movieRoundsCompleted >= props.maxMovieRounds ? "Terminar puntaje" : "Terminar"}
+            <Trophy className="h-4 w-4" />
+          </button>
         </div>
       ) : null}
       {props.failed ? (
