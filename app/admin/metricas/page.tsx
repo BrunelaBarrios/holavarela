@@ -5,10 +5,12 @@ import { useEffect, useMemo, useState } from "react"
 import {
   ArrowLeft,
   BarChart3,
+  CalendarDays,
   FileText,
   Heart,
   MessageCircle,
   MousePointerClick,
+  Save,
   Share2,
 } from "lucide-react"
 import { supabase } from "../../supabase"
@@ -36,7 +38,7 @@ import {
   type ViewMoreTotals,
 } from "../../lib/viewMoreTracking"
 import { recordSiteVisit } from "../../lib/contentVisits"
-import type { SiteTrafficSnapshot } from "../../../lib/siteTrafficSummary"
+import type { SiteTrafficSnapshot } from "../../lib/siteTrafficSummary"
 
 type MetricRow = {
   section: string | null
@@ -79,7 +81,19 @@ const EMPTY_SITE_TRAFFIC: SiteTrafficSnapshot = {
   visitors: null,
   pageViews: null,
   periodLabel: "Ultimos 30 dias",
+  periodStart: null,
+  periodEnd: null,
+  sourceLabel: "Vercel Analytics",
   updatedAt: null,
+}
+
+type SiteTrafficForm = {
+  visitors: string
+  pageViews: string
+  periodLabel: string
+  periodStart: string
+  periodEnd: string
+  sourceLabel: string
 }
 
 const SECTION_LABELS: Record<string, string> = {
@@ -191,6 +205,15 @@ const formatUpdatedAt = (value: string | null) => {
     month: "2-digit",
     year: "numeric",
   })
+}
+
+const formatPeriodRange = (start: string | null, end: string | null) => {
+  if (!start || !end) return ""
+  const startDate = new Date(`${start}T00:00:00`)
+  const endDate = new Date(`${end}T00:00:00`)
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return ""
+
+  return `${startDate.toLocaleDateString("es-UY")} al ${endDate.toLocaleDateString("es-UY")}`
 }
 
 function SectionBars({
@@ -307,6 +330,17 @@ export default function AdminMetricasPage() {
     whatsapp15Days: 0,
   })
   const [siteTraffic, setSiteTraffic] = useState<SiteTrafficSnapshot>(EMPTY_SITE_TRAFFIC)
+  const [siteTrafficForm, setSiteTrafficForm] = useState<SiteTrafficForm>({
+    visitors: "",
+    pageViews: "",
+    periodLabel: "Ultimos 30 dias",
+    periodStart: "",
+    periodEnd: "",
+    sourceLabel: "Vercel Analytics",
+  })
+  const [trafficSaving, setTrafficSaving] = useState(false)
+  const [trafficError, setTrafficError] = useState("")
+  const [trafficSuccess, setTrafficSuccess] = useState("")
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -448,6 +482,15 @@ export default function AdminMetricasPage() {
         whatsapp15Days: whatsappRows15.length,
       })
       setSiteTraffic(siteTrafficResponse)
+      setSiteTrafficForm({
+        visitors: siteTrafficResponse.visitors !== null ? String(siteTrafficResponse.visitors) : "",
+        pageViews:
+          siteTrafficResponse.pageViews !== null ? String(siteTrafficResponse.pageViews) : "",
+        periodLabel: siteTrafficResponse.periodLabel || "Ultimos 30 dias",
+        periodStart: siteTrafficResponse.periodStart || "",
+        periodEnd: siteTrafficResponse.periodEnd || "",
+        sourceLabel: siteTrafficResponse.sourceLabel || "Vercel Analytics",
+      })
       setRecentMessages(
         [
           {
@@ -494,6 +537,55 @@ export default function AdminMetricasPage() {
     () => Object.values(externalLinkTotals).reduce((sum, value) => sum + value, 0),
     [externalLinkTotals]
   )
+
+  const handleTrafficFormChange = (field: keyof SiteTrafficForm, value: string) => {
+    setSiteTrafficForm((current) => ({ ...current, [field]: value }))
+  }
+
+  const handleTrafficSave = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setTrafficError("")
+    setTrafficSuccess("")
+    setTrafficSaving(true)
+
+    const response = await fetch("/api/admin/site-traffic", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        visitors: Number(siteTrafficForm.visitors),
+        pageViews: Number(siteTrafficForm.pageViews),
+        periodLabel: siteTrafficForm.periodLabel,
+        periodStart: siteTrafficForm.periodStart,
+        periodEnd: siteTrafficForm.periodEnd,
+        sourceLabel: siteTrafficForm.sourceLabel,
+      }),
+    })
+
+    const result = (await response.json()) as { error?: string }
+
+    if (!response.ok) {
+      setTrafficError(result.error || "No pudimos guardar el trafico general.")
+      setTrafficSaving(false)
+      return
+    }
+
+    const updatedSnapshot: SiteTrafficSnapshot = {
+      configured: true,
+      visitors: Number(siteTrafficForm.visitors),
+      pageViews: Number(siteTrafficForm.pageViews),
+      periodLabel: siteTrafficForm.periodLabel,
+      periodStart: siteTrafficForm.periodStart,
+      periodEnd: siteTrafficForm.periodEnd,
+      sourceLabel: siteTrafficForm.sourceLabel,
+      updatedAt: new Date().toISOString(),
+    }
+
+    setSiteTraffic(updatedSnapshot)
+    setTrafficSuccess("Trafico general actualizado correctamente.")
+    setTrafficSaving(false)
+  }
 
   const trendMax = maxValue(
     dailyTrend.flatMap((item) => [
@@ -736,7 +828,7 @@ export default function AdminMetricasPage() {
                     Visitantes y page views
                   </h2>
                   <p className="mt-2 text-sm leading-7 text-slate-500">
-                    Resumen general del trafico de la web tomado desde Vercel Analytics.
+                    Resumen general del trafico de la web tomado desde {siteTraffic.sourceLabel}.
                   </p>
                 </div>
 
@@ -763,10 +855,129 @@ export default function AdminMetricasPage() {
                   </div>
                 ) : null}
                 {siteTraffic.updatedAt ? (
-                  <div className="mt-4 text-xs text-slate-400">
+                  <div className="mt-4 space-y-1 text-xs text-slate-400">
+                    {formatPeriodRange(siteTraffic.periodStart, siteTraffic.periodEnd) ? (
+                      <div>Periodo mostrado: {formatPeriodRange(siteTraffic.periodStart, siteTraffic.periodEnd)}</div>
+                    ) : null}
                     Actualizado: {formatUpdatedAt(siteTraffic.updatedAt)}
                   </div>
                 ) : null}
+              </section>
+
+              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="mb-5 flex items-start justify-between gap-4">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                      Actualizacion manual
+                    </div>
+                    <h2 className="mt-2 text-2xl font-semibold text-slate-950">
+                      Cargar trafico semanal
+                    </h2>
+                    <p className="mt-2 text-sm leading-7 text-slate-500">
+                      Copia los valores desde Vercel Analytics y deja claro el rango de fechas que estas mostrando.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-100 p-3 text-slate-700">
+                    <CalendarDays className="h-5 w-5" />
+                  </div>
+                </div>
+
+                <form onSubmit={handleTrafficSave} className="space-y-4">
+                  {trafficError ? (
+                    <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                      {trafficError}
+                    </div>
+                  ) : null}
+                  {trafficSuccess ? (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                      {trafficSuccess}
+                    </div>
+                  ) : null}
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-900">Visitantes</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={siteTrafficForm.visitors}
+                        onChange={(event) => handleTrafficFormChange("visitors", event.target.value)}
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-900">Page views</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={siteTrafficForm.pageViews}
+                        onChange={(event) => handleTrafficFormChange("pageViews", event.target.value)}
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-900">Desde</label>
+                      <input
+                        type="date"
+                        value={siteTrafficForm.periodStart}
+                        onChange={(event) => handleTrafficFormChange("periodStart", event.target.value)}
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-900">Hasta</label>
+                      <input
+                        type="date"
+                        value={siteTrafficForm.periodEnd}
+                        onChange={(event) => handleTrafficFormChange("periodEnd", event.target.value)}
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-900">Etiqueta del periodo</label>
+                      <input
+                        type="text"
+                        value={siteTrafficForm.periodLabel}
+                        onChange={(event) => handleTrafficFormChange("periodLabel", event.target.value)}
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
+                        placeholder="Ultimos 30 dias"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-900">Fuente</label>
+                      <input
+                        type="text"
+                        value={siteTrafficForm.sourceLabel}
+                        onChange={(event) => handleTrafficFormChange("sourceLabel", event.target.value)}
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
+                        placeholder="Vercel Analytics"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={trafficSaving}
+                    className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-3 font-medium text-white transition hover:bg-blue-600 disabled:opacity-60"
+                  >
+                    <Save className="h-5 w-5" />
+                    {trafficSaving ? "Guardando..." : "Guardar trafico general"}
+                  </button>
+                </form>
               </section>
 
               <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">

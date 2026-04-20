@@ -4,8 +4,11 @@ import Image from "next/image"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { LockKeyhole, UserRound, Users } from "lucide-react"
+import { Eye, EyeOff, LockKeyhole, UserRound, Users } from "lucide-react"
 import { supabase } from "../../supabase"
+
+const inputClassName =
+  "w-full bg-transparent text-base font-medium text-slate-950 caret-slate-950 outline-none placeholder:text-slate-400 autofill:text-slate-950 [-webkit-text-fill-color:#020617] [transition:background-color_9999s_ease-out,color_9999s_ease-out] [-webkit-box-shadow:0_0_0px_1000px_white_inset]"
 
 export default function UsuariosLoginPage() {
   const router = useRouter()
@@ -13,6 +16,7 @@ export default function UsuariosLoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     const resetSession = async () => {
@@ -73,13 +77,13 @@ export default function UsuariosLoginPage() {
 
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-900">Email</label>
-            <div className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3">
+            <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100">
               <UserRound className="h-5 w-5 text-slate-400" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full outline-none"
+                className={inputClassName}
                 placeholder="tuemail@ejemplo.com"
                 autoComplete="username"
                 required
@@ -89,17 +93,25 @@ export default function UsuariosLoginPage() {
 
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-900">Contrasena</label>
-            <div className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3">
+            <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100">
               <LockKeyhole className="h-5 w-5 text-slate-400" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full outline-none"
+                className={inputClassName}
                 placeholder="********"
                 autoComplete="current-password"
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((current) => !current)}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                aria-label={showPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
             </div>
           </div>
 

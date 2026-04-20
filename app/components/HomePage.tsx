@@ -1988,11 +1988,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-[22px]">
                       {business.nombre}
                     </h3>
-                    {business.descripcion && (
-                        <p className="mt-2 line-clamp-2 whitespace-pre-line text-sm text-slate-500 sm:line-clamp-3 sm:text-base">
-                          {business.descripcion}
-                        </p>
-                    )}
                     {business.direccion && (
                       <p className="mt-2 line-clamp-2 text-xs text-slate-500 sm:text-sm">
                         {business.direccion}

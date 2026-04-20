@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { ArrowLeft, BarChart3, MessageCircle } from "lucide-react"
 import { supabase } from "../../supabase"
 import { recordSiteVisit } from "../../lib/contentVisits"
-import type { SiteTrafficSnapshot } from "../../../lib/siteTrafficSummary"
+import type { SiteTrafficSnapshot } from "../../lib/siteTrafficSummary"
 
 type InteractionRow = {
   created_at: string | null
@@ -26,6 +26,9 @@ const EMPTY_SITE_TRAFFIC: SiteTrafficSnapshot = {
   visitors: null,
   pageViews: null,
   periodLabel: "Ultimos 30 dias",
+  periodStart: null,
+  periodEnd: null,
+  sourceLabel: "Vercel Analytics",
   updatedAt: null,
 }
 
@@ -43,6 +46,15 @@ const formatUpdatedAt = (value: string | null) => {
     month: "2-digit",
     year: "numeric",
   })
+}
+
+const formatPeriodRange = (start: string | null, end: string | null) => {
+  if (!start || !end) return ""
+  const startDate = new Date(`${start}T00:00:00`)
+  const endDate = new Date(`${end}T00:00:00`)
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return ""
+
+  return `${startDate.toLocaleDateString("es-UY")} al ${endDate.toLocaleDateString("es-UY")}`
 }
 
 const getIsoDaysAgo = (days: number) => {
@@ -256,7 +268,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
                 </div>
                 <h2 className="mt-4 text-2xl font-semibold text-slate-950">Visitantes y vistas del sitio</h2>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
-                  Resumen general del trafico de la web tomado desde Vercel Analytics.
+                  Resumen general del trafico de la web tomado desde {siteTraffic.sourceLabel}.
                 </p>
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
                   <MetricCard
@@ -280,7 +292,10 @@ export default function UsuariosMetricasHolaVarelaPage() {
                   </div>
                 ) : null}
                 {siteTraffic.updatedAt ? (
-                  <div className="mt-4 text-xs text-slate-400">
+                  <div className="mt-4 space-y-1 text-xs text-slate-400">
+                    {formatPeriodRange(siteTraffic.periodStart, siteTraffic.periodEnd) ? (
+                      <div>Periodo mostrado: {formatPeriodRange(siteTraffic.periodStart, siteTraffic.periodEnd)}</div>
+                    ) : null}
                     Actualizado: {formatUpdatedAt(siteTraffic.updatedAt)}
                   </div>
                 ) : null}

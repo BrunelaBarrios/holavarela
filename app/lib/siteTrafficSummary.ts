@@ -3,10 +3,14 @@ export type SiteTrafficSnapshot = {
   visitors: number | null
   pageViews: number | null
   periodLabel: string
+  periodStart: string | null
+  periodEnd: string | null
+  sourceLabel: string
   updatedAt: string | null
 }
 
 const DEFAULT_PERIOD_LABEL = "Ultimos 30 dias"
+const DEFAULT_SOURCE_LABEL = "Vercel Analytics"
 
 function parseNullableMetric(value: string | undefined) {
   if (!value) return null
@@ -28,6 +32,9 @@ export function readSiteTrafficSnapshotFromEnv(): SiteTrafficSnapshot {
     visitors,
     pageViews,
     periodLabel: process.env.VERCEL_ANALYTICS_PERIOD_LABEL?.trim() || DEFAULT_PERIOD_LABEL,
+    periodStart: process.env.VERCEL_ANALYTICS_PERIOD_START?.trim() || null,
+    periodEnd: process.env.VERCEL_ANALYTICS_PERIOD_END?.trim() || null,
+    sourceLabel: process.env.VERCEL_ANALYTICS_SOURCE_LABEL?.trim() || DEFAULT_SOURCE_LABEL,
     updatedAt: process.env.VERCEL_ANALYTICS_UPDATED_AT?.trim() || null,
   }
 }

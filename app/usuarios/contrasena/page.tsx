@@ -3,8 +3,12 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { Eye, EyeOff } from "lucide-react"
 import { AuthFormStatus } from "../../components/AuthFormStatus"
 import { supabase } from "../../supabase"
+
+const inputClassName =
+  "w-full rounded-2xl bg-white px-4 py-3 text-base font-medium text-slate-950 caret-slate-950 outline-none placeholder:text-slate-400 autofill:text-slate-950 [-webkit-text-fill-color:#020617] [transition:background-color_9999s_ease-out,color_9999s_ease-out] [-webkit-box-shadow:0_0_0px_1000px_white_inset]"
 
 export default function UsuariosContrasenaPage() {
   const router = useRouter()
@@ -16,6 +20,9 @@ export default function UsuariosContrasenaPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   useEffect(() => {
     const loadSession = async () => {
@@ -128,24 +135,30 @@ export default function UsuariosContrasenaPage() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <Field
                 label="Contrasena actual"
-                type="password"
+                type={showCurrentPassword ? "text" : "password"}
                 value={currentPassword}
                 onChange={setCurrentPassword}
                 autoComplete="current-password"
+                visible={showCurrentPassword}
+                onToggleVisibility={() => setShowCurrentPassword((current) => !current)}
               />
               <Field
                 label="Nueva contrasena"
-                type="password"
+                type={showNewPassword ? "text" : "password"}
                 value={newPassword}
                 onChange={setNewPassword}
                 autoComplete="new-password"
+                visible={showNewPassword}
+                onToggleVisibility={() => setShowNewPassword((current) => !current)}
               />
               <Field
                 label="Confirmar nueva contrasena"
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
                 onChange={setConfirmPassword}
                 autoComplete="new-password"
+                visible={showConfirmPassword}
+                onToggleVisibility={() => setShowConfirmPassword((current) => !current)}
               />
 
               {error ? <AuthFormStatus tone="error" message={error} /> : null}
@@ -172,24 +185,38 @@ function Field({
   onChange,
   autoComplete,
   type,
+  visible,
+  onToggleVisibility,
 }: {
   label: string
   value: string
   onChange: (value: string) => void
   autoComplete: string
   type: string
+  visible: boolean
+  onToggleVisibility: () => void
 }) {
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium text-slate-700">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        autoComplete={autoComplete}
-        required
-        className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-400"
-      />
+      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white pr-2 shadow-sm transition focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100">
+        <input
+          type={type}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          autoComplete={autoComplete}
+          required
+          className={inputClassName}
+        />
+        <button
+          type="button"
+          onClick={onToggleVisibility}
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+          aria-label={visible ? "Ocultar contrasena" : "Mostrar contrasena"}
+        >
+          {visible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+        </button>
+      </div>
     </div>
   )
 }
