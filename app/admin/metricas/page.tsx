@@ -36,6 +36,7 @@ import {
   type ViewMoreTotals,
 } from "../../lib/viewMoreTracking"
 import { recordSiteVisit } from "../../lib/contentVisits"
+import type { SiteTrafficSnapshot } from "../../../lib/siteTrafficSummary"
 
 type MetricRow = {
   section: string | null
@@ -71,6 +72,14 @@ type TrendPoint = {
   verMas: number
   enlaces: number
   corazones: number
+}
+
+const EMPTY_SITE_TRAFFIC: SiteTrafficSnapshot = {
+  configured: false,
+  visitors: null,
+  pageViews: null,
+  periodLabel: "Ultimos 30 dias",
+  updatedAt: null,
 }
 
 const SECTION_LABELS: Record<string, string> = {
@@ -168,6 +177,22 @@ const withFallback = async <T,>(
 
 const maxValue = (values: number[]) => Math.max(...values, 1)
 
+const formatMetricValue = (value: number | null) =>
+  value === null ? "Sin dato" : new Intl.NumberFormat("es-UY").format(value)
+
+const formatUpdatedAt = (value: string | null) => {
+  if (!value) return ""
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ""
+
+  return date.toLocaleDateString("es-UY", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  })
+}
+
 function SectionBars({
   title,
   subtitle,
@@ -229,7 +254,7 @@ function MetricCard({
   tone,
 }: {
   title: string
-  value: number
+  value: string | number
   helper: string
   icon: React.ReactNode
   tone: string
@@ -281,11 +306,13 @@ export default function AdminMetricasPage() {
     interactions15Days: 0,
     whatsapp15Days: 0,
   })
+  const [siteTraffic, setSiteTraffic] = useState<SiteTrafficSnapshot>(EMPTY_SITE_TRAFFIC)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadMetrics = async () => {
       const [
+        siteTrafficResponse,
         { data: shareRows },
         { data: whatsappRows },
         { data: viewMoreRows },
@@ -304,6 +331,18 @@ export default function AdminMetricasPage() {
         courseRows48,
         institutionRows48,
       ] = await Promise.all([
+        fetch("/api/metricas/trafico")
+          .then(async (response) => {
+            if (!response.ok) {
+              throw new Error("No pudimos cargar el trafico general.")
+            }
+
+            return (await response.json()) as SiteTrafficSnapshot
+          })
+          .catch((error) => {
+            console.warn("No se pudo cargar el trafico general del sitio.", error)
+            return EMPTY_SITE_TRAFFIC
+          }),
         supabase.from("share_events").select("section, created_at"),
         supabase.from("whatsapp_clicks").select("section, created_at"),
         supabase.from("view_more_clicks").select("section, created_at"),
@@ -408,6 +447,7 @@ export default function AdminMetricasPage() {
           likesRows15.length,
         whatsapp15Days: whatsappRows15.length,
       })
+      setSiteTraffic(siteTrafficResponse)
       setRecentMessages(
         [
           {
@@ -687,6 +727,48 @@ export default function AdminMetricasPage() {
             </section>
 
             <div className="grid gap-6">
+              <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="mb-5">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Trafico general
+                  </div>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">
+                    Visitantes y page views
+                  </h2>
+                  <p className="mt-2 text-sm leading-7 text-slate-500">
+                    Resumen general del trafico de la web tomado desde Vercel Analytics.
+                  </p>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <MetricCard
+                    title="Visitantes"
+                    value={formatMetricValue(siteTraffic.visitors)}
+                    helper={siteTraffic.periodLabel}
+                    icon={<BarChart3 className="h-5 w-5 text-sky-700" />}
+                    tone="bg-sky-100 text-sky-700"
+                  />
+                  <MetricCard
+                    title="Page views"
+                    value={formatMetricValue(siteTraffic.pageViews)}
+                    helper={siteTraffic.periodLabel}
+                    icon={<MousePointerClick className="h-5 w-5 text-violet-700" />}
+                    tone="bg-violet-100 text-violet-700"
+                  />
+                </div>
+
+                {!siteTraffic.configured ? (
+                  <div className="mt-4 rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                    Aun no cargamos los valores de trafico general para mostrar aqui.
+                  </div>
+                ) : null}
+                {siteTraffic.updatedAt ? (
+                  <div className="mt-4 text-xs text-slate-400">
+                    Actualizado: {formatUpdatedAt(siteTraffic.updatedAt)}
+                  </div>
+                ) : null}
+              </section>
+
               <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="mb-5">
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">

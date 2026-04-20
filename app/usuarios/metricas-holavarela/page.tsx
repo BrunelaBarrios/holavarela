@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { ArrowLeft, BarChart3, MessageCircle } from "lucide-react"
 import { supabase } from "../../supabase"
 import { recordSiteVisit } from "../../lib/contentVisits"
+import type { SiteTrafficSnapshot } from "../../../lib/siteTrafficSummary"
 
 type InteractionRow = {
   created_at: string | null
@@ -18,6 +19,30 @@ type RecentActivity = {
 type RecentMessage = {
   label: string
   value: number
+}
+
+const EMPTY_SITE_TRAFFIC: SiteTrafficSnapshot = {
+  configured: false,
+  visitors: null,
+  pageViews: null,
+  periodLabel: "Ultimos 30 dias",
+  updatedAt: null,
+}
+
+const formatMetricValue = (value: number | null) =>
+  value === null ? "Sin dato" : new Intl.NumberFormat("es-UY").format(value)
+
+const formatUpdatedAt = (value: string | null) => {
+  if (!value) return ""
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ""
+
+  return date.toLocaleDateString("es-UY", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  })
 }
 
 const getIsoDaysAgo = (days: number) => {
@@ -45,6 +70,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
     interactions15Days: 0,
     whatsapp15Days: 0,
   })
+  const [siteTraffic, setSiteTraffic] = useState<SiteTrafficSnapshot>(EMPTY_SITE_TRAFFIC)
 
   useEffect(() => {
     const loadMetrics = async () => {
@@ -52,6 +78,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
       const since2 = getIsoDaysAgo(2)
 
       const [
+        siteTrafficResponse,
         shareRows15,
         whatsappRows15,
         viewMoreRows15,
@@ -65,6 +92,18 @@ export default function UsuariosMetricasHolaVarelaPage() {
         courseRows48,
         institutionRows48,
       ] = await Promise.all([
+        fetch("/api/metricas/trafico")
+          .then(async (response) => {
+            if (!response.ok) {
+              throw new Error("No pudimos cargar el trafico general.")
+            }
+
+            return (await response.json()) as SiteTrafficSnapshot
+          })
+          .catch((error) => {
+            console.warn("No se pudo cargar el trafico general del sitio.", error)
+            return EMPTY_SITE_TRAFFIC
+          }),
         withFallback<InteractionRow>(
           supabase.from("share_events").select("created_at").gte("created_at", since15),
           "los compartidos de 15 dias"
@@ -124,6 +163,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
           likesRows15.length,
         whatsapp15Days: whatsappRows15.length,
       })
+      setSiteTraffic(siteTrafficResponse)
 
       const listings48 =
         commerceRows48.length +
@@ -216,8 +256,34 @@ export default function UsuariosMetricasHolaVarelaPage() {
                 </div>
                 <h2 className="mt-4 text-2xl font-semibold text-slate-950">Visitantes y vistas del sitio</h2>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600">
-                  Resumen general del movimiento y las visitas dentro de Hola Varela.
+                  Resumen general del trafico de la web tomado desde Vercel Analytics.
                 </p>
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                  <MetricCard
+                    label="Visitantes"
+                    value={formatMetricValue(siteTraffic.visitors)}
+                    description={siteTraffic.periodLabel}
+                    icon={<BarChart3 className="h-5 w-5 text-sky-700" />}
+                    tone="bg-sky-100"
+                  />
+                  <MetricCard
+                    label="Page views"
+                    value={formatMetricValue(siteTraffic.pageViews)}
+                    description={siteTraffic.periodLabel}
+                    icon={<MessageCircle className="h-5 w-5 text-violet-700" />}
+                    tone="bg-violet-100"
+                  />
+                </div>
+                {!siteTraffic.configured ? (
+                  <div className="mt-4 rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+                    Aun no cargamos los valores de trafico general para mostrar aqui.
+                  </div>
+                ) : null}
+                {siteTraffic.updatedAt ? (
+                  <div className="mt-4 text-xs text-slate-400">
+                    Actualizado: {formatUpdatedAt(siteTraffic.updatedAt)}
+                  </div>
+                ) : null}
               </section>
 
               <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
@@ -258,7 +324,7 @@ function MetricCard({
   tone,
 }: {
   label: string
-  value: number
+  value: string | number
   description: string
   icon: React.ReactNode
   tone: string
