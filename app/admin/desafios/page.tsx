@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { Copy, Download, ExternalLink, QrCode, Search, Shuffle, Trophy } from "lucide-react"
+import { Copy, Download, ExternalLink, QrCode, RotateCcw, Search, Shuffle, Trash2, Trophy } from "lucide-react"
+import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { isMissingChallengesSchemaError } from "../../lib/challengeGame"
@@ -65,11 +66,16 @@ export default function AdminDesafiosPage() {
   const [draws, setDraws] = useState<ChallengeDraw[]>([])
   const [winners, setWinners] = useState<ChallengeWinner[]>([])
   const [search, setSearch] = useState("")
+  const [sortBy, setSortBy] = useState<"recent" | "score_desc">("recent")
   const [winnersCount, setWinnersCount] = useState("1")
   const [drawing, setDrawing] = useState(false)
+  const [resettingDraws, setResettingDraws] = useState(false)
   const [message, setMessage] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
   const [shareMessage, setShareMessage] = useState("")
+  const [entryToDelete, setEntryToDelete] = useState<ChallengeEntry | null>(null)
+  const [deletingEntry, setDeletingEntry] = useState(false)
+  const [showResetDrawsConfirm, setShowResetDrawsConfirm] = useState(false)
 
   const challengePublicUrl = buildChallengePublicUrl()
   const challengeQrUrl = buildChallengeQrUrl()
@@ -155,12 +161,25 @@ export default function AdminDesafiosPage() {
 
   const visibleEntries = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
-    if (!normalizedSearch) return entries
+    const filteredEntries =
+      !normalizedSearch
+        ? entries
+        : entries.filter((entry) =>
+            `${entry.nombre} ${entry.telefono}`.toLowerCase().includes(normalizedSearch)
+          )
 
-    return entries.filter((entry) =>
-      `${entry.nombre} ${entry.telefono}`.toLowerCase().includes(normalizedSearch)
-    )
-  }, [entries, search])
+    return [...filteredEntries].sort((left, right) => {
+      if (sortBy === "score_desc") {
+        if (right.puntajeTotal !== left.puntajeTotal) {
+          return right.puntajeTotal - left.puntajeTotal
+        }
+      }
+
+      const leftTime = left.createdAt ? new Date(left.createdAt).getTime() : 0
+      const rightTime = right.createdAt ? new Date(right.createdAt).getTime() : 0
+      return rightTime - leftTime
+    })
+  }, [entries, search, sortBy])
 
   const latestDraw = draws[0] || null
   const latestWinnerRows = useMemo(
@@ -290,6 +309,7 @@ export default function AdminDesafiosPage() {
     setDrawing(true)
     setErrorMessage("")
     setMessage("")
+    setShareMessage("")
 
     const selectedWinners = shuffleEntries(visibleEntries).slice(
       0,
@@ -333,6 +353,48 @@ export default function AdminDesafiosPage() {
     await loadData()
     setMessage(`Sorteo realizado con ${selectedWinners.length} ganador(es).`)
     setDrawing(false)
+  }
+
+  const handleResetDraws = async () => {
+    setResettingDraws(true)
+    setErrorMessage("")
+    setMessage("")
+
+    const { error: deleteWinnersError } = await supabase
+      .from("desafio_sorteo_ganadores")
+      .delete()
+      .gte("id", 0)
+
+    if (deleteWinnersError) {
+      setErrorMessage(`No se pudieron reiniciar los ganadores: ${deleteWinnersError.message}`)
+      setResettingDraws(false)
+      return
+    }
+
+    const { error: deleteDrawsError } = await supabase
+      .from("desafio_sorteos")
+      .delete()
+      .gte("id", 0)
+
+    if (deleteDrawsError) {
+      setErrorMessage(`No se pudieron reiniciar los sorteos: ${deleteDrawsError.message}`)
+      setResettingDraws(false)
+      return
+    }
+
+    setDraws([])
+    setWinners([])
+    setShowResetDrawsConfirm(false)
+    setMessage("Se reiniciaron los sorteos y ganadores de desafios.")
+
+    await logAdminActivity({
+      action: "Reiniciar sorteos",
+      section: "Desafios",
+      target: "Sorteos de desafios",
+      details: "Elimino sorteos y ganadores para volver a empezar desde cero.",
+    })
+
+    setResettingDraws(false)
   }
 
   const handleToggleDelivered = async (
@@ -383,6 +445,52 @@ export default function AdminDesafiosPage() {
     })
   }
 
+  const handleDeleteEntry = async () => {
+    if (!entryToDelete) return
+
+    setDeletingEntry(true)
+    setErrorMessage("")
+    setMessage("")
+
+    const { error: deleteWinnerLinksError } = await supabase
+      .from("desafio_sorteo_ganadores")
+      .delete()
+      .eq("participacion_id", entryToDelete.id)
+
+    if (deleteWinnerLinksError) {
+      setErrorMessage(
+        `No se pudieron quitar los sorteos del participante: ${deleteWinnerLinksError.message}`
+      )
+      setDeletingEntry(false)
+      return
+    }
+
+    const { error: deleteEntryError } = await supabase
+      .from("desafio_participaciones")
+      .delete()
+      .eq("id", entryToDelete.id)
+
+    if (deleteEntryError) {
+      setErrorMessage(`No se pudo eliminar el participante: ${deleteEntryError.message}`)
+      setDeletingEntry(false)
+      return
+    }
+
+    setEntries((prev) => prev.filter((entry) => entry.id !== entryToDelete.id))
+    setWinners((prev) => prev.filter((winner) => winner.participacionId !== entryToDelete.id))
+    setEntryToDelete(null)
+    setMessage(`Eliminaste a ${entryToDelete.nombre} de los desafios.`)
+
+    await logAdminActivity({
+      action: "Eliminar participante",
+      section: "Desafios",
+      target: entryToDelete.nombre,
+      details: "Elimino un participante de desafios desde admin.",
+    })
+
+    setDeletingEntry(false)
+  }
+
   if (loading) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">
@@ -393,6 +501,30 @@ export default function AdminDesafiosPage() {
 
   return (
     <div className="mx-auto max-w-7xl">
+      <AdminConfirmModal
+        isOpen={Boolean(entryToDelete)}
+        title="Eliminar participante"
+        description={`Vas a eliminar a "${entryToDelete?.nombre || ""}" de los desafios. Tambien se quitaran sus registros de sorteos.`}
+        confirmLabel="Eliminar"
+        onCancel={() => setEntryToDelete(null)}
+        onConfirm={() => {
+          void handleDeleteEntry()
+        }}
+        isLoading={deletingEntry}
+      />
+      <AdminConfirmModal
+        isOpen={showResetDrawsConfirm}
+        title="Reiniciar sorteos"
+        description="Vas a borrar los sorteos y ganadores registrados en desafios para volver a empezar desde cero. Los participantes quedan guardados."
+        confirmLabel="Reiniciar"
+        confirmVariant="primary"
+        onCancel={() => setShowResetDrawsConfirm(false)}
+        onConfirm={() => {
+          void handleResetDraws()
+        }}
+        isLoading={resettingDraws}
+      />
+
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-slate-900">Desafios</h1>
         <p className="mt-2 text-slate-500">
@@ -492,16 +624,29 @@ export default function AdminDesafiosPage() {
                 </button>
               </div>
 
-              <label className="mb-5 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
-                <Search className="h-4 w-4 text-slate-400" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Buscar por nombre o telefono"
-                  className="w-full outline-none"
-                />
-              </label>
+              <div className="mb-5 grid gap-3 md:grid-cols-[minmax(0,1fr)_240px]">
+                <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+                  <Search className="h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Buscar por nombre o telefono"
+                    className="w-full outline-none"
+                  />
+                </label>
+
+                <select
+                  value={sortBy}
+                  onChange={(event) =>
+                    setSortBy(event.target.value === "score_desc" ? "score_desc" : "recent")
+                  }
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-500"
+                >
+                  <option value="recent">Ordenar por mas recientes</option>
+                  <option value="score_desc">Ordenar por mayor puntaje</option>
+                </select>
+              </div>
 
               <div className="overflow-hidden rounded-2xl border border-slate-200">
                 <div className="overflow-x-auto">
@@ -513,12 +658,13 @@ export default function AdminDesafiosPage() {
                         <th className="px-4 py-3">Puntos</th>
                         <th className="px-4 py-3">Detalle</th>
                         <th className="px-4 py-3">Fecha</th>
+                        <th className="px-4 py-3">Acciones</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 bg-white">
                       {visibleEntries.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="px-4 py-6 text-sm text-slate-500">
+                          <td colSpan={6} className="px-4 py-6 text-sm text-slate-500">
                             No encontramos participantes con ese filtro.
                           </td>
                         </tr>
@@ -540,6 +686,16 @@ export default function AdminDesafiosPage() {
                                     timeStyle: "short",
                                   })
                                 : "-"}
+                            </td>
+                            <td className="px-4 py-3">
+                              <button
+                                type="button"
+                                onClick={() => setEntryToDelete(entry)}
+                                className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Eliminar
+                              </button>
                             </td>
                           </tr>
                         ))
@@ -599,6 +755,16 @@ export default function AdminDesafiosPage() {
                   <Trophy className="h-5 w-5" />
                   {drawing ? "Sorteando..." : "Realizar sorteo"}
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowResetDrawsConfirm(true)}
+                  disabled={resettingDraws || (draws.length === 0 && winners.length === 0)}
+                  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <RotateCcw className="h-5 w-5" />
+                  {resettingDraws ? "Reiniciando..." : "Reiniciar sorteos"}
+                </button>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -647,23 +813,33 @@ export default function AdminDesafiosPage() {
                                 </div>
                               ) : null}
                             </div>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                void handleToggleDelivered(
-                                  winner.winnerRowId,
-                                  winner.entregado,
-                                  winner.nombre
-                                )
-                              }
-                              className={`inline-flex items-center justify-center rounded-xl px-3 py-2 text-xs font-semibold transition ${
-                                winner.entregado
-                                  ? "border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-100"
-                                  : "bg-emerald-600 text-white hover:bg-emerald-500"
-                              }`}
-                            >
-                              {winner.entregado ? "Quitar marca" : "Marcar entregado"}
-                            </button>
+                            <div className="flex flex-col gap-2 sm:items-end">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  void handleToggleDelivered(
+                                    winner.winnerRowId,
+                                    winner.entregado,
+                                    winner.nombre
+                                  )
+                                }
+                                className={`inline-flex items-center justify-center rounded-xl px-3 py-2 text-xs font-semibold transition ${
+                                  winner.entregado
+                                    ? "border border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-100"
+                                    : "bg-emerald-600 text-white hover:bg-emerald-500"
+                                }`}
+                              >
+                                {winner.entregado ? "Quitar marca" : "Marcar entregado"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEntryToDelete(winner)}
+                                className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Eliminar participante
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}

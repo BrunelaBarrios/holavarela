@@ -365,7 +365,7 @@ export default function AdminMetricasPage() {
         courseRows48,
         institutionRows48,
       ] = await Promise.all([
-        fetch("/api/metricas/trafico")
+        fetch("/api/metricas/trafico", { cache: "no-store" })
           .then(async (response) => {
             if (!response.ok) {
               throw new Error("No pudimos cargar el trafico general.")

@@ -10,6 +10,7 @@ type SaveCursoPayload = {
     nombre?: string
     descripcion?: string
     institucion_id?: number | null
+    servicio_id?: number | null
     responsable?: string
     contacto?: string
     web_url?: string | null
@@ -182,6 +183,7 @@ export async function POST(request: NextRequest) {
       nombre: body.payload.nombre?.trim() || "",
       descripcion: body.payload.descripcion?.trim() || "",
       institucion_id: body.payload.institucion_id || null,
+      servicio_id: body.payload.servicio_id || null,
       responsable: body.payload.responsable?.trim() || "",
       contacto: body.payload.contacto?.trim() || "",
       web_url: normalizeUrl(body.payload.web_url),
@@ -196,6 +198,13 @@ export async function POST(request: NextRequest) {
     if (!payload.nombre || !payload.descripcion || !payload.responsable) {
       return NextResponse.json(
         { error: "Completa los datos principales del curso o clase." },
+        { status: 400 }
+      )
+    }
+
+    if (payload.institucion_id && payload.servicio_id) {
+      return NextResponse.json(
+        { error: "El curso puede estar asociado a una institucion o a un servicio, no a ambos al mismo tiempo." },
         { status: 400 }
       )
     }

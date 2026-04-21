@@ -1,8 +1,8 @@
 'use client'
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
-import { ArrowLeft, BarChart3, MessageCircle } from "lucide-react"
+import { useEffect, useState, useTransition } from "react"
+import { ArrowLeft, BarChart3, MessageCircle, RefreshCcw } from "lucide-react"
 import { supabase } from "../../supabase"
 import { recordSiteVisit } from "../../lib/contentVisits"
 import type { SiteTrafficSnapshot } from "../../lib/siteTrafficSummary"
@@ -77,6 +77,8 @@ const withFallback = async <T,>(
 
 export default function UsuariosMetricasHolaVarelaPage() {
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [isPending, startTransition] = useTransition()
   const [recentMessages, setRecentMessages] = useState<RecentMessage[]>([])
   const [recentActivity, setRecentActivity] = useState<RecentActivity>({
     interactions15Days: 0,
@@ -84,132 +86,140 @@ export default function UsuariosMetricasHolaVarelaPage() {
   })
   const [siteTraffic, setSiteTraffic] = useState<SiteTrafficSnapshot>(EMPTY_SITE_TRAFFIC)
 
-  useEffect(() => {
-    const loadMetrics = async () => {
-      const since15 = getIsoDaysAgo(15)
-      const since2 = getIsoDaysAgo(2)
-
-      const [
-        siteTrafficResponse,
-        shareRows15,
-        whatsappRows15,
-        viewMoreRows15,
-        externalRows15,
-        likesRows15,
-        contactRows48,
-        likesRows48,
-        eventRows48,
-        commerceRows48,
-        serviceRows48,
-        courseRows48,
-        institutionRows48,
-      ] = await Promise.all([
-        fetch("/api/metricas/trafico")
-          .then(async (response) => {
-            if (!response.ok) {
-              throw new Error("No pudimos cargar el trafico general.")
-            }
-
-            return (await response.json()) as SiteTrafficSnapshot
-          })
-          .catch((error) => {
-            console.warn("No se pudo cargar el trafico general del sitio.", error)
-            return EMPTY_SITE_TRAFFIC
-          }),
-        withFallback<InteractionRow>(
-          supabase.from("share_events").select("created_at").gte("created_at", since15),
-          "los compartidos de 15 dias"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("whatsapp_clicks").select("created_at").gte("created_at", since15),
-          "los clics de WhatsApp de 15 dias"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("view_more_clicks").select("created_at").gte("created_at", since15),
-          "los clics en ver mas de 15 dias"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("external_link_clicks").select("created_at").gte("created_at", since15),
-          "los clics externos de 15 dias"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("event_likes").select("created_at").gte("created_at", since15),
-          "los likes de 15 dias"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("contacto_solicitudes").select("created_at").gte("created_at", since2),
-          "los mensajes de 48 horas"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("event_likes").select("created_at").gte("created_at", since2),
-          "los likes de 48 horas"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("eventos").select("created_at").gte("created_at", since2),
-          "los eventos nuevos de 48 horas"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("comercios").select("created_at").gte("created_at", since2),
-          "los comercios nuevos de 48 horas"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("servicios").select("created_at").gte("created_at", since2),
-          "los servicios nuevos de 48 horas"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("cursos").select("created_at").gte("created_at", since2),
-          "los cursos nuevos de 48 horas"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("instituciones").select("created_at").gte("created_at", since2),
-          "las instituciones nuevas de 48 horas"
-        ),
-      ])
-
-      setRecentActivity({
-        interactions15Days:
-          shareRows15.length +
-          whatsappRows15.length +
-          viewMoreRows15.length +
-          externalRows15.length +
-          likesRows15.length,
-        whatsapp15Days: whatsappRows15.length,
-      })
-      setSiteTraffic(siteTrafficResponse)
-
-      const listings48 =
-        commerceRows48.length +
-        serviceRows48.length +
-        courseRows48.length +
-        institutionRows48.length
-
-      setRecentMessages(
-        [
-          {
-            label: `${contactRows48.length} ${contactRows48.length === 1 ? "mensaje nuevo" : "mensajes nuevos"}`,
-            value: contactRows48.length,
-          },
-          {
-            label: `${likesRows48.length} ${likesRows48.length === 1 ? "nuevo like" : "nuevos likes"}`,
-            value: likesRows48.length,
-          },
-          {
-            label: `${eventRows48.length} ${eventRows48.length === 1 ? "nuevo evento subido" : "nuevos eventos subidos"}`,
-            value: eventRows48.length,
-          },
-          {
-            label: `${listings48} ${listings48 === 1 ? "nueva ficha se sumo" : "nuevas fichas se sumaron"}`,
-            value: listings48,
-          },
-        ].filter((item) => item.value > 0)
-      )
-
-      setLoading(false)
+  const loadMetrics = async (mode: "initial" | "refresh" = "initial") => {
+    if (mode === "initial") {
+      setLoading(true)
+    } else {
+      setRefreshing(true)
     }
 
-    void loadMetrics()
-  }, [])
+    const since15 = getIsoDaysAgo(15)
+    const since2 = getIsoDaysAgo(2)
 
+    const [
+      siteTrafficResponse,
+      shareRows15,
+      whatsappRows15,
+      viewMoreRows15,
+      externalRows15,
+      likesRows15,
+      contactRows48,
+      likesRows48,
+      eventRows48,
+      commerceRows48,
+      serviceRows48,
+      courseRows48,
+      institutionRows48,
+    ] = await Promise.all([
+      fetch("/api/metricas/trafico", { cache: "no-store" })
+        .then(async (response) => {
+          if (!response.ok) {
+            throw new Error("No pudimos cargar el trafico general.")
+          }
+
+          return (await response.json()) as SiteTrafficSnapshot
+        })
+        .catch((error) => {
+          console.warn("No se pudo cargar el trafico general del sitio.", error)
+          return EMPTY_SITE_TRAFFIC
+        }),
+      withFallback<InteractionRow>(
+        supabase.from("share_events").select("created_at").gte("created_at", since15),
+        "los compartidos de 15 dias"
+      ),
+      withFallback<InteractionRow>(
+        supabase.from("whatsapp_clicks").select("created_at").gte("created_at", since15),
+        "los clics de WhatsApp de 15 dias"
+      ),
+      withFallback<InteractionRow>(
+        supabase.from("view_more_clicks").select("created_at").gte("created_at", since15),
+        "los clics en ver mas de 15 dias"
+      ),
+      withFallback<InteractionRow>(
+        supabase.from("external_link_clicks").select("created_at").gte("created_at", since15),
+        "los clics externos de 15 dias"
+      ),
+      withFallback<InteractionRow>(
+        supabase.from("event_likes").select("created_at").gte("created_at", since15),
+        "los likes de 15 dias"
+      ),
+      withFallback<InteractionRow>(
+        supabase.from("contacto_solicitudes").select("created_at").gte("created_at", since2),
+        "los mensajes de 48 horas"
+      ),
+      withFallback<InteractionRow>(
+        supabase.from("event_likes").select("created_at").gte("created_at", since2),
+        "los likes de 48 horas"
+      ),
+      withFallback<InteractionRow>(
+        supabase.from("eventos").select("created_at").gte("created_at", since2),
+        "los eventos nuevos de 48 horas"
+      ),
+      withFallback<InteractionRow>(
+        supabase.from("comercios").select("created_at").gte("created_at", since2),
+        "los comercios nuevos de 48 horas"
+      ),
+      withFallback<InteractionRow>(
+        supabase.from("servicios").select("created_at").gte("created_at", since2),
+        "los servicios nuevos de 48 horas"
+      ),
+      withFallback<InteractionRow>(
+        supabase.from("cursos").select("created_at").gte("created_at", since2),
+        "los cursos nuevos de 48 horas"
+      ),
+      withFallback<InteractionRow>(
+        supabase.from("instituciones").select("created_at").gte("created_at", since2),
+        "las instituciones nuevas de 48 horas"
+      ),
+    ])
+
+    setRecentActivity({
+      interactions15Days:
+        shareRows15.length +
+        whatsappRows15.length +
+        viewMoreRows15.length +
+        externalRows15.length +
+        likesRows15.length,
+      whatsapp15Days: whatsappRows15.length,
+    })
+    setSiteTraffic(siteTrafficResponse)
+
+    const listings48 =
+      commerceRows48.length +
+      serviceRows48.length +
+      courseRows48.length +
+      institutionRows48.length
+
+    setRecentMessages(
+      [
+        {
+          label: `${contactRows48.length} ${contactRows48.length === 1 ? "mensaje nuevo" : "mensajes nuevos"}`,
+          value: contactRows48.length,
+        },
+        {
+          label: `${likesRows48.length} ${likesRows48.length === 1 ? "nuevo like" : "nuevos likes"}`,
+          value: likesRows48.length,
+        },
+        {
+          label: `${eventRows48.length} ${eventRows48.length === 1 ? "nuevo evento subido" : "nuevos eventos subidos"}`,
+          value: eventRows48.length,
+        },
+        {
+          label: `${listings48} ${listings48 === 1 ? "nueva ficha se sumo" : "nuevas fichas se sumaron"}`,
+          value: listings48,
+        },
+      ].filter((item) => item.value > 0)
+    )
+
+    setLoading(false)
+    setRefreshing(false)
+  }
+
+  useEffect(() => {
+    startTransition(() => {
+      void loadMetrics()
+    })
+  }, [])
   useEffect(() => {
     void recordSiteVisit("usuarios-metricas", "Metricas Hola Varela")
   }, [])
@@ -237,6 +247,22 @@ export default function UsuariosMetricasHolaVarelaPage() {
             Volver al panel
           </Link>
         </div>
+
+        {!loading ? (
+          <div className="mb-6">
+            <button
+              type="button"
+              onClick={() => {
+                void loadMetrics("refresh")
+              }}
+              disabled={refreshing || isPending}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-300 hover:text-blue-600 disabled:opacity-60"
+            >
+              <RefreshCcw className={`h-4 w-4 ${refreshing || isPending ? "animate-spin" : ""}`} />
+              {refreshing || isPending ? "Actualizando..." : "Actualizar ahora"}
+            </button>
+          </div>
+        ) : null}
 
         {loading ? (
           <div className="rounded-[32px] border border-slate-200 bg-white p-10 text-slate-500 shadow-sm">

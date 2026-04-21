@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { sendAdminNotification } from "../../../../lib/emailNotifications"
 import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin"
 import { consumeRateLimit, getClientIp } from "../../../../lib/rateLimit"
 
@@ -73,6 +74,23 @@ export async function POST(request: Request) {
       ])
 
     if (insertError) throw insertError
+
+    try {
+      await sendAdminNotification({
+        subject: "Hola Varela - Nueva solicitud de recuperacion",
+        intro: "Llego una nueva solicitud para reasignar o recuperar una contrasena.",
+        fields: [
+          { label: "Email de la cuenta", value: email },
+          { label: "Nombre de contacto", value: contactName },
+          { label: "Telefono", value: phone },
+          { label: "Mensaje", value: message },
+          { label: "IP", value: clientMeta.ipAddress },
+          { label: "User-Agent", value: clientMeta.userAgent },
+        ],
+      })
+    } catch (notificationError) {
+      console.error(notificationError)
+    }
 
     return NextResponse.json({
       ok: true,

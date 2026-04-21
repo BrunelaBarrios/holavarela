@@ -103,6 +103,9 @@ add column if not exists mp_preapproval_id text;
 alter table public.cursos
 add column if not exists institucion_id bigint;
 
+alter table public.cursos
+add column if not exists servicio_id bigint;
+
 alter table public.eventos
 add column if not exists fecha_solo_mes boolean default false;
 

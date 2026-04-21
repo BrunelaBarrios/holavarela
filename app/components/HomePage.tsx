@@ -27,7 +27,6 @@ import { recordContentVisit, recordSiteVisit } from "../lib/contentVisits"
 import { DELAYED_PROMO_STORAGE_KEY, RADIO_STORAGE_KEY } from "../lib/localStorageKeys"
 import { buildHomePublicNav } from "../lib/publicNav"
 import { recordViewMore, type ViewMoreSection } from "../lib/viewMoreTracking"
-import { supabase } from "../supabase"
 import {
   ArrowRight,
   Building2,
@@ -818,16 +817,26 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       mensaje: contactLeadForm.mensaje.trim(),
     }
 
-    const { error } = await supabase.from("contacto_solicitudes").insert([payload])
+    const response = await fetch("/api/contacto", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    })
 
-    if (error) {
-      setContactLeadStatus("No pudimos enviar tu solicitud. Proba de nuevo.")
+    const result = (await response.json().catch(() => null)) as
+      | { error?: string; message?: string }
+      | null
+
+    if (!response.ok) {
+      setContactLeadStatus(result?.error || "No pudimos enviar tu solicitud. Proba de nuevo.")
       setContactLeadLoading(false)
       return
     }
 
     setContactLeadForm(initialContactLeadForm)
-    setContactLeadStatus("Recibimos tu mensaje. Te contactaremos a la brevedad.")
+    setContactLeadStatus(result?.message || "Recibimos tu mensaje. Te contactaremos a la brevedad.")
     setContactLeadLoading(false)
   }
 
@@ -2464,9 +2473,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-[22px]">
                       {curso.nombre}
                     </h3>
-                      <p className="mt-2 line-clamp-2 whitespace-pre-line text-sm leading-6 text-slate-500 sm:mt-3 sm:line-clamp-3 sm:text-base sm:leading-7">
-                        {curso.descripcion}
-                      </p>
+                    <p className="mt-2 line-clamp-2 whitespace-pre-line text-sm leading-6 text-slate-500 sm:mt-3 sm:line-clamp-3 sm:text-base sm:leading-7">
+                      {curso.descripcion}
+                    </p>
                     <div className="mt-3 flex items-center gap-2 text-xs text-slate-600 sm:mt-4 sm:text-sm">
                       <GraduationCap className="h-4 w-4" />
                       <span>{curso.responsable}</span>

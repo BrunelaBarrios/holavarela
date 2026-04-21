@@ -14,6 +14,7 @@ type Curso = {
   nombre: string
   descripcion: string
   institucion_id?: number | null
+  servicio_id?: number | null
   responsable: string
   contacto: string
   web_url?: string | null
@@ -37,6 +38,11 @@ type InstitucionOption = {
   nombre: string
 }
 
+type ServicioOption = {
+  id: number
+  nombre: string
+}
+
 const initialForm: CursoForm = {
   nombre: "",
   descripcion: "",
@@ -48,6 +54,7 @@ const initialForm: CursoForm = {
   imagen: "",
   usa_whatsapp: true,
   institucion_id: null,
+  servicio_id: null,
 }
 
 export default function AdminCursosPage() {
@@ -60,6 +67,7 @@ export default function AdminCursosPage() {
   const [deletingCurso, setDeletingCurso] = useState<Curso | null>(null)
   const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
   const [instituciones, setInstituciones] = useState<InstitucionOption[]>([])
+  const [servicios, setServicios] = useState<ServicioOption[]>([])
 
   const runAdminAction = async (body: unknown) => {
     const response = await fetch("/api/admin/cursos", {
@@ -132,9 +140,23 @@ export default function AdminCursosPage() {
     setInstituciones((data || []) as InstitucionOption[])
   }
 
+  const cargarServicios = async () => {
+    const { data, error } = await supabase
+      .from("servicios")
+      .select("id, nombre")
+      .order("nombre", { ascending: true })
+
+    if (error) {
+      setSaveError(`Error al cargar servicios: ${error.message}`)
+      return
+    }
+
+    setServicios((data || []) as ServicioOption[])
+  }
+
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      void Promise.all([cargarCursos(), cargarInstituciones()])
+      void Promise.all([cargarCursos(), cargarInstituciones(), cargarServicios()])
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
@@ -221,6 +243,7 @@ export default function AdminCursosPage() {
       responsable: formData.responsable,
       contacto: formData.contacto,
       institucion_id: formData.institucion_id || null,
+      servicio_id: formData.servicio_id || null,
       web_url: formData.web_url?.trim() || null,
       instagram_url: formData.instagram_url?.trim() || null,
       facebook_url: formData.facebook_url?.trim() || null,
@@ -275,6 +298,10 @@ export default function AdminCursosPage() {
     () => new Map(instituciones.map((institucion) => [institucion.id, institucion.nombre])),
     [instituciones]
   )
+  const serviceNameById = useMemo(
+    () => new Map(servicios.map((servicio) => [servicio.id, servicio.nombre])),
+    [servicios]
+  )
 
   const handleEdit = (curso: Curso) => {
     setEditingCurso(curso)
@@ -284,6 +311,7 @@ export default function AdminCursosPage() {
       responsable: curso.responsable,
       contacto: curso.contacto,
       institucion_id: curso.institucion_id ?? null,
+      servicio_id: curso.servicio_id ?? null,
       web_url: curso.web_url || "",
       instagram_url: curso.instagram_url || "",
       facebook_url: curso.facebook_url || "",
@@ -450,6 +478,7 @@ export default function AdminCursosPage() {
                       setFormData((prev) => ({
                         ...prev,
                         institucion_id: e.target.value ? Number(e.target.value) : null,
+                        servicio_id: e.target.value ? null : prev.servicio_id,
                       }))
                     }
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500"
@@ -461,6 +490,33 @@ export default function AdminCursosPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Servicio
+                  </label>
+                  <select
+                    value={formData.servicio_id || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        servicio_id: e.target.value ? Number(e.target.value) : null,
+                        institucion_id: e.target.value ? null : prev.institucion_id,
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500"
+                  >
+                    <option value="">Sin servicio asociado</option>
+                    {servicios.map((servicio) => (
+                      <option key={servicio.id} value={servicio.id}>
+                        {servicio.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-xs text-slate-500">
+                    Elige una institucion o un servicio si quieres que el curso aparezca dentro de ese perfil premium.
+                  </p>
                 </div>
 
                 <div>
@@ -670,6 +726,14 @@ export default function AdminCursosPage() {
                     <GraduationCap className="h-4 w-4" />
                     <span>
                       Institucion: {institutionNameById.get(curso.institucion_id) || `ID ${curso.institucion_id}`}
+                    </span>
+                  </div>
+                ) : null}
+                {curso.servicio_id ? (
+                  <div className="flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4" />
+                    <span>
+                      Servicio: {serviceNameById.get(curso.servicio_id) || `ID ${curso.servicio_id}`}
                     </span>
                   </div>
                 ) : null}

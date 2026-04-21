@@ -242,39 +242,60 @@ export default function UsuariosNuevoEventoPage() {
         publicMode || ownedEntity?.type !== "institucion" ? null : ownedEntity.record.id,
     }
 
-    const runEventSave = (
-      payloadToSave: typeof payload | Omit<typeof payload, "institucion_id">
-    ) =>
-      editingEventId
-        ? supabase
-            .from("eventos")
-            .update(payloadToSave)
-            .eq("id", editingEventId)
-            .eq("owner_email", ownerEmail)
-        : supabase.from("eventos").insert([payloadToSave])
+    if (publicMode) {
+      const response = await fetch("/api/eventos/publico", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
 
-    let { error: saveError } = await runEventSave(payload)
+      const result = (await response.json().catch(() => null)) as
+        | { error?: string; message?: string }
+        | null
 
-    if (saveError && hasMissingInstitutionIdColumn(saveError.message)) {
-      const legacyPayload = Object.fromEntries(
-        Object.entries(payload).filter(([key]) => key !== "institucion_id")
-      ) as Omit<typeof payload, "institucion_id">
-      ;({ error: saveError } = await runEventSave(legacyPayload))
-    }
+      if (!response.ok) {
+        setError(result?.error || "No pudimos guardar el evento.")
+        setSaving(false)
+        return
+      }
 
-    if (saveError) {
-      setError(`No pudimos guardar el evento: ${saveError.message}`)
-      setSaving(false)
-      return
-    }
+      setSuccess(result?.message || "Recibimos tu contenido y lo vamos a revisar.")
+    } else {
+      const runEventSave = (
+        payloadToSave: typeof payload | Omit<typeof payload, "institucion_id">
+      ) =>
+        editingEventId
+          ? supabase
+              .from("eventos")
+              .update(payloadToSave)
+              .eq("id", editingEventId)
+              .eq("owner_email", ownerEmail)
+          : supabase.from("eventos").insert([payloadToSave])
 
-    setSuccess(
-      publicMode
-        ? "Recibimos tu contenido y lo vamos a revisar."
-        : editingEventId
+      let { error: saveError } = await runEventSave(payload)
+
+      if (saveError && hasMissingInstitutionIdColumn(saveError.message)) {
+        const legacyPayload = Object.fromEntries(
+          Object.entries(payload).filter(([key]) => key !== "institucion_id")
+        ) as Omit<typeof payload, "institucion_id">
+        ;({ error: saveError } = await runEventSave(legacyPayload))
+      }
+
+      if (saveError) {
+        setError(`No pudimos guardar el evento: ${saveError.message}`)
+        setSaving(false)
+        return
+      }
+
+      setSuccess(
+        editingEventId
           ? "Tu borrador quedo actualizado."
           : "Tu evento quedo guardado como borrador."
-    )
+      )
+    }
+
     setSaving(false)
     window.setTimeout(() => {
       router.push(publicMode ? "/eventos" : "/usuarios")

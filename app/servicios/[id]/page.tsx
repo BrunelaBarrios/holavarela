@@ -6,6 +6,17 @@ import { supabaseServer } from "../../lib/supabaseServer"
 // Premium detail pages are stable enough for a longer cache window.
 export const revalidate = 43200
 
+type RelatedEvent = {
+  id: number
+  titulo: string
+  categoria?: string | null
+  fecha: string
+  fecha_fin?: string | null
+  fecha_solo_mes?: boolean | null
+  descripcion?: string | null
+  imagen?: string | null
+}
+
 export default async function ServicioSharePage({
   params,
 }: {
@@ -30,25 +41,50 @@ export default async function ServicioSharePage({
     redirect(`/servicios?item=${encodeURIComponent(id)}`)
   }
 
-  const [relatedEventsResult, relatedCoursesResult] = data.owner_email
-    ? await Promise.all([
-        supabaseServer
+  const [relatedEventsResult, relatedCoursesResult] = await Promise.all([
+    data.owner_email
+      ? supabaseServer
           .from("eventos")
           .select("id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, descripcion, imagen")
           .eq("owner_email", data.owner_email)
           .or("estado.is.null,estado.eq.activo")
-          .order("fecha", { ascending: true }),
-        supabaseServer
-          .from("cursos")
-          .select("id, nombre, descripcion, responsable, contacto, imagen, estado")
-          .eq("owner_email", data.owner_email)
-          .eq("estado", "activo")
-          .order("id", { ascending: false }),
-      ])
-    : [{ data: [] }, { data: [] }]
+          .order("fecha", { ascending: true })
+      : Promise.resolve({ data: [] as unknown[] }),
+    supabaseServer
+      .from("cursos")
+      // Prefer explicit service-course links to avoid relying on owner email.
+      .select("id, nombre, descripcion, responsable, contacto, imagen, estado, servicio_id, owner_email")
+      .eq("servicio_id", data.id)
+      .eq("estado", "activo")
+      .order("id", { ascending: false }),
+  ])
 
   const relatedEvents = relatedEventsResult.data || []
-  const relatedCourses = relatedCoursesResult.data || []
+  const typedRelatedEvents = relatedEvents as RelatedEvent[]
+  const relatedCourses = (relatedCoursesResult.data || []) as Array<{
+    id: number
+    nombre: string
+    descripcion?: string | null
+    responsable?: string | null
+    contacto?: string | null
+    imagen?: string | null
+    estado?: string | null
+    servicio_id?: number | null
+    owner_email?: string | null
+  }>
+
+  const fallbackCourses =
+    relatedCourses.length === 0 && data.owner_email
+      ? (
+          await supabaseServer
+            .from("cursos")
+            .select("id, nombre, descripcion, responsable, contacto, imagen, estado")
+            .eq("owner_email", data.owner_email)
+            .is("servicio_id", null)
+            .eq("estado", "activo")
+            .order("id", { ascending: false })
+        ).data || []
+      : []
 
   return (
     <PremiumListingPage
@@ -71,8 +107,8 @@ export default async function ServicioSharePage({
       instagramUrl={data.instagram_url}
       facebookUrl={data.facebook_url}
       usesWhatsapp={data.usa_whatsapp}
-      relatedEvents={(relatedEvents || []).filter((event) => isEventCurrentOrUpcoming(event))}
-      relatedCourses={relatedCourses || []}
+      relatedEvents={typedRelatedEvents.filter((event) => isEventCurrentOrUpcoming(event))}
+      relatedCourses={relatedCourses.length > 0 ? relatedCourses : fallbackCourses}
     />
   )
 }
