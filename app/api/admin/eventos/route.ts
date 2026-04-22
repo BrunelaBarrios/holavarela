@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache"
 import { NextResponse, type NextRequest } from "next/server"
 import { readAdminSessionFromRequest } from "../../../lib/adminSession"
 import { logAdminActivityServer } from "../../../lib/adminActivityServer"
@@ -62,6 +63,14 @@ function normalizeUrl(value?: string | null) {
   }
 }
 
+function revalidateEventoPages(id?: number | string) {
+  revalidatePath("/")
+  revalidatePath("/eventos")
+  if (id) {
+    revalidatePath(`/eventos/${id}`)
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await readAdminSessionFromRequest(request)
@@ -96,6 +105,8 @@ export async function POST(request: NextRequest) {
         section: "Eventos",
         target: existing.titulo,
       })
+
+      revalidateEventoPages(body.id)
 
       return NextResponse.json({ ok: true })
     }
@@ -138,6 +149,8 @@ export async function POST(request: NextRequest) {
         section: "Eventos",
         target: existing.titulo,
       })
+
+      revalidateEventoPages(body.id)
 
       return NextResponse.json({ ok: true, record: data })
     }
@@ -189,6 +202,8 @@ export async function POST(request: NextRequest) {
         section: "Eventos",
         target: existing.titulo,
       })
+
+      revalidateEventoPages(data.id)
 
       return NextResponse.json({ ok: true, record: data })
     }
@@ -245,6 +260,8 @@ export async function POST(request: NextRequest) {
         target: payload.titulo,
       })
 
+      revalidateEventoPages(body.id)
+
       return NextResponse.json({ ok: true, record: data })
     }
 
@@ -261,6 +278,8 @@ export async function POST(request: NextRequest) {
       section: "Eventos",
       target: payload.titulo,
     })
+
+    revalidateEventoPages(data.id)
 
     return NextResponse.json({ ok: true, record: data })
   } catch (error) {

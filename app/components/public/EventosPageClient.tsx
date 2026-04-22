@@ -43,6 +43,7 @@ const normalizeEventCategory = (categoria?: string | null) => {
   const value = categoria?.trim()
   if (!value || value.toUpperCase() === "NOT NULL") return "Evento"
   if (value.toLowerCase() === "beneficios") return "Beneficio"
+  if (value.toLowerCase() === "avisos") return "Aviso"
   return value
 }
 
@@ -298,7 +299,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Hoy en Varela</h1>
             <p className="mt-2 text-gray-600">
-              Eventos, avisos, promos y novedades de Hola Varela
+              Eventos, aviso, promos y novedades de Hola Varela
             </p>
           </div>
 
@@ -327,7 +328,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          {["Todos", "Evento", "Avisos", "Promocion", "Sorteo", "Beneficio", "Consulta"].map((item) => (
+          {["Todos", "Evento", "Aviso", "Promocion", "Sorteo", "Beneficio", "Consulta"].map((item) => (
             <button
               key={item}
               type="button"

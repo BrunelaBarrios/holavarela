@@ -68,10 +68,11 @@ const normalizeAdminEventCategory = (categoria?: string | null) => {
   const value = categoria?.trim()
   if (!value) return "Evento"
   if (value.toLowerCase() === "beneficios") return "Beneficio"
+  if (value.toLowerCase() === "avisos") return "Aviso"
   return value
 }
 
-const categoriasEvento = ["Evento", "Avisos", "Promocion", "Sorteo", "Beneficio", "Consulta"]
+const categoriasEvento = ["Evento", "Aviso", "Promocion", "Sorteo", "Beneficio", "Consulta"]
 
 export default function AdminEventosPage() {
   const [eventos, setEventos] = useState<Evento[]>([])

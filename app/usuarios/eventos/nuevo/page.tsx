@@ -33,7 +33,7 @@ type EventForm = {
   submitterPhone: string
 }
 
-const categoriasEvento = ["Evento", "Avisos", "Promocion", "Sorteo", "Beneficio", "Consulta"]
+const categoriasEvento = ["Evento", "Aviso", "Promocion", "Sorteo", "Beneficio", "Consulta"]
 
 const initialForm: EventForm = {
   titulo: "",
@@ -373,7 +373,7 @@ export default function UsuariosNuevoEventoPage() {
                   <p className="mt-4 text-lg leading-8 text-slate-600">
                     {publicMode
                       ? "Completa los datos y nos llega para revisarlo antes de publicarlo en Hoy en Varela."
-                      : "Puedes publicar eventos, avisos, promociones, sorteos, beneficios o consultas. Todo entra como borrador para revisarlo antes de mostrarlo."}
+                      : "Puedes publicar eventos, aviso, promociones, sorteos, beneficios o consultas. Todo entra como borrador para revisarlo antes de mostrarlo."}
                   </p>
                 </div>
 
@@ -387,7 +387,7 @@ export default function UsuariosNuevoEventoPage() {
                         <div className="font-semibold text-slate-900">Que conviene cargar aca</div>
                         <p className="mt-2 text-sm leading-6 text-slate-600">
                           {publicMode
-                            ? "Publica eventos, beneficios, sorteos o promos, charlas, avisos y consultas relacionadas con la ciudad."
+                            ? "Publica eventos, beneficios, sorteos o promos, charlas, aviso y consultas relacionadas con la ciudad."
                             : "Actividades especiales, promos del mes, sorteos, beneficios y cualquier novedad puntual de tu espacio."}
                         </p>
                       </div>

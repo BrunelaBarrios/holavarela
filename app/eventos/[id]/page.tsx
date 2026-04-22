@@ -61,6 +61,7 @@ const normalizeEventCategory = (categoria?: string | null) => {
   const value = categoria?.trim()
   if (!value || value.toUpperCase() === "NOT NULL") return "Evento"
   if (value.toLowerCase() === "beneficios") return "Beneficio"
+  if (value.toLowerCase() === "avisos") return "Aviso"
   return value
 }
 

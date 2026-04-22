@@ -108,6 +108,7 @@ const normalizeEventCategory = (categoria?: string | null) => {
   const value = categoria?.trim()
   if (!value || value.toUpperCase() === "NOT NULL") return "Evento"
   if (value.toLowerCase() === "beneficios") return "Beneficio"
+  if (value.toLowerCase() === "avisos") return "Aviso"
   return value
 }
 
@@ -2289,7 +2290,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               Hoy en Varela
             </h2>
             <p className="mt-4 text-xl text-slate-500">
-              Eventos, avisos, promos y sorteos activos
+              Eventos, aviso, promos y sorteos activos
             </p>
             <div className="mt-6">
               <Link
@@ -2308,7 +2309,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 Todavía no hay novedades activas
               </h3>
               <p className="mt-3 text-sm leading-7 text-slate-500">
-                Cuando se publiquen eventos, avisos o promos en Hola Varela, van a aparecer en este bloque.
+                Cuando se publiquen eventos, aviso o promos en Hola Varela, van a aparecer en este bloque.
               </p>
               <div className="mt-5">
                 <Link
