@@ -15,7 +15,6 @@ import { ContactActionLink } from "./ContactActionLink"
 import { ExternalLinksButtons } from "./ExternalLinksButtons"
 import { EventLikeButton } from "./EventLikeButton"
 import { OptimizedImage } from "./OptimizedImage"
-import { PrimaryExternalLinkButton } from "./PrimaryExternalLinkButton"
 import { PublicHeader } from "./PublicHeader"
 import { ShareButton } from "./ShareButton"
 import { SweepstakesPopup } from "./SweepstakesPopup"
@@ -1998,44 +1997,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                     <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-[22px]">
                       {business.nombre}
                     </h3>
-                    {business.direccion && (
-                      <p className="mt-2 line-clamp-2 text-xs text-slate-500 sm:text-sm">
-                        {business.direccion}
-                      </p>
-                    )}
 
-                      {business.telefono && business.usa_whatsapp !== false ? (
-                        <ContactActionLink
-                          href={getContactHref(
-                            business.telefono,
-                          business.usa_whatsapp
-                        )}
-                        mode="whatsapp"
-                        section="comercios"
-                        itemId={String(business.id)}
-                        itemTitle={business.nombre}
-                        onClick={(event) => event.stopPropagation()}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-600 sm:mt-5 sm:py-3 sm:text-lg"
-                      >
-                          <Phone className="h-5 w-5" />
-                          WhatsApp
-                        </ContactActionLink>
-                      ) : (
-                        <PrimaryExternalLinkButton
-                          webUrl={business.web_url}
-                          instagramUrl={business.instagram_url}
-                          facebookUrl={business.facebook_url}
-                          section="comercios"
-                          itemId={String(business.id)}
-                          itemTitle={business.nombre}
-                          onClick={(event) => event.stopPropagation()}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100 sm:mt-5 sm:py-3 sm:text-lg"
-                        />
-                      )}
 
                     {business.premium_activo ? (
                       <Link
@@ -2156,72 +2118,11 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         )}
 
                         <div className="p-4 sm:p-5">
-                          {servicio.categoria && (
-                            <div className="mb-3 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                              {servicio.categoria}
-                            </div>
-                          )}
 
                           <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-xl">
                             {servicio.nombre}
                           </h3>
 
-                          <div className="mt-3 space-y-2 text-xs text-slate-600 sm:mt-4 sm:text-sm">
-                            {servicio.responsable && (
-                              <div className="flex items-center gap-2">
-                                <UserRound className="h-4 w-4" />
-                                <span>{servicio.responsable}</span>
-                              </div>
-                            )}
-
-                            {servicio.contacto && (
-                              <div className="flex items-center gap-2">
-                                <Phone className="h-4 w-4" />
-                                <span>{servicio.contacto}</span>
-                              </div>
-                            )}
-
-                            {servicio.direccion && (
-                              <div className="flex items-center gap-2">
-                                <MapPin className="h-4 w-4" />
-                                <span>{servicio.direccion}</span>
-                              </div>
-                            )}
-                          </div>
-
-                            {servicio.contacto?.trim() &&
-                            servicio.usa_whatsapp !== false ? (
-                              <ContactActionLink
-                                href={getContactHref(
-                                  servicio.contacto,
-                                servicio.usa_whatsapp
-                              )}
-                              mode="whatsapp"
-                              section="servicios"
-                              itemId={String(servicio.id)}
-                              itemTitle={servicio.nombre}
-                              onClick={(event) => event.stopPropagation()}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-green-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-green-600 sm:mt-5 sm:py-3 sm:text-lg"
-                            >
-                                <Phone className="h-5 w-5" />
-                                WhatsApp
-                              </ContactActionLink>
-                            ) : (
-                              <PrimaryExternalLinkButton
-                                webUrl={servicio.web_url}
-                                instagramUrl={servicio.instagram_url}
-                                facebookUrl={servicio.facebook_url}
-                                section="servicios"
-                                itemId={String(servicio.id)}
-                                itemTitle={servicio.nombre}
-                                onClick={(event) => event.stopPropagation()}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-3 font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
-                              />
-                            )}
 
                           {servicio.premium_activo ? (
                             <Link
