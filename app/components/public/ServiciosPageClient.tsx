@@ -7,7 +7,6 @@ import { ArrowRight, MapPin, Phone, Search, UserRound } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
-import { PrimaryExternalLinkButton } from "../PrimaryExternalLinkButton"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
@@ -301,35 +300,6 @@ export function ServiciosPageClient({
                     {servicio.nombre}
                   </h3>
 
-                  {servicio.descripcion && (
-                    <p className="line-clamp-3 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
-                      {servicio.descripcion}
-                    </p>
-                  )}
-
-                  <div className="mt-4 space-y-2 text-sm text-gray-600">
-                    {servicio.responsable && (
-                      <div className="flex items-center gap-2">
-                        <UserRound className="h-4 w-4" />
-                        <span>{servicio.responsable}</span>
-                      </div>
-                    )}
-
-                    {servicio.contacto && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        <span>{servicio.contacto}</span>
-                      </div>
-                    )}
-
-                    {servicio.direccion && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        <span>{servicio.direccion}</span>
-                      </div>
-                    )}
-                  </div>
-
                   <div className="mt-5 flex flex-wrap gap-3">
                     {servicio.premium_activo ? (
                       <Link
@@ -357,45 +327,6 @@ export function ServiciosPageClient({
                       </button>
                     )}
 
-                    {servicio.contacto && servicio.usa_whatsapp !== false ? (
-                      <ContactActionLink
-                        href={getContactHref(servicio.contacto, servicio.usa_whatsapp)}
-                        mode="whatsapp"
-                        section="servicios"
-                        itemId={String(servicio.id)}
-                        itemTitle={servicio.nombre}
-                        onClick={(event) => event.stopPropagation()}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
-                      >
-                        Contactar
-                      </ContactActionLink>
-                    ) : (
-                      <PrimaryExternalLinkButton
-                        webUrl={servicio.web_url}
-                        instagramUrl={servicio.instagram_url}
-                        facebookUrl={servicio.facebook_url}
-                        section="servicios"
-                        itemId={String(servicio.id)}
-                        itemTitle={servicio.nombre}
-                        onClick={(event) => event.stopPropagation()}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
-                      />
-                    )}
-
-                    <div onClick={(event) => event.stopPropagation()}>
-                      <ShareButton
-                        title={servicio.nombre}
-                        text={servicio.descripcion || undefined}
-                        url={getShareUrl(servicio.id)}
-                        section="servicios"
-                        itemId={String(servicio.id)}
-                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                      />
-                    </div>
                   </div>
                 </div>
               </div>
