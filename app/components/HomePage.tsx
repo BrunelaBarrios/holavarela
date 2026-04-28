@@ -1882,13 +1882,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
       <section
         id="inicio"
-        className="relative overflow-hidden bg-[linear-gradient(180deg,#edf6f7_0%,#dbecee_38%,#bdd7de_68%,#9fbec8_100%)] py-20 md:py-28"
+        className="relative overflow-hidden bg-[linear-gradient(180deg,#f4fafb_0%,#e8f3f5_36%,#d7e8ec_68%,#c6dce3_100%)] py-20 md:py-28"
       >
-        <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_center,rgba(255,255,255,0.62),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0)_40%,rgba(15,23,42,0.06)_100%)]" />
-        <div className="absolute inset-x-0 bottom-0 -z-0 h-[38%] bg-[linear-gradient(180deg,rgba(72,116,131,0)_0%,rgba(72,116,131,0.18)_18%,rgba(61,103,118,0.5)_100%)]" />
-        <div className="absolute inset-x-0 top-[64%] -z-0 h-px bg-white/30" />
-        <div className="absolute left-1/2 top-[68%] -z-0 h-[72%] w-[15rem] -translate-x-1/2 rounded-t-[38%] bg-[linear-gradient(180deg,rgba(228,233,235,0.8)_0%,rgba(170,181,186,0.82)_42%,rgba(118,132,139,0.9)_100%)] opacity-70 shadow-[0_-8px_40px_rgba(15,23,42,0.06)]" />
-        <div className="absolute left-0 right-0 bottom-[14%] -z-0 h-10 bg-[linear-gradient(90deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0.18)_22%,rgba(255,255,255,0.05)_50%,rgba(255,255,255,0.18)_78%,rgba(255,255,255,0)_100%)]" />
+        <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_center,rgba(255,255,255,0.72),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.04)_42%,rgba(15,23,42,0.04)_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 -z-0 h-[32%] bg-[linear-gradient(180deg,rgba(100,145,160,0)_0%,rgba(100,145,160,0.12)_30%,rgba(86,127,141,0.24)_100%)]" />
+        <div className="absolute inset-x-0 top-[70%] -z-0 h-px bg-white/40" />
+        <div className="absolute inset-x-0 top-[73%] -z-0 h-16 bg-[linear-gradient(180deg,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0)_100%)]" />
 
         <div className="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <div className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-white/80 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm">
