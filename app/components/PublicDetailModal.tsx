@@ -55,9 +55,9 @@ export function PublicDetailModal({
           <button
             type="button"
             onClick={() => setIsImageZoomed(false)}
-            className="relative flex h-[88vh] w-full max-w-5xl items-center justify-center overflow-hidden rounded-[28px] bg-white/5 p-4"
+            className="relative flex h-[88vh] w-full max-w-5xl items-center justify-center overflow-hidden rounded-[28px] bg-white/5 p-6 md:p-8"
           >
-            <div className="relative h-full w-full">
+            <div className="relative h-full w-full px-3 py-4 md:px-6 md:py-8">
               <OptimizedImage
                 src={imageSrc}
                 alt={imageAlt}
@@ -93,12 +93,12 @@ export function PublicDetailModal({
                   <span className="absolute left-4 top-4 z-10 rounded-full bg-slate-950/75 px-3 py-1 text-xs font-semibold tracking-[0.2em] text-white/90 uppercase">
                     Toca para ampliar
                   </span>
-                  <div className="relative h-full w-full">
+                  <div className="relative h-full w-full px-2 py-3 sm:px-4 sm:py-5 md:px-6 md:py-7">
                     <OptimizedImage
                       src={imageSrc}
                       alt={imageAlt}
                       sizes="(max-width: 1024px) 100vw, 60vw"
-                      className="object-contain object-center p-1 sm:p-2"
+                      className="object-contain object-center"
                     />
                   </div>
                 </button>

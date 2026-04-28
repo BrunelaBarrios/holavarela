@@ -36,6 +36,7 @@ type EventoForm = {
   fecha: string
   fechaFin: string
   fechaSoloMes: boolean
+  ocultarFecha: boolean
   mesReferencia: string
   ubicacion: string
   telefono: string
@@ -53,6 +54,7 @@ const initialForm: EventoForm = {
   fecha: "",
   fechaFin: "",
   fechaSoloMes: false,
+  ocultarFecha: false,
   mesReferencia: "",
   ubicacion: "",
   telefono: "",
@@ -174,6 +176,7 @@ export default function AdminEventosPage() {
       fecha: evento.fecha || "",
       fechaFin: evento.fecha_fin || "",
       fechaSoloMes: evento.fecha_solo_mes ?? false,
+      ocultarFecha: parseEventDescription(evento.descripcion).hideDate,
       mesReferencia:
         evento.fecha_solo_mes && evento.fecha ? String(evento.fecha).slice(0, 7) : "",
       ubicacion: evento.ubicacion || "",
@@ -326,9 +329,12 @@ export default function AdminEventosPage() {
       facebook_url: formData.facebook_url.trim() || null,
       descripcion: buildEventDescription(
         formData.descripcion,
-        editingEvento
-          ? parseEventDescription(editingEvento.descripcion).submissionContact
-          : null
+        {
+          contact: editingEvento
+            ? parseEventDescription(editingEvento.descripcion).submissionContact
+            : null,
+          hideDate: formData.ocultarFecha,
+        }
       ),
       imagen: formData.imagen || null,
         estado: isDraft
@@ -494,6 +500,21 @@ export default function AdminEventosPage() {
                     className="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
                   />
                   <span>Todavia no tengo el dia exacto, mostrar solo el mes</span>
+                </label>
+
+                <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={formData.ocultarFecha}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        ocultarFecha: e.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span>No mostrar la fecha en la web</span>
                 </label>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

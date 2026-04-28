@@ -3,23 +3,35 @@ type SubmissionContact = {
   senderPhone: string
 }
 
+type EventDescriptionOptions = {
+  contact?: SubmissionContact | null
+  hideDate?: boolean
+}
+
 const META_MARKER = "[[HV_SUBMISSION_META]]"
 
 export function buildEventDescription(
   description: string,
-  contact?: SubmissionContact | null
+  options?: SubmissionContact | EventDescriptionOptions | null
 ) {
   const baseDescription = description.trim()
+  const normalizedOptions =
+    options && ("senderName" in options || "senderPhone" in options)
+      ? { contact: options as SubmissionContact, hideDate: false }
+      : ((options || {}) as EventDescriptionOptions)
+  const contact = normalizedOptions.contact
+  const hideDate = Boolean(normalizedOptions.hideDate)
 
-  if (!contact?.senderName?.trim() || !contact?.senderPhone?.trim()) {
+  if (!hideDate && (!contact?.senderName?.trim() || !contact?.senderPhone?.trim())) {
     return baseDescription
   }
 
   return [
     baseDescription,
     META_MARKER,
-    `sender_name=${contact.senderName.trim()}`,
-    `sender_phone=${contact.senderPhone.trim()}`,
+    hideDate ? "hide_date=true" : null,
+    contact?.senderName?.trim() ? `sender_name=${contact.senderName.trim()}` : null,
+    contact?.senderPhone?.trim() ? `sender_phone=${contact.senderPhone.trim()}` : null,
   ]
     .filter(Boolean)
     .join("\n")
@@ -32,6 +44,7 @@ export function parseEventDescription(rawDescription?: string | null) {
   if (markerIndex === -1) {
     return {
       baseDescription: content.trim(),
+      hideDate: false,
       submissionContact: null,
     }
   }
@@ -47,9 +60,11 @@ export function parseEventDescription(rawDescription?: string | null) {
     metaLines.find((line) => line.startsWith("sender_name="))?.slice("sender_name=".length).trim() || ""
   const senderPhone =
     metaLines.find((line) => line.startsWith("sender_phone="))?.slice("sender_phone=".length).trim() || ""
+  const hideDate = metaLines.some((line) => line === "hide_date=true")
 
   return {
     baseDescription,
+    hideDate,
     submissionContact:
       senderName && senderPhone
         ? {
@@ -58,4 +73,17 @@ export function parseEventDescription(rawDescription?: string | null) {
           }
         : null,
   }
+}
+
+export function shouldHideEventDate(
+  rawDescription?: string | null,
+  categoria?: string | null
+) {
+  const normalizedCategory = categoria?.trim().toLowerCase()
+
+  if (normalizedCategory === "aviso" || normalizedCategory === "avisos") {
+    return true
+  }
+
+  return parseEventDescription(rawDescription).hideDate
 }

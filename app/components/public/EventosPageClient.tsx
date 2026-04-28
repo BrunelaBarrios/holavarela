@@ -14,7 +14,7 @@ import { SweepstakesPopup } from "../SweepstakesPopup"
 import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { formatEventDateRange } from "../../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../../lib/eventLikes"
-import { parseEventDescription } from "../../lib/eventSubmissionMeta"
+import { parseEventDescription, shouldHideEventDate } from "../../lib/eventSubmissionMeta"
 import { buildPublicNav } from "../../lib/publicNav"
 import { recordViewMore } from "../../lib/viewMoreTracking"
 import { useSweepstakesPopup } from "../../lib/useSweepstakesPopup"
@@ -190,7 +190,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
         badge={selectedEvento ? normalizeEventCategory(selectedEvento.categoria) : null}
         description={selectedEvento ? parseEventDescription(selectedEvento.descripcion).baseDescription || null : null}
         meta={[
-          ...(selectedEvento?.fecha
+          ...(selectedEvento?.fecha && !shouldHideEventDate(selectedEvento.descripcion, selectedEvento.categoria)
             ? [{
                 icon: CalendarDays,
                 text: formatEventDateRange(
@@ -382,9 +382,11 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                   {normalizeEventCategory(evento.categoria)}
                 </div>
 
-                <p className="mt-2 text-sm text-gray-600">
-                  Fecha: {formatEventDateRange(evento.fecha, evento.fecha_fin, evento.fecha_solo_mes ?? false)}
-                </p>
+                {!shouldHideEventDate(evento.descripcion, evento.categoria) ? (
+                  <p className="mt-2 text-sm text-gray-600">
+                    Fecha: {formatEventDateRange(evento.fecha, evento.fecha_fin, evento.fecha_solo_mes ?? false)}
+                  </p>
+                ) : null}
 
                 <p className="mt-1 text-sm text-gray-600">
                   Ubicacion: {evento.ubicacion}

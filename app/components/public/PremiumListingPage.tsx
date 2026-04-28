@@ -11,7 +11,7 @@ import { ShareButton } from "../ShareButton"
 import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { formatEventDateRange } from "../../lib/eventDates"
 import { buildJosePedroVarelaDirectionsUrl } from "../../lib/mapLinks"
-import { parseEventDescription } from "../../lib/eventSubmissionMeta"
+import { parseEventDescription, shouldHideEventDate } from "../../lib/eventSubmissionMeta"
 import { buildPublicNav } from "../../lib/publicNav"
 
 type RelatedEvent = {
@@ -572,10 +572,12 @@ export function PremiumListingPage({
                         </div>
                       ) : null}
                       <h3 className="text-xl font-semibold text-slate-900">{event.titulo}</h3>
-                      <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
-                        <CalendarDays className="h-4 w-4 text-slate-400" />
-                        <span>{formatEventDateRange(event.fecha, event.fecha_fin, event.fecha_solo_mes ?? false)}</span>
-                      </div>
+                      {!shouldHideEventDate(event.descripcion, event.categoria) ? (
+                        <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+                          <CalendarDays className="h-4 w-4 text-slate-400" />
+                          <span>{formatEventDateRange(event.fecha, event.fecha_fin, event.fecha_solo_mes ?? false)}</span>
+                        </div>
+                      ) : null}
                       {event.descripcion ? (
                         <p className="mt-4 line-clamp-4 whitespace-pre-line text-sm leading-7 text-slate-500">
                           {parseEventDescription(event.descripcion).baseDescription}

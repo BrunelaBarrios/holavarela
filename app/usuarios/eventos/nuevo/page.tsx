@@ -20,6 +20,7 @@ type EventForm = {
   fecha: string
   fechaFin: string
   fechaSoloMes: boolean
+  ocultarFecha: boolean
   mesReferencia: string
   ubicacion: string
   telefono: string
@@ -41,6 +42,7 @@ const initialForm: EventForm = {
   fecha: "",
   fechaFin: "",
   fechaSoloMes: false,
+  ocultarFecha: false,
   mesReferencia: "",
   ubicacion: "",
   telefono: "",
@@ -131,6 +133,7 @@ export default function UsuariosNuevoEventoPage() {
               fecha: existingEvent.fecha || "",
               fechaFin: existingEvent.fecha_fin || "",
               fechaSoloMes: existingEvent.fecha_solo_mes ?? false,
+              ocultarFecha: parseEventDescription(existingEvent.descripcion).hideDate,
               mesReferencia:
                 existingEvent.fecha_solo_mes && existingEvent.fecha
                   ? String(existingEvent.fecha).slice(0, 7)
@@ -226,12 +229,16 @@ export default function UsuariosNuevoEventoPage() {
       web_url: formData.webUrl.trim() || null,
       instagram_url: formData.instagramUrl.trim() || null,
       facebook_url: formData.facebookUrl.trim() || null,
-      descripcion: buildEventDescription(formData.descripcion, publicMode && formData.submitterPhone.trim()
-        ? {
-            senderName: formData.submitterName,
-            senderPhone: formData.submitterPhone,
-          }
-        : null),
+      descripcion: buildEventDescription(formData.descripcion, {
+        contact:
+          publicMode && formData.submitterPhone.trim()
+            ? {
+                senderName: formData.submitterName,
+                senderPhone: formData.submitterPhone,
+              }
+            : null,
+        hideDate: formData.ocultarFecha,
+      }),
       imagen: formData.imagen || null,
       estado: "borrador",
       usa_whatsapp: formData.usaWhatsapp,
@@ -513,6 +520,21 @@ export default function UsuariosNuevoEventoPage() {
                         className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                       />
                       <span>Todavia no tengo el dia exacto, mostrar solo el mes</span>
+                    </label>
+
+                    <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={formData.ocultarFecha}
+                        onChange={(event) =>
+                          setFormData((current) => ({
+                            ...current,
+                            ocultarFecha: event.target.checked,
+                          }))
+                        }
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span>No mostrar la fecha en la web</span>
                     </label>
 
                     {formData.fechaSoloMes ? (

@@ -20,7 +20,7 @@ import { ShareButton } from "./ShareButton"
 import { SweepstakesPopup } from "./SweepstakesPopup"
 import { formatEventDateRange } from "../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
-import { parseEventDescription } from "../lib/eventSubmissionMeta"
+import { parseEventDescription, shouldHideEventDate } from "../lib/eventSubmissionMeta"
 import { useSweepstakesPopup } from "../lib/useSweepstakesPopup"
 import { recordContentVisit, recordSiteVisit } from "../lib/contentVisits"
 import { DELAYED_PROMO_STORAGE_KEY, RADIO_STORAGE_KEY } from "../lib/localStorageKeys"
@@ -36,7 +36,6 @@ import {
   CloudSun,
   GraduationCap,
   Heart,
-  Megaphone,
   Mail,
   MapPin,
   Phone,
@@ -101,6 +100,7 @@ type Evento = {
   imagen?: string | null
   estado?: string | null
   usa_whatsapp?: boolean | null
+  created_at?: string | null
 }
 
 const normalizeEventCategory = (categoria?: string | null) => {
@@ -110,6 +110,41 @@ const normalizeEventCategory = (categoria?: string | null) => {
   if (value.toLowerCase() === "avisos") return "Aviso"
   return value
 }
+
+const isAvisoCategory = (categoria?: string | null) =>
+  normalizeEventCategory(categoria).toLowerCase() === "aviso"
+
+const isPromoOrSweepstakesCategory = (categoria?: string | null) => {
+  const normalized = normalizeEventCategory(categoria).toLowerCase()
+  return (
+    normalized === "promocion" ||
+    normalized === "promociones" ||
+    normalized === "promo" ||
+    normalized === "promos" ||
+    normalized === "sorteo" ||
+    normalized === "sorteos" ||
+    normalized === "consulta" ||
+    normalized === "consulta comercial" ||
+    normalized === "consultas"
+  )
+}
+
+const sortEventsForHome = (events: Evento[]) =>
+  [...events].sort((a, b) => {
+    const aHasDate = Boolean(a.fecha)
+    const bHasDate = Boolean(b.fecha)
+
+    if (aHasDate && bHasDate) {
+      return a.fecha.localeCompare(b.fecha)
+    }
+
+    if (aHasDate) return -1
+    if (bHasDate) return 1
+
+    const aCreatedAt = a.created_at || ""
+    const bCreatedAt = b.created_at || ""
+    return bCreatedAt.localeCompare(aCreatedAt)
+  })
 
 type Curso = {
   id: number
@@ -525,7 +560,29 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         : featuredServiciosForHome.slice(0, ITEMS_PER_ROTATION),
     [featuredServiciosForHome, scheduledServicePage, shouldRotateServicios]
   )
-  const visibleEventos = useMemo(() => eventos.slice(0, 8), [eventos])
+  const visiblePrimaryEventos = useMemo(
+    () =>
+      sortEventsForHome(
+        eventos
+        .filter(
+          (event) =>
+            !isAvisoCategory(event.categoria) &&
+            !isPromoOrSweepstakesCategory(event.categoria)
+        )
+      ).slice(0, 6),
+    [eventos]
+  )
+  const visibleAvisoEventos = useMemo(
+    () => sortEventsForHome(eventos.filter((event) => isAvisoCategory(event.categoria))).slice(0, 3),
+    [eventos]
+  )
+  const visiblePromoEventos = useMemo(
+    () =>
+      sortEventsForHome(
+        eventos.filter((event) => isPromoOrSweepstakesCategory(event.categoria))
+      ).slice(0, 3),
+    [eventos]
+  )
   const visibleCursos = useMemo(() => cursos.slice(0, 8), [cursos])
   const visibleInstituciones = useMemo(() => instituciones.slice(0, 10), [instituciones])
   const delayedPromoOptions = useMemo<DelayedPromo[]>(() => {
@@ -921,10 +978,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   <div className="p-4 sm:p-6 lg:p-8">
                     <div className="inline-flex rounded-full bg-amber-100 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-800 sm:px-4 sm:py-2 sm:text-xs">
                       Publicidad
-                    </div>
-                    <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-sky-700 sm:mt-4 sm:text-xs">
-                      <Megaphone className="h-3.5 w-3.5" />
-                      Comercio recomendado
                     </div>
                     <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:mt-5 sm:text-3xl">
                       {delayedPromo.title}
@@ -1486,7 +1539,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         badge={selectedEvento ? normalizeEventCategory(selectedEvento.categoria) : null}
         description={selectedEvento ? parseEventDescription(selectedEvento.descripcion).baseDescription || null : null}
         meta={[
-          ...(selectedEvento?.fecha
+          ...(selectedEvento?.fecha && !shouldHideEventDate(selectedEvento.descripcion, selectedEvento.categoria)
             ? [{
                 icon: CalendarDays,
                 text: formatEventDateRange(
@@ -1505,14 +1558,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         ]}
         actions={
           <>
-            <Link
-              href="/usuarios/eventos/nuevo?public=1"
-              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
-            >
-              Sumar nueva actividad
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-
             {selectedEvento?.telefono?.trim() ? (
               <ContactActionLink
                 href={getContactHref(
@@ -1998,7 +2043,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       {business.nombre}
                     </h3>
 
-
                     {business.premium_activo ? (
                       <Link
                         href={`/comercios/${business.id}`}
@@ -2118,11 +2162,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         )}
 
                         <div className="p-4 sm:p-5">
-
                           <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-xl">
                             {servicio.nombre}
                           </h3>
-
 
                           {servicio.premium_activo ? (
                             <Link
@@ -2204,7 +2246,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </div>
           </div>
 
-          {visibleEventos.length === 0 ? (
+          {visiblePrimaryEventos.length === 0 &&
+          visibleAvisoEventos.length === 0 &&
+          visiblePromoEventos.length === 0 ? (
             <div className="rounded-[28px] border border-slate-200 bg-white/90 p-8 text-center shadow-sm">
               <h3 className="text-xl font-semibold text-slate-900">
                 Todavía no hay novedades activas
@@ -2212,104 +2256,149 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               <p className="mt-3 text-sm leading-7 text-slate-500">
                 Cuando se publiquen eventos, aviso o promos en Hola Varela, van a aparecer en este bloque.
               </p>
-              <div className="mt-5">
-                <Link
-                  href="/usuarios/eventos/nuevo?public=1"
-                  className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-5 py-3 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
-                >
-                  Sumar nueva actividad
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              {visibleEventos.map((event) => (
-                <div
-                  key={event.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() =>
-                    handleViewMoreClick(
-                      "eventos",
-                      String(event.id),
-                      event.titulo,
-                      () => setSelectedEvento(event)
-                    )
-                  }
-                  onKeyDown={(eventKey) =>
-                    handleCardKeyDown(eventKey, () =>
-                      handleViewMoreClick(
-                        "eventos",
-                        String(event.id),
-                        event.titulo,
-                        () => setSelectedEvento(event)
-                      )
-                    )
-                  }
-                  className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
-                    normalizeEventCategory(event.categoria) === "Evento"
-                      ? "border-emerald-200/80"
-                      : "border-white/80"
-                  }`}
-                >
-                  {event.imagen && (
-                    <div className="relative h-64 w-full">
-                      <OptimizedImage
-                        src={event.imagen}
-                        alt={event.titulo}
-                        sizes="(max-width: 1024px) 100vw, 33vw"
-                        quality={62}
-                        className="object-cover"
-                      />
-                    </div>
-                  )}
+            <div className="space-y-10">
+              <section className="space-y-5">
+                <div className="rounded-[28px] border border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#f6fbff_70%,#ffffff_100%)] p-6">
+                  <div className="inline-flex rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 shadow-sm">
+                    Primero
+                  </div>
+                  <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
+                    Eventos y Beneficios
+                  </h3>
+                  <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+                    Acá aparecen primero las publicaciones activas del momento para participar o aprovechar: eventos en agenda y beneficios disponibles.
+                  </p>
+                </div>
 
-                  <div className="p-5">
-                    <div className="mb-4 flex items-center gap-2 text-lg text-blue-500">
-                      <CalendarDays className="h-5 w-5" />
-                      <span>{formatEventDateRange(event.fecha, event.fecha_fin, event.fecha_solo_mes ?? false)}</span>
-                    </div>
-
-                    <div className="mb-3 inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
-                      {normalizeEventCategory(event.categoria)}
-                    </div>
-
-                    <h3 className="text-[22px] font-semibold text-slate-900">
-                      {event.titulo}
+                {visiblePrimaryEventos.length === 0 ? (
+                  <div className="rounded-[28px] border border-slate-200 bg-white/90 p-8 text-center shadow-sm">
+                    <h3 className="text-xl font-semibold text-slate-900">
+                      No hay eventos ni beneficios activos
                     </h3>
-
-                    <p className="mt-2 text-sm text-slate-500">{event.ubicacion}</p>
-
-                    <div className="mt-4" onClick={(eventLikeWrapper) => eventLikeWrapper.stopPropagation()}>
-                      <EventLikeButton
+                    <p className="mt-3 text-sm leading-7 text-slate-500">
+                      Cuando se publiquen novedades de ese tipo en Hola Varela, van a mostrarse primero en este bloque.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    {visiblePrimaryEventos.map((event) => (
+                      <HomeEventCard
+                        key={event.id}
+                        event={event}
                         count={eventLikeCounts[String(event.id)]}
                         liked={Boolean(likedEvents[String(event.id)])}
-                        onClick={() => void handleEventLike(String(event.id), event.titulo)}
                         disabled={likingEventId === String(event.id)}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-default disabled:opacity-70"
+                        onLike={() => void handleEventLike(String(event.id), event.titulo)}
+                        onOpen={() =>
+                          handleViewMoreClick(
+                            "eventos",
+                            String(event.id),
+                            event.titulo,
+                            () => setSelectedEvento(event)
+                          )
+                        }
+                        onCardKeyDown={handleCardKeyDown}
                       />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={(eventClick) => {
-                        eventClick.stopPropagation()
-                        handleViewMoreClick(
-                          "eventos",
-                          String(event.id),
-                          event.titulo,
-                          () => setSelectedEvento(event)
-                        )
-                      }}
-                      className="mt-5 inline-flex items-center gap-2 text-lg font-medium text-blue-500 hover:text-blue-600"
-                    >
-                      Ver más
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
+                    ))}
                   </div>
+                )}
+              </section>
+
+              <section className="space-y-5">
+                <div className="rounded-[28px] border border-cyan-100 bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_60%,#ffffff_100%)] p-6">
+                  <div className="inline-flex rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700 shadow-sm">
+                    Avisos
+                  </div>
+                  <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
+                    Avisos importantes
+                  </h3>
+                  <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+                    En esta fila quedan separados los avisos de interés general para que se distingan rápido del resto de las publicaciones.
+                  </p>
                 </div>
-              ))}
+
+                {visibleAvisoEventos.length === 0 ? (
+                  <div className="rounded-[28px] border border-slate-200 bg-white/90 p-8 text-center shadow-sm">
+                    <h3 className="text-xl font-semibold text-slate-900">
+                      No hay avisos activos
+                    </h3>
+                    <p className="mt-3 text-sm leading-7 text-slate-500">
+                      Cuando se publique un aviso activo en Hola Varela, va a verse en esta fila propia.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    {visibleAvisoEventos.map((event) => (
+                      <HomeEventCard
+                        key={event.id}
+                        event={event}
+                        count={eventLikeCounts[String(event.id)]}
+                        liked={Boolean(likedEvents[String(event.id)])}
+                        disabled={likingEventId === String(event.id)}
+                        onLike={() => void handleEventLike(String(event.id), event.titulo)}
+                        onOpen={() =>
+                          handleViewMoreClick(
+                            "eventos",
+                            String(event.id),
+                            event.titulo,
+                            () => setSelectedEvento(event)
+                          )
+                        }
+                        onCardKeyDown={handleCardKeyDown}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              <section className="space-y-5">
+                <div className="rounded-[28px] border border-amber-100 bg-[linear-gradient(135deg,#fff7ed_0%,#fff1f2_55%,#ffffff_100%)] p-6">
+                  <div className="inline-flex rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700 shadow-sm">
+                    Más abajo
+                  </div>
+                  <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
+                    Promociones, Sorteos y Consultas
+                  </h3>
+                  <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
+                    En esta sección quedan separadas las publicaciones más comerciales: descuentos, campañas especiales, sorteos y consultas.
+                  </p>
+                </div>
+
+                {visiblePromoEventos.length === 0 ? (
+                  <div className="rounded-[28px] border border-slate-200 bg-white/90 p-8 text-center shadow-sm">
+                    <h3 className="text-xl font-semibold text-slate-900">
+                      No hay promociones ni sorteos activos
+                    </h3>
+                    <p className="mt-3 text-sm leading-7 text-slate-500">
+                      Cuando haya promociones o sorteos publicados en Hola Varela, se van a mostrar en este bloque separado.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    {visiblePromoEventos.map((event) => (
+                      <HomeEventCard
+                        key={event.id}
+                        event={event}
+                        count={eventLikeCounts[String(event.id)]}
+                        liked={Boolean(likedEvents[String(event.id)])}
+                        disabled={likingEventId === String(event.id)}
+                        onLike={() => void handleEventLike(String(event.id), event.titulo)}
+                        onOpen={() =>
+                          handleViewMoreClick(
+                            "eventos",
+                            String(event.id),
+                            event.titulo,
+                            () => setSelectedEvento(event)
+                          )
+                        }
+                        onCardKeyDown={handleCardKeyDown}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
             </div>
           )}
         </div>
@@ -2652,6 +2741,91 @@ function InstagramMark() {
     <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
       <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2Zm0 1.75A4 4 0 0 0 3.75 7.75v8.5a4 4 0 0 0 4 4h8.5a4 4 0 0 0 4-4v-8.5a4 4 0 0 0-4-4h-8.5Zm8.94 1.31a1.06 1.06 0 1 1 0 2.12 1.06 1.06 0 0 1 0-2.12ZM12 6.5A5.5 5.5 0 1 1 6.5 12 5.5 5.5 0 0 1 12 6.5Zm0 1.75A3.75 3.75 0 1 0 15.75 12 3.75 3.75 0 0 0 12 8.25Z" />
     </svg>
+  )
+}
+
+function HomeEventCard({
+  event,
+  count,
+  liked,
+  disabled,
+  onLike,
+  onOpen,
+  onCardKeyDown,
+}: {
+  event: Evento
+  count?: number
+  liked: boolean
+  disabled: boolean
+  onLike: () => void
+  onOpen: () => void
+  onCardKeyDown: (event: KeyboardEvent<HTMLElement>, action: () => void) => void
+}) {
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(eventKey) => onCardKeyDown(eventKey, onOpen)}
+      className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
+        normalizeEventCategory(event.categoria) === "Evento"
+          ? "border-emerald-200/80"
+          : "border-white/80"
+      }`}
+    >
+      {event.imagen && (
+        <div className="relative h-64 w-full">
+          <OptimizedImage
+            src={event.imagen}
+            alt={event.titulo}
+            sizes="(max-width: 1024px) 100vw, 33vw"
+            quality={62}
+            className="object-cover"
+          />
+        </div>
+      )}
+
+      <div className="p-5">
+        {!shouldHideEventDate(event.descripcion, event.categoria) ? (
+          <div className="mb-4 flex items-center gap-2 text-lg text-blue-500">
+            <CalendarDays className="h-5 w-5" />
+            <span>{formatEventDateRange(event.fecha, event.fecha_fin, event.fecha_solo_mes ?? false)}</span>
+          </div>
+        ) : null}
+
+        <div className="mb-3 inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+          {normalizeEventCategory(event.categoria)}
+        </div>
+
+        <h3 className="text-[22px] font-semibold text-slate-900">
+          {event.titulo}
+        </h3>
+
+        <p className="mt-2 text-sm text-slate-500">{event.ubicacion}</p>
+
+        <div className="mt-4" onClick={(eventLikeWrapper) => eventLikeWrapper.stopPropagation()}>
+          <EventLikeButton
+            count={count}
+            liked={liked}
+            onClick={onLike}
+            disabled={disabled}
+            className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-default disabled:opacity-70"
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={(eventClick) => {
+            eventClick.stopPropagation()
+            onOpen()
+          }}
+          className="mt-5 inline-flex items-center gap-2 text-lg font-medium text-blue-500 hover:text-blue-600"
+        >
+          Ver más
+          <ArrowRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
   )
 }
 

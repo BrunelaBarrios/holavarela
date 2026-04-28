@@ -1,5 +1,5 @@
 import { HomePage, type HomePageData, type WeatherData } from "./components/HomePage"
-import { isEventCurrentOrUpcoming } from "./lib/eventDates"
+import { getDateKeyDaysAgo, isEventCurrentOrUpcoming } from "./lib/eventDates"
 import { supabaseServer } from "./lib/supabaseServer"
 
 export const revalidate = 3600
@@ -13,6 +13,24 @@ const defaultSobreVarela = {
   texto_3:
     "Cartelera online de Jose Pedro Varela: encontra aca eventos, cursos, clases, servicios y mas.",
   imagen_url: null,
+}
+
+const RECENT_COMMERCIAL_EVENT_DAYS = 1
+
+const isCommercialEventCategory = (categoria?: string | null) => {
+  const normalized = categoria?.trim().toLowerCase()
+
+  return (
+    normalized === "promocion" ||
+    normalized === "promociones" ||
+    normalized === "promo" ||
+    normalized === "promos" ||
+    normalized === "sorteo" ||
+    normalized === "sorteos" ||
+    normalized === "consulta" ||
+    normalized === "consultas" ||
+    normalized === "consulta comercial"
+  )
 }
 
 export default async function Page() {
@@ -62,7 +80,7 @@ export default async function Page() {
       .limit(48),
     supabaseServer
       .from("eventos")
-      .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp")
+      .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, created_at")
       .or("estado.is.null,estado.eq.activo")
       .order("fecha", { ascending: true }),
     supabaseServer
@@ -109,13 +127,18 @@ export default async function Page() {
     featuredBusinesses: featuredBusinesses || [],
     eventos: (() => {
       const activeEvents = eventosData || []
-      const currentOrUpcoming = activeEvents.filter((evento) =>
-        isEventCurrentOrUpcoming(evento)
+      const recentCommercialCutoff = getDateKeyDaysAgo(RECENT_COMMERCIAL_EVENT_DAYS)
+      const eventsForHome = activeEvents.filter((evento) =>
+        isEventCurrentOrUpcoming(evento) ||
+        (!evento.fecha &&
+          isCommercialEventCategory(evento.categoria) &&
+          typeof evento.created_at === "string" &&
+          evento.created_at.slice(0, 10) >= recentCommercialCutoff)
       )
 
-      // If date metadata is incomplete or stale, keep the home populated
-      // with active events instead of rendering an empty section.
-      return (currentOrUpcoming.length ? currentOrUpcoming : activeEvents).slice(0, 6)
+      // Show current/upcoming items in home, and only allow very recent
+      // commercial posts without a usable event date as a fallback.
+      return (eventsForHome.length ? eventsForHome : activeEvents).slice(0, 30)
     })(),
     cursos: cursos || [],
     servicios: servicios || [],

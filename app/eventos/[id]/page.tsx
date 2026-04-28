@@ -9,7 +9,7 @@ import { OptimizedImage } from "../../components/OptimizedImage"
 import { PublicHeader } from "../../components/PublicHeader"
 import { ShareButton } from "../../components/ShareButton"
 import { formatEventDateRange, isEventCurrentOrUpcoming } from "../../lib/eventDates"
-import { parseEventDescription } from "../../lib/eventSubmissionMeta"
+import { parseEventDescription, shouldHideEventDate } from "../../lib/eventSubmissionMeta"
 import { buildPublicNav } from "../../lib/publicNav"
 import { supabaseServer } from "../../lib/supabaseServer"
 
@@ -234,14 +234,16 @@ export default async function EventoSharePage({ params }: EventPageParams) {
                 </h1>
 
                 <div className="mt-6 grid gap-3">
-                  <InfoPill
-                    icon={<CalendarDays className="h-4 w-4" />}
-                    text={formatEventDateRange(
-                      evento.fecha,
-                      evento.fecha_fin,
-                      evento.fecha_solo_mes ?? false
-                    )}
-                  />
+                  {!shouldHideEventDate(evento.descripcion, evento.categoria) ? (
+                    <InfoPill
+                      icon={<CalendarDays className="h-4 w-4" />}
+                      text={formatEventDateRange(
+                        evento.fecha,
+                        evento.fecha_fin,
+                        evento.fecha_solo_mes ?? false
+                      )}
+                    />
+                  ) : null}
                   <InfoPill icon={<MapPin className="h-4 w-4" />} text={evento.ubicacion} />
                   {evento.telefono ? (
                     <InfoPill icon={<Phone className="h-4 w-4" />} text={evento.telefono} />
