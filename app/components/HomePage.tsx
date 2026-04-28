@@ -2267,9 +2267,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
                     Eventos y Beneficios
                   </h3>
-                  <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-                    Acá aparecen primero las publicaciones activas del momento para participar o aprovechar: eventos en agenda y beneficios disponibles.
-                  </p>
                 </div>
 
                 {visiblePrimaryEventos.length === 0 ? (
@@ -2314,9 +2311,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
                     Avisos importantes
                   </h3>
-                  <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-600 sm:text-base">
-                    En esta fila quedan separados los avisos de interés general para que se distingan rápido del resto de las publicaciones.
-                  </p>
                 </div>
 
                 {visibleAvisoEventos.length === 0 ? (
