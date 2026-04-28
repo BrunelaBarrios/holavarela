@@ -2349,9 +2349,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
               <section className="space-y-5">
                 <div className="rounded-[28px] border border-amber-100 bg-[linear-gradient(135deg,#fff7ed_0%,#fff1f2_55%,#ffffff_100%)] p-6">
-                  <div className="inline-flex rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700 shadow-sm">
-                    Más abajo
-                  </div>
                   <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
                     Promociones, Sorteos y Consultas
                   </h3>
