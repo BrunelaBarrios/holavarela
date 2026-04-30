@@ -1,8 +1,17 @@
+import type { Metadata } from "next"
 import { InstitucionesPageClient } from "../components/public/InstitucionesPageClient"
+import { buildPageMetadata } from "../lib/seo"
 import { getSupabaseAdmin } from "../lib/supabaseAdmin"
 
 // Public listings change occasionally, so a longer cache window is enough.
 export const revalidate = 43200
+
+export const metadata: Metadata = buildPageMetadata({
+  path: "/instituciones",
+  title: "Instituciones de Jose Pedro Varela | Hola Varela!",
+  description:
+    "Consulta instituciones, organizaciones y espacios comunitarios de Jose Pedro Varela en Hola Varela.",
+})
 
 export default async function InstitucionesPage() {
   const supabaseAdmin = getSupabaseAdmin()

@@ -1,6 +1,9 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
+import { cache } from "react"
 import { PremiumListingPage } from "../../components/public/PremiumListingPage"
 import { isEventCurrentOrUpcoming } from "../../lib/eventDates"
+import { buildPageMetadata } from "../../lib/seo"
 import { supabaseServer } from "../../lib/supabaseServer"
 
 // Premium detail pages are stable enough for a longer cache window.
@@ -15,6 +18,43 @@ function hasInstitutionPremium(data: {
 const hasMissingInstitutionIdColumn = (message?: string | null) =>
   Boolean(message && message.toLowerCase().includes("institucion_id"))
 
+const fetchInstitucionById = cache(async (id: string) =>
+  supabaseServer
+    .from("instituciones")
+    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, premium_cursos_activo, premium_cursos_titulo, direccion, direccion_mapa, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, estado, owner_email")
+    .eq("id", Number(id))
+    .maybeSingle()
+)
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const { data } = await fetchInstitucionById(id)
+
+  if (!data || (data.estado && data.estado !== "activo")) {
+    return buildPageMetadata({
+      path: `/instituciones/${id}`,
+      title: "Institucion | Hola Varela!",
+      description: "Perfil institucional en Hola Varela.",
+      noIndex: true,
+    })
+  }
+
+  return buildPageMetadata({
+    path: `/instituciones/${id}`,
+    title: `${data.nombre} | Hola Varela!`,
+    description:
+      data.premium_detalle?.trim() ||
+      data.descripcion?.trim() ||
+      `Conoce ${data.nombre} y su informacion en Hola Varela.`,
+    image: data.foto || "/logo-varela-grande.png",
+    noIndex: !hasInstitutionPremium(data),
+  })
+}
+
 export default async function InstitucionSharePage({
   params,
 }: {
@@ -22,11 +62,7 @@ export default async function InstitucionSharePage({
 }) {
   const { id } = await params
 
-  const { data } = await supabaseServer
-    .from("instituciones")
-    .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, premium_cursos_activo, premium_cursos_titulo, direccion, direccion_mapa, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, estado, owner_email")
-    .eq("id", Number(id))
-    .maybeSingle()
+  const { data } = await fetchInstitucionById(id)
 
   if (!data) {
     notFound()

@@ -1,10 +1,19 @@
+import type { Metadata } from "next"
 import { EventosPageClient } from "../components/public/EventosPageClient"
 import type { Evento } from "../components/public/EventosPageClient"
 import { isEventCurrentOrUpcoming } from "../lib/eventDates"
+import { buildPageMetadata } from "../lib/seo"
 import { supabaseServer } from "../lib/supabaseServer"
 
 // Events need freshness, but hourly ISR was more expensive than necessary.
 export const revalidate = 14400
+
+export const metadata: Metadata = buildPageMetadata({
+  path: "/eventos",
+  title: "Eventos en Jose Pedro Varela | Hola Varela!",
+  description:
+    "Mira eventos, actividades, beneficios y agenda local de Jose Pedro Varela actualizados en Hola Varela.",
+})
 
 const EVENT_BASE_SELECT =
   "id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email"

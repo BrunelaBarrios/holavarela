@@ -1,6 +1,9 @@
+import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
+import { cache } from "react"
 import { PremiumListingPage } from "../../components/public/PremiumListingPage"
 import { isEventCurrentOrUpcoming } from "../../lib/eventDates"
+import { buildPageMetadata } from "../../lib/seo"
 import { supabaseServer } from "../../lib/supabaseServer"
 
 // Premium detail pages are stable enough for a longer cache window.
@@ -17,17 +20,50 @@ type RelatedEvent = {
   imagen?: string | null
 }
 
+const fetchServicioById = cache(async (id: string) =>
+  supabaseServer
+    .from("servicios")
+    .select("id, nombre, categoria, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, responsable, contacto, direccion, direccion_mapa, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email")
+    .eq("id", Number(id))
+    .maybeSingle()
+)
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  const { data } = await fetchServicioById(id)
+
+  if (!data || (data.estado && data.estado !== "activo")) {
+    return buildPageMetadata({
+      path: `/servicios/${id}`,
+      title: "Servicio | Hola Varela!",
+      description: "Perfil de servicio en Hola Varela.",
+      noIndex: true,
+    })
+  }
+
+  return buildPageMetadata({
+    path: `/servicios/${id}`,
+    title: `${data.nombre} | Hola Varela!`,
+    description:
+      data.premium_detalle?.trim() ||
+      data.descripcion?.trim() ||
+      `Conoce ${data.nombre} y sus datos de contacto en Hola Varela.`,
+    image: data.imagen || "/logo-varela-grande.png",
+    noIndex: !data.premium_activo,
+  })
+}
+
 export default async function ServicioSharePage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const { data } = await supabaseServer
-    .from("servicios")
-    .select("id, nombre, categoria, descripcion, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, responsable, contacto, direccion, direccion_mapa, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email")
-    .eq("id", Number(id))
-    .maybeSingle()
+  const { data } = await fetchServicioById(id)
 
   if (!data) {
     notFound()
