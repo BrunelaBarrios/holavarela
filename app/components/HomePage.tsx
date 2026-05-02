@@ -837,19 +837,28 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
     if (likedEvents[eventId] || likingEventId === eventId) return
 
     setLikingEventId(eventId)
+    setLikedEvents((prev) => ({
+      ...prev,
+      [eventId]: true,
+    }))
+    setEventLikeCounts((prev) => ({
+      ...prev,
+      [eventId]: (prev[eventId] || 0) + 1,
+    }))
+
     const result = await recordEventLike(eventId, eventTitle)
 
-    if (result.status === "liked") {
+    if (result.status === "exists" || result.status === "error") {
       setEventLikeCounts((prev) => ({
         ...prev,
-        [eventId]: (prev[eventId] || 0) + 1,
+        [eventId]: Math.max((prev[eventId] || 1) - 1, 0),
       }))
     }
 
-    if (result.status === "liked" || result.status === "exists") {
+    if (result.status === "error") {
       setLikedEvents((prev) => ({
         ...prev,
-        [eventId]: true,
+        [eventId]: false,
       }))
     }
 
