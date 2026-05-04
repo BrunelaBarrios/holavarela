@@ -56,6 +56,20 @@ const initialForm: EventForm = {
   submitterPhone: "",
 }
 
+const revalidateEventPages = async (id?: string | null) => {
+  try {
+    await fetch("/api/eventos/revalidate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+    })
+  } catch (error) {
+    console.error("No pudimos actualizar la cache de eventos:", error)
+  }
+}
+
 export default function UsuariosNuevoEventoPage() {
   const router = useRouter()
   const [formData, setFormData] = useState<EventForm>(initialForm)
@@ -296,6 +310,8 @@ export default function UsuariosNuevoEventoPage() {
         return
       }
 
+      await revalidateEventPages(editingEventId)
+
       setSuccess(
         editingEventId
           ? "Tu borrador quedo actualizado."
@@ -332,6 +348,8 @@ export default function UsuariosNuevoEventoPage() {
       setShowDeleteConfirm(false)
       return
     }
+
+    await revalidateEventPages(editingEventId)
 
     setDeleting(false)
     setShowDeleteConfirm(false)

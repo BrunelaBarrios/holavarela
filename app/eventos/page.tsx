@@ -5,8 +5,9 @@ import { isEventCurrentOrUpcoming } from "../lib/eventDates"
 import { buildPageMetadata } from "../lib/seo"
 import { supabaseServer } from "../lib/supabaseServer"
 
-// Events need freshness, but hourly ISR was more expensive than necessary.
-export const revalidate = 14400
+// Event listings should feel fresh after publication while still avoiding
+// constant server renders for regular visitors.
+export const revalidate = 300
 
 export const metadata: Metadata = buildPageMetadata({
   path: "/eventos",

@@ -24,6 +24,21 @@ const initialComercio: ComercioForm = { nombre: "", direccion: "", telefono: "",
 const initialServicio: ServicioForm = { nombre: "", categoria: "Profesionales", descripcion: "", responsable: "", contacto: "", direccion: "", webUrl: "", instagramUrl: "", facebookUrl: "", usaWhatsapp: true }
 const initialCurso: CursoForm = { nombre: "", descripcion: "", responsable: "", contacto: "", webUrl: "", instagramUrl: "", facebookUrl: "", usaWhatsapp: true }
 const initialInstitucion: InstitucionForm = { nombre: "", descripcion: "", direccion: "", telefono: "", webUrl: "", instagramUrl: "", facebookUrl: "", usaWhatsapp: true }
+
+const revalidateEventPages = async (id?: string | null) => {
+  try {
+    await fetch("/api/eventos/revalidate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id }),
+    })
+  } catch (error) {
+    console.error("No pudimos actualizar la cache de eventos:", error)
+  }
+}
+
 function formatEventState(status?: string | null) {
   const normalized = normalizeEventStatus(status)
   if (normalized === "borrador") return "Borrador"
@@ -189,6 +204,7 @@ export default function UsuariosHomePage() {
           : item
       )
     )
+    await revalidateEventPages(eventId)
     setUpdatingEventId(null)
   }
 
@@ -213,6 +229,8 @@ export default function UsuariosHomePage() {
       setDeletingEventId(null)
       return
     }
+
+    await revalidateEventPages(eventId)
 
     setEvents((current) => current.filter((item) => item.id !== eventId))
     setConfirmingDeleteEventId(null)

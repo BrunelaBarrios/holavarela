@@ -2,7 +2,7 @@ import { HomePage, type HomePageData, type WeatherData } from "./components/Home
 import { getDateKeyDaysAgo, isEventCurrentOrUpcoming } from "./lib/eventDates"
 import { supabaseServer } from "./lib/supabaseServer"
 
-export const revalidate = 3600
+export const revalidate = 300
 
 const defaultSobreVarela = {
   titulo: "Jose Pedro Varela",
