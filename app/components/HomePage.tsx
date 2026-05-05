@@ -1891,18 +1891,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
       <section
         id="inicio"
-        className="relative overflow-hidden bg-[linear-gradient(180deg,#fff8dc_0%,#fbbf64_48%,#d9773a_100%)] py-20 md:py-28"
+        className="relative overflow-hidden bg-[linear-gradient(180deg,#ecfeff_0%,#bbf7d0_52%,#7dd3fc_100%)] py-20 md:py-28"
       >
-        <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_center,rgba(255,255,255,0.78),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.26)_0%,rgba(255,247,237,0.12)_42%,rgba(154,52,18,0.1)_100%)]" />
-        <div className="absolute inset-x-0 bottom-0 -z-0 h-[32%] bg-[linear-gradient(180deg,rgba(217,119,58,0)_0%,rgba(217,119,58,0.1)_30%,rgba(180,83,9,0.16)_100%)]" />
+        <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_center,rgba(255,255,255,0.78),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.26)_0%,rgba(240,253,250,0.12)_42%,rgba(14,165,233,0.1)_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 -z-0 h-[32%] bg-[linear-gradient(180deg,rgba(14,165,233,0)_0%,rgba(14,165,233,0.1)_30%,rgba(34,197,94,0.16)_100%)]" />
         <div className="absolute inset-x-0 top-[70%] -z-0 h-px bg-white/40" />
         <div className="absolute inset-x-0 top-[73%] -z-0 h-16 bg-[linear-gradient(180deg,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0)_100%)]" />
-        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
-          <span className="absolute left-[7%] top-[18%] h-12 w-7 rotate-[-32deg] rounded-[70%_0_70%_0] bg-amber-700/16 shadow-[18px_20px_0_-6px_rgba(194,65,12,0.14)]" />
-          <span className="absolute right-[9%] top-[16%] h-14 w-8 rotate-[28deg] rounded-[70%_0_70%_0] bg-orange-700/14 shadow-[-20px_28px_0_-7px_rgba(180,83,9,0.14)]" />
-          <span className="absolute bottom-[18%] left-[14%] h-10 w-6 rotate-[36deg] rounded-[70%_0_70%_0] bg-yellow-800/12 shadow-[22px_-18px_0_-8px_rgba(146,64,14,0.12)]" />
-          <span className="absolute bottom-[15%] right-[16%] h-11 w-7 rotate-[-24deg] rounded-[70%_0_70%_0] bg-red-900/11 shadow-[-24px_-16px_0_-8px_rgba(217,119,6,0.12)]" />
-        </div>
 
         <div className="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <div className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-white/80 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm">

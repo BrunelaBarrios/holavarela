@@ -889,7 +889,7 @@ export function JugaYGanaExperience() {
   const selectedWord = getWordFromSelection(wordSelection)
 
   const movieAnswer = movieChallenge.title.replace(/\s/g, "")
-  const maskedMovieTitle = movieChallenge.title
+  const maskedMovieWords = movieChallenge.title
     .split(" ")
     .map((word) =>
       word
@@ -897,7 +897,6 @@ export function JugaYGanaExperience() {
         .map((character) => (guessedLetters.includes(character) ? character : "_"))
         .join(" ")
     )
-    .join("   ")
 
   const totalPoints = useMemo(
     () => Object.values(earnedPoints).reduce((sum, value) => sum + value, 0),
@@ -1289,7 +1288,7 @@ export function JugaYGanaExperience() {
               {stage === "play" && activeChallenge?.key === "pelicula" ? (
                 <MoviePanel
                   hint={movieChallenge.hint}
-                  maskedTitle={maskedMovieTitle}
+                  maskedWords={maskedMovieWords}
                   guessedLetters={guessedLetters}
                   wrongLetters={wrongLetters}
                   completed={movieRoundCompleted}
@@ -1641,7 +1640,7 @@ function MemoryPanel(props: {
 
 function MoviePanel(props: {
   hint: string
-  maskedTitle: string
+  maskedWords: string[]
   guessedLetters: string[]
   wrongLetters: string[]
   completed: boolean
@@ -1667,8 +1666,15 @@ function MoviePanel(props: {
       <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
         Pista: {props.hint}
       </p>
-      <div className="mt-5 rounded-[28px] border border-slate-200 bg-slate-950 px-5 py-6 text-center text-2xl font-semibold tracking-[0.28em] text-white sm:text-3xl">
-        {props.maskedTitle}
+      <div className="mt-5 flex flex-wrap justify-center gap-x-7 gap-y-3 rounded-[28px] border border-slate-200 bg-slate-950 px-5 py-6 text-center text-2xl font-semibold text-white sm:gap-x-10 sm:text-3xl">
+        {props.maskedWords.map((word, index) => (
+          <span
+            key={`${word}-${index}`}
+            className="inline-block tracking-[0.2em]"
+          >
+            {word}
+          </span>
+        ))}
       </div>
       <div className="mt-5 rounded-full bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700">
         Errores: {props.wrongLetters.length} / {MAX_MOVIE_ERRORS}
