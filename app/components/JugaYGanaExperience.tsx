@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import {
   ArrowLeft,
@@ -289,7 +289,7 @@ const MOVIE_CHALLENGES = [
     hint: "Animales del zoologico viven una aventura inesperada.",
   },
   {
-    title: "KUNGFUPANDA",
+    title: "KUNG FU PANDA",
     hint: "Un panda torpe termina convertido en gran guerrero.",
   },
   {
@@ -297,15 +297,15 @@ const MOVIE_CHALLENGES = [
     hint: "Juguetes que cobran vida cuando nadie los ve.",
   },
   {
-    title: "BUSCANDOADORY",
+    title: "BUSCANDO A DORY",
     hint: "Una pez olvidadiza busca reencontrarse con su familia.",
   },
   {
-    title: "ELREYLEON",
+    title: "EL REY LEON",
     hint: "Un cachorro debe crecer para ocupar su lugar en la sabana.",
   },
   {
-    title: "MONSTERSINC",
+    title: "MONSTERS INC",
     hint: "Monstruos trabajan asustando ninos para generar energia.",
   },
   {
@@ -345,7 +345,7 @@ const MOVIE_CHALLENGES = [
     hint: "Aves coloridas viven una gran aventura en Brasil.",
   },
   {
-    title: "HOTELTRANSYLVANIA",
+    title: "HOTEL TRANSYLVANIA",
     hint: "Monstruos pasan sus vacaciones en un hotel muy especial.",
   },
   {
@@ -389,27 +389,27 @@ const MOVIE_CHALLENGES = [
     hint: "La historia de un personaje perturbador que cae en la locura.",
   },
   {
-    title: "HARRYPOTTER",
+    title: "HARRY POTTER",
     hint: "Un mago joven estudia en una escuela muy especial.",
   },
   {
-    title: "ELHOBBIT",
+    title: "EL HOBBIT",
     hint: "Una aventura fantastica con un anillo y criaturas sorprendentes.",
   },
   {
-    title: "ELPADRINO",
+    title: "EL PADRINO",
     hint: "Un clasico sobre familia, poder y mafia.",
   },
   {
-    title: "FORRESTGUMP",
+    title: "FORREST GUMP",
     hint: "Un hombre vive momentos historicos con una mirada muy particular.",
   },
   {
-    title: "JURASSICPARK",
+    title: "JURASSIC PARK",
     hint: "Un parque tematico revive dinosaurios.",
   },
   {
-    title: "KINGKONG",
+    title: "KING KONG",
     hint: "Un enorme gorila se convierte en leyenda.",
   },
   {
@@ -417,31 +417,31 @@ const MOVIE_CHALLENGES = [
     hint: "Un monstruo gigante emerge para sembrar caos.",
   },
   {
-    title: "RAPIDOSYFURIOSOS",
+    title: "RAPIDOS Y FURIOSOS",
     hint: "Velocidad, autos y carreras llenas de accion.",
   },
   {
-    title: "MISIONIMPOSIBLE",
+    title: "MISION IMPOSIBLE",
     hint: "Un agente arriesga todo en operaciones extremas.",
   },
   {
-    title: "TOPGUN",
+    title: "TOP GUN",
     hint: "Pilotos de combate entrenan al limite.",
   },
   {
-    title: "CASAFANTASMAS",
+    title: "CAZA FANTASMAS",
     hint: "Un grupo atrapa seres sobrenaturales en la ciudad.",
   },
   {
-    title: "VOLVERALFUTURO",
+    title: "VOLVER AL FUTURO",
     hint: "Un auto especial lleva a sus protagonistas a otras epocas.",
   },
   {
-    title: "INDIANAJONES",
+    title: "INDIANA JONES",
     hint: "Un arqueologo vive aventuras buscando reliquias historicas.",
   },
   {
-    title: "STARWARS",
+    title: "STAR WARS",
     hint: "Una saga galactica con jedis, naves y una gran fuerza.",
   },
   {
@@ -449,15 +449,15 @@ const MOVIE_CHALLENGES = [
     hint: "Un pequeno extraterrestre quiere volver a su casa.",
   },
   {
-    title: "ELMASKARA",
+    title: "LA MASCARA",
     hint: "Una mascara transforma a un hombre comun en alguien disparatado.",
   },
   {
-    title: "ACEVENTURA",
+    title: "ACE VENTURA",
     hint: "Un detective muy excéntrico busca animales perdidos.",
   },
   {
-    title: "MIPOBREANGELITO",
+    title: "MI POBRE ANGELITO",
     hint: "Un nino queda solo en casa y enfrenta a dos ladrones.",
   },
   {
@@ -465,47 +465,47 @@ const MOVIE_CHALLENGES = [
     hint: "Una nina muy inteligente descubre poderes especiales.",
   },
   {
-    title: "CHARLIEYLAFABRICA",
+    title: "CHARLIE Y LA FABRICA",
     hint: "Un nino entra en una fabrica de chocolate inolvidable.",
   },
   {
-    title: "ELGRINCH",
+    title: "EL GRINCH",
     hint: "Un personaje verde intenta arruinar la Navidad.",
   },
   {
-    title: "LAMASCARADEZORRO",
+    title: "LA MASCARA DE ZORRO",
     hint: "Un heroe enmascarado deja su marca con la espada.",
   },
   {
-    title: "NACHOLIBRE",
+    title: "NACHO LIBRE",
     hint: "Un cocinero sueña con ser luchador.",
   },
   {
-    title: "ESCUELADEROCK",
+    title: "ESCUELA DE ROCK",
     hint: "Un musico arma una banda con sus estudiantes.",
   },
   {
-    title: "LEGALMENTERUBIA",
+    title: "LEGALMENTE RUBIA",
     hint: "Una joven demuestra que puede brillar en la facultad de derecho.",
   },
   {
-    title: "DIABLOVISTEALAMODA",
+    title: "DIABLO VISTE A LA MODA",
     hint: "Una asistente entra al exigente mundo de la moda.",
   },
   {
-    title: "HOMBRESDENEGRO",
+    title: "HOMBRES DE NEGRO",
     hint: "Agentes secretos controlan la presencia extraterrestre.",
   },
   {
-    title: "BUSCANDONUNCAJAMAS",
+    title: "BUSCANDO NUNCA JAMAS",
     hint: "Un nino que no quiere crecer lidera una aventura fantastica.",
   },
   {
-    title: "PETERPAN",
+    title: "PETER PAN",
     hint: "Un chico vuela hacia un lugar donde nadie crece.",
   },
   {
-    title: "LILOYSTITCH",
+    title: "LILO Y STITCH",
     hint: "Una nina hawaiana adopta una criatura muy traviesa.",
   },
   {
@@ -525,7 +525,7 @@ const MOVIE_CHALLENGES = [
     hint: "Un zapatito cambia el destino de una joven.",
   },
   {
-    title: "LABELLAYLABESTIA",
+    title: "LA BELLA Y LA BESTIA",
     hint: "Una historia romantica en un castillo encantado.",
   },
   {
@@ -533,7 +533,7 @@ const MOVIE_CHALLENGES = [
     hint: "Una princesa encuentra ayuda en siete companeros.",
   },
   {
-    title: "LOSINCREIBLES",
+    title: "LOS INCREIBLES",
     hint: "Una familia de superheroes intenta volver a la accion.",
   },
   {
@@ -549,15 +549,15 @@ const MOVIE_CHALLENGES = [
     hint: "Un perro actor cree tener superpoderes.",
   },
   {
-    title: "ELGATOCONBOTAS",
+    title: "EL GATO CON BOTAS",
     hint: "Un felino espadachin vive aventuras con mucho estilo.",
   },
   {
-    title: "DRAGONBALLSUPER",
+    title: "DRAGON BALL SUPER",
     hint: "Guerreros poderosos pelean por universos enteros.",
   },
   {
-    title: "KARATEKID",
+    title: "KARATE KID",
     hint: "Un joven aprende defensa y disciplina con un maestro especial.",
   },
   {
@@ -629,6 +629,56 @@ function getStepDirection(fromIndex: number, toIndex: number, columnCount: numbe
   }
 
   return { rowStep, colStep }
+}
+
+function addCellToWordSelection(
+  current: number[],
+  cellIndex: number,
+  columnCount: number,
+  options: { allowBacktrack: boolean }
+) {
+  if (current.length === 0) {
+    return [cellIndex]
+  }
+
+  const lastSelectedIndex = current[current.length - 1]
+
+  if (cellIndex === lastSelectedIndex) {
+    return current
+  }
+
+  if (options.allowBacktrack && current.length > 1 && cellIndex === current[current.length - 2]) {
+    return current.slice(0, -1)
+  }
+
+  if (current.includes(cellIndex)) {
+    return current
+  }
+
+  const nextDirection = getStepDirection(lastSelectedIndex, cellIndex, columnCount)
+
+  if (!nextDirection) {
+    return current
+  }
+
+  if (current.length === 1) {
+    return [...current, cellIndex]
+  }
+
+  const lockedDirection = getStepDirection(current[0], current[1], columnCount)
+
+  if (!lockedDirection) {
+    return current
+  }
+
+  if (
+    nextDirection.rowStep !== lockedDirection.rowStep ||
+    nextDirection.colStep !== lockedDirection.colStep
+  ) {
+    return current
+  }
+
+  return [...current, cellIndex]
 }
 
 function createSeededRandom(seedText: string) {
@@ -828,21 +878,26 @@ export function JugaYGanaExperience() {
     setMovieTitlesCompleted([])
   }
 
-  const selectedWord = wordSelection
-    .map((cellIndex) => {
+  const getWordFromSelection = (selection: number[]) =>
+    selection
+      .map((cellIndex) => {
       const row = Math.floor(cellIndex / activeWordSearchGrid[0].length)
       const col = cellIndex % activeWordSearchGrid[0].length
       return activeWordSearchGrid[row][col]
     })
     .join("")
+  const selectedWord = getWordFromSelection(wordSelection)
 
+  const movieAnswer = movieChallenge.title.replace(/\s/g, "")
   const maskedMovieTitle = movieChallenge.title
-    .split("")
-    .map((character) => {
-      if (character === " ") return " "
-      return guessedLetters.includes(character) ? character : "_"
-    })
-    .join(" ")
+    .split(" ")
+    .map((word) =>
+      word
+        .split("")
+        .map((character) => (guessedLetters.includes(character) ? character : "_"))
+        .join(" ")
+    )
+    .join("   ")
 
   const totalPoints = useMemo(
     () => Object.values(earnedPoints).reduce((sum, value) => sum + value, 0),
@@ -912,42 +967,21 @@ export function JugaYGanaExperience() {
         return current.slice(0, -1)
       }
 
-      if (current.includes(cellIndex)) {
-        return current
-      }
-
       const columnCount = activeWordSearchGrid[0].length
-      const nextDirection = getStepDirection(lastSelectedIndex, cellIndex, columnCount)
-
-      if (!nextDirection) {
-        return current
-      }
-
-      if (current.length === 1) {
-        return [...current, cellIndex]
-      }
-
-      const lockedDirection = getStepDirection(current[0], current[1], columnCount)
-
-      if (!lockedDirection) {
-        return current
-      }
-
-      if (
-        nextDirection.rowStep !== lockedDirection.rowStep ||
-        nextDirection.colStep !== lockedDirection.colStep
-      ) {
-        return current
-      }
-
-      return [...current, cellIndex]
+      return addCellToWordSelection(current, cellIndex, columnCount, {
+        allowBacktrack: true,
+      })
     })
   }
 
-  const handleCheckWord = () => {
-    if (!selectedWord) return
+  const validateWordSelection = (selection: number[]) => {
+    const wordToCheck = getWordFromSelection(selection)
+    if (!wordToCheck) {
+      setWordSelection([])
+      return
+    }
 
-    const normalizedWord = selectedWord.toUpperCase()
+    const normalizedWord = wordToCheck.toUpperCase()
     const reversedWord = normalizedWord.split("").reverse().join("")
     const matchedWord = activeWordSearch.targets.find(
       (word) => !foundWords.includes(word) && (word === normalizedWord || word === reversedWord)
@@ -976,6 +1010,30 @@ export function JugaYGanaExperience() {
     }
 
     setWordSelection([])
+  }
+
+  const handleCheckWord = () => {
+    validateWordSelection(wordSelection)
+  }
+
+  const handleStartWordSelection = (cellIndex: number) => {
+    if (wordSearchFinished || completedChallenges.sopa) return
+    setWordSelection([cellIndex])
+  }
+
+  const handleExtendWordSelection = (cellIndex: number) => {
+    if (wordSearchFinished || completedChallenges.sopa) return
+
+    setWordSelection((current) =>
+      addCellToWordSelection(current, cellIndex, activeWordSearchGrid[0].length, {
+        allowBacktrack: true,
+      })
+    )
+  }
+
+  const handleAutoCheckWordSelection = (selection: number[]) => {
+    if (wordSearchFinished || completedChallenges.sopa) return
+    validateWordSelection(selection)
   }
 
   const resetWordSearch = () => {
@@ -1050,12 +1108,11 @@ export function JugaYGanaExperience() {
     if (movieRoundCompleted || movieFailed) return
     if (guessedLetters.includes(letter) || wrongLetters.includes(letter)) return
 
-    if (movieChallenge.title.includes(letter)) {
+    if (movieAnswer.includes(letter)) {
       const nextGuessedLetters = [...guessedLetters, letter]
       setGuessedLetters(nextGuessedLetters)
 
-      const solved = movieChallenge.title
-        .replace(/ /g, "")
+      const solved = movieAnswer
         .split("")
         .every((character) => nextGuessedLetters.includes(character))
 
@@ -1063,7 +1120,7 @@ export function JugaYGanaExperience() {
         const moviePoints =
           CHALLENGES[2].points +
           Math.max(0, MAX_MOVIE_ERRORS - wrongLetters.length) * 4 +
-          movieChallenge.title.replace(/ /g, "").length
+          movieAnswer.length
 
         setMovieRoundCompleted(true)
         setMovieRoundPoints(moviePoints)
@@ -1205,6 +1262,9 @@ export function JugaYGanaExperience() {
                   completed={completedChallenges.sopa}
                   finished={wordSearchFinished}
                   onToggleCell={handleWordCellToggle}
+                  onStartSelection={handleStartWordSelection}
+                  onExtendSelection={handleExtendWordSelection}
+                  onAutoCheckSelection={handleAutoCheckWordSelection}
                   onCheckWord={handleCheckWord}
                   onClear={() => setWordSelection([])}
                   onReset={resetWordSearch}
@@ -1344,11 +1404,46 @@ function WordSearchPanel(props: {
   completed: boolean
   finished: boolean
   onToggleCell: (index: number) => void
+  onStartSelection: (index: number) => void
+  onExtendSelection: (index: number) => void
+  onAutoCheckSelection: (selection: number[]) => void
   onCheckWord: () => void
   onClear: () => void
   onReset: () => void
   earnedPoints: number
 }) {
+  const isDraggingSelectionRef = useRef(false)
+  const suppressNextClickRef = useRef(false)
+  const dragSelectionRef = useRef<number[]>(props.wordSelection)
+
+  useEffect(() => {
+    if (!isDraggingSelectionRef.current) {
+      dragSelectionRef.current = props.wordSelection
+    }
+  }, [props.wordSelection])
+
+  const extendDragSelection = (cellIndex: number) => {
+    const nextSelection = addCellToWordSelection(
+      dragSelectionRef.current,
+      cellIndex,
+      props.grid[0].length,
+      { allowBacktrack: true }
+    )
+
+    if (nextSelection === dragSelectionRef.current) return
+
+    dragSelectionRef.current = nextSelection
+    props.onExtendSelection(cellIndex)
+  }
+
+  const finishDragSelection = () => {
+    if (!isDraggingSelectionRef.current) return
+
+    isDraggingSelectionRef.current = false
+    props.onAutoCheckSelection(dragSelectionRef.current)
+    dragSelectionRef.current = []
+  }
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1371,15 +1466,48 @@ function WordSearchPanel(props: {
       </p>
 
       <div
-        className="mt-6 grid w-full max-w-[480px] gap-2"
+        className="mt-6 grid w-full max-w-[480px] touch-none select-none gap-2"
         style={{ gridTemplateColumns: `repeat(${props.grid[0].length}, minmax(0, 1fr))` }}
+        onPointerMove={(event) => {
+          if (!isDraggingSelectionRef.current) return
+
+          event.preventDefault()
+          const element = document
+            .elementFromPoint(event.clientX, event.clientY)
+            ?.closest<HTMLElement>("[data-word-cell-index]")
+          const cellIndex = Number(element?.dataset.wordCellIndex)
+
+          if (Number.isInteger(cellIndex)) {
+            extendDragSelection(cellIndex)
+          }
+        }}
+        onPointerUp={finishDragSelection}
+        onPointerCancel={finishDragSelection}
       >
         {props.grid.flat().map((letter, index) => (
           <button
             key={`${letter}-${index}`}
             type="button"
-            onClick={() => props.onToggleCell(index)}
-            className={`aspect-square rounded-2xl border text-lg font-semibold transition ${
+            data-word-cell-index={index}
+            onPointerDown={(event) => {
+              if (props.finished || props.completed) return
+
+              event.preventDefault()
+              event.currentTarget.setPointerCapture(event.pointerId)
+              isDraggingSelectionRef.current = true
+              suppressNextClickRef.current = true
+              dragSelectionRef.current = [index]
+              props.onStartSelection(index)
+            }}
+            onClick={() => {
+              if (suppressNextClickRef.current) {
+                suppressNextClickRef.current = false
+                return
+              }
+
+              props.onToggleCell(index)
+            }}
+            className={`aspect-square touch-none rounded-2xl border text-lg font-semibold transition ${
               props.wordSelection.includes(index)
                 ? "border-sky-500 bg-sky-500 text-white"
                 : "border-slate-200 bg-slate-50 text-slate-800 hover:border-sky-300 hover:bg-sky-50"

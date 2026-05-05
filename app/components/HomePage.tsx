@@ -1891,10 +1891,10 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
       <section
         id="inicio"
-        className="relative overflow-hidden bg-[linear-gradient(180deg,#f4fafb_0%,#e8f3f5_36%,#d7e8ec_68%,#c6dce3_100%)] py-20 md:py-28"
+        className="relative overflow-hidden bg-[linear-gradient(180deg,#fff7c2_0%,#ffe1b3_38%,#ffd1dc_70%,#d9f99d_100%)] py-20 md:py-28"
       >
-        <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_center,rgba(255,255,255,0.72),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.04)_42%,rgba(15,23,42,0.04)_100%)]" />
-        <div className="absolute inset-x-0 bottom-0 -z-0 h-[32%] bg-[linear-gradient(180deg,rgba(100,145,160,0)_0%,rgba(100,145,160,0.12)_30%,rgba(86,127,141,0.24)_100%)]" />
+        <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_center,rgba(255,255,255,0.78),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.2)_0%,rgba(255,255,255,0.06)_42%,rgba(251,146,60,0.08)_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 -z-0 h-[32%] bg-[linear-gradient(180deg,rgba(251,146,60,0)_0%,rgba(251,146,60,0.1)_30%,rgba(244,114,182,0.18)_100%)]" />
         <div className="absolute inset-x-0 top-[70%] -z-0 h-px bg-white/40" />
         <div className="absolute inset-x-0 top-[73%] -z-0 h-16 bg-[linear-gradient(180deg,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0)_100%)]" />
 

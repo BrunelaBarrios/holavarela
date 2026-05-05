@@ -15,7 +15,6 @@ import {
   Store,
   Users,
 } from "lucide-react"
-import { supabase } from "../supabase"
 import { recordSiteVisit } from "../lib/contentVisits"
 
 type StatCard = {
@@ -46,6 +45,20 @@ type PriorityCard = {
   action: () => void
 }
 
+type DashboardCounts = {
+  comercios: number
+  eventos: number
+  servicios: number
+  instituciones: number
+  cursos: number
+  usuarios: number
+  newComercios: number
+  newEventos: number
+  newContactos: number
+  pendingPasswordRequests: number
+  pendingSubscriptions: number
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -60,61 +73,41 @@ export default function AdminDashboardPage() {
   const [newContactosCount, setNewContactosCount] = useState(0)
   const [pendingSubscriptionsCount, setPendingSubscriptionsCount] = useState(0)
   const [pendingPasswordRequestsCount, setPendingPasswordRequestsCount] = useState(0)
+  const [loadError, setLoadError] = useState("")
 
   useEffect(() => {
     const cargarDashboard = async () => {
-      const [
-        { count: comercios },
-        { count: eventos },
-        { count: servicios },
-        { count: instituciones },
-        { count: cursos },
-        { count: usuarios },
-        { count: newComercios },
-        { count: newEventos },
-        { count: newContactos },
-        { count: pendingPasswordRequests },
-        { count: pendingComercios },
-        { count: pendingServicios },
-      ] = await Promise.all([
-        supabase.from("comercios").select("*", { count: "exact", head: true }),
-        supabase.from("eventos").select("*", { count: "exact", head: true }),
-        supabase.from("servicios").select("*", { count: "exact", head: true }),
-        supabase.from("instituciones").select("*", { count: "exact", head: true }),
-        supabase.from("cursos").select("*", { count: "exact", head: true }),
-        supabase.from("usuarios_registrados").select("*", { count: "exact", head: true }),
-        supabase.from("comercios").select("*", { count: "exact", head: true }).eq("estado", "borrador"),
-        supabase.from("eventos").select("*", { count: "exact", head: true }).eq("estado", "borrador"),
-        supabase
-          .from("contacto_solicitudes")
-          .select("*", { count: "exact", head: true })
-          .or("visto.is.null,visto.eq.false"),
-        supabase
-          .from("password_reset_requests")
-          .select("*", { count: "exact", head: true })
-          .eq("status", "pending"),
-        supabase
-          .from("comercios")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "pendiente"),
-        supabase
-          .from("servicios")
-          .select("*", { count: "exact", head: true })
-          .eq("estado_suscripcion", "pendiente"),
-      ])
+      try {
+        const response = await fetch("/api/admin/dashboard", {
+          cache: "no-store",
+        })
+        const result = (await response.json()) as {
+          counts?: DashboardCounts
+          error?: string
+        }
 
-      setComerciosCount(comercios || 0)
-      setEventosCount(eventos || 0)
-      setServiciosCount(servicios || 0)
-      setInstitucionesCount(instituciones || 0)
-      setCursosCount(cursos || 0)
-      setUsuariosCount(usuarios || 0)
-      setNewComerciosCount(newComercios || 0)
-      setNewEventosCount(newEventos || 0)
-      setNewContactosCount(newContactos || 0)
-      setPendingPasswordRequestsCount(pendingPasswordRequests || 0)
-      setPendingSubscriptionsCount((pendingComercios || 0) + (pendingServicios || 0))
-      setLoading(false)
+        if (!response.ok || !result.counts) {
+          throw new Error(result.error || "No se pudo cargar el dashboard.")
+        }
+
+        setComerciosCount(result.counts.comercios)
+        setEventosCount(result.counts.eventos)
+        setServiciosCount(result.counts.servicios)
+        setInstitucionesCount(result.counts.instituciones)
+        setCursosCount(result.counts.cursos)
+        setUsuariosCount(result.counts.usuarios)
+        setNewComerciosCount(result.counts.newComercios)
+        setNewEventosCount(result.counts.newEventos)
+        setNewContactosCount(result.counts.newContactos)
+        setPendingPasswordRequestsCount(result.counts.pendingPasswordRequests)
+        setPendingSubscriptionsCount(result.counts.pendingSubscriptions)
+      } catch (error) {
+        setLoadError(
+          error instanceof Error ? error.message : "No se pudo cargar el dashboard."
+        )
+      } finally {
+        setLoading(false)
+      }
     }
 
     void cargarDashboard()
@@ -272,6 +265,10 @@ export default function AdminDashboardPage() {
       {loading ? (
         <div className="rounded-3xl border border-slate-200 bg-white p-8 text-slate-500 shadow-sm">
           Cargando panel...
+        </div>
+      ) : loadError ? (
+        <div className="rounded-3xl border border-red-200 bg-red-50 p-8 text-red-700 shadow-sm">
+          {loadError}
         </div>
       ) : (
         <div className="space-y-8">
