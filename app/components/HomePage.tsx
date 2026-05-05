@@ -1891,9 +1891,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
       <section
         id="inicio"
-        className="relative overflow-hidden bg-[linear-gradient(180deg,#fff7ed_0%,#fde68a_52%,#fed7aa_100%)] py-20 md:py-28"
+        className="relative overflow-hidden bg-[linear-gradient(120deg,#e9f8ec_0%,#edf9f6_46%,#eaf5ff_100%)] py-20 md:py-28"
       >
-        <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_center,rgba(255,255,255,0.68),transparent_36%)]" />
+        <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_center,rgba(255,255,255,0.72),transparent_36%)]" />
 
         <div className="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <div className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-white/80 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm">
