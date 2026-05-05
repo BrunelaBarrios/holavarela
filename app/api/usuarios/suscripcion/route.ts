@@ -11,6 +11,9 @@ type ActionPayload =
   | { action: "save_plan"; planKey: SubscriptionPlanKey }
   | { action: "cancel_subscription" }
 
+const keepsPremiumProfile = (planKey: SubscriptionPlanKey, status?: string | null) =>
+  planKey === "destacado_plus" && (status === "activa" || status === "pendiente")
+
 function getServerSupabase() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -115,8 +118,7 @@ export async function POST(request: Request) {
         .from(ownedEntity.table)
         .update({
           plan_suscripcion: planKey,
-          premium_activo:
-            ownedEntity.record.estado_suscripcion === "activa" && planKey === "destacado_plus",
+          premium_activo: keepsPremiumProfile(planKey, ownedEntity.record.estado_suscripcion),
           suscripcion_actualizada_at: changedAt,
         })
         .eq("id", ownedEntity.record.id)
