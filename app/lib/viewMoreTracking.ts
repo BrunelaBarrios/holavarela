@@ -25,6 +25,37 @@ export const recordViewMore = async (
   itemId: string,
   itemTitle?: string | null
 ) => {
+  const payload = JSON.stringify({
+    section,
+    itemId,
+    itemTitle: itemTitle || null,
+  })
+
+  if (typeof navigator !== "undefined" && "sendBeacon" in navigator) {
+    const sent = navigator.sendBeacon(
+      "/api/metricas/view-more",
+      new Blob([payload], { type: "application/json" })
+    )
+
+    if (sent) return
+  }
+
+  if (typeof fetch !== "undefined") {
+    try {
+      await fetch("/api/metricas/view-more", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: payload,
+        keepalive: true,
+      })
+      return
+    } catch {
+      // Fall back to the direct Supabase insert below.
+    }
+  }
+
   const { error } = await supabase.from("view_more_clicks").insert([
     {
       section,

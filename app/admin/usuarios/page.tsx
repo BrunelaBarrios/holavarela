@@ -348,6 +348,7 @@ export default function AdminUsuariosPage() {
         id: deleteTarget.id,
         userId: deleteTarget.user_id,
         email: deleteTarget.email,
+        adminPassword: deleteAdminPassword,
       }),
     })
 
@@ -638,7 +639,7 @@ export default function AdminUsuariosPage() {
               <button
                 type="button"
                 onClick={handleDelete}
-                disabled={deleting}
+                disabled={deleting || !deleteAdminPassword}
                 className="flex-1 rounded-xl bg-rose-600 px-4 py-3 font-medium text-white transition hover:bg-rose-500 disabled:opacity-60"
               >
                 {deleting ? "Borrando..." : "Borrar usuario"}
@@ -750,7 +751,9 @@ export default function AdminUsuariosPage() {
         </div>
       ) : usuariosFiltrados.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-slate-500 shadow-sm">
-          No hay usuarios registrados todavia.
+          {usuarios.length === 0
+            ? "No hay usuarios registrados todavia."
+            : "No hay usuarios que coincidan con esa busqueda."}
         </div>
       ) : (
         <div className="space-y-4">

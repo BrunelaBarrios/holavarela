@@ -1891,12 +1891,9 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
       <section
         id="inicio"
-        className="relative overflow-hidden bg-[linear-gradient(180deg,#ecfeff_0%,#bbf7d0_52%,#7dd3fc_100%)] py-20 md:py-28"
+        className="relative overflow-hidden bg-[linear-gradient(180deg,#fff7ed_0%,#fde68a_52%,#fed7aa_100%)] py-20 md:py-28"
       >
-        <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_center,rgba(255,255,255,0.78),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.26)_0%,rgba(240,253,250,0.12)_42%,rgba(14,165,233,0.1)_100%)]" />
-        <div className="absolute inset-x-0 bottom-0 -z-0 h-[32%] bg-[linear-gradient(180deg,rgba(14,165,233,0)_0%,rgba(14,165,233,0.1)_30%,rgba(34,197,94,0.16)_100%)]" />
-        <div className="absolute inset-x-0 top-[70%] -z-0 h-px bg-white/40" />
-        <div className="absolute inset-x-0 top-[73%] -z-0 h-16 bg-[linear-gradient(180deg,rgba(255,255,255,0.14)_0%,rgba(255,255,255,0)_100%)]" />
+        <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_center,rgba(255,255,255,0.68),transparent_36%)]" />
 
         <div className="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <div className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-white/80 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm">

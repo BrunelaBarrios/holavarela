@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState, useTransition } from "react"
-import { ArrowLeft, BarChart3, MessageCircle, RefreshCcw } from "lucide-react"
+import { ArrowLeft, BarChart3, FileText, MessageCircle, RefreshCcw } from "lucide-react"
 import { supabase } from "../../supabase"
 import { recordSiteVisit } from "../../lib/contentVisits"
 import type { SiteTrafficSnapshot } from "../../lib/siteTrafficSummary"
@@ -14,6 +14,7 @@ type InteractionRow = {
 type RecentActivity = {
   interactions15Days: number
   whatsapp15Days: number
+  viewMore15Days: number
 }
 
 type RecentMessage = {
@@ -83,6 +84,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
   const [recentActivity, setRecentActivity] = useState<RecentActivity>({
     interactions15Days: 0,
     whatsapp15Days: 0,
+    viewMore15Days: 0,
   })
   const [siteTraffic, setSiteTraffic] = useState<SiteTrafficSnapshot>(EMPTY_SITE_TRAFFIC)
 
@@ -181,6 +183,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
         externalRows15.length +
         likesRows15.length,
       whatsapp15Days: whatsappRows15.length,
+      viewMore15Days: viewMoreRows15.length,
     })
     setSiteTraffic(siteTrafficResponse)
 
@@ -270,13 +273,20 @@ export default function UsuariosMetricasHolaVarelaPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            <section className="grid gap-4 md:grid-cols-2">
+            <section className="grid gap-4 md:grid-cols-3">
               <MetricCard
                 label="Actividad reciente"
                 value={recentActivity.interactions15Days}
                 description="Interacciones ultimos 15 dias"
                 icon={<BarChart3 className="h-5 w-5 text-emerald-700" />}
                 tone="bg-emerald-100"
+              />
+              <MetricCard
+                label="Ver mas"
+                value={recentActivity.viewMore15Days}
+                description="Aperturas ultimos 15 dias"
+                icon={<FileText className="h-5 w-5 text-sky-700" />}
+                tone="bg-sky-100"
               />
               <MetricCard
                 label="Contactos rapidos"

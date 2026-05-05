@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { readAdminSessionFromRequest } from "../../../lib/adminSession"
+import {
+  ADMIN_DEFAULT_CREDENTIALS,
+  readAdminSessionFromRequest,
+} from "../../../lib/adminSession"
 import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
 
 type OwnerType = "comercio" | "servicio" | "curso" | "institucion"
@@ -27,6 +30,7 @@ type DeleteUserPayload = {
   id?: number
   userId?: string | null
   email?: string
+  adminPassword?: string
 }
 
 type LinkedOwner = {
@@ -55,6 +59,27 @@ async function requireAdminSession(request: NextRequest) {
   }
 
   return session
+}
+
+async function validateAdminPassword(username: string, password: string) {
+  if (!password) return false
+
+  if (
+    username === ADMIN_DEFAULT_CREDENTIALS.username &&
+    password === ADMIN_DEFAULT_CREDENTIALS.password
+  ) {
+    return true
+  }
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("administradores")
+    .select("contrasena, activo")
+    .eq("usuario", username)
+    .maybeSingle()
+
+  if (error) throw error
+
+  return Boolean(data?.activo && data.contrasena === password)
 }
 
 async function getLinkedOwnerByEmail(email: string) {
@@ -426,11 +451,24 @@ export async function DELETE(request: NextRequest) {
     const id = body.id ? Number(body.id) : 0
     const userId = body.userId?.trim() || null
     const email = body.email?.trim().toLowerCase() || ""
+    const adminPassword = body.adminPassword || ""
 
-    if (!id || !email) {
+    if (!id || !email || !adminPassword) {
       return NextResponse.json(
         { error: "Faltan datos para borrar el usuario." },
         { status: 400 }
+      )
+    }
+
+    const passwordIsValid = await validateAdminPassword(
+      adminSession.username,
+      adminPassword
+    )
+
+    if (!passwordIsValid) {
+      return NextResponse.json(
+        { error: "La contrasena de admin no es correcta." },
+        { status: 403 }
       )
     }
 
