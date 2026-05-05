@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache"
 import { NextResponse } from "next/server"
 import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
 import {
@@ -16,6 +17,18 @@ const tableByType = {
 
 const keepsPremiumProfile = (planKey: string | null, statusKey: string) =>
   planKey === "destacado_plus" && (statusKey === "activa" || statusKey === "pendiente")
+
+function revalidateEntityPages(table: EntityTable, id?: number) {
+  revalidatePath("/")
+  if (table === "comercios") {
+    revalidatePath("/comercios")
+    if (id) revalidatePath(`/comercios/${id}`)
+    return
+  }
+
+  revalidatePath("/servicios")
+  if (id) revalidatePath(`/servicios/${id}`)
+}
 
 async function updateEntityByReference(params: {
   table: EntityTable
@@ -42,6 +55,8 @@ async function updateEntityByReference(params: {
   if (error) {
     throw new Error(`No pudimos actualizar ${params.table}#${params.id}: ${error.message}`)
   }
+
+  revalidateEntityPages(params.table, params.id)
 }
 
 async function updateEntityByEmail(params: {
@@ -78,6 +93,8 @@ async function updateEntityByEmail(params: {
     if (error) {
       throw new Error(`No pudimos actualizar ${table} por email: ${error.message}`)
     }
+
+    revalidateEntityPages(table, data.id)
 
     return true
   }

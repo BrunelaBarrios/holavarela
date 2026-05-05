@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import { createClient } from "@supabase/supabase-js"
 import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
 import { subscriptionPlans, type SubscriptionPlanKey } from "../../../lib/subscriptionPlans"
@@ -13,6 +14,18 @@ type ActionPayload =
 
 const keepsPremiumProfile = (planKey: SubscriptionPlanKey, status?: string | null) =>
   planKey === "destacado_plus" && (status === "activa" || status === "pendiente")
+
+function revalidateOwnedEntityPages(type: EntityType, id?: number) {
+  revalidatePath("/")
+  if (type === "comercio") {
+    revalidatePath("/comercios")
+    if (id) revalidatePath(`/comercios/${id}`)
+    return
+  }
+
+  revalidatePath("/servicios")
+  if (id) revalidatePath(`/servicios/${id}`)
+}
 
 function getServerSupabase() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -129,6 +142,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: updateError.message }, { status: 500 })
       }
 
+      revalidateOwnedEntityPages(ownedEntity.type, updatedRecord?.id || ownedEntity.record.id)
+
       return NextResponse.json({
         ok: true,
         action,
@@ -172,6 +187,8 @@ export async function POST(request: Request) {
       if (eventsError) {
         return NextResponse.json({ error: eventsError.message }, { status: 500 })
       }
+
+      revalidateOwnedEntityPages(ownedEntity.type, ownedEntity.record.id)
 
       return NextResponse.json({
         ok: true,

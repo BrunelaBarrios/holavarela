@@ -3,8 +3,8 @@ import { ComerciosPageClient } from "../components/public/ComerciosPageClient"
 import { buildPageMetadata } from "../lib/seo"
 import { supabaseServer } from "../lib/supabaseServer"
 
-// Public listings change occasionally, so a longer cache window is enough.
-export const revalidate = 43200
+// Commerce premium status can change from admin or subscription flows.
+export const revalidate = 300
 
 export const metadata: Metadata = buildPageMetadata({
   path: "/comercios",

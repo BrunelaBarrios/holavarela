@@ -6,8 +6,8 @@ import { isEventCurrentOrUpcoming } from "../../lib/eventDates"
 import { buildPageMetadata } from "../../lib/seo"
 import { supabaseServer } from "../../lib/supabaseServer"
 
-// Premium detail pages are stable enough for a longer cache window.
-export const revalidate = 43200
+// Premium status can change while subscriptions are still pending.
+export const revalidate = 300
 
 const fetchComercioById = cache(async (id: string) =>
   supabaseServer

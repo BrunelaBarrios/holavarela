@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache"
 import { NextResponse, type NextRequest } from "next/server"
 import { readAdminSessionFromRequest } from "../../../lib/adminSession"
 import { logAdminActivityServer } from "../../../lib/adminActivityServer"
@@ -73,6 +74,14 @@ async function requireAdminSession(request: NextRequest) {
   return readAdminSessionFromRequest(request)
 }
 
+function revalidateComercioPages(id?: number) {
+  revalidatePath("/")
+  revalidatePath("/comercios")
+  if (id) {
+    revalidatePath(`/comercios/${id}`)
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAdminSession(request)
@@ -107,6 +116,8 @@ export async function POST(request: NextRequest) {
         section: "Comercios",
         target: existing.nombre,
       })
+
+      revalidateComercioPages(body.id)
 
       return NextResponse.json({ ok: true })
     }
@@ -150,6 +161,8 @@ export async function POST(request: NextRequest) {
         target: existing.nombre,
       })
 
+      revalidateComercioPages(body.id)
+
       return NextResponse.json({ ok: true, record: data })
     }
 
@@ -183,6 +196,8 @@ export async function POST(request: NextRequest) {
         section: "Comercios",
         target: existing.nombre,
       })
+
+      revalidateComercioPages(body.id)
 
       return NextResponse.json({ ok: true, record: data })
     }
@@ -238,6 +253,8 @@ export async function POST(request: NextRequest) {
         target: payload.nombre,
       })
 
+      revalidateComercioPages(body.id)
+
       return NextResponse.json({ ok: true, record: data })
     }
 
@@ -254,6 +271,8 @@ export async function POST(request: NextRequest) {
       section: "Comercios",
       target: payload.nombre,
     })
+
+    revalidateComercioPages(data.id)
 
     return NextResponse.json({ ok: true, record: data })
   } catch (error) {
