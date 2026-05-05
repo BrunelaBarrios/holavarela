@@ -1,5 +1,10 @@
 import { HomePage, type HomePageData, type WeatherData } from "./components/HomePage"
-import { getDateKeyDaysAgo, isEventCurrentOrUpcoming } from "./lib/eventDates"
+import {
+  buildActiveEventsFilter,
+  getDateKeyDaysAgo,
+  getTodayInMontevideo,
+  isEventCurrentOrUpcoming,
+} from "./lib/eventDates"
 import { supabaseServer } from "./lib/supabaseServer"
 
 export const revalidate = 300
@@ -34,6 +39,8 @@ const isCommercialEventCategory = (categoria?: string | null) => {
 }
 
 export default async function Page() {
+  const today = getTodayInMontevideo()
+
   const weatherPromise = fetch(
     "https://api.open-meteo.com/v1/forecast?latitude=-33.45&longitude=-54.53&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min&timezone=America%2FMontevideo&forecast_days=1",
     {
@@ -82,6 +89,7 @@ export default async function Page() {
       .from("eventos")
       .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, created_at")
       .or("estado.is.null,estado.eq.activo")
+      .or(buildActiveEventsFilter(today))
       .order("fecha", { ascending: true }),
     supabaseServer
       .from("cursos")
