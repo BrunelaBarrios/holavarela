@@ -4,8 +4,8 @@ import { notFound } from "next/navigation"
 import { cache } from "react"
 import { CalendarDays, MapPin, Phone, Share2 } from "lucide-react"
 import { ContactActionLink } from "../../components/ContactActionLink"
+import { EventImageViewer } from "../../components/EventImageViewer"
 import { ExternalLinksButtons } from "../../components/ExternalLinksButtons"
-import { OptimizedImage } from "../../components/OptimizedImage"
 import { PublicHeader } from "../../components/PublicHeader"
 import { ShareButton } from "../../components/ShareButton"
 import { formatEventDateRange, isEventCurrentOrUpcoming } from "../../lib/eventDates"
@@ -206,15 +206,7 @@ export default async function EventoSharePage({ params }: EventPageParams) {
             <div className="bg-[radial-gradient(circle_at_top_left,#e8f6ec_0%,#f4f9ff_38%,#eef4ff_100%)] p-5 sm:p-7 lg:p-10">
               <div className="overflow-hidden rounded-[30px] border border-white/80 bg-white/90 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.45)]">
                 {evento.imagen ? (
-                  <div className="relative aspect-[16/10] w-full bg-white">
-                    <OptimizedImage
-                      src={evento.imagen}
-                      alt={evento.titulo}
-                      sizes="(max-width: 1280px) 100vw, 58vw"
-                      priority
-                      className="object-contain p-2 sm:p-4"
-                    />
-                  </div>
+                  <EventImageViewer src={evento.imagen} alt={evento.titulo} />
                 ) : (
                   <div className="flex min-h-[320px] items-center justify-center text-slate-400">
                     Sin imagen principal
