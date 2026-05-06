@@ -63,6 +63,7 @@ export function useSweepstakesPopup() {
       nombre,
       telefono,
       totalLikes: currentTotalLikes,
+      source: "corazones",
     })
 
     if (entryResult.status === "error") {

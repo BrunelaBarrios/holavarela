@@ -34,6 +34,7 @@ type SweepstakesEntry = {
   nombre: string
   telefono: string
   totalLikes: number
+  source?: string | null
   createdAt: string | null
 }
 
@@ -125,6 +126,12 @@ function parseParticipantKey(
   return { type, id }
 }
 
+function getEntrySourceLabel(source?: string | null) {
+  if (source === "qr") return "QR"
+  if (source === "corazones") return "Corazones"
+  return "Sin dato"
+}
+
 export default function AdminSorteosPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -170,7 +177,9 @@ export default function AdminSorteosPage() {
 
       if (!normalizedSearch) return true
 
-      return `${entry.nombre} ${entry.telefono}`.toLowerCase().includes(normalizedSearch)
+      return `${entry.nombre} ${entry.telefono} ${getEntrySourceLabel(entry.source)}`
+        .toLowerCase()
+        .includes(normalizedSearch)
     })
   }, [entries, entryScope, entrySearch, selectedCampaign])
   const selectedCampaignEntriesCount = useMemo(() => {
@@ -222,12 +231,23 @@ export default function AdminSorteosPage() {
         .select("id, nombre")
         .or("estado.is.null,estado.eq.activo")
         .order("nombre", { ascending: true }),
-      supabase
-        .from("sorteo_participaciones")
-        .select("id, sorteo_id, nombre, telefono, total_likes, created_at", {
-          count: "exact",
-        })
-        .order("created_at", { ascending: false }),
+      (async () => {
+        const result = await supabase
+          .from("sorteo_participaciones")
+          .select("id, sorteo_id, nombre, telefono, total_likes, origen, created_at", {
+            count: "exact",
+          })
+          .order("created_at", { ascending: false })
+
+        if (result.error?.code !== "42703") return result
+
+        return supabase
+          .from("sorteo_participaciones")
+          .select("id, sorteo_id, nombre, telefono, total_likes, created_at", {
+            count: "exact",
+          })
+          .order("created_at", { ascending: false })
+      })(),
     ])
 
     if (configError) {
@@ -284,6 +304,7 @@ export default function AdminSorteosPage() {
           nombre: string
           telefono: string
           total_likes: number
+          origen?: string | null
           created_at: string | null
         }>).map((entry) => ({
           id: entry.id,
@@ -291,6 +312,7 @@ export default function AdminSorteosPage() {
           nombre: entry.nombre,
           telefono: entry.telefono,
           totalLikes: entry.total_likes,
+          source: entry.origen || null,
           createdAt: entry.created_at,
         }))
       )
@@ -394,7 +416,7 @@ export default function AdminSorteosPage() {
       `"${String(value ?? "").replace(/"/g, '""')}"`
 
     const rows = [
-      ["sorteo_id", "sorteo", "nombre", "telefono", "corazones", "fecha"],
+      ["sorteo_id", "sorteo", "nombre", "telefono", "corazones", "origen", "fecha"],
       ...visibleEntries.map((entry) => [
         entry.sorteoId ?? "",
         entry.sorteoId
@@ -403,6 +425,7 @@ export default function AdminSorteosPage() {
         entry.nombre,
         entry.telefono,
         entry.totalLikes,
+        getEntrySourceLabel(entry.source),
         entry.createdAt
           ? new Date(entry.createdAt).toLocaleString("sv-SE", { hour12: false })
           : "",
@@ -888,6 +911,7 @@ export default function AdminSorteosPage() {
                           <th className="px-4 py-3">Nombre</th>
                           <th className="px-4 py-3">Telefono</th>
                           <th className="px-4 py-3">Corazones</th>
+                          <th className="px-4 py-3">Origen</th>
                           <th className="px-4 py-3">Sorteo</th>
                           <th className="px-4 py-3">Fecha</th>
                         </tr>
@@ -898,6 +922,11 @@ export default function AdminSorteosPage() {
                               <td className="px-4 py-3 font-medium text-slate-900">{entry.nombre}</td>
                               <td className="px-4 py-3">{entry.telefono}</td>
                               <td className="px-4 py-3">{entry.totalLikes}</td>
+                              <td className="px-4 py-3">
+                                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                                  {getEntrySourceLabel(entry.source)}
+                                </span>
+                              </td>
                               <td className="px-4 py-3">
                                 {entry.sorteoId
                                   ? campaigns.find((campaign) => campaign.id === entry.sorteoId)?.titulo || `Sorteo #${entry.sorteoId}`

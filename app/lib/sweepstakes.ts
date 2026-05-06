@@ -234,6 +234,7 @@ export async function createSweepstakesEntry(params: {
   nombre: string
   telefono: string
   totalLikes: number
+  source: "corazones" | "qr"
 }) {
   if (params.totalLikes < 3) {
     return {
@@ -242,17 +243,41 @@ export async function createSweepstakesEntry(params: {
     }
   }
 
+  const entryPayload = {
+    sorteo_id: params.sorteoId,
+    browser_key: params.browserKey,
+    nombre: params.nombre.trim(),
+    telefono: params.telefono.trim(),
+    total_likes: params.totalLikes,
+    origen: params.source,
+  }
+
   const { error } = await supabase
     .from(SWEEPSTAKES_ENTRIES_TABLE)
-    .insert([
-      {
-        sorteo_id: params.sorteoId,
-        browser_key: params.browserKey,
-        nombre: params.nombre.trim(),
-        telefono: params.telefono.trim(),
-        total_likes: params.totalLikes,
-      },
-    ])
+    .insert([entryPayload])
+
+  if (error?.code === "42703") {
+    const payloadWithoutSource: Omit<typeof entryPayload, "origen"> = {
+      sorteo_id: entryPayload.sorteo_id,
+      browser_key: entryPayload.browser_key,
+      nombre: entryPayload.nombre,
+      telefono: entryPayload.telefono,
+      total_likes: entryPayload.total_likes,
+    }
+    const fallback = await supabase
+      .from(SWEEPSTAKES_ENTRIES_TABLE)
+      .insert([payloadWithoutSource])
+
+    if (!fallback.error) {
+      return { status: "created" as const, error: null }
+    }
+
+    if (!isMissingSweepstakesSchemaError(fallback.error)) {
+      console.error("No se pudo guardar la participacion del sorteo:", fallback.error)
+    }
+
+    return { status: "error" as const, error: fallback.error }
+  }
 
   if (error) {
     if (!isMissingSweepstakesSchemaError(error)) {

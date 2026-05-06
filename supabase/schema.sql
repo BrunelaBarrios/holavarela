@@ -523,6 +523,9 @@ add column if not exists participante_id_2 bigint;
 alter table public.sorteo_participaciones
 add column if not exists sorteo_id bigint references public.sorteo_popup_config(id) on delete cascade;
 
+alter table public.sorteo_participaciones
+add column if not exists origen text not null default 'corazones';
+
 drop index if exists public.sorteo_participaciones_browser_key_key;
 
 drop index if exists sorteo_participaciones_browser_key_key;

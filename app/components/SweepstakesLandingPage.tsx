@@ -58,6 +58,7 @@ export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
       nombre,
       telefono,
       totalLikes: 3,
+      source: "qr",
     })
 
     if (result.status === "error") {
