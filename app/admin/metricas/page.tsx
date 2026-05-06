@@ -13,7 +13,6 @@ import {
   Save,
   Share2,
 } from "lucide-react"
-import { supabase } from "../../supabase"
 import { buildEventLikeTotal } from "../../lib/eventLikes"
 import {
   buildExternalLinkTotals,
@@ -38,6 +37,7 @@ import {
   type ViewMoreTotals,
 } from "../../lib/viewMoreTracking"
 import { recordSiteVisit } from "../../lib/contentVisits"
+import { fetchMetricRows, fetchMetricRowsWithFallback } from "../../lib/metricRows"
 import type { SiteTrafficSnapshot } from "../../lib/siteTrafficSummary"
 
 type MetricRow = {
@@ -175,18 +175,6 @@ const buildDailyTrend = (
   addRows(eventLikeRows, "corazones")
 
   return last7Days.map((day) => seed[day])
-}
-
-const withFallback = async <T,>(
-  promiseLike: PromiseLike<{ data: T[] | null; error: unknown }>,
-  label: string
-) => {
-  const { data, error } = await promiseLike
-  if (error) {
-    console.warn(`No se pudo cargar ${label}.`, error)
-    return [] as T[]
-  }
-  return (data || []) as T[]
 }
 
 const maxValue = (values: number[]) => Math.max(...values, 1)
@@ -347,11 +335,11 @@ export default function AdminMetricasPage() {
     const loadMetrics = async () => {
       const [
         siteTrafficResponse,
-        { data: shareRows },
-        { data: whatsappRows },
-        { data: viewMoreRows },
-        { data: externalLinkRows },
-        { data: eventLikeRows },
+        shareRows,
+        whatsappRows,
+        viewMoreRows,
+        externalLinkRows,
+        eventLikeRows,
         shareRows15,
         whatsappRows15,
         viewMoreRows15,
@@ -377,70 +365,61 @@ export default function AdminMetricasPage() {
             console.warn("No se pudo cargar el trafico general del sitio.", error)
             return EMPTY_SITE_TRAFFIC
           }),
-        supabase.from("share_events").select("section, created_at"),
-        supabase.from("whatsapp_clicks").select("section, created_at"),
-        supabase.from("view_more_clicks").select("section, created_at"),
-        supabase.from("external_link_clicks").select("section, link_type, created_at"),
-        supabase.from("event_likes").select("created_at"),
-        withFallback<InteractionRow>(
-          supabase.from("share_events").select("created_at").gte("created_at", getIsoDaysAgo(15)),
-          "los compartidos de 15 dias"
+        fetchMetricRows<MetricRow>("share_events", "section, created_at"),
+        fetchMetricRows<MetricRow>("whatsapp_clicks", "section, created_at"),
+        fetchMetricRows<MetricRow>("view_more_clicks", "section, created_at"),
+        fetchMetricRows<ExternalLinkMetricRow>("external_link_clicks", "section, link_type, created_at"),
+        fetchMetricRows<EventLikeMetricRow>("event_likes", "created_at"),
+        fetchMetricRowsWithFallback<InteractionRow>("share_events", "created_at", "los compartidos de 15 dias", {
+          since: getIsoDaysAgo(15),
+        }),
+        fetchMetricRowsWithFallback<InteractionRow>(
+          "whatsapp_clicks",
+          "created_at",
+          "los clics de WhatsApp de 15 dias",
+          { since: getIsoDaysAgo(15) }
         ),
-        withFallback<InteractionRow>(
-          supabase
-            .from("whatsapp_clicks")
-            .select("created_at")
-            .gte("created_at", getIsoDaysAgo(15)),
-          "los clics de WhatsApp de 15 dias"
+        fetchMetricRowsWithFallback<InteractionRow>(
+          "view_more_clicks",
+          "created_at",
+          "los clics en ver mas de 15 dias",
+          { since: getIsoDaysAgo(15) }
         ),
-        withFallback<InteractionRow>(
-          supabase
-            .from("view_more_clicks")
-            .select("created_at")
-            .gte("created_at", getIsoDaysAgo(15)),
-          "los clics en ver mas de 15 dias"
+        fetchMetricRowsWithFallback<InteractionRow>(
+          "external_link_clicks",
+          "created_at",
+          "los clics externos de 15 dias",
+          { since: getIsoDaysAgo(15) }
         ),
-        withFallback<InteractionRow>(
-          supabase
-            .from("external_link_clicks")
-            .select("created_at")
-            .gte("created_at", getIsoDaysAgo(15)),
-          "los clics externos de 15 dias"
+        fetchMetricRowsWithFallback<InteractionRow>("event_likes", "created_at", "los likes de 15 dias", {
+          since: getIsoDaysAgo(15),
+        }),
+        fetchMetricRowsWithFallback<InteractionRow>(
+          "contacto_solicitudes",
+          "created_at",
+          "los mensajes de 48 horas",
+          { since: getIsoDaysAgo(2) }
         ),
-        withFallback<InteractionRow>(
-          supabase.from("event_likes").select("created_at").gte("created_at", getIsoDaysAgo(15)),
-          "los likes de 15 dias"
-        ),
-        withFallback<InteractionRow>(
-          supabase
-            .from("contacto_solicitudes")
-            .select("created_at")
-            .gte("created_at", getIsoDaysAgo(2)),
-          "los mensajes de 48 horas"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("event_likes").select("created_at").gte("created_at", getIsoDaysAgo(2)),
-          "los likes de 48 horas"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("eventos").select("created_at").gte("created_at", getIsoDaysAgo(2)),
-          "los eventos nuevos de 48 horas"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("comercios").select("created_at").gte("created_at", getIsoDaysAgo(2)),
-          "los comercios nuevos de 48 horas"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("servicios").select("created_at").gte("created_at", getIsoDaysAgo(2)),
-          "los servicios nuevos de 48 horas"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("cursos").select("created_at").gte("created_at", getIsoDaysAgo(2)),
-          "los cursos nuevos de 48 horas"
-        ),
-        withFallback<InteractionRow>(
-          supabase.from("instituciones").select("created_at").gte("created_at", getIsoDaysAgo(2)),
-          "las instituciones nuevas de 48 horas"
+        fetchMetricRowsWithFallback<InteractionRow>("event_likes", "created_at", "los likes de 48 horas", {
+          since: getIsoDaysAgo(2),
+        }),
+        fetchMetricRowsWithFallback<InteractionRow>("eventos", "created_at", "los eventos nuevos de 48 horas", {
+          since: getIsoDaysAgo(2),
+        }),
+        fetchMetricRowsWithFallback<InteractionRow>("comercios", "created_at", "los comercios nuevos de 48 horas", {
+          since: getIsoDaysAgo(2),
+        }),
+        fetchMetricRowsWithFallback<InteractionRow>("servicios", "created_at", "los servicios nuevos de 48 horas", {
+          since: getIsoDaysAgo(2),
+        }),
+        fetchMetricRowsWithFallback<InteractionRow>("cursos", "created_at", "los cursos nuevos de 48 horas", {
+          since: getIsoDaysAgo(2),
+        }),
+        fetchMetricRowsWithFallback<InteractionRow>(
+          "instituciones",
+          "created_at",
+          "las instituciones nuevas de 48 horas",
+          { since: getIsoDaysAgo(2) }
         ),
       ])
 
