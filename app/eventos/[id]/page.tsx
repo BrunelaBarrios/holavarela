@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { cache } from "react"
-import { CalendarDays, MapPin, Phone, Share2 } from "lucide-react"
+import { CalendarDays, MapPin, Phone } from "lucide-react"
 import { ContactActionLink } from "../../components/ContactActionLink"
 import { EventImageViewer } from "../../components/EventImageViewer"
 import { ExternalLinksButtons } from "../../components/ExternalLinksButtons"
@@ -38,6 +38,12 @@ type EventoRecord = {
   usa_whatsapp?: boolean | null
   owner_email?: string | null
   institucion_id?: number | null
+}
+
+type OwnerProfile = {
+  href: string
+  label: string
+  name: string
 }
 
 const getSiteUrl = () => {
@@ -160,27 +166,78 @@ export default async function EventoSharePage({ params }: EventPageParams) {
 
   const parsedDescription = parseEventDescription(evento.descripcion).baseDescription
   const eventUrl = getEventUrl(evento.id)
-  const { data: ownerInstitutionById } =
+  const [
+    { data: ownerInstitutionById },
+    { data: ownerCommerceByEmail },
+    { data: ownerServiceByEmail },
+    { data: ownerInstitutionByEmail },
+  ] = await Promise.all([
     typeof evento.institucion_id === "number"
-      ? await supabaseServer
+      ? supabaseServer
           .from("instituciones")
-          .select("id, nombre, owner_email, premium_activo, estado")
+          .select("id, nombre, premium_activo, estado")
           .eq("id", evento.institucion_id)
-          .eq("premium_activo", true)
           .eq("estado", "activo")
           .maybeSingle()
-      : { data: null }
-  const { data: ownerInstitutionByEmail } =
-    !ownerInstitutionById && evento.owner_email
-      ? await supabaseServer
-          .from("instituciones")
-          .select("id, nombre, owner_email, premium_activo, estado")
+      : Promise.resolve({ data: null }),
+    evento.owner_email
+      ? supabaseServer
+          .from("comercios")
+          .select("id, nombre, premium_activo, estado")
           .eq("owner_email", evento.owner_email)
-          .eq("premium_activo", true)
           .eq("estado", "activo")
           .maybeSingle()
-      : { data: null }
-  const ownerInstitution = ownerInstitutionById || ownerInstitutionByEmail
+      : Promise.resolve({ data: null }),
+    evento.owner_email
+      ? supabaseServer
+          .from("servicios")
+          .select("id, nombre, premium_activo, estado")
+          .eq("owner_email", evento.owner_email)
+          .eq("estado", "activo")
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    evento.owner_email
+      ? supabaseServer
+          .from("instituciones")
+          .select("id, nombre, premium_activo, estado")
+          .eq("owner_email", evento.owner_email)
+          .eq("estado", "activo")
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+  const ownerProfile: OwnerProfile | null = ownerInstitutionById
+    ? {
+        href: ownerInstitutionById.premium_activo
+          ? `/instituciones/${ownerInstitutionById.id}`
+          : `/instituciones?item=${ownerInstitutionById.id}`,
+        label: "Volver a la institucion",
+        name: ownerInstitutionById.nombre,
+      }
+    : ownerCommerceByEmail
+      ? {
+          href: ownerCommerceByEmail.premium_activo
+            ? `/comercios/${ownerCommerceByEmail.id}`
+            : `/comercios?item=${ownerCommerceByEmail.id}`,
+          label: "Volver al comercio",
+          name: ownerCommerceByEmail.nombre,
+        }
+      : ownerServiceByEmail
+        ? {
+            href: ownerServiceByEmail.premium_activo
+              ? `/servicios/${ownerServiceByEmail.id}`
+              : `/servicios?item=${ownerServiceByEmail.id}`,
+            label: "Volver al servicio",
+            name: ownerServiceByEmail.nombre,
+          }
+        : ownerInstitutionByEmail
+          ? {
+              href: ownerInstitutionByEmail.premium_activo
+                ? `/instituciones/${ownerInstitutionByEmail.id}`
+                : `/instituciones?item=${ownerInstitutionByEmail.id}`,
+              label: "Volver a la institucion",
+              name: ownerInstitutionByEmail.nombre,
+            }
+          : null
   const contactHref = evento.telefono
     ? evento.usa_whatsapp === false
       ? `tel:${evento.telefono}`
@@ -295,19 +352,19 @@ export default async function EventoSharePage({ params }: EventPageParams) {
                 </div>
               ) : null}
 
-              {ownerInstitution ? (
+              {ownerProfile ? (
                 <div className="mt-5 rounded-[24px] border border-emerald-100 bg-emerald-50/70 p-6">
                   <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
                     Pertenece a
                   </div>
                   <p className="text-lg font-semibold text-slate-950">
-                    {ownerInstitution.nombre}
+                    {ownerProfile.name}
                   </p>
                   <Link
-                    href={`/instituciones/${ownerInstitution.id}`}
+                    href={ownerProfile.href}
                     className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100"
                   >
-                    Ver perfil completo
+                    {ownerProfile.label}
                   </Link>
                 </div>
               ) : null}
@@ -328,15 +385,6 @@ export default async function EventoSharePage({ params }: EventPageParams) {
                     itemId={String(evento.id)}
                     className="inline-flex items-center gap-2 rounded-2xl border border-blue-200 bg-white px-5 py-3 font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-50"
                   />
-                  <a
-                    href={eventUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                  >
-                    <Share2 className="h-4 w-4" />
-                    Abrir enlace
-                  </a>
                 </div>
               </div>
             </div>
