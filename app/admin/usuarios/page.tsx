@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   BellRing,
+  Eye,
+  EyeOff,
   KeyRound,
   Link2,
   Mail,
@@ -83,6 +85,7 @@ export default function AdminUsuariosPage() {
   const [formMode, setFormMode] = useState<"create" | "edit">("create")
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState<UserForm>(initialForm)
+  const [showUserPassword, setShowUserPassword] = useState(false)
   const [ownerOptions, setOwnerOptions] = useState<Record<OwnerType, OwnerOption[]>>({
     comercio: [],
     servicio: [],
@@ -240,6 +243,7 @@ export default function AdminUsuariosPage() {
 
   const resetForm = () => {
     setFormData(initialForm)
+    setShowUserPassword(false)
     setFormMode("create")
     setIsFormOpen(false)
     setError("")
@@ -248,6 +252,7 @@ export default function AdminUsuariosPage() {
   const openCreateForm = () => {
     setFormMode("create")
     setFormData(initialForm)
+    setShowUserPassword(false)
     setError("")
     setIsFormOpen(true)
   }
@@ -270,6 +275,7 @@ export default function AdminUsuariosPage() {
       adminPassword: "",
       requestId: options?.requestId || null,
     })
+    setShowUserPassword(false)
     setError("")
     setIsFormOpen(true)
   }
@@ -488,21 +494,32 @@ export default function AdminUsuariosPage() {
                   <label className="mb-2 block text-sm font-medium text-slate-900">
                     {formMode === "create" ? "Contrasena inicial" : "Nueva contrasena"}
                   </label>
-                  <input
-                    type="password"
-                    value={formData.password}
-                    onChange={(event) =>
-                      setFormData((current) => ({ ...current, password: event.target.value }))
-                    }
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none"
-                    minLength={formMode === "create" ? 6 : undefined}
-                    required={formMode === "create"}
-                    placeholder={
-                      formMode === "create"
-                        ? "Minimo 6 caracteres"
-                        : "Opcional. Solo si vas a asignar una nueva clave"
-                    }
-                  />
+                  <div className="relative">
+                    <input
+                      type={showUserPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={(event) =>
+                        setFormData((current) => ({ ...current, password: event.target.value }))
+                      }
+                      className="w-full rounded-xl border border-slate-200 px-4 py-3 pr-14 outline-none"
+                      minLength={formMode === "create" ? 6 : undefined}
+                      required={formMode === "create"}
+                      placeholder={
+                        formMode === "create"
+                          ? "Minimo 6 caracteres"
+                          : "Opcional. Solo si vas a asignar una nueva clave"
+                      }
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowUserPassword((current) => !current)}
+                      className="absolute right-2 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                      aria-label={showUserPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
+                      title={showUserPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
+                    >
+                      {showUserPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
