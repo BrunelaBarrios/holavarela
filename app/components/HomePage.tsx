@@ -17,11 +17,9 @@ import { EventLikeButton } from "./EventLikeButton"
 import { OptimizedImage } from "./OptimizedImage"
 import { PublicHeader } from "./PublicHeader"
 import { ShareButton } from "./ShareButton"
-import { SweepstakesPopup } from "./SweepstakesPopup"
 import { formatEventDateRange } from "../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
 import { parseEventDescription, shouldHideEventDate } from "../lib/eventSubmissionMeta"
-import { useSweepstakesPopup } from "../lib/useSweepstakesPopup"
 import { recordContentVisit, recordSiteVisit } from "../lib/contentVisits"
 import { DELAYED_PROMO_STORAGE_KEY, RADIO_STORAGE_KEY } from "../lib/localStorageKeys"
 import { buildHomePublicNav } from "../lib/publicNav"
@@ -35,7 +33,6 @@ import {
   CloudRain,
   CloudSun,
   GraduationCap,
-  Heart,
   Mail,
   MapPin,
   Phone,
@@ -367,7 +364,6 @@ const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
 const DELAYED_PROMO_SESSION_KEY = "guia-varela-delayed-promo-shown-v1"
 const DELAYED_PROMO_LAST_KEY = "guia-varela-delayed-promo-last-key"
-const SWEEPSTAKES_HINT_DISMISSED_SESSION_KEY = "guia-varela-sweepstakes-hint-dismissed-v1"
 const DELAYED_PROMO_UPDATE_EVENT = "delayed-promo-config-updated"
 
 type DelayedPromoConfig = {
@@ -505,13 +501,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   }, [])
   const [contactLeadLoading, setContactLeadLoading] = useState(false)
   const [isContactLeadOpen, setIsContactLeadOpen] = useState(false)
-  const [isSweepstakesHintOpen, setIsSweepstakesHintOpen] = useState(false)
-  const [isSweepstakesHintVisible, setIsSweepstakesHintVisible] = useState(() => {
-    if (typeof window === "undefined") return true
-    return (
-      window.sessionStorage.getItem(SWEEPSTAKES_HINT_DISMISSED_SESSION_KEY) !== "true"
-    )
-  })
   const [isDelayedPromoOpen, setIsDelayedPromoOpen] = useState(false)
   const [delayedPromoConfig, setDelayedPromoConfig] = useState<DelayedPromoConfig>(
     defaultDelayedPromoConfig
@@ -521,7 +510,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [shouldLoadRadioWidget, setShouldLoadRadioWidget] = useState(false)
   const eventsSectionRef = useRef<HTMLElement | null>(null)
   const radioSectionRef = useRef<HTMLElement | null>(null)
-  const sweepstakesPopup = useSweepstakesPopup()
 
   const featuredBusinessPageCount = Math.max(
     1,
@@ -862,7 +850,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
       }))
     }
 
-    await sweepstakesPopup.handleLikeResult(result)
     setLikingEventId(null)
   }
 
@@ -1020,57 +1007,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                       </button>
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {isSweepstakesHintOpen ? (
-          <div className="fixed inset-0 z-[85] overflow-y-auto bg-slate-950/55 px-3 py-4 sm:p-4" onClick={() => setIsSweepstakesHintOpen(false)}>
-            <div className="mx-auto flex min-h-full max-w-2xl items-center justify-center py-2 sm:py-4">
-              <div
-                className="w-full overflow-hidden rounded-[26px] border border-white/10 bg-white shadow-2xl sm:rounded-[32px]"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div className="bg-[radial-gradient(circle_at_top_left,#ffe2ea_0%,#fff4f7_42%,#f5f8ff_100%)] p-4 sm:p-6 lg:p-8">
-                  <div className="inline-flex rounded-full bg-white/85 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-700 sm:px-4 sm:py-2 sm:text-xs">
-                    Sorteo 9 de Mayo
-                  </div>
-                  <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:mt-5 sm:text-4xl">
-                    Participa dando 3 corazones
-                  </h2>
-                  <div className="mt-4 space-y-3 text-sm leading-7 text-slate-700 sm:mt-5 sm:space-y-4 sm:text-base sm:leading-8">
-                    <p>
-                      Busca las publicaciones de <span className="font-semibold">Hoy en Varela</span> y toca el boton de corazones.
-                    </p>
-                    <p>
-                      Cuando llegues a <span className="font-semibold">3 corazones</span>, se abre el popup del sorteo para dejar tu nombre y telefono.
-                    </p>
-                    <p>
-                      El sorteo es el <span className="font-semibold">9 de Mayo</span>. Puedes participar desde la web, de forma simple y rapida.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:p-6 lg:p-8">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsSweepstakesHintOpen(false)
-                      eventsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-                    }}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-rose-600 sm:w-auto"
-                  >
-                    Ir a dar corazones
-                    <Heart className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsSweepstakesHintOpen(false)}
-                    className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 sm:w-auto"
-                  >
-                    Cerrar
-                  </button>
                 </div>
               </div>
             </div>
@@ -1870,19 +1806,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       )}
 
-      {sweepstakesPopup.config ? (
-        <SweepstakesPopup
-          open={sweepstakesPopup.open}
-          title={sweepstakesPopup.config.title}
-          description={sweepstakesPopup.config.description}
-              participants={sweepstakesPopup.config.participants}
-          loading={sweepstakesPopup.submitting}
-          error={sweepstakesPopup.submitError}
-          onClose={sweepstakesPopup.closePopup}
-          onSubmit={sweepstakesPopup.submitEntry}
-        />
-      ) : null}
-
       <PublicHeader
         items={buildHomePublicNav()}
         borderClassName="border-white/60"
@@ -2681,49 +2604,6 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         </div>
       </footer>
 
-      {isSweepstakesHintVisible ? (
-        <div className="fixed bottom-5 left-4 right-4 z-[70] sm:bottom-7 sm:left-auto sm:right-7 sm:max-w-[300px] lg:bottom-8 lg:right-8 lg:max-w-[320px]">
-          <button
-            type="button"
-            onClick={() => setIsSweepstakesHintOpen(true)}
-            className="w-full rounded-[24px] border border-rose-200 bg-[linear-gradient(135deg,#fff1f5_0%,#ffffff_100%)] px-3 py-3 pr-12 text-left shadow-[0_24px_60px_-24px_rgba(244,63,94,0.4)] transition hover:-translate-y-0.5 hover:shadow-[0_30px_70px_-24px_rgba(244,63,94,0.45)] sm:rounded-[26px] sm:px-4 sm:py-4 lg:px-5 lg:py-4"
-            aria-label="Ver como participar del sorteo del 9 de Mayo"
-          >
-            <div className="flex items-start gap-2.5 sm:gap-3">
-              <div className="rounded-2xl bg-rose-100 p-2.5 text-rose-600 sm:p-3">
-                <Heart className="h-4 w-4 sm:h-5 sm:w-5" />
-              </div>
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-rose-600 sm:text-xs sm:tracking-[0.18em]">
-                  9 de Mayo
-                </div>
-                <div className="mt-1 text-sm font-semibold text-slate-900 sm:text-base">
-                  Sorteo con 3 corazones
-                </div>
-                <p className="mt-1 text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6">
-                  Toca aqui y te explicamos como participar.
-                </p>
-              </div>
-            </div>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setIsSweepstakesHintVisible(false)
-              if (typeof window !== "undefined") {
-                window.sessionStorage.setItem(
-                  SWEEPSTAKES_HINT_DISMISSED_SESSION_KEY,
-                  "true"
-                )
-              }
-            }}
-            className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-rose-200/80 bg-white/90 text-rose-500 shadow-sm transition hover:border-rose-300 hover:bg-white hover:text-rose-700"
-            aria-label="Cerrar aviso del sorteo"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      ) : null}
     </div>
   )
 }
