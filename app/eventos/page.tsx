@@ -5,9 +5,8 @@ import { isEventCurrentOrUpcoming } from "../lib/eventDates"
 import { buildPageMetadata } from "../lib/seo"
 import { supabaseServer } from "../lib/supabaseServer"
 
-// Event listings should feel fresh after publication while still avoiding
-// constant server renders for regular visitors.
-export const revalidate = 300
+// Admin and user edits call revalidatePath; this interval is only a fallback.
+export const revalidate = 3600
 
 export const metadata: Metadata = buildPageMetadata({
   path: "/eventos",

@@ -6,8 +6,8 @@ import { isEventCurrentOrUpcoming } from "../../lib/eventDates"
 import { buildPageMetadata } from "../../lib/seo"
 import { supabaseServer } from "../../lib/supabaseServer"
 
-// Premium status can change while subscriptions are still pending.
-export const revalidate = 300
+// Admin and subscription flows call revalidatePath; this interval is only a fallback.
+export const revalidate = 3600
 
 const fetchComercioById = cache(async (id: string) =>
   supabaseServer

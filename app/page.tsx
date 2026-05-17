@@ -7,7 +7,7 @@ import {
 } from "./lib/eventDates"
 import { supabaseServer } from "./lib/supabaseServer"
 
-export const revalidate = 300
+export const revalidate = 3600
 
 const defaultSobreVarela = {
   titulo: "Jose Pedro Varela",

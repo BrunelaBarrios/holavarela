@@ -3,8 +3,8 @@ import { ComerciosPageClient } from "../components/public/ComerciosPageClient"
 import { buildPageMetadata } from "../lib/seo"
 import { supabaseServer } from "../lib/supabaseServer"
 
-// Commerce premium status can change from admin or subscription flows.
-export const revalidate = 300
+// Admin and subscription flows call revalidatePath; this interval is only a fallback.
+export const revalidate = 3600
 
 export const metadata: Metadata = buildPageMetadata({
   path: "/comercios",
