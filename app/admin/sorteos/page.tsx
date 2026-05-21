@@ -281,7 +281,7 @@ export default function AdminSorteosPage() {
         type: "institucion" as const,
         id: item.id,
         nombre: item.nombre,
-        label: `Institucion: ${item.nombre}`,
+        label: `Institución: ${item.nombre}`,
       })),
     ]
     setParticipantOptions(nextParticipantOptions)

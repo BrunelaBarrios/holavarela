@@ -84,7 +84,7 @@ export const userEntityLabels: Record<UserEntityType, string> = {
   comercio: "Comercio",
   servicio: "Servicio",
   curso: "Curso o clase",
-  institucion: "Institucion",
+  institucion: "Institución",
 }
 
 export const userEntityStatusCopy = {

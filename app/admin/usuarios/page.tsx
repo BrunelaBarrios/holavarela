@@ -72,7 +72,7 @@ const ownerTypeLabels: Record<OwnerType, string> = {
   comercio: "Comercio",
   servicio: "Servicio",
   curso: "Curso o clase",
-  institucion: "Institucion",
+  institucion: "Institución",
 }
 
 export default function AdminUsuariosPage() {
@@ -543,7 +543,7 @@ export default function AdminUsuariosPage() {
                       <option value="comercio">Comercio</option>
                       <option value="servicio">Servicio</option>
                       <option value="curso">Curso o clase</option>
-                      <option value="institucion">Institucion</option>
+                      <option value="institucion">Institución</option>
                     </select>
                   </div>
 

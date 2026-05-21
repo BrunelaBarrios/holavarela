@@ -159,7 +159,7 @@ export function PremiumListingPage({
     kind === "institucion" ? "Todavia no tiene actividades activas" : "Todavia no tiene eventos activos"
   const emptyEventsDescription =
     kind === "institucion"
-      ? "Cuando esta institucion publique actividades o eventos activos en Hola Varela, van a aparecer en esta seccion."
+      ? "Cuando esta institución publique actividades o eventos activos en Hola Varela, van a aparecer en esta seccion."
       : "Cuando este perfil publique eventos y queden activos en Hola Varela, van a aparecer en esta seccion."
   const coursesSectionEyebrow = kind === "institucion" ? "Cursos y talleres" : "Cursos del perfil"
   const coursesSectionTitle =

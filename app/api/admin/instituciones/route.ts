@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     if (body.action === "delete") {
       if (!body.id) {
-        return NextResponse.json({ error: "Falta la institucion a eliminar." }, { status: 400 })
+        return NextResponse.json({ error: "Falta la institución a eliminar." }, { status: 400 })
       }
 
       const { data: existing, error: loadError } = await supabaseAdmin
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
       if (loadError) throw loadError
       if (!existing) {
-        return NextResponse.json({ error: "No encontramos la institucion." }, { status: 404 })
+        return NextResponse.json({ error: "No encontramos la institución." }, { status: 404 })
       }
 
       const { error } = await supabaseAdmin.from("instituciones").delete().eq("id", body.id)
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
 
     if (body.action === "toggle_visibility") {
       if (!body.id) {
-        return NextResponse.json({ error: "Falta la institucion." }, { status: 400 })
+        return NextResponse.json({ error: "Falta la institución." }, { status: 400 })
       }
 
       const { data: existing, error: loadError } = await supabaseAdmin
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
 
       if (loadError) throw loadError
       if (!existing) {
-        return NextResponse.json({ error: "No encontramos la institucion." }, { status: 404 })
+        return NextResponse.json({ error: "No encontramos la institución." }, { status: 404 })
       }
 
       const nextEstado =
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, record: data })
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "No pudimos guardar la institucion."
+      error instanceof Error ? error.message : "No pudimos guardar la institución."
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

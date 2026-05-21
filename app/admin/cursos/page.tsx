@@ -470,7 +470,7 @@ export default function AdminCursosPage() {
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Institucion
+                    Institución
                   </label>
                   <select
                     value={formData.institucion_id || ""}
@@ -483,7 +483,7 @@ export default function AdminCursosPage() {
                     }
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500"
                   >
-                    <option value="">Sin institucion asociada</option>
+                    <option value="">Sin institución asociada</option>
                     {instituciones.map((institucion) => (
                       <option key={institucion.id} value={institucion.id}>
                         {institucion.nombre}
@@ -515,7 +515,7 @@ export default function AdminCursosPage() {
                     ))}
                   </select>
                   <p className="mt-2 text-xs text-slate-500">
-                    Elige una institucion o un servicio si quieres que el curso aparezca dentro de ese perfil premium.
+                    Elige una institución o un servicio si quieres que el curso aparezca dentro de ese perfil premium.
                   </p>
                 </div>
 
@@ -725,7 +725,7 @@ export default function AdminCursosPage() {
                   <div className="flex items-center gap-2">
                     <GraduationCap className="h-4 w-4" />
                     <span>
-                      Institucion: {institutionNameById.get(curso.institucion_id) || `ID ${curso.institucion_id}`}
+                      Institución: {institutionNameById.get(curso.institucion_id) || `ID ${curso.institucion_id}`}
                     </span>
                   </div>
                 ) : null}

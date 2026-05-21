@@ -37,7 +37,7 @@ export async function generateMetadata({
   if (!data || (data.estado && data.estado !== "activo")) {
     return buildPageMetadata({
       path: `/instituciones/${id}`,
-      title: "Institucion | Hola Varela!",
+      title: "Institución | Hola Varela!",
       description: "Perfil institucional en Hola Varela.",
       noIndex: true,
     })

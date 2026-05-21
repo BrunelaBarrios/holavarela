@@ -210,7 +210,7 @@ export default async function EventoSharePage({ params }: EventPageParams) {
         href: ownerInstitutionById.premium_activo
           ? `/instituciones/${ownerInstitutionById.id}`
           : `/instituciones?item=${ownerInstitutionById.id}`,
-        label: "Volver a la institucion",
+        label: "Volver a la institución",
         name: ownerInstitutionById.nombre,
       }
     : ownerCommerceByEmail
@@ -234,7 +234,7 @@ export default async function EventoSharePage({ params }: EventPageParams) {
               href: ownerInstitutionByEmail.premium_activo
                 ? `/instituciones/${ownerInstitutionByEmail.id}`
                 : `/instituciones?item=${ownerInstitutionByEmail.id}`,
-              label: "Volver a la institucion",
+              label: "Volver a la institución",
               name: ownerInstitutionByEmail.nombre,
             }
           : null

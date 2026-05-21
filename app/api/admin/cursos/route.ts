@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
 
     if (payload.institucion_id && payload.servicio_id) {
       return NextResponse.json(
-        { error: "El curso puede estar asociado a una institucion o a un servicio, no a ambos al mismo tiempo." },
+        { error: "El curso puede estar asociado a una institución o a un servicio, no a ambos al mismo tiempo." },
         { status: 400 }
       )
     }

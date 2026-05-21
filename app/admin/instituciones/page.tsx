@@ -111,7 +111,7 @@ export default function AdminInstitucionesPage() {
     const result = (await response.json()) as { error?: string }
 
     if (!response.ok) {
-      setSaveError(result.error || "No pudimos eliminar la institucion.")
+      setSaveError(result.error || "No pudimos eliminar la institución.")
       return
     }
 
@@ -201,8 +201,8 @@ export default function AdminInstitucionesPage() {
       setSaveError(
         result.error ||
           (editingInstitucion
-            ? "No pudimos actualizar la institucion."
-            : "No pudimos guardar la institucion.")
+            ? "No pudimos actualizar la institución."
+            : "No pudimos guardar la institución.")
       )
       setLoading(false)
       return
@@ -224,7 +224,7 @@ export default function AdminInstitucionesPage() {
     <div className="mx-auto max-w-7xl">
       <AdminConfirmModal
         isOpen={Boolean(deletingInstitucion)}
-        title="Eliminar institucion"
+        title="Eliminar institución"
         description={`Vas a eliminar "${deletingInstitucion?.nombre || ""}". Esta accion no se puede deshacer.`}
         confirmLabel="Eliminar"
         onCancel={() => setDeletingInstitucion(null)}
@@ -246,7 +246,7 @@ export default function AdminInstitucionesPage() {
           className="inline-flex items-center gap-2 rounded-xl bg-cyan-600 px-4 py-3 font-medium text-white transition hover:bg-cyan-500"
         >
           <Plus className="h-5 w-5" />
-          Agregar institucion
+          Agregar institución
         </button>
       </div>
 
@@ -255,7 +255,7 @@ export default function AdminInstitucionesPage() {
           <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-xl">
             <div className="sticky top-0 flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
               <h2 className="text-xl font-semibold text-slate-900">
-                {editingInstitucion ? "Editar institucion" : "Agregar institucion"}
+                {editingInstitucion ? "Editar institución" : "Agregar institución"}
               </h2>
               <button
                 onClick={resetForm}
@@ -342,7 +342,7 @@ export default function AdminInstitucionesPage() {
                   }
                   className="h-4 w-4 rounded border-violet-300 text-violet-600 focus:ring-violet-500"
                 />
-                <span>Perfil premium activo para esta institucion</span>
+                <span>Perfil premium activo para esta institución</span>
               </label>
 
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
@@ -374,7 +374,7 @@ export default function AdminInstitucionesPage() {
                         premium_cursos_titulo: e.target.value,
                       }))
                     }
-                    placeholder="Cursos de esta institucion"
+                    placeholder="Cursos de esta institución"
                     className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
                   />
                   <p className="mt-2 text-xs text-slate-500">
@@ -461,7 +461,7 @@ export default function AdminInstitucionesPage() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={formData.foto}
-                      alt="Vista previa de la institucion"
+                      alt="Vista previa de la institución"
                       className="h-40 w-full rounded-2xl object-cover"
                     />
                     <button
@@ -485,7 +485,7 @@ export default function AdminInstitucionesPage() {
                     ? "Guardando..."
                     : editingInstitucion
                       ? "Guardar cambios"
-                      : "Agregar institucion"}
+                      : "Agregar institución"}
                 </button>
 
                 <button
@@ -606,13 +606,13 @@ export default function AdminInstitucionesPage() {
             No hay instituciones
           </h3>
           <p className="mb-4 text-slate-500">
-            Comenza agregando la primera institucion
+            Comenza agregando la primera institución
           </p>
           <button
             onClick={() => setIsFormOpen(true)}
             className="rounded-xl bg-cyan-600 px-6 py-3 font-medium text-white transition hover:bg-cyan-500"
           >
-            Agregar institucion
+            Agregar institución
           </button>
         </div>
       )}
