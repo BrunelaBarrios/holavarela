@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"main": ".open-next/worker.js",
+	"main": "custom-worker.ts",
 	"name": "hola-varela",
 	"compatibility_date": "2026-05-20",
 	"compatibility_flags": [
@@ -9,6 +9,11 @@
 	],
 	"limits": {
 		"cpu_ms": 30000
+	},
+	"triggers": {
+		"crons": [
+			"0 5 * * *"
+		]
 	},
 	"assets": {
 		"directory": ".open-next/assets",
