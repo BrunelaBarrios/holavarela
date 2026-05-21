@@ -3,7 +3,7 @@ import { readAdminSessionFromRequest } from "./app/lib/adminSession"
 
 const ADMIN_LOGIN_PATH = "/admin/login"
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   const isAdminPage = pathname.startsWith("/admin")

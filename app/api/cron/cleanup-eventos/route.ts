@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server"
 import { getDateKeyDaysAgo, isEventExpiredBefore } from "../../../lib/eventDates"
 import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
 
+const EVENT_RETENTION_DAYS = 30
+
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization")
   const secret = process.env.CRON_SECRET
@@ -12,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabaseAdmin = getSupabaseAdmin()
-    const limitDate = getDateKeyDaysAgo(10)
+    const limitDate = getDateKeyDaysAgo(EVENT_RETENTION_DAYS)
 
     const { data, error } = await supabaseAdmin
       .from("eventos")
