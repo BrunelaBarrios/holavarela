@@ -59,18 +59,18 @@ const CHALLENGES: ChallengeMeta[] = [
   {
     key: "sopa",
     title: "Sopa de letras",
-    description: "Encuentra todas las palabras antes de que termine el tiempo y suma mas puntos.",
+    description: "Encuentra todas las palabras antes de que termine el tiempo y suma más puntos.",
     points: 30,
   },
   {
     key: "memoria",
     title: "Juego de memoria",
-    description: "Descubre todas las parejas antes de que se acabe el tiempo para sumar mas.",
+    description: "Descubre todas las parejas antes de que se acabe el tiempo para sumar más.",
     points: 30,
   },
   {
     key: "pelicula",
-    title: "Adivina la pelicula",
+    title: "Adivina la película",
     description: "Adivina el titulo con la menor cantidad posible de errores.",
     points: 40,
   },
@@ -188,7 +188,7 @@ const WORD_SEARCH_VARIANTS: WordSearchVariant[] = [
     ],
   },
   {
-    name: "Descubre mas",
+    name: "Descubre más",
     targets: ["DESCUBRE", "JUEGOS", "PUNTOS", "GANAR"],
     placements: [
       { word: "DESCUBRE", row: 0, col: 0, rowStep: 0, colStep: 1 },
@@ -330,7 +330,7 @@ const MOVIE_CHALLENGES = [
   },
   {
     title: "MEGAMENTE",
-    hint: "Un villano brillante termina convirtiendose en heroe.",
+    hint: "Un villano brillante termina convirtiéndose en héroe.",
   },
   {
     title: "MINIONS",
@@ -374,7 +374,7 @@ const MOVIE_CHALLENGES = [
   },
   {
     title: "SPIDERMAN",
-    hint: "Un joven heroe lanza telaranas y protege su ciudad.",
+    hint: "Un joven héroe lanza telarañas y protege su ciudad.",
   },
   {
     title: "BATMAN",
@@ -382,7 +382,7 @@ const MOVIE_CHALLENGES = [
   },
   {
     title: "SUPERMAN",
-    hint: "Un heroe venido de otro planeta protege la Tierra.",
+    hint: "Un héroe venido de otro planeta protege la Tierra.",
   },
   {
     title: "JOKER",
@@ -418,7 +418,7 @@ const MOVIE_CHALLENGES = [
   },
   {
     title: "RAPIDOS Y FURIOSOS",
-    hint: "Velocidad, autos y carreras llenas de accion.",
+    hint: "Velocidad, autos y carreras llenas de acción.",
   },
   {
     title: "MISION IMPOSIBLE",
@@ -450,7 +450,7 @@ const MOVIE_CHALLENGES = [
   },
   {
     title: "LA MASCARA",
-    hint: "Una mascara transforma a un hombre comun en alguien disparatado.",
+    hint: "Una máscara transforma a un hombre común en alguien disparatado.",
   },
   {
     title: "ACE VENTURA",
@@ -474,7 +474,7 @@ const MOVIE_CHALLENGES = [
   },
   {
     title: "LA MASCARA DE ZORRO",
-    hint: "Un heroe enmascarado deja su marca con la espada.",
+    hint: "Un héroe enmascarado deja su marca con la espada.",
   },
   {
     title: "NACHO LIBRE",
@@ -514,7 +514,7 @@ const MOVIE_CHALLENGES = [
   },
   {
     title: "HERCULES",
-    hint: "Un heroe mitologico busca demostrar su verdadero valor.",
+    hint: "Un héroe mitológico busca demostrar su verdadero valor.",
   },
   {
     title: "PINOCHO",
@@ -534,7 +534,7 @@ const MOVIE_CHALLENGES = [
   },
   {
     title: "LOS INCREIBLES",
-    hint: "Una familia de superheroes intenta volver a la accion.",
+    hint: "Una familia de superhéroes intenta volver a la acción.",
   },
   {
     title: "BICHOS",
@@ -566,7 +566,7 @@ const MOVIE_CHALLENGES = [
   },
   {
     title: "TERMINATOR",
-    hint: "Una maquina llega del futuro para cambiar la historia.",
+    hint: "Una máquina llega del futuro para cambiar la historia.",
   },
 ]
 
@@ -1226,7 +1226,7 @@ export function JugaYGanaExperience() {
                 Hola Varela en eventos
               </div>
               <h1 className="mt-6 max-w-xl text-4xl font-semibold tracking-tight sm:text-5xl">
-                Desafios cortos, juga y gana.
+                Desafíos cortos, jugá y ganá.
               </h1>
               <p className="mt-5 max-w-xl text-base leading-8 text-sky-50/90 sm:text-lg">
                 Acumula puntos y participa de ganar premios.
@@ -1235,7 +1235,7 @@ export function JugaYGanaExperience() {
                 {CHALLENGES.map((challenge, index) => (
                   <div key={challenge.key} className={`rounded-[24px] border px-4 py-4 ${completedChallenges[challenge.key] ? "border-emerald-300/40 bg-emerald-400/15" : activeChallengeIndex === index && stage === "play" ? "border-white/30 bg-white/10" : "border-white/10 bg-black/10"}`}>
                     <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-100/80">
-                      Desafio {index + 1}
+                      Desafío {index + 1}
                     </div>
                     <div className="mt-2 flex items-center gap-2 text-lg font-semibold">
                       {completedChallenges[challenge.key] ? <CheckCircle2 className="h-5 w-5 text-emerald-300" /> : null}
@@ -1448,7 +1448,7 @@ function WordSearchPanel(props: {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
-            Desafio 1
+            Desafío 1
           </div>
           <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">
             Sopa de letras
@@ -1549,7 +1549,7 @@ function WordSearchPanel(props: {
 
       {props.completed ? (
         <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm leading-7 text-emerald-800">
-          Desafio completado. Sumaste {props.earnedPoints} puntos.
+          Desafío completado. Sumaste {props.earnedPoints} puntos.
         </div>
       ) : null}
       {props.finished && !props.completed ? (
@@ -1579,7 +1579,7 @@ function MemoryPanel(props: {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
-            Desafio 2
+            Desafío 2
           </div>
           <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">
             Juego de memoria
@@ -1658,10 +1658,10 @@ function MoviePanel(props: {
   return (
     <div>
       <div className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
-        Desafio 3
+        Desafío 3
       </div>
       <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">
-        Adivina la pelicula
+        Adivina la película
       </h2>
       <p className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
         Pista: {props.hint}
@@ -1705,13 +1705,13 @@ function MoviePanel(props: {
         {!props.completed ? (
           <button type="button" onClick={props.onReset} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
             <RefreshCcw className="h-4 w-4" />
-            Cambiar pelicula
+            Cambiar película
           </button>
         ) : null}
       </div>
       {props.completed ? (
         <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm leading-7 text-emerald-800">
-          Adivinanza resuelta. Sumaste {props.movieRoundPoints} puntos en esta pelicula y llevas {props.earnedPoints} en total.
+          Adivinanza resuelta. Sumaste {props.movieRoundPoints} puntos en esta película y llevas {props.earnedPoints} en total.
         </div>
       ) : null}
       {props.completed ? (
@@ -1722,7 +1722,7 @@ function MoviePanel(props: {
               onClick={props.onPlayAnotherMovie}
               className="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-5 py-3 text-sm font-semibold text-sky-700 transition hover:border-sky-300 hover:bg-sky-100"
             >
-              Seguir con otra pelicula
+              Seguir con otra película
               <ArrowRight className="h-4 w-4" />
             </button>
           ) : null}
@@ -1765,11 +1765,11 @@ function EntryFormPanel(props: {
       </h2>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <ScoreCard label="Puntaje total" value={props.totalPoints} />
-        <ScoreCard label="Desafios" value={3} />
+        <ScoreCard label="Desafíos" value={3} />
       </div>
       <form onSubmit={props.onSubmit} className="mt-8 space-y-4">
         <input value={props.participantName} onChange={(event) => props.onNameChange(event.target.value)} placeholder="Tu nombre" className="w-full rounded-2xl border border-slate-200 px-4 py-4 outline-none transition focus:border-sky-400" />
-        <input value={props.participantPhone} onChange={(event) => props.onPhoneChange(event.target.value)} placeholder="Telefono" className="w-full rounded-2xl border border-slate-200 px-4 py-4 outline-none transition focus:border-sky-400" />
+        <input value={props.participantPhone} onChange={(event) => props.onPhoneChange(event.target.value)} placeholder="Teléfono" className="w-full rounded-2xl border border-slate-200 px-4 py-4 outline-none transition focus:border-sky-400" />
         {props.submitError ? (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm leading-7 text-rose-700">
             {props.submitError}
@@ -1798,7 +1798,7 @@ function DonePanel(props: { participantName: string; participantPhone: string; t
       </p>
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
         <ScoreCard label="Participante" value={props.participantName} />
-        <ScoreCard label="Telefono" value={props.participantPhone} />
+        <ScoreCard label="Teléfono" value={props.participantPhone} />
         <ScoreCard label="Puntaje final" value={props.totalPoints} />
       </div>
       <div className="mt-8 rounded-[28px] border border-sky-100 bg-sky-50/80 p-6">

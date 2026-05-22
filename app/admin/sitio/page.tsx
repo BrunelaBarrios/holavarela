@@ -16,13 +16,13 @@ type SitioForm = {
 }
 
 const initialForm: SitioForm = {
-  titulo: "Jose Pedro Varela",
+  titulo: "José Pedro Varela",
   texto_1:
-    "Jose Pedro Varela es una ciudad del departamento de Lavalleja, Uruguay. Conocida por su rica historia y su comunidad vibrante, es un importante centro agropecuario de la region.",
+    "José Pedro Varela es una ciudad del departamento de Lavalleja, Uruguay. Conocida por su rica historia y su comunidad vibrante, es un importante centro agropecuario de la región.",
   texto_2:
     "La ciudad cuenta con todos los servicios esenciales y una amplia variedad de comercios locales que sirven a la comunidad y sus alrededores.",
   texto_3:
-    "Cartelera online de Jose Pedro Varela: encontra aca eventos, cursos, clases, servicios y mas.",
+    "Cartelera online de José Pedro Varela: encontrá acá eventos, cursos, clases, servicios y más.",
   imagen_url: "",
 }
 
@@ -119,7 +119,7 @@ export default function AdminSitioPage() {
           Contenido del Sitio
         </h1>
         <p className="text-slate-500">
-          Edita el bloque sobre Jose Pedro Varela que aparece en la home.
+          Edita el bloque sobre José Pedro Varela que aparece en la home.
         </p>
       </div>
 

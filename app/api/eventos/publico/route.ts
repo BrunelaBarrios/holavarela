@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
     if (!rateLimit.allowed) {
       return NextResponse.json(
-        { error: "Demasiados envios seguidos. Intenta nuevamente en unos minutos." },
+        { error: "Demasiados envíos seguidos. Intenta nuevamente en unos minutos." },
         { status: 429 }
       )
     }
@@ -78,15 +78,15 @@ export async function POST(request: Request) {
         intro: "Llego una nueva solicitud de evento para revisar y publicar.",
         fields: [
           { label: "Titulo", value: payload.titulo },
-          { label: "Categoria", value: payload.categoria },
+          { label: "Categoría", value: payload.categoria },
           { label: "Fecha desde", value: payload.fecha },
           { label: "Fecha hasta", value: payload.fecha_fin },
-          { label: "Ubicacion", value: payload.ubicacion },
-          { label: "Telefono publico", value: payload.telefono },
+          { label: "Ubicación", value: payload.ubicacion },
+          { label: "Teléfono público", value: payload.telefono },
           { label: "WhatsApp", value: payload.usa_whatsapp ? "Si" : "No" },
           { label: "Contacto del remitente", value: parsedDescription.submissionContact?.senderName },
-          { label: "Telefono del remitente", value: parsedDescription.submissionContact?.senderPhone },
-          { label: "Descripcion", value: parsedDescription.baseDescription },
+          { label: "Teléfono del remitente", value: parsedDescription.submissionContact?.senderPhone },
+          { label: "Descripción", value: parsedDescription.baseDescription },
         ],
       })
     } catch (notificationError) {

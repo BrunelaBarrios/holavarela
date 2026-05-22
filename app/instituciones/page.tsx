@@ -8,9 +8,9 @@ export const revalidate = 43200
 
 export const metadata: Metadata = buildPageMetadata({
   path: "/instituciones",
-  title: "Instituciones de Jose Pedro Varela | Hola Varela!",
+  title: "Instituciones de José Pedro Varela | Hola Varela!",
   description:
-    "Consulta instituciones, organizaciones y espacios comunitarios de Jose Pedro Varela en Hola Varela.",
+    "Consulta instituciones, organizaciones y espacios comunitarios de José Pedro Varela en Hola Varela.",
 })
 
 export default async function InstitucionesPage() {

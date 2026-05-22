@@ -26,7 +26,7 @@ const EMPTY_SITE_TRAFFIC: SiteTrafficSnapshot = {
   configured: false,
   visitors: null,
   pageViews: null,
-  periodLabel: "Ultimos 30 dias",
+  periodLabel: "Últimos 30 días",
   periodStart: null,
   periodEnd: null,
   sourceLabel: "Vercel Analytics",
@@ -113,28 +113,28 @@ export default function UsuariosMetricasHolaVarelaPage() {
           console.warn("No se pudo cargar el trafico general del sitio.", error)
           return EMPTY_SITE_TRAFFIC
         }),
-      fetchMetricRowsWithFallback<InteractionRow>("share_events", "created_at", "los compartidos de 15 dias", {
+      fetchMetricRowsWithFallback<InteractionRow>("share_events", "created_at", "los compartidos de 15 días", {
         since: since15,
       }),
       fetchMetricRowsWithFallback<InteractionRow>(
         "whatsapp_clicks",
         "created_at",
-        "los clics de WhatsApp de 15 dias",
+        "los clics de WhatsApp de 15 días",
         { since: since15 }
       ),
       fetchMetricRowsWithFallback<InteractionRow>(
         "view_more_clicks",
         "created_at",
-        "los clics en ver mas de 15 dias",
+        "los clics en ver más de 15 días",
         { since: since15 }
       ),
       fetchMetricRowsWithFallback<InteractionRow>(
         "external_link_clicks",
         "created_at",
-        "los clics externos de 15 dias",
+        "los clics externos de 15 días",
         { since: since15 }
       ),
-      fetchMetricRowsWithFallback<InteractionRow>("event_likes", "created_at", "los likes de 15 dias", {
+      fetchMetricRowsWithFallback<InteractionRow>("event_likes", "created_at", "los likes de 15 días", {
         since: since15,
       }),
       fetchMetricRowsWithFallback<InteractionRow>(
@@ -268,21 +268,21 @@ export default function UsuariosMetricasHolaVarelaPage() {
               <MetricCard
                 label="Actividad reciente"
                 value={recentActivity.interactions15Days}
-                description="Interacciones ultimos 15 dias"
+                description="Interacciones últimos 15 días"
                 icon={<BarChart3 className="h-5 w-5 text-emerald-700" />}
                 tone="bg-emerald-100"
               />
               <MetricCard
-                label="Ver mas"
+                label="Ver más"
                 value={recentActivity.viewMore15Days}
-                description="Aperturas ultimos 15 dias"
+                description="Aperturas últimos 15 días"
                 icon={<FileText className="h-5 w-5 text-sky-700" />}
                 tone="bg-sky-100"
               />
               <MetricCard
                 label="Contactos rapidos"
                 value={recentActivity.whatsapp15Days}
-                description="WhatsApp ultimos 15 dias"
+                description="WhatsApp últimos 15 días"
                 icon={<MessageCircle className="h-5 w-5 text-green-700" />}
                 tone="bg-green-100"
               />
@@ -315,7 +315,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
                 </div>
                 {!siteTraffic.configured ? (
                   <div className="mt-4 rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-                    Aun no cargamos los valores de trafico general para mostrar aqui.
+                    Aún no cargamos los valores de tráfico general para mostrar aquí.
                   </div>
                 ) : null}
                 {siteTraffic.updatedAt ? (
@@ -333,7 +333,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                     Actividad reciente
                   </div>
-                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Ultimas 48 horas</h2>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Últimas 48 horas</h2>
                   <p className="mt-2 text-sm leading-7 text-slate-500">
                     Un resumen rapido de lo ultimo que paso dentro de Hola Varela.
                   </p>
@@ -341,7 +341,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
                 <div className="space-y-4">
                   {recentMessages.length === 0 ? (
                     <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                      Aun no hay novedades registradas en las ultimas 48 horas.
+                      Aún no hay novedades registradas en las últimas 48 horas.
                     </div>
                   ) : (
                     recentMessages.map((item) => (

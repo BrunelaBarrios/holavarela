@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
     if (!rateLimit.allowed) {
       return NextResponse.json(
-        { error: "Demasiados intentos de validacion. Espera unos minutos e intenta otra vez." },
+        { error: "Demasiados intentos de validación. Espera unos minutos e intenta otra vez." },
         { status: 429 }
       )
     }
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
     if (!normalizedEmail || !normalizedCode) {
       return NextResponse.json(
-        { error: "Ingresa tu email y el codigo de WhatsApp." },
+        { error: "Ingresa tu email y el código de WhatsApp." },
         { status: 400 }
       )
     }
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       !data.whatsapp_recovery_enabled
     ) {
       return NextResponse.json(
-        { error: "Esta cuenta no tiene recuperacion por WhatsApp habilitada." },
+        { error: "Esta cuenta no tiene recuperación por WhatsApp habilitada." },
         { status: 400 }
       )
     }
@@ -83,7 +83,7 @@ export async function POST(request: Request) {
       })
 
       return NextResponse.json(
-        { error: "El codigo no es valido o ya vencio." },
+        { error: "El código no es válido o ya venció." },
         { status: 400 }
       )
     }
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
     const message =
       error instanceof Error
         ? error.message
-        : "No pudimos validar el codigo en este momento."
+        : "No pudimos validar el código en este momento."
 
     return NextResponse.json({ error: message }, { status: 500 })
   }

@@ -100,7 +100,7 @@ export async function POST(request: Request) {
     const action = body.action
 
     if (!action) {
-      return NextResponse.json({ error: "Falta la accion a ejecutar." }, { status: 400 })
+      return NextResponse.json({ error: "Falta la acción a ejecutar." }, { status: 400 })
     }
 
     const ownedEntity = await findOwnedEntity(email)

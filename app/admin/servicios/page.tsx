@@ -387,7 +387,7 @@ export default function AdminServiciosPage() {
       <AdminConfirmModal
         isOpen={Boolean(deletingServicio)}
         title="Eliminar servicio"
-        description={`Vas a eliminar "${deletingServicio?.nombre || ""}". Esta accion no se puede deshacer.`}
+        description={`Vas a eliminar "${deletingServicio?.nombre || ""}". Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         onCancel={() => setDeletingServicio(null)}
         onConfirm={() => {
@@ -462,7 +462,7 @@ export default function AdminServiciosPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Categoria *
+                  Categoría *
                 </label>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   {categoriasServicio.map((categoria) => (
@@ -495,7 +495,7 @@ export default function AdminServiciosPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Descripcion
+                  Descripción
                 </label>
                 <textarea
                   value={formData.descripcion}
@@ -528,7 +528,7 @@ export default function AdminServiciosPage() {
                 <div className="mt-4 grid grid-cols-1 gap-4">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-900">
-                      Descripcion ampliada
+                      Descripción ampliada
                     </label>
                     <textarea
                       value={formData.premium_detalle}
@@ -666,7 +666,7 @@ export default function AdminServiciosPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Direccion
+                  Dirección
                 </label>
                 <input
                   type="text"

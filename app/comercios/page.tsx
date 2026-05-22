@@ -8,9 +8,9 @@ export const revalidate = 3600
 
 export const metadata: Metadata = buildPageMetadata({
   path: "/comercios",
-  title: "Comercios en Jose Pedro Varela | Hola Varela!",
+  title: "Comercios en José Pedro Varela | Hola Varela!",
   description:
-    "Descubre comercios de Jose Pedro Varela con ubicacion, contacto y perfiles destacados en Hola Varela.",
+    "Descubre comercios de José Pedro Varela con ubicación, contacto y perfiles destacados en Hola Varela.",
 })
 
 export default async function ComerciosPage() {

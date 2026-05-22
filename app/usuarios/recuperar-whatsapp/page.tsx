@@ -150,7 +150,7 @@ export default function UsuariosRecuperarWhatsappPage() {
                 placeholder="Ej: Maria del kiosco"
               />
               <Field
-                label="Telefono"
+                label="Teléfono"
                 type="text"
                 value={phone}
                 onChange={setPhone}

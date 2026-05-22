@@ -384,7 +384,7 @@ export default function UsuariosPerfilPage() {
 
                       {ownedEntity.type === "servicio" ? (
                         <div className="space-y-2">
-                          <label className="text-sm font-medium text-slate-700">Categoria</label>
+                          <label className="text-sm font-medium text-slate-700">Categoría</label>
                           <select
                             value={formData.categoria}
                             onChange={(event) =>
@@ -432,14 +432,14 @@ export default function UsuariosPerfilPage() {
                         <div className="space-y-4">
                           <div className="grid gap-4 md:grid-cols-2">
                             <Field
-                              label="Direccion"
+                              label="Dirección"
                               value={formData.direccion}
                               onChange={(value) =>
                                 setFormData((current) => ({ ...current, direccion: value }))
                               }
                             />
                             <Field
-                              label="Telefono"
+                              label="Teléfono"
                               value={formData.telefono}
                               onChange={(value) =>
                                 setFormData((current) => ({ ...current, telefono: value }))
@@ -457,7 +457,7 @@ export default function UsuariosPerfilPage() {
 
                       {ownedEntity.type === "servicio" ? (
                         <Field
-                          label="Direccion"
+                          label="Dirección"
                           value={formData.direccion}
                           onChange={(value) => setFormData((current) => ({ ...current, direccion: value }))}
                         />
@@ -468,15 +468,15 @@ export default function UsuariosPerfilPage() {
                         ownedEntity.type === "institucion") ? (
                         <div className="rounded-[24px] border border-sky-100 bg-sky-50/70 p-5">
                           <div className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
-                            Como llegar
+                            Cómo llegar
                           </div>
                           <p className="mt-2 text-sm leading-6 text-slate-600">
-                            Usa este campo si quieres abrir un punto mas preciso en Google Maps.
+                            Usa este campo si quieres abrir un punto más preciso en Google Maps.
                             Puedes escribir una referencia completa o pegar un link directo de Google Maps.
                           </p>
                           <div className="mt-4">
                             <TextAreaField
-                              label="Ubicacion precisa para el boton de como llegar"
+                              label="Ubicación precisa para el botón de cómo llegar"
                               value={formData.direccionMapa}
                               onChange={(value) =>
                                 setFormData((current) => ({ ...current, direccionMapa: value }))
@@ -488,7 +488,7 @@ export default function UsuariosPerfilPage() {
                       ) : null}
 
                       <TextAreaField
-                        label="Descripcion"
+                        label="Descripción"
                         value={formData.descripcion}
                         onChange={(value) => setFormData((current) => ({ ...current, descripcion: value }))}
                       />
@@ -525,20 +525,20 @@ export default function UsuariosPerfilPage() {
                   {ownedEntity.type !== "institucion" ? (
                     <div className="rounded-[32px] border border-slate-200 bg-slate-50 p-6">
                       <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                        Suscripcion
+                        Suscripción
                       </div>
                       <h3 className="mt-2 text-xl font-semibold text-slate-950">
                         Gestiona tu plan desde el panel
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-slate-600">
-                        La version extendida se administra aparte porque depende del plan que tengas activo.
+                        La versión extendida se administra aparte porque depende del plan que tengas activo.
                       </p>
                       <div className="mt-4">
                         <Link
                           href="/usuarios/suscripcion"
                           className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
                         >
-                          Ir a suscripcion
+                          Ir a suscripción
                         </Link>
                       </div>
                     </div>
@@ -577,7 +577,7 @@ export default function UsuariosPerfilPage() {
                             Contenido ampliado
                           </h3>
                           <p className="mt-2 text-sm leading-6 text-slate-600">
-                            Aqui editas solo la parte diferencial del perfil: galeria destacada y bloque complementario.
+                            Aquí editas solo la parte diferencial del perfil: galería destacada y bloque complementario.
                           </p>
                         </div>
 
@@ -587,7 +587,7 @@ export default function UsuariosPerfilPage() {
                           </div>
                           <div className="space-y-5">
                             <TextAreaField
-                              label="Descripcion destacada"
+                              label="Descripción destacada"
                               value={formData.premiumDetalle}
                               onChange={(value) =>
                                 setFormData((current) => ({ ...current, premiumDetalle: value }))
@@ -596,7 +596,7 @@ export default function UsuariosPerfilPage() {
 
                             <ImageUploadField
                               label="Galeria principal del perfil ampliado"
-                              helper="Estas imagenes se veran grandes al inicio del perfil completo. Se suben optimizadas en WebP, con ancho maximo de 800 px."
+                              helper="Estas imágenes se verán grandes al inicio del perfil completo. Se suben optimizadas en WebP, con ancho máximo de 800 px."
                               images={formData.premiumGaleria}
                               onUpload={(event) => void handleGalleryUpload(event, "premiumGaleria")}
                               onRemove={(index) => removeGalleryImage("premiumGaleria", index)}
@@ -617,15 +617,15 @@ export default function UsuariosPerfilPage() {
                               }
                             />
                             <TextAreaField
-                              label="Descripcion del bloque"
+                              label="Descripción del bloque"
                               value={formData.premiumExtraDetalle}
                               onChange={(value) =>
                                 setFormData((current) => ({ ...current, premiumExtraDetalle: value }))
                               }
                             />
                             <ImageUploadField
-                              label="Imagenes del bloque"
-                              helper="Estas imagenes solo se veran dentro del bloque complementario y tambien se optimizan automaticamente."
+                              label="Imágenes del bloque"
+                              helper="Estas imágenes solo se verán dentro del bloque complementario y también se optimizan automáticamente."
                               images={formData.premiumExtraGaleria}
                               onUpload={(event) => void handleGalleryUpload(event, "premiumExtraGaleria")}
                               onRemove={(index) => removeGalleryImage("premiumExtraGaleria", index)}
@@ -636,7 +636,7 @@ export default function UsuariosPerfilPage() {
                       </div>
                     ) : (
                       <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-600">
-                        La version extendida aun no esta activa para esta ficha. Cuando se habilite desde tu plan o desde admin, vas a poder editarla aqui.
+                        La versión extendida aún no está activa para esta ficha. Cuando se habilite desde tu plan o desde admin, vas a poder editarla aquí.
                       </div>
                     )
                   ) : null}
@@ -653,7 +653,7 @@ export default function UsuariosPerfilPage() {
                     {saving
                       ? "Guardando cambios..."
                       : activeSection === "premium"
-                        ? "Guardar version extendida"
+                        ? "Guardar versión extendida"
                         : "Guardar ficha base"}
                   </button>
                 </form>

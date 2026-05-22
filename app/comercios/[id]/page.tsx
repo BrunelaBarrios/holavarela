@@ -40,7 +40,7 @@ export async function generateMetadata({
     description:
       data.premium_detalle?.trim() ||
       data.descripcion?.trim() ||
-      `Conoce ${data.nombre} en la guia digital de Jose Pedro Varela.`,
+      `Conoce ${data.nombre} en la guía digital de José Pedro Varela.`,
     image: data.imagen_url || data.imagen || "/logo-varela-grande.png",
     noIndex: !data.premium_activo,
   })

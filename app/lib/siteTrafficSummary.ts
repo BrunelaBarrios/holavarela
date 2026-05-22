@@ -9,7 +9,7 @@ export type SiteTrafficSnapshot = {
   updatedAt: string | null
 }
 
-const DEFAULT_PERIOD_LABEL = "Ultimos 30 dias"
+const DEFAULT_PERIOD_LABEL = "Últimos 30 días"
 const DEFAULT_SOURCE_LABEL = "Vercel Analytics"
 
 function parseNullableMetric(value: string | undefined) {

@@ -494,7 +494,7 @@ export default function UsuariosNuevoEventoPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Categoria</label>
+                    <label className="text-sm font-medium text-slate-700">Categoría</label>
                     <div className="grid gap-3 sm:grid-cols-2">
                       {categoriasEvento.map((category) => (
                         <label
@@ -537,7 +537,7 @@ export default function UsuariosNuevoEventoPage() {
                         }
                         className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <span>Todavia no tengo el dia exacto, mostrar solo el mes</span>
+                      <span>Todavía no tengo el día exacto, mostrar solo el mes</span>
                     </label>
 
                     <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
@@ -600,7 +600,7 @@ export default function UsuariosNuevoEventoPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Ubicacion</label>
+                    <label className="text-sm font-medium text-slate-700">Ubicación</label>
                     <div className="relative">
                       <MapPin className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <input
@@ -616,7 +616,7 @@ export default function UsuariosNuevoEventoPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Telefono</label>
+                    <label className="text-sm font-medium text-slate-700">Teléfono</label>
                     <div className="relative">
                       <Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <input
@@ -684,7 +684,7 @@ export default function UsuariosNuevoEventoPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Descripcion</label>
+                    <label className="text-sm font-medium text-slate-700">Descripción</label>
                     <div className="relative">
                       <MessageSquareText className="pointer-events-none absolute left-4 top-4 h-4 w-4 text-slate-400" />
                       <textarea

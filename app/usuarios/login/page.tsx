@@ -92,7 +92,7 @@ export default function UsuariosLoginPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-900">Contrasena</label>
+            <label className="mb-2 block text-sm font-medium text-slate-900">Contraseña</label>
             <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100">
               <LockKeyhole className="h-5 w-5 text-slate-400" />
               <input

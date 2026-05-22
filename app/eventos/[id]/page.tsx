@@ -374,7 +374,7 @@ export default async function EventoSharePage({ params }: EventPageParams) {
                   Compartir
                 </div>
                 <p className="text-sm leading-7 text-slate-700">
-                  Esta pagina tiene enlace propio para compartir y vista previa con imagen en apps como WhatsApp y Facebook.
+                  Esta página tiene enlace propio para compartir y vista previa con imagen en apps como WhatsApp y Facebook.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <ShareButton

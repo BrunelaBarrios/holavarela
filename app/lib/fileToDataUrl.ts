@@ -48,7 +48,7 @@ export async function fileToDataUrl(
 
   const image = await loadImage(file)
   if ((image.width || 0) * (image.height || 0) > MAX_IMAGE_PIXELS) {
-    throw new Error("La imagen es demasiado grande. Prueba con una version mas liviana.")
+    throw new Error("La imagen es demasiado grande. Prueba con una versión más liviana.")
   }
 
   const maxWidth = options.maxWidth ?? DEFAULT_MAX_WIDTH

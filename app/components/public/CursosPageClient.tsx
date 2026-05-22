@@ -182,8 +182,8 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
           <div className="mt-10 rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
             <p className="text-gray-600">
               {cursos.length === 0
-                ? "Todavia no hay cursos o clases cargados."
-                : "No se encontraron cursos o clases con esa busqueda."}
+                ? "Todavía no hay cursos o clases cargados."
+                : "No se encontraron cursos o clases con esa búsqueda."}
             </p>
           </div>
         ) : (
@@ -237,7 +237,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                       }}
                       className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                     >
-                      Ver mas
+                      Ver más
                       <ArrowRight className="h-4 w-4" />
                     </button>
 

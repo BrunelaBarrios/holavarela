@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     if (!rateLimit.allowed) {
       return NextResponse.json(
-        { error: "Demasiados envios seguidos. Intenta nuevamente en unos minutos." },
+        { error: "Demasiados envíos seguidos. Intenta nuevamente en unos minutos." },
         { status: 429 }
       )
     }
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
         intro: "Llego una nueva consulta desde el formulario de contacto del sitio.",
         fields: [
           { label: "Nombre", value: nombre },
-          { label: "Telefono", value: telefono },
+          { label: "Teléfono", value: telefono },
           { label: "Mensaje", value: mensaje },
         ],
       })

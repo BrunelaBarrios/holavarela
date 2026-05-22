@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     if (!rateLimit.allowed) {
       return NextResponse.json(
-        { error: "Demasiados intentos. Espera unos minutos para volver a pedir el codigo." },
+        { error: "Demasiados intentos. Espera unos minutos para volver a pedir el código." },
         { status: 429 }
       )
     }
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     if (error) throw error
 
     const genericMessage =
-      "Si la cuenta tiene recuperacion por WhatsApp activa, te enviamos un codigo."
+      "Si la cuenta tiene recuperación por WhatsApp activa, te enviamos un código."
 
     if (
       !data?.user_id ||
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     const message =
       error instanceof Error
         ? error.message
-        : "No pudimos iniciar la recuperacion por WhatsApp."
+        : "No pudimos iniciar la recuperación por WhatsApp."
 
     return NextResponse.json({ error: message }, { status: 500 })
   }

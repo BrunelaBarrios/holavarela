@@ -154,7 +154,7 @@ export default function AdminContactosPage() {
       <AdminConfirmModal
         isOpen={Boolean(deletingSolicitud)}
         title="Eliminar solicitud"
-        description={`Vas a eliminar la solicitud de "${deletingSolicitud?.nombre || ""}". Esta accion no se puede deshacer.`}
+        description={`Vas a eliminar la solicitud de "${deletingSolicitud?.nombre || ""}". Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         onCancel={() => setDeletingSolicitud(null)}
         onConfirm={() => {

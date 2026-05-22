@@ -1,4 +1,4 @@
-const JOSE_PEDRO_VARELA_CONTEXT = "Jose Pedro Varela, Lavalleja, Uruguay"
+const JOSE_PEDRO_VARELA_CONTEXT = "José Pedro Varela, Lavalleja, Uruguay"
 
 export function buildJosePedroVarelaDirectionsUrl(
   address?: string | null,

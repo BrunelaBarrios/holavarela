@@ -148,7 +148,7 @@ export function InstitucionesPageClient({
               {hasInstitutionPremium(selectedInstitucion) && selectedInstitucion.premium_detalle ? (
                 <div className="rounded-[24px] border border-sky-100 bg-sky-50/70 p-5">
                   <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
-                    Informacion ampliada
+                    Información ampliada
                   </div>
                   <p className="whitespace-pre-line text-sm leading-7 text-slate-700">
                     {selectedInstitucion.premium_detalle}

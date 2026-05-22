@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     if (!rateLimit.allowed) {
       return NextResponse.json(
-        { error: "Demasiados intentos. Espera unos minutos antes de cambiar la contrasena." },
+        { error: "Demasiados intentos. Espera unos minutos antes de cambiar la contraseña." },
         { status: 429 }
       )
     }

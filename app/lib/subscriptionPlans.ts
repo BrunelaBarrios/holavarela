@@ -24,7 +24,7 @@ export const subscriptionPlans: Record<
     preapprovalPlanId: "da243ed097c7494ebb8b6214020a986d",
     features: [
       "Presencia del comercio en la web",
-      "Informacion basica: nombre, descripcion y direccion",
+      "Información básica: nombre, descripción y dirección",
       "Boton de contacto directo por WhatsApp",
       "Redes sociales visibles",
       "Aparicion en listado general por categoria",
@@ -41,7 +41,7 @@ export const subscriptionPlans: Record<
     preapprovalPlanId: "895598aa88e34099ac7e6126dcbba360",
     features: [
       "Incluye todo lo del plan Presencia",
-      "Aparicion en seccion Destacados",
+      "Aparición en sección Destacados",
       "Mayor visibilidad dentro de la web",
       "Ventana emergente rotativa",
       "Hasta 6 publicaciones de eventos al ano",

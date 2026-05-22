@@ -14,7 +14,7 @@ function getRecoverySecret() {
 
   if (!secret) {
     throw new Error(
-      "Falta PASSWORD_RECOVERY_SECRET. Configura esa variable para habilitar la recuperacion por WhatsApp."
+      "Falta PASSWORD_RECOVERY_SECRET. Configura esa variable para habilitar la recuperación por WhatsApp."
     )
   }
 
@@ -56,7 +56,7 @@ export function verifyRecoveryToken(token: string) {
   const [payloadSegment, providedSignature] = token.split(".")
 
   if (!payloadSegment || !providedSignature) {
-    throw new Error("El enlace de recuperacion no es valido.")
+    throw new Error("El enlace de recuperación no es válido.")
   }
 
   const expectedSignature = signSegment(payloadSegment)
@@ -67,17 +67,17 @@ export function verifyRecoveryToken(token: string) {
     providedBuffer.length !== expectedBuffer.length ||
     !timingSafeEqual(providedBuffer, expectedBuffer)
   ) {
-    throw new Error("No pudimos validar el token de recuperacion.")
+    throw new Error("No pudimos validar el token de recuperación.")
   }
 
   const payload = JSON.parse(fromBase64Url(payloadSegment)) as RecoveryTokenPayload
 
   if (!payload.userId || !payload.email || !payload.exp) {
-    throw new Error("El token de recuperacion esta incompleto.")
+    throw new Error("El token de recuperación está incompleto.")
   }
 
   if (payload.exp < Date.now()) {
-    throw new Error("El codigo de recuperacion vencio. Solicita uno nuevo.")
+    throw new Error("El código de recuperación venció. Solicita uno nuevo.")
   }
 
   return payload

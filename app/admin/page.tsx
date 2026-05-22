@@ -235,7 +235,7 @@ export default function AdminDashboardPage() {
     },
     {
       id: "desafios",
-      title: "Desafios",
+      title: "Desafíos",
       description: "Ve participantes, puntajes y realiza sorteos aleatorios de los juegos.",
       icon: Gamepad2,
       color: "bg-blue-600",
@@ -249,7 +249,7 @@ export default function AdminDashboardPage() {
         <div>
           <h1 className="mb-2 text-3xl font-semibold text-slate-900">Dashboard</h1>
           <p className="text-slate-500">
-            Un panel mas simple para resolver rapido lo importante.
+            Un panel más simple para resolver rápido lo importante.
           </p>
         </div>
         <button

@@ -97,7 +97,7 @@ export default function AdminActividadPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Nombre, usuario, seccion o accion"
+                placeholder="Nombre, usuario, sección o acción"
                 className="w-full bg-transparent text-sm outline-none"
               />
             </div>
@@ -165,7 +165,7 @@ export default function AdminActividadPage() {
           <div className="hidden grid-cols-[1.1fr_0.9fr_0.8fr_0.9fr_1fr] gap-4 border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 md:grid">
             <div>Administrador</div>
             <div>Accion</div>
-            <div>Seccion</div>
+            <div>Sección</div>
             <div>Objetivo</div>
             <div>Fecha</div>
           </div>

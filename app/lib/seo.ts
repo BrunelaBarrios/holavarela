@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 const SITE_NAME = "Hola Varela!"
 const DEFAULT_SITE_URL = "https://www.holavarela.uy"
 const DEFAULT_DESCRIPTION =
-  "Guia digital de Jose Pedro Varela con comercios, eventos, cursos, instituciones y radio local."
+  "Guía digital de José Pedro Varela con comercios, eventos, cursos, instituciones y radio local."
 
 export const getSiteUrl = () => {
   const directUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL

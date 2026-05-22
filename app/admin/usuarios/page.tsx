@@ -409,7 +409,7 @@ export default function AdminUsuariosPage() {
                 {solicitudes.length === 1 ? "" : "s"}
               </h2>
               <p className="mt-2 text-sm text-slate-600">
-                Cada pedido aparece aqui para que puedas asignar una nueva contrasena desde admin.
+                Cada pedido aparece aquí para que puedas asignar una nueva contraseña desde admin.
               </p>
             </div>
             <div className="rounded-2xl bg-violet-600 p-3 text-white">
@@ -472,7 +472,7 @@ export default function AdminUsuariosPage() {
 
               {formData.requestId ? (
                 <div className="rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-900">
-                  Esta accion resolvera la solicitud pendiente #{formData.requestId} apenas guardes la nueva contrasena.
+                  Esta acción resolverá la solicitud pendiente #{formData.requestId} apenas guardes la nueva contraseña.
                 </div>
               ) : null}
 
@@ -492,7 +492,7 @@ export default function AdminUsuariosPage() {
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-900">
-                    {formMode === "create" ? "Contrasena inicial" : "Nueva contrasena"}
+                    {formMode === "create" ? "Contraseña inicial" : "Nueva contraseña"}
                   </label>
                   <div className="relative">
                     <input
@@ -643,7 +643,7 @@ export default function AdminUsuariosPage() {
               value={deleteAdminPassword}
               onChange={(event) => setDeleteAdminPassword(event.target.value)}
               className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none"
-              placeholder="Contrasena de admin"
+              placeholder="Contraseña de admin"
             />
             <div className="mt-4 flex gap-3">
               <button
@@ -700,7 +700,7 @@ export default function AdminUsuariosPage() {
                       ) : null}
 
                       {solicitud.phone ? (
-                        <div className="text-sm text-slate-600">Telefono: {solicitud.phone}</div>
+                        <div className="text-sm text-slate-600">Teléfono: {solicitud.phone}</div>
                       ) : null}
 
                       {solicitud.message ? (
@@ -770,7 +770,7 @@ export default function AdminUsuariosPage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-slate-500 shadow-sm">
           {usuarios.length === 0
             ? "No hay usuarios registrados todavia."
-            : "No hay usuarios que coincidan con esa busqueda."}
+            : "No hay usuarios que coincidan con esa búsqueda."}
         </div>
       ) : (
         <div className="space-y-4">

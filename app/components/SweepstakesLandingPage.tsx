@@ -187,7 +187,7 @@ export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Telefono</label>
+                    <label className="text-sm font-medium text-slate-700">Teléfono</label>
                     <div className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
                       <Phone className="h-4 w-4 text-slate-400" />
                       <input

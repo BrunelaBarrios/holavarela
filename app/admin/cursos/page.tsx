@@ -357,7 +357,7 @@ export default function AdminCursosPage() {
       <AdminConfirmModal
         isOpen={Boolean(deletingCurso)}
         title="Eliminar curso o clase"
-        description={`Vas a eliminar "${deletingCurso?.nombre || ""}". Esta accion no se puede deshacer.`}
+        description={`Vas a eliminar "${deletingCurso?.nombre || ""}". Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         onCancel={() => setDeletingCurso(null)}
         onConfirm={() => {
@@ -434,7 +434,7 @@ export default function AdminCursosPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Descripcion *
+                  Descripción *
                 </label>
                 <textarea
                   value={formData.descripcion}

@@ -28,7 +28,7 @@ type PromoOption = {
 
 const defaultConfig: RadioConfig = {
   title: "Delta FM 88.3",
-  description: "Escucha Delta FM 88.3 en vivo desde Jose Pedro Varela.",
+  description: "Escuchá Delta FM 88.3 en vivo desde José Pedro Varela.",
   streamUrl: "https://radios.com.uy/delta/?utm_source=chatgpt.com",
   isLive: true,
 }
@@ -163,7 +163,7 @@ export default function AdminRadioPage() {
               Configuracion de Radio
             </h2>
             <p className="text-sm text-slate-500">
-              Guarda una URL de streaming o una pagina para escuchar la radio
+              Guarda una URL de streaming o una página para escuchar la radio
             </p>
           </div>
         </div>
@@ -185,7 +185,7 @@ export default function AdminRadioPage() {
 
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-900">
-              Descripcion
+              Descripción
             </label>
             <input
               type="text"

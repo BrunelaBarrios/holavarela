@@ -282,14 +282,14 @@ export default function AdminDesafiosPage() {
 
     printCouponsPdf({
       documentTitle: "cupones-desafios-hola-varela",
-      heading: "Cupones de participantes - Desafios Hola Varela",
+      heading: "Cupones de participantes - Desafíos Hola Varela",
       subheading:
         "Listos para imprimir o guardar como PDF y recortar para el sorteo.",
       items: visibleEntries.map((entry) => ({
         title: entry.nombre,
         subtitle: entry.telefono,
         meta: `Puntaje total: ${entry.puntajeTotal}\nSopa: ${entry.puntosSopa} | Memoria: ${entry.puntosMemoria} | Pelicula: ${entry.puntosPelicula}`,
-        footer: "Hola Varela - Desafios",
+        footer: "Hola Varela - Desafíos",
       })),
     })
   }
@@ -345,7 +345,7 @@ export default function AdminDesafiosPage() {
 
     await logAdminActivity({
       action: "Sortear",
-      section: "Desafios",
+      section: "Desafíos",
       target: `Sorteo de ${selectedWinners.length} ganadores`,
       details: "Realizo un sorteo aleatorio desde los participantes de desafios.",
     })
@@ -389,7 +389,7 @@ export default function AdminDesafiosPage() {
 
     await logAdminActivity({
       action: "Reiniciar sorteos",
-      section: "Desafios",
+      section: "Desafíos",
       target: "Sorteos de desafios",
       details: "Elimino sorteos y ganadores para volver a empezar desde cero.",
     })
@@ -439,7 +439,7 @@ export default function AdminDesafiosPage() {
 
     await logAdminActivity({
       action: delivered ? "Quitar entrega" : "Marcar entrega",
-      section: "Desafios",
+      section: "Desafíos",
       target: winnerName,
       details: "Actualizo el estado de entrega del premio de un ganador de desafios.",
     })
@@ -483,7 +483,7 @@ export default function AdminDesafiosPage() {
 
     await logAdminActivity({
       action: "Eliminar participante",
-      section: "Desafios",
+      section: "Desafíos",
       target: entryToDelete.nombre,
       details: "Elimino un participante de desafios desde admin.",
     })
@@ -526,7 +526,7 @@ export default function AdminDesafiosPage() {
       />
 
       <div className="mb-8">
-        <h1 className="text-3xl font-semibold text-slate-900">Desafios</h1>
+        <h1 className="text-3xl font-semibold text-slate-900">Desafíos</h1>
         <p className="mt-2 text-slate-500">
           Aqui ves participantes, puntajes, telefonos y puedes realizar sorteos aleatorios.
         </p>
@@ -581,7 +581,7 @@ export default function AdminDesafiosPage() {
                   className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Ver pagina publica
+                  Ver página pública
                 </a>
               </div>
             </div>
@@ -643,7 +643,7 @@ export default function AdminDesafiosPage() {
                   }
                   className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-500"
                 >
-                  <option value="recent">Ordenar por mas recientes</option>
+                  <option value="recent">Ordenar por más recientes</option>
                   <option value="score_desc">Ordenar por mayor puntaje</option>
                 </select>
               </div>
@@ -654,7 +654,7 @@ export default function AdminDesafiosPage() {
                     <thead className="bg-slate-50">
                       <tr className="text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                         <th className="px-4 py-3">Nombre</th>
-                        <th className="px-4 py-3">Telefono</th>
+                        <th className="px-4 py-3">Teléfono</th>
                         <th className="px-4 py-3">Puntos</th>
                         <th className="px-4 py-3">Detalle</th>
                         <th className="px-4 py-3">Fecha</th>
@@ -847,7 +847,7 @@ export default function AdminDesafiosPage() {
                   </>
                 ) : (
                   <div className="mt-3 text-sm text-slate-500">
-                    Todavia no realizaste ningun sorteo desde este panel.
+                    Todavía no realizaste ningún sorteo desde este panel.
                   </div>
                 )}
               </div>

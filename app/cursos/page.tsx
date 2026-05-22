@@ -8,9 +8,9 @@ export const revalidate = 43200
 
 export const metadata: Metadata = buildPageMetadata({
   path: "/cursos",
-  title: "Cursos y talleres en Jose Pedro Varela | Hola Varela!",
+  title: "Cursos y talleres en José Pedro Varela | Hola Varela!",
   description:
-    "Explora cursos, clases y talleres disponibles en Jose Pedro Varela con datos de contacto y redes sociales.",
+    "Explora cursos, clases y talleres disponibles en José Pedro Varela con datos de contacto y redes sociales.",
 })
 
 export default async function CursosPage() {

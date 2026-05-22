@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true })
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "No se pudo registrar Ver mas."
+      error instanceof Error ? error.message : "No se pudo registrar Ver más."
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

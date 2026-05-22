@@ -149,7 +149,7 @@ export function buildUserProfileFields(entity: UserOwnedEntity | null) {
 
   return [
     entity.record.direccion
-      ? { label: "Direccion", value: entity.record.direccion, icon: MapPin }
+      ? { label: "Dirección", value: entity.record.direccion, icon: MapPin }
       : null,
     entity.record.telefono || entity.record.contacto
       ? {
@@ -166,7 +166,7 @@ export function buildUserProfileFields(entity: UserOwnedEntity | null) {
         }
       : null,
     entity.record.categoria
-      ? { label: "Categoria", value: entity.record.categoria, icon: Sparkles }
+      ? { label: "Categoría", value: entity.record.categoria, icon: Sparkles }
       : null,
     entity.record.web_url
       ? { label: "Sitio web", value: entity.record.web_url, icon: Globe }

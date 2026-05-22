@@ -80,7 +80,7 @@ const EMPTY_SITE_TRAFFIC: SiteTrafficSnapshot = {
   configured: false,
   visitors: null,
   pageViews: null,
-  periodLabel: "Ultimos 30 dias",
+  periodLabel: "Últimos 30 días",
   periodStart: null,
   periodEnd: null,
   sourceLabel: "Vercel Analytics",
@@ -321,7 +321,7 @@ export default function AdminMetricasPage() {
   const [siteTrafficForm, setSiteTrafficForm] = useState<SiteTrafficForm>({
     visitors: "",
     pageViews: "",
-    periodLabel: "Ultimos 30 dias",
+    periodLabel: "Últimos 30 días",
     periodStart: "",
     periodEnd: "",
     sourceLabel: "Vercel Analytics",
@@ -370,28 +370,28 @@ export default function AdminMetricasPage() {
         fetchMetricRows<MetricRow>("view_more_clicks", "section, created_at"),
         fetchMetricRows<ExternalLinkMetricRow>("external_link_clicks", "section, link_type, created_at"),
         fetchMetricRows<EventLikeMetricRow>("event_likes", "created_at"),
-        fetchMetricRowsWithFallback<InteractionRow>("share_events", "created_at", "los compartidos de 15 dias", {
+        fetchMetricRowsWithFallback<InteractionRow>("share_events", "created_at", "los compartidos de 15 días", {
           since: getIsoDaysAgo(15),
         }),
         fetchMetricRowsWithFallback<InteractionRow>(
           "whatsapp_clicks",
           "created_at",
-          "los clics de WhatsApp de 15 dias",
+          "los clics de WhatsApp de 15 días",
           { since: getIsoDaysAgo(15) }
         ),
         fetchMetricRowsWithFallback<InteractionRow>(
           "view_more_clicks",
           "created_at",
-          "los clics en ver mas de 15 dias",
+          "los clics en ver más de 15 días",
           { since: getIsoDaysAgo(15) }
         ),
         fetchMetricRowsWithFallback<InteractionRow>(
           "external_link_clicks",
           "created_at",
-          "los clics externos de 15 dias",
+          "los clics externos de 15 días",
           { since: getIsoDaysAgo(15) }
         ),
-        fetchMetricRowsWithFallback<InteractionRow>("event_likes", "created_at", "los likes de 15 dias", {
+        fetchMetricRowsWithFallback<InteractionRow>("event_likes", "created_at", "los likes de 15 días", {
           since: getIsoDaysAgo(15),
         }),
         fetchMetricRowsWithFallback<InteractionRow>(
@@ -465,7 +465,7 @@ export default function AdminMetricasPage() {
         visitors: siteTrafficResponse.visitors !== null ? String(siteTrafficResponse.visitors) : "",
         pageViews:
           siteTrafficResponse.pageViews !== null ? String(siteTrafficResponse.pageViews) : "",
-        periodLabel: siteTrafficResponse.periodLabel || "Ultimos 30 dias",
+        periodLabel: siteTrafficResponse.periodLabel || "Últimos 30 días",
         periodStart: siteTrafficResponse.periodStart || "",
         periodEnd: siteTrafficResponse.periodEnd || "",
         sourceLabel: siteTrafficResponse.sourceLabel || "Vercel Analytics",
@@ -586,7 +586,7 @@ export default function AdminMetricasPage() {
             Interacciones del sitio
           </h1>
           <p className="mt-2 text-slate-500">
-            Seguimiento de WhatsApp, compartir, ver mas, sitios/redes y corazones.
+            Seguimiento de WhatsApp, compartir, ver más, sitios/redes y corazones.
           </p>
         </div>
         <Link
@@ -641,7 +641,7 @@ export default function AdminMetricasPage() {
               tone="bg-violet-100 text-violet-700"
             />
             <MetricCard
-              title="Ver mas"
+              title="Ver más"
               value={totalViewMore}
               helper="Aperturas de detalle o perfil ampliado."
               icon={<FileText className="h-5 w-5 text-sky-700" />}
@@ -666,8 +666,8 @@ export default function AdminMetricasPage() {
           <section className="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">Ultimos 7 dias</h2>
-                <p className="text-sm text-slate-500">Comparacion diaria de interacciones.</p>
+                <h2 className="text-xl font-semibold text-slate-900">Últimos 7 días</h2>
+                <p className="text-sm text-slate-500">Comparación diaria de interacciones.</p>
               </div>
               <div className="rounded-2xl bg-slate-100 p-3 text-slate-700">
                 <BarChart3 className="h-5 w-5" />
@@ -691,7 +691,7 @@ export default function AdminMetricasPage() {
                     {[
                       { label: "WhatsApp", value: item.whatsapp, color: "bg-green-500" },
                       { label: "Compartir", value: item.compartir, color: "bg-violet-500" },
-                      { label: "Ver mas", value: item.verMas, color: "bg-sky-500" },
+                      { label: "Ver más", value: item.verMas, color: "bg-sky-500" },
                       { label: "Sitio/redes", value: item.enlaces, color: "bg-amber-500" },
                       { label: "Corazones", value: item.corazones, color: "bg-rose-500" },
                     ].map((metric) => (
@@ -717,7 +717,7 @@ export default function AdminMetricasPage() {
           <div className="mb-8 grid grid-cols-1 gap-6 xl:grid-cols-3">
             <SectionBars
               title="WhatsApp"
-              subtitle="Desglose por seccion"
+              subtitle="Desglose por sección"
               icon={<MessageCircle className="h-5 w-5 text-green-700" />}
               barClass="bg-green-500"
               iconClass="bg-green-100"
@@ -726,7 +726,7 @@ export default function AdminMetricasPage() {
             />
             <SectionBars
               title="Compartir"
-              subtitle="Contenido compartido por seccion"
+              subtitle="Contenido compartido por sección"
               icon={<Share2 className="h-5 w-5 text-violet-700" />}
               barClass="bg-violet-500"
               iconClass="bg-violet-100"
@@ -734,8 +734,8 @@ export default function AdminMetricasPage() {
               sections={SHARE_SECTIONS}
             />
             <SectionBars
-              title="Ver mas"
-              subtitle="Aperturas por seccion"
+              title="Ver más"
+              subtitle="Aperturas por sección"
               icon={<FileText className="h-5 w-5 text-sky-700" />}
               barClass="bg-sky-500"
               iconClass="bg-sky-100"
@@ -758,7 +758,7 @@ export default function AdminMetricasPage() {
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <div className="mb-6">
                 <h2 className="text-xl font-semibold text-slate-900">Tipos de enlace</h2>
-                <p className="text-sm text-slate-500">Que botones usan mas dentro del sitio.</p>
+                <p className="text-sm text-slate-500">Qué botones usan más dentro del sitio.</p>
               </div>
 
               <div className="space-y-3">
@@ -784,14 +784,14 @@ export default function AdminMetricasPage() {
               <MetricCard
                 title="Actividad reciente"
                 value={recentSiteActivity.interactions15Days}
-                helper="Interacciones ultimos 15 dias"
+                helper="Interacciones últimos 15 días"
                 icon={<BarChart3 className="h-5 w-5 text-emerald-700" />}
                 tone="bg-emerald-100 text-emerald-700"
               />
               <MetricCard
                 title="Contactos rapidos"
                 value={recentSiteActivity.whatsapp15Days}
-                helper="WhatsApp ultimos 15 dias"
+                helper="WhatsApp últimos 15 días"
                 icon={<MessageCircle className="h-5 w-5 text-green-700" />}
                 tone="bg-green-100 text-green-700"
               />
@@ -830,7 +830,7 @@ export default function AdminMetricasPage() {
 
                 {!siteTraffic.configured ? (
                   <div className="mt-4 rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-                    Aun no cargamos los valores de trafico general para mostrar aqui.
+                    Aún no cargamos los valores de tráfico general para mostrar aquí.
                   </div>
                 ) : null}
                 {siteTraffic.updatedAt ? (
@@ -931,7 +931,7 @@ export default function AdminMetricasPage() {
                         value={siteTrafficForm.periodLabel}
                         onChange={(event) => handleTrafficFormChange("periodLabel", event.target.value)}
                         className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
-                        placeholder="Ultimos 30 dias"
+                        placeholder="Últimos 30 días"
                         required
                       />
                     </div>
@@ -964,7 +964,7 @@ export default function AdminMetricasPage() {
                   <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                     Actividad reciente
                   </div>
-                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Ultimas 48 horas</h2>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">Últimas 48 horas</h2>
                   <p className="mt-2 text-sm leading-7 text-slate-500">
                     El mismo resumen general que hoy ve el usuario.
                   </p>
@@ -972,7 +972,7 @@ export default function AdminMetricasPage() {
                 <div className="space-y-4">
                   {recentMessages.length === 0 ? (
                     <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                      Aun no hay novedades registradas en las ultimas 48 horas.
+                      Aún no hay novedades registradas en las últimas 48 horas.
                     </div>
                   ) : (
                     recentMessages.map((item) => (

@@ -401,7 +401,7 @@ export default function AdminEventosPage() {
       <AdminConfirmModal
         isOpen={Boolean(deletingEvento)}
         title="Eliminar evento"
-        description={`Vas a eliminar "${deletingEvento?.titulo || ""}". Esta accion no se puede deshacer.`}
+        description={`Vas a eliminar "${deletingEvento?.titulo || ""}". Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         onCancel={() => setDeletingEvento(null)}
         onConfirm={() => {
@@ -471,7 +471,7 @@ export default function AdminEventosPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Categoria *
+                  Categoría *
                 </label>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                   {categoriasEvento.map((categoria) => (
@@ -518,7 +518,7 @@ export default function AdminEventosPage() {
                     }
                     className="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
                   />
-                  <span>Todavia no tengo el dia exacto, mostrar solo el mes</span>
+                  <span>Todavía no tengo el día exacto, mostrar solo el mes</span>
                 </label>
 
                 <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700">
@@ -595,7 +595,7 @@ export default function AdminEventosPage() {
 
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-900">
-                      Ubicacion *
+                      Ubicación *
                     </label>
                     <input
                       type="text"
@@ -615,7 +615,7 @@ export default function AdminEventosPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Telefono
+                  Teléfono
                 </label>
                 <input
                   type="text"
@@ -655,7 +655,7 @@ export default function AdminEventosPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Descripcion *
+                  Descripción *
                 </label>
                 <textarea
                   value={formData.descripcion}

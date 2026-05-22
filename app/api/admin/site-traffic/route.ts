@@ -26,7 +26,7 @@ export async function PATCH(request: NextRequest) {
     const body = (await request.json()) as SiteTrafficPayload
     const visitors = Number(body.visitors)
     const pageViews = Number(body.pageViews)
-    const periodLabel = body.periodLabel?.trim() || "Ultimos 30 dias"
+    const periodLabel = body.periodLabel?.trim() || "Últimos 30 días"
     const periodStart = body.periodStart?.trim() || ""
     const periodEnd = body.periodEnd?.trim() || ""
     const sourceLabel = body.sourceLabel?.trim() || "Vercel Analytics"

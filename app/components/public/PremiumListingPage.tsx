@@ -153,14 +153,14 @@ export function PremiumListingPage({
   const eventsSectionEyebrow = kind === "institucion" ? "Actividades" : "Actividad del local"
   const eventsSectionTitle =
     kind === "institucion"
-      ? `Proximos eventos y actividades de ${title}`
-      : `Proximos eventos de ${title}`
+      ? `Próximos eventos y actividades de ${title}`
+      : `Próximos eventos de ${title}`
   const emptyEventsTitle =
-    kind === "institucion" ? "Todavia no tiene actividades activas" : "Todavia no tiene eventos activos"
+    kind === "institucion" ? "Todavía no tiene actividades activas" : "Todavía no tiene eventos activos"
   const emptyEventsDescription =
     kind === "institucion"
-      ? "Cuando esta institución publique actividades o eventos activos en Hola Varela, van a aparecer en esta seccion."
-      : "Cuando este perfil publique eventos y queden activos en Hola Varela, van a aparecer en esta seccion."
+      ? "Cuando esta institución publique actividades o eventos activos en Hola Varela, van a aparecer en esta sección."
+      : "Cuando este perfil publique eventos y queden activos en Hola Varela, van a aparecer en esta sección."
   const coursesSectionEyebrow = kind === "institucion" ? "Cursos y talleres" : "Cursos del perfil"
   const coursesSectionTitle =
     relatedCoursesTitle ||
@@ -346,10 +346,10 @@ export function PremiumListingPage({
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                        Imagenes
+                        Imágenes
                       </div>
                       <p className="mt-2 text-sm text-slate-500">
-                        Toca una miniatura para verla grande y recorre las imagenes.
+                        Toca una miniatura para verla grande y recorre las imágenes.
                       </p>
                     </div>
                     <div className="flex gap-2">
@@ -447,7 +447,7 @@ export function PremiumListingPage({
                         className="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-5 py-3 font-semibold text-sky-700 transition hover:border-sky-300 hover:bg-sky-100"
                       >
                         <MapPin className="h-4 w-4" />
-                        Como llegar
+                        Cómo llegar
                       </a>
                     ) : null}
 
@@ -486,7 +486,7 @@ export function PremiumListingPage({
               {premiumDetail ? (
                 <div className="mt-5 rounded-[24px] border border-sky-100 bg-sky-50/70 p-6">
                   <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
-                    Informacion ampliada
+                    Información ampliada
                   </div>
                   <p className="whitespace-pre-line text-base leading-8 text-slate-700">
                     {premiumDetail}

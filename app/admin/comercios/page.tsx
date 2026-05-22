@@ -431,7 +431,7 @@ export default function AdminComerciosPage() {
       <AdminConfirmModal
         isOpen={Boolean(deletingComercio)}
         title="Eliminar comercio"
-        description={`Vas a eliminar "${deletingComercio?.nombre || ""}". Esta accion no se puede deshacer.`}
+        description={`Vas a eliminar "${deletingComercio?.nombre || ""}". Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         onCancel={() => setDeletingComercio(null)}
         onConfirm={() => {
@@ -446,7 +446,7 @@ export default function AdminComerciosPage() {
           <h1 className="mb-2 text-3xl font-semibold text-slate-900">Comercios</h1>
           <p className="text-slate-500">Gestiona los comercios locales</p>
           <p className="mt-1 text-sm text-slate-400">
-            Puedes marcar todos los que quieras. La home muestra tandas de 8 y las rota cada 2 dias.
+            Puedes marcar todos los que quieras. La home muestra tandas de 8 y las rota cada 2 días.
           </p>
         </div>
 
@@ -504,7 +504,7 @@ export default function AdminComerciosPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Direccion
+                  Dirección
                 </label>
                 <input
                   type="text"
@@ -518,7 +518,7 @@ export default function AdminComerciosPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Telefono
+                  Teléfono
                 </label>
                 <input
                   type="text"
@@ -552,7 +552,7 @@ export default function AdminComerciosPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Descripcion
+                  Descripción
                 </label>
                 <textarea
                   value={formData.descripcion}
@@ -585,7 +585,7 @@ export default function AdminComerciosPage() {
                 <div className="mt-4 grid grid-cols-1 gap-4">
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-900">
-                      Descripcion ampliada
+                      Descripción ampliada
                     </label>
                     <textarea
                       value={formData.premium_detalle}
@@ -689,7 +689,7 @@ export default function AdminComerciosPage() {
 
                       <div>
                         <label className="mb-2 block text-sm font-medium text-slate-900">
-                          Descripcion del bloque extra
+                          Descripción del bloque extra
                         </label>
                         <textarea
                           value={formData.premium_extra_detalle}
@@ -1066,7 +1066,7 @@ export default function AdminComerciosPage() {
             onClick={() => setVisibleCount((prev) => prev + ITEMS_PER_PAGE)}
             className="rounded-xl bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-500"
           >
-            Ver mas comercios ({comercios.length - visibleCount} restantes)
+            Ver más comercios ({comercios.length - visibleCount} restantes)
           </button>
         </div>
       )}

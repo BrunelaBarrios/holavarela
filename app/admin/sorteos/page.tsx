@@ -700,7 +700,7 @@ export default function AdminSorteosPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100"
                 >
-                  Ver pagina publica
+                  Ver página pública
                 </a>
               </div>
 
@@ -896,7 +896,7 @@ export default function AdminSorteosPage() {
                 </div>
               ) : entryScope !== "all" && selectedCampaignEntriesCount === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
-                  Todavia no hay participaciones para este sorteo.
+                  Todavía no hay participaciones para este sorteo.
                 </div>
               ) : visibleEntries.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
@@ -909,7 +909,7 @@ export default function AdminSorteosPage() {
                       <thead className="bg-slate-50">
                         <tr className="text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
                           <th className="px-4 py-3">Nombre</th>
-                          <th className="px-4 py-3">Telefono</th>
+                          <th className="px-4 py-3">Teléfono</th>
                           <th className="px-4 py-3">Corazones</th>
                           <th className="px-4 py-3">Origen</th>
                           <th className="px-4 py-3">Sorteo</th>

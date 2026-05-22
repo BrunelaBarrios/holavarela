@@ -79,6 +79,6 @@ export const recordSiteVisit = async (pageId: string, pageTitle?: string | null)
   ])
 
   if (error) {
-    console.error("No se pudo registrar la visita de la pagina:", error)
+    console.error("No se pudo registrar la visita de la página:", error)
   }
 }

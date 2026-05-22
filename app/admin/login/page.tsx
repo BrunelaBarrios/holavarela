@@ -82,7 +82,7 @@ export default function AdminLoginPage() {
 
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-900">
-              Contrasena
+              Contraseña
             </label>
             <div className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3">
               <LockKeyhole className="h-5 w-5 text-slate-400" />

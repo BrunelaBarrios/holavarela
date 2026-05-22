@@ -330,7 +330,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por titulo, ubicacion o categoria"
+              placeholder="Buscar por título, ubicación o categoría"
               className="w-full text-sm outline-none"
             />
           </div>
@@ -357,7 +357,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
           <div className="mt-10 rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
             <p className="text-gray-600">
               {eventos.length === 0
-                ? "Todavia no hay novedades cargadas."
+                ? "Todavía no hay novedades cargadas."
                 : "No se encontraron publicaciones con esos filtros."}
             </p>
           </div>
@@ -398,7 +398,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 ) : null}
 
                 <p className="mt-1 text-sm text-gray-600">
-                  Ubicacion: {evento.ubicacion}
+                  Ubicación: {evento.ubicacion}
                 </p>
 
                 {evento.ownerLabel && evento.ownerHref ? (
@@ -416,7 +416,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
 
                 {evento.telefono && (
                   <p className="mt-1 text-sm text-gray-600">
-                    Telefono: {evento.telefono}
+                    Teléfono: {evento.telefono}
                   </p>
                 )}
 
@@ -442,7 +442,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                   }}
                   className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
                 >
-                  Ver mas
+                  Ver más
                   <ArrowRight className="h-4 w-4" />
                 </button>
 

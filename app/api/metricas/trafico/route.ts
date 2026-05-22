@@ -79,7 +79,7 @@ export async function GET() {
           configured: true,
           visitors,
           pageViews,
-          periodLabel: `Ultimos ${INTERNAL_PERIOD_DAYS} dias`,
+          periodLabel: `Últimos ${INTERNAL_PERIOD_DAYS} días`,
           periodStart: null,
           periodEnd: null,
           sourceLabel: "Metricas internas de Hola Varela",

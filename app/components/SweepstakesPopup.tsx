@@ -151,7 +151,7 @@ export function SweepstakesPopup({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-700">Telefono</label>
+                  <label className="text-sm font-medium text-slate-700">Teléfono</label>
                   <input
                     type="text"
                     value={telefono}

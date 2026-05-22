@@ -227,7 +227,7 @@ export default function AdminAdministradoresPage() {
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Contrasena
+                    Contraseña
                   </label>
                   <input
                     type="text"

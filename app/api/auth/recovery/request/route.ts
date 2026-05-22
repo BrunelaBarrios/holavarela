@@ -77,12 +77,12 @@ export async function POST(request: Request) {
 
     try {
       await sendAdminNotification({
-        subject: "Hola Varela - Nueva solicitud de recuperacion",
+        subject: "Hola Varela - Nueva solicitud de recuperación",
         intro: "Llego una nueva solicitud para reasignar o recuperar una contrasena.",
         fields: [
           { label: "Email de la cuenta", value: email },
           { label: "Nombre de contacto", value: contactName },
-          { label: "Telefono", value: phone },
+          { label: "Teléfono", value: phone },
           { label: "Mensaje", value: message },
           { label: "IP", value: clientMeta.ipAddress },
           { label: "User-Agent", value: clientMeta.userAgent },

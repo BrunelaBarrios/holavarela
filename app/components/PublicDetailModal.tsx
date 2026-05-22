@@ -88,7 +88,7 @@ export function PublicDetailModal({
                   type="button"
                   onClick={() => setIsImageZoomed(true)}
                   className="group relative flex aspect-[4/5] w-full max-w-[620px] items-center justify-center overflow-hidden rounded-[30px] border border-white/80 bg-white/90 p-3 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] hover:shadow-[0_32px_90px_-34px_rgba(15,23,42,0.5)] md:max-w-[680px] md:p-4"
-                  aria-label="Ver imagen mas grande"
+                  aria-label="Ver imagen más grande"
                 >
                   <span className="absolute left-4 top-4 z-10 rounded-full bg-slate-950/75 px-3 py-1 text-xs font-semibold tracking-[0.2em] text-white/90 uppercase">
                     Toca para ampliar
@@ -144,7 +144,7 @@ export function PublicDetailModal({
             {description ? (
               <div className="px-6 py-6 md:px-8">
                 <div className="mb-3 text-xs font-semibold tracking-[0.24em] text-slate-400 uppercase">
-                  Descripcion
+                  Descripción
                 </div>
                 <div className="rounded-[24px] border border-slate-100 bg-slate-50/80 p-5">
                   <p className="whitespace-pre-line text-[1.02rem] leading-8 text-slate-600">

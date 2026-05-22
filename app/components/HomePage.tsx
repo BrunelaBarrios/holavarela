@@ -297,7 +297,7 @@ const buildWelcomeItems = (
       kind: "servicio" as const,
       title: item.nombre,
       description:
-        item.descripcion || "Servicio destacado para descubrir en Jose Pedro Varela.",
+        item.descripcion || "Servicio destacado para descubrir en José Pedro Varela.",
       image: item.imagen || null,
       subtitle: item.categoria || null,
       contact: item.contacto || null,
@@ -342,19 +342,19 @@ const getInitialWelcomeHighlight = (
 }
 
 const defaultSobreVarela: SobreVarelaConfig = {
-  titulo: "Jose Pedro Varela",
+  titulo: "José Pedro Varela",
   texto_1:
-    "Jose Pedro Varela es una ciudad del departamento de Lavalleja, Uruguay. Conocida por su rica historia y su comunidad vibrante, es un importante centro agropecuario de la region.",
+    "José Pedro Varela es una ciudad del departamento de Lavalleja, Uruguay. Conocida por su rica historia y su comunidad vibrante, es un importante centro agropecuario de la región.",
   texto_2:
     "La ciudad cuenta con todos los servicios esenciales y una amplia variedad de comercios locales que sirven a la comunidad y sus alrededores.",
   texto_3:
-    "Cartelera online de Jose Pedro Varela: encontra aca eventos, cursos, clases, servicios y mas.",
+    "Cartelera online de José Pedro Varela: encontrá acá eventos, cursos, clases, servicios y más.",
   imagen_url: null,
 }
 
 const defaultRadioConfig: RadioConfig = {
   title: "Delta FM 88.3",
-  description: "Escucha Delta FM 88.3 en vivo desde Jose Pedro Varela.",
+  description: "Escuchá Delta FM 88.3 en vivo desde José Pedro Varela.",
   streamUrl: "https://radios.com.uy/delta/?utm_source=chatgpt.com",
   isLive: true,
 }
@@ -1066,7 +1066,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           })
                         }
                         className="relative aspect-[4/5] h-[280px] w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[360px]"
-                        aria-label="Ver imagen mas grande"
+                        aria-label="Ver imagen más grande"
                       >
                         <OptimizedImage
                           src={welcomeHighlight.image}
@@ -1213,7 +1213,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-700">
-                      Telefono
+                      Teléfono
                     </label>
                     <input
                       type="tel"
@@ -1597,7 +1597,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                           })
                         }
                         className="relative aspect-[4/5] h-[380px] w-full max-w-[680px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[560px]"
-                        aria-label="Ver imagen mas grande"
+                        aria-label="Ver imagen más grande"
                       >
                         <OptimizedImage
                           src={selectedCurso.imagen}
@@ -1701,7 +1701,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         })
                       }
                       className="relative aspect-[4/5] h-[380px] w-full max-w-[680px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[560px]"
-                      aria-label="Ver imagen mas grande"
+                      aria-label="Ver imagen más grande"
                     >
                       <OptimizedImage
                         src={selectedInstitucion.foto}
@@ -1821,12 +1821,12 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
         <div className="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <div className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-white/80 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm">
             <MapPin className="h-4 w-4" />
-            Jose Pedro Varela, Uruguay
+            José Pedro Varela, Uruguay
           </div>
 
           <div className="mx-auto max-w-5xl">
             <h1 className="text-4xl font-bold leading-[1.05] tracking-tight text-slate-950 sm:text-5xl lg:text-7xl">
-              Cartelera online de Jose Pedro Varela
+              Cartelera online de José Pedro Varela
             </h1>
           </div>
 
@@ -1861,7 +1861,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   Estado del tiempo
                 </p>
                 <h2 className="mt-1 text-2xl font-semibold text-slate-900">
-                  Clima en Jose Pedro Varela
+                  Clima en José Pedro Varela
                 </h2>
                 <p className="mt-2 text-base text-slate-600">
                   {weatherLabel}. Min {Math.round(weather.tempMin)}°C, max {Math.round(weather.tempMax)}°C y viento de {Math.round(weather.windSpeed)} km/h.
@@ -2003,7 +2003,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                         }}
                         className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-blue-500 transition hover:text-blue-600 sm:text-sm"
                       >
-                        Ver mas
+                        Ver más
                         <ArrowRight className="h-4 w-4" />
                       </button>
                     )}
@@ -2037,7 +2037,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
           {servicios.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
-              Todavia no hay servicios cargados.
+              Todavía no hay servicios cargados.
             </div>
           ) : (
             <>
@@ -2341,7 +2341,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
           {cursos.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
-              Todavia no hay cursos o clases cargados.
+              Todavía no hay cursos o clases cargados.
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
@@ -2417,7 +2417,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
               Instituciones
             </h2>
             <p className="mt-4 text-xl text-slate-500">
-              Espacios y organizaciones de referencia en Jose Pedro Varela
+              Espacios y organizaciones de referencia en José Pedro Varela
             </p>
             <div className="mt-6">
               <Link
@@ -2524,7 +2524,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                 <div>
                   <MapPin className="mx-auto h-10 w-10 text-slate-400" />
                   <p className="mt-4 text-lg font-medium text-slate-600">
-                    Imagen de Jose Pedro Varela pendiente
+                    Imagen de José Pedro Varela pendiente
                   </p>
                   <p className="mt-2 text-sm text-slate-500">
                     Cargala desde el panel admin cuando la tengas pronta.
@@ -2552,7 +2552,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
             </div>
 
             <p className="mt-6 text-lg leading-8 text-slate-500">
-              Portal informativo independiente de Jose Pedro Varela. Tu guia
+              Portal informativo independiente de José Pedro Varela. Tu guía
               digital para todo lo que pasa en la ciudad.
             </p>
 
@@ -2569,7 +2569,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
               <div className="flex items-center gap-3">
                 <MapPin className="h-5 w-5 text-slate-400" />
-                <span>Jose Pedro Varela, Lavalleja</span>
+                <span>José Pedro Varela, Lavalleja</span>
               </div>
 
               <div className="flex flex-wrap gap-3 pt-2">

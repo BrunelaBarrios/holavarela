@@ -134,7 +134,7 @@ export default function UsuariosContrasenaPage() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <Field
-                label="Contrasena actual"
+                label="Contraseña actual"
                 type={showCurrentPassword ? "text" : "password"}
                 value={currentPassword}
                 onChange={setCurrentPassword}

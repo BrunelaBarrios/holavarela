@@ -10,9 +10,9 @@ export const revalidate = 3600
 
 export const metadata: Metadata = buildPageMetadata({
   path: "/eventos",
-  title: "Eventos en Jose Pedro Varela | Hola Varela!",
+  title: "Eventos en José Pedro Varela | Hola Varela!",
   description:
-    "Mira eventos, actividades, beneficios y agenda local de Jose Pedro Varela actualizados en Hola Varela.",
+    "Mirá eventos, actividades, beneficios y agenda local de José Pedro Varela actualizados en Hola Varela.",
 })
 
 const EVENT_BASE_SELECT =

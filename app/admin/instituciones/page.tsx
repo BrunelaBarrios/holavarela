@@ -225,7 +225,7 @@ export default function AdminInstitucionesPage() {
       <AdminConfirmModal
         isOpen={Boolean(deletingInstitucion)}
         title="Eliminar institución"
-        description={`Vas a eliminar "${deletingInstitucion?.nombre || ""}". Esta accion no se puede deshacer.`}
+        description={`Vas a eliminar "${deletingInstitucion?.nombre || ""}". Esta acción no se puede deshacer.`}
         confirmLabel="Eliminar"
         onCancel={() => setDeletingInstitucion(null)}
         onConfirm={() => {
@@ -289,7 +289,7 @@ export default function AdminInstitucionesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Direccion
+                  Dirección
                 </label>
                 <input
                   type="text"
@@ -303,7 +303,7 @@ export default function AdminInstitucionesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Telefono
+                  Teléfono
                 </label>
                 <input
                   type="text"
@@ -385,7 +385,7 @@ export default function AdminInstitucionesPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-900">
-                  Descripcion
+                  Descripción
                 </label>
                 <textarea
                   value={formData.descripcion || ""}
