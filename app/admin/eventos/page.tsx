@@ -114,7 +114,9 @@ export default function AdminEventosPage() {
     const [{ data, error }, { data: shareRows, error: shareError }] = await Promise.all([
       supabase
         .from("eventos")
-        .select("*")
+        .select(
+          "id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, descripcion, estado, usa_whatsapp, owner_email"
+        )
         .order("fecha", { ascending: true }),
       supabase.from("share_events").select("item_id").eq("section", "eventos"),
     ])
@@ -168,25 +170,42 @@ export default function AdminEventosPage() {
     setSubmitMode("publish")
   }
 
-  const handleEdit = (evento: Evento) => {
-    setEditingEvento(evento)
+  const handleEdit = async (evento: Evento) => {
+    setLoading(true)
+    setSaveError("")
+
+    const { data, error } = await supabase
+      .from("eventos")
+      .select("imagen")
+      .eq("id", evento.id)
+      .maybeSingle()
+
+    setLoading(false)
+
+    if (error) {
+      setSaveError(`No se pudo cargar la imagen del evento: ${error.message}`)
+      return
+    }
+
+    const eventoToEdit = { ...evento, imagen: data?.imagen || null }
+    setEditingEvento(eventoToEdit)
     setFormData({
-      titulo: evento.titulo || "",
-      categoria: normalizeAdminEventCategory(evento.categoria),
-      fecha: evento.fecha || "",
-      fechaFin: evento.fecha_fin || "",
-      fechaSoloMes: evento.fecha_solo_mes ?? false,
-      ocultarFecha: parseEventDescription(evento.descripcion).hideDate,
+      titulo: eventoToEdit.titulo || "",
+      categoria: normalizeAdminEventCategory(eventoToEdit.categoria),
+      fecha: eventoToEdit.fecha || "",
+      fechaFin: eventoToEdit.fecha_fin || "",
+      fechaSoloMes: eventoToEdit.fecha_solo_mes ?? false,
+      ocultarFecha: parseEventDescription(eventoToEdit.descripcion).hideDate,
       mesReferencia:
-        evento.fecha_solo_mes && evento.fecha ? String(evento.fecha).slice(0, 7) : "",
-      ubicacion: evento.ubicacion || "",
-      telefono: evento.telefono || "",
-      web_url: evento.web_url || "",
-      instagram_url: evento.instagram_url || "",
-      facebook_url: evento.facebook_url || "",
-      descripcion: parseEventDescription(evento.descripcion).baseDescription || "",
-      imagen: evento.imagen || "",
-      usaWhatsapp: evento.usa_whatsapp ?? true,
+        eventoToEdit.fecha_solo_mes && eventoToEdit.fecha ? String(eventoToEdit.fecha).slice(0, 7) : "",
+      ubicacion: eventoToEdit.ubicacion || "",
+      telefono: eventoToEdit.telefono || "",
+      web_url: eventoToEdit.web_url || "",
+      instagram_url: eventoToEdit.instagram_url || "",
+      facebook_url: eventoToEdit.facebook_url || "",
+      descripcion: parseEventDescription(eventoToEdit.descripcion).baseDescription || "",
+      imagen: eventoToEdit.imagen || "",
+      usaWhatsapp: eventoToEdit.usa_whatsapp ?? true,
     })
     setIsFormOpen(true)
   }
@@ -890,7 +909,8 @@ export default function AdminEventosPage() {
                 </button>
 
                 <button
-                  onClick={() => handleEdit(evento)}
+                  onClick={() => void handleEdit(evento)}
+                  disabled={loading}
                   className="rounded-lg p-2 text-emerald-600 transition hover:bg-emerald-50"
                   title="Editar"
                 >

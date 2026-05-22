@@ -38,6 +38,25 @@ const isCommercialEventCategory = (categoria?: string | null) => {
   )
 }
 
+function withDataUrlImage<T extends { id: number | string; imagen?: string | null }>(
+  item: T,
+  routeBase: string
+) {
+  return {
+    ...item,
+    imagen: item.imagen ? `/api/${routeBase}/${item.id}/image` : null,
+  }
+}
+
+function withInstitutionImage<T extends { id: number | string; foto?: string | null }>(
+  item: T
+) {
+  return {
+    ...item,
+    foto: item.foto ? `/api/instituciones/${item.id}/image` : null,
+  }
+}
+
 export default async function Page() {
   const today = getTodayInMontevideo()
 
@@ -132,7 +151,9 @@ export default async function Page() {
   ])
 
   const initialData: HomePageData = {
-    featuredBusinesses: featuredBusinesses || [],
+    featuredBusinesses: (featuredBusinesses || []).map((item) =>
+      item.imagen_url ? item : withDataUrlImage(item, "comercios")
+    ),
     eventos: (() => {
       const activeEvents = eventosData || []
       const recentCommercialCutoff = getDateKeyDaysAgo(RECENT_COMMERCIAL_EVENT_DAYS)
@@ -146,13 +167,19 @@ export default async function Page() {
 
       // Show current/upcoming items in home, and only allow very recent
       // commercial posts without a usable event date as a fallback.
-      return (eventsForHome.length ? eventsForHome : activeEvents).slice(0, 30)
+      return (eventsForHome.length ? eventsForHome : activeEvents)
+        .slice(0, 30)
+        .map((item) => withDataUrlImage(item, "eventos"))
     })(),
-    cursos: cursos || [],
-    servicios: servicios || [],
-    instituciones: instituciones || [],
-    allCursos: highlightedCursos || cursos || [],
-    allServicios: highlightedServicios || servicios || [],
+    cursos: (cursos || []).map((item) => withDataUrlImage(item, "cursos")),
+    servicios: (servicios || []).map((item) => withDataUrlImage(item, "servicios")),
+    instituciones: (instituciones || []).map((item) => withInstitutionImage(item)),
+    allCursos: (highlightedCursos || cursos || []).map((item) =>
+      withDataUrlImage(item, "cursos")
+    ),
+    allServicios: (highlightedServicios || servicios || []).map((item) =>
+      withDataUrlImage(item, "servicios")
+    ),
     sobreVarela: sobreVarelaData
       ? { ...defaultSobreVarela, ...sobreVarelaData }
       : defaultSobreVarela,

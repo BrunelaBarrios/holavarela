@@ -16,7 +16,7 @@ export const metadata: Metadata = buildPageMetadata({
 })
 
 const EVENT_BASE_SELECT =
-  "id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, owner_email"
+  "id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, estado, usa_whatsapp, owner_email"
 
 const hasMissingInstitutionIdColumn = (message?: string | null) =>
   Boolean(message && message.toLowerCase().includes("institucion_id"))
@@ -108,6 +108,7 @@ export default async function EventosPage() {
 
     return {
       ...evento,
+      imagen: `/api/eventos/${evento.id}/image`,
       ownerLabel: ownerInfo?.ownerLabel || null,
       ownerHref: ownerInfo?.ownerHref || null,
     }

@@ -463,7 +463,7 @@ export default function AdminSorteosPage() {
       items: visibleEntries.map((entry) => ({
         title: entry.nombre,
         subtitle: entry.telefono,
-        meta: `Corazones: ${entry.totalLikes}\n${
+        meta: `Origen: ${getEntrySourceLabel(entry.source)}\nCorazones: ${entry.totalLikes}\n${
           entry.sorteoId
             ? campaigns.find((campaign) => campaign.id === entry.sorteoId)?.titulo ||
               `Sorteo #${entry.sorteoId}`
