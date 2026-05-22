@@ -17,6 +17,10 @@ function isSupabaseStorageUrl(src: string) {
   return src.includes("/storage/v1/object/public/")
 }
 
+function isDynamicApiImageUrl(src: string) {
+  return src.startsWith("/api/") && src.endsWith("/image")
+}
+
 function buildSupabaseResponsiveUrl(src: string, width: number, quality?: number) {
   const qualityValue = Math.max(40, Math.min(quality ?? DEFAULT_QUALITY, 85))
 
@@ -65,7 +69,7 @@ export function OptimizedImage({
       quality={quality}
       loading={priority ? "eager" : "lazy"}
       loader={isSupabaseStorageUrl(src) ? supabaseLoader : undefined}
-      unoptimized={src.startsWith("data:")}
+      unoptimized={src.startsWith("data:") || isDynamicApiImageUrl(src)}
       className={className}
     />
   )
