@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
-import { ArrowRight, CalendarDays, MapPin, Phone, Search } from "lucide-react"
+import { ArrowRight, CalendarDays, ChevronDown, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { EventLikeButton } from "../EventLikeButton"
@@ -51,6 +51,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
   const [eventos] = useState<Evento[]>(initialEventos)
   const [search, setSearch] = useState("")
   const [categoria, setCategoria] = useState("Todos")
+  const [showSupportedEvents, setShowSupportedEvents] = useState(false)
   const [eventLikeCounts, setEventLikeCounts] = useState<Record<string, number>>({})
   const [likedEvents, setLikedEvents] = useState<Record<string, boolean>>({})
   const [likingEventId, setLikingEventId] = useState<string | null>(null)
@@ -147,6 +148,11 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
     void recordViewMore("eventos", String(evento.id), evento.titulo)
     void recordContentVisit("eventos", String(evento.id), evento.titulo)
     setSelectedEventoId(String(evento.id))
+  }
+
+  const handleSupportedEventClick = (evento: Evento) => {
+    void handleEventLike(String(evento.id), evento.titulo)
+    handleOpenEvento(evento)
   }
 
   const handleCardKeyDown = (
@@ -370,48 +376,68 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
         </div>
 
         {showEventosMasApoyados ? (
-          <section className="mt-8 rounded-3xl border border-emerald-100 bg-emerald-50/60 p-5 sm:p-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <section className="mt-6 overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/40">
+            <button
+              type="button"
+              onClick={() => setShowSupportedEvents((current) => !current)}
+              aria-expanded={showSupportedEvents}
+              aria-controls="eventos-apoyados"
+              className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition hover:bg-emerald-50 sm:px-5"
+            >
               <div>
-                <h2 className="text-xl font-bold text-slate-950">
+                <p className="text-sm font-bold text-slate-950">
                   Eventos más apoyados
-                </h2>
-                <p className="mt-1 text-sm text-slate-600">
-                  Lo que la comunidad viene marcando con corazones.
+                </p>
+                <p className="mt-0.5 text-xs text-slate-600">
+                  Tocá uno para participar del sorteo.
                 </p>
               </div>
-              <Link
-                href="/sorteo"
-                className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
-              >
-                Ver sorteo
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
+              <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm">
+                {showSupportedEvents ? "Ocultar" : "Ver"}
+                <ChevronDown
+                  className={`h-4 w-4 transition ${showSupportedEvents ? "rotate-180" : ""}`}
+                />
+              </span>
+            </button>
 
-            <div className="mt-5 grid gap-4 md:grid-cols-3">
-              {eventosMasApoyados.map(({ evento, count }) => (
-                <button
-                  key={evento.id}
-                  type="button"
-                  onClick={() => handleOpenEvento(evento)}
-                  className="group flex min-h-[132px] flex-col justify-between rounded-2xl border border-white/80 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+            {showSupportedEvents ? (
+              <div id="eventos-apoyados" className="border-t border-emerald-100 px-4 pb-4 pt-3 sm:px-5">
+                <div className="grid gap-3 md:grid-cols-3">
+                  {eventosMasApoyados.map(({ evento, count }) => {
+                    const eventId = String(evento.id)
+                    const isLiked = Boolean(likedEvents[eventId])
+
+                    return (
+                      <button
+                        key={evento.id}
+                        type="button"
+                        onClick={() => handleSupportedEventClick(evento)}
+                        disabled={likingEventId === eventId}
+                        className="group rounded-2xl border border-white/80 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:cursor-wait disabled:opacity-70"
+                      >
+                        <div className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                          {count} {count === 1 ? "corazón" : "corazones"}
+                        </div>
+                        <h3 className="mt-3 line-clamp-2 text-base font-bold text-slate-950 group-hover:text-emerald-700">
+                          {evento.titulo}
+                        </h3>
+                        <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">
+                          {isLiked ? "Ya participás" : "Tocar y participar"}
+                          <ArrowRight className="h-4 w-4" />
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+                <Link
+                  href="/sorteo"
+                  className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 transition hover:text-emerald-600"
                 >
-                  <div>
-                    <div className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                      {count} {count === 1 ? "corazón" : "corazones"}
-                    </div>
-                    <h3 className="mt-3 line-clamp-2 text-base font-bold text-slate-950 group-hover:text-emerald-700">
-                      {evento.titulo}
-                    </h3>
-                  </div>
-                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">
-                    Ver detalle
-                    <ArrowRight className="h-4 w-4" />
-                  </span>
-                </button>
-              ))}
-            </div>
+                  Ver sorteo
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            ) : null}
           </section>
         ) : null}
 

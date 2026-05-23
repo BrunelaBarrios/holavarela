@@ -1830,16 +1830,14 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
           </div>
 
           <div className="mx-auto max-w-4xl">
-            <h1 className="flex flex-col items-center gap-3 text-4xl font-black uppercase leading-[0.95] tracking-normal text-slate-950 sm:flex-row sm:justify-center sm:text-6xl lg:text-7xl">
-              <span className="hidden text-blue-600/55 sm:inline">-</span>
+            <h1 className="flex flex-col items-center gap-3 text-4xl font-black uppercase leading-[0.95] tracking-normal text-slate-950 sm:justify-center sm:text-6xl lg:text-7xl">
               <span>Cartelera Digital</span>
-              <span className="hidden text-blue-600/55 sm:inline">-</span>
               <span className="sr-only">
               Cartelera online de José Pedro Varela
               </span>
             </h1>
             <div className="mx-auto mt-5 h-px max-w-md bg-[linear-gradient(90deg,transparent,rgba(37,99,235,0.45),transparent)]" />
-            <p className="mt-5 text-3xl font-semibold tracking-normal text-blue-700 sm:text-4xl lg:text-5xl">
+            <p className="mt-5 bg-[linear-gradient(90deg,#0f172a_0%,#123d73_42%,#1d4ed8_100%)] bg-clip-text text-3xl font-black tracking-normal text-transparent sm:text-4xl lg:text-5xl">
               José Pedro Varela
             </p>
           </div>
