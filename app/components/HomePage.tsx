@@ -1814,27 +1814,44 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
 
       <section
         id="inicio"
-        className="relative overflow-hidden bg-[linear-gradient(120deg,#e9f8ec_0%,#edf9f6_46%,#eaf5ff_100%)] py-20 md:py-28"
+        className="relative overflow-hidden bg-[linear-gradient(135deg,#eefaf2_0%,#f7fbff_46%,#eaf4ff_100%)] py-16 md:py-24"
       >
-        <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_center,rgba(255,255,255,0.72),transparent_36%)]" />
+        <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_center,rgba(255,255,255,0.86),transparent_38%)]" />
+        <div className="absolute left-1/2 top-10 h-48 w-48 -translate-x-1/2 rounded-full bg-blue-200/20 blur-3xl" />
+        <div className="absolute bottom-8 left-[12%] h-32 w-32 rounded-full bg-emerald-200/20 blur-3xl" />
 
         <div className="relative z-10 mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
           <div className="mx-auto mb-8 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-white/80 px-4 py-2 text-sm font-medium text-blue-700 shadow-sm">
             <MapPin className="h-4 w-4" />
+            <span>José Pedro Varela, Uruguay</span>
+            <span className="sr-only">
             José Pedro Varela, Uruguay
+            </span>
           </div>
 
-          <div className="mx-auto max-w-5xl">
-            <h1 className="text-4xl font-bold leading-[1.05] tracking-tight text-slate-950 sm:text-5xl lg:text-7xl">
+          <div className="mx-auto max-w-4xl">
+            <h1 className="text-4xl font-black uppercase leading-[0.95] tracking-normal text-slate-950 sm:text-6xl lg:text-7xl">
+              <span>- Cartelera Digital -</span>
+              <span className="sr-only">
               Cartelera online de José Pedro Varela
+              </span>
             </h1>
+            <div className="mx-auto mt-5 h-px max-w-md bg-[linear-gradient(90deg,transparent,rgba(37,99,235,0.45),transparent)]" />
+            <p className="mt-5 text-3xl font-semibold tracking-normal text-blue-700 sm:text-4xl lg:text-5xl">
+              José Pedro Varela
+            </p>
           </div>
 
-          <p className="mx-auto mt-8 max-w-3xl text-lg leading-8 text-slate-600 sm:text-xl">
+          <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">
+            <span>
+              Encontrá eventos, cursos, comercios, servicios y novedades de la ciudad en un solo lugar.
+            </span>
+            <span className="sr-only">
             Encontrá acá eventos, cursos, servicios y más.
+            </span>
           </p>
 
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <button
               onClick={() =>
                 document.getElementById("eventos")?.scrollIntoView({ behavior: "smooth" })
