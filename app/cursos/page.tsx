@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
+import { JsonLd } from "../components/JsonLd"
 import { CursosPageClient } from "../components/public/CursosPageClient"
-import { buildPageMetadata } from "../lib/seo"
+import { absoluteUrl, buildPageMetadata } from "../lib/seo"
+import { buildCourseSchema, buildItemListSchema } from "../lib/schema"
 import { supabaseServer } from "../lib/supabaseServer"
 
 // Public listings change occasionally, so a longer cache window is enough.
@@ -20,5 +22,30 @@ export default async function CursosPage() {
     .eq("estado", "activo")
     .order("id", { ascending: false })
 
-  return <CursosPageClient initialCursos={data || []} />
+  const cursos = data || []
+
+  return (
+    <>
+      <JsonLd
+        data={[
+          buildItemListSchema(
+            "Cursos y talleres en José Pedro Varela",
+            cursos.slice(0, 48).map((curso) => ({
+              name: curso.nombre,
+              url: absoluteUrl(`/cursos?item=${curso.id}`),
+            }))
+          ),
+          ...cursos.slice(0, 12).map((curso) =>
+            buildCourseSchema({
+              name: curso.nombre,
+              description: curso.descripcion,
+              url: absoluteUrl(`/cursos?item=${curso.id}`),
+              providerName: curso.responsable,
+            })
+          ),
+        ]}
+      />
+      <CursosPageClient initialCursos={cursos} />
+    </>
+  )
 }

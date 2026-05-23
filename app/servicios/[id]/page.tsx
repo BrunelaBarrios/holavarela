@@ -1,9 +1,11 @@
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { cache } from "react"
+import { JsonLd } from "../../components/JsonLd"
 import { PremiumListingPage } from "../../components/public/PremiumListingPage"
 import { isEventCurrentOrUpcoming } from "../../lib/eventDates"
-import { buildPageMetadata } from "../../lib/seo"
+import { absoluteUrl, buildPageMetadata } from "../../lib/seo"
+import { buildLocalBusinessSchema } from "../../lib/schema"
 import { supabaseServer } from "../../lib/supabaseServer"
 
 // Premium detail pages are stable enough for a longer cache window.
@@ -123,28 +125,41 @@ export default async function ServicioSharePage({
       : []
 
   return (
-    <PremiumListingPage
-      kind="servicio"
-      id={data.id}
-      title={data.nombre}
-      imageSrc={data.imagen || null}
-      description={data.descripcion}
-      premiumDetail={data.premium_detalle}
-      premiumGallery={data.premium_galeria}
-      premiumExtraTitle={data.premium_extra_titulo}
-      premiumExtraDetail={data.premium_extra_detalle}
-      premiumExtraGallery={data.premium_extra_galeria}
-      address={data.direccion}
-      directionsAddress={data.direccion_mapa}
-      phone={data.contacto}
-      contactName={data.responsable}
-      category={data.categoria}
-      webUrl={data.web_url}
-      instagramUrl={data.instagram_url}
-      facebookUrl={data.facebook_url}
-      usesWhatsapp={data.usa_whatsapp}
-      relatedEvents={typedRelatedEvents.filter((event) => isEventCurrentOrUpcoming(event))}
-      relatedCourses={relatedCourses.length > 0 ? relatedCourses : fallbackCourses}
-    />
+    <>
+      <JsonLd
+        data={buildLocalBusinessSchema({
+          name: data.nombre,
+          description: data.premium_detalle || data.descripcion,
+          url: absoluteUrl(`/servicios/${data.id}`),
+          image: data.imagen,
+          address: data.direccion,
+          telephone: data.contacto,
+          category: data.categoria || "Servicio local",
+        })}
+      />
+      <PremiumListingPage
+        kind="servicio"
+        id={data.id}
+        title={data.nombre}
+        imageSrc={data.imagen || null}
+        description={data.descripcion}
+        premiumDetail={data.premium_detalle}
+        premiumGallery={data.premium_galeria}
+        premiumExtraTitle={data.premium_extra_titulo}
+        premiumExtraDetail={data.premium_extra_detalle}
+        premiumExtraGallery={data.premium_extra_galeria}
+        address={data.direccion}
+        directionsAddress={data.direccion_mapa}
+        phone={data.contacto}
+        contactName={data.responsable}
+        category={data.categoria}
+        webUrl={data.web_url}
+        instagramUrl={data.instagram_url}
+        facebookUrl={data.facebook_url}
+        usesWhatsapp={data.usa_whatsapp}
+        relatedEvents={typedRelatedEvents.filter((event) => isEventCurrentOrUpcoming(event))}
+        relatedCourses={relatedCourses.length > 0 ? relatedCourses : fallbackCourses}
+      />
+    </>
   )
 }

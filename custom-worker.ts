@@ -1,4 +1,4 @@
-// @ts-expect-error .open-next/worker.js is generated during the Cloudflare build.
+// @ts-ignore .open-next/worker.js is generated during the Cloudflare build.
 import { default as handler } from "./.open-next/worker.js"
 
 type CronEnv = {

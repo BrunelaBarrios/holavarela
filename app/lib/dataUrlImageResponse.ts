@@ -32,7 +32,7 @@ export async function dataUrlImageResponse(
   return new NextResponse(body, {
     headers: {
       "Content-Type": contentType,
-      "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+      "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000",
     },
   })
 }

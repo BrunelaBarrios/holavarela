@@ -2,6 +2,9 @@ import type { Metadata } from "next"
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import "./globals.css"
+import { AnalyticsScripts } from "./components/AnalyticsScripts"
+import { JsonLd } from "./components/JsonLd"
+import { buildOrganizationSchema, buildWebsiteSchema } from "./lib/schema"
 import { defaultSiteMetadata } from "./lib/seo"
 
 export const metadata: Metadata = {
@@ -22,6 +25,8 @@ export default function RootLayout({
     <html lang="es">
       <body>
         {children}
+        <JsonLd data={[buildWebsiteSchema(), buildOrganizationSchema()]} />
+        <AnalyticsScripts />
         <Analytics />
         <SpeedInsights />
       </body>

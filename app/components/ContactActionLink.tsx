@@ -5,6 +5,7 @@ import {
   recordWhatsappClick,
   type WhatsappSection,
 } from "../lib/whatsappTracking"
+import { trackAnalyticsEvent } from "../lib/clientAnalytics"
 
 type ContactActionLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
   children: ReactNode
@@ -33,6 +34,15 @@ export function ContactActionLink({
       itemId
     ) {
       void recordWhatsappClick(section, itemId, itemTitle)
+    }
+
+    if (!event.defaultPrevented) {
+      trackAnalyticsEvent("contact_click", {
+        contact_mode: mode,
+        content_section: section,
+        item_id: itemId,
+        item_title: itemTitle,
+      })
     }
   }
 

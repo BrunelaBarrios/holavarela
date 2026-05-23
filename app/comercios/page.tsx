@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
+import { JsonLd } from "../components/JsonLd"
 import { ComerciosPageClient } from "../components/public/ComerciosPageClient"
-import { buildPageMetadata } from "../lib/seo"
+import { absoluteUrl, buildPageMetadata } from "../lib/seo"
+import { buildItemListSchema } from "../lib/schema"
 import { supabaseServer } from "../lib/supabaseServer"
 
 // Admin and subscription flows call revalidatePath; this interval is only a fallback.
@@ -20,5 +22,22 @@ export default async function ComerciosPage() {
     .eq("estado", "activo")
     .order("id", { ascending: false })
 
-  return <ComerciosPageClient initialComercios={data || []} />
+  const comercios = data || []
+
+  return (
+    <>
+      <JsonLd
+        data={buildItemListSchema(
+          "Comercios locales en José Pedro Varela",
+          comercios.slice(0, 48).map((comercio) => ({
+            name: comercio.nombre,
+            url: absoluteUrl(
+              comercio.premium_activo ? `/comercios/${comercio.id}` : `/comercios?item=${comercio.id}`
+            ),
+          }))
+        )}
+      />
+      <ComerciosPageClient initialComercios={comercios} />
+    </>
+  )
 }

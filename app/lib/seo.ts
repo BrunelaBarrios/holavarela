@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 
 const SITE_NAME = "Hola Varela!"
-const DEFAULT_SITE_URL = "https://www.holavarela.uy"
+const DEFAULT_SITE_URL = "https://holavarela.uy"
 const DEFAULT_DESCRIPTION =
   "Guía digital de José Pedro Varela con comercios, eventos, cursos, instituciones y radio local."
 
@@ -44,7 +44,10 @@ export const buildPageMetadata = ({
 
   return {
     metadataBase: new URL(getSiteUrl()),
-    title,
+    title: title === SITE_NAME ? {
+      default: SITE_NAME,
+      template: `%s | ${SITE_NAME}`,
+    } : title,
     description,
     alternates: {
       canonical,

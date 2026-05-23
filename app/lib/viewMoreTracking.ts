@@ -1,4 +1,5 @@
 import { supabase } from "../supabase"
+import { trackAnalyticsEvent } from "./clientAnalytics"
 
 export const VIEW_MORE_SECTIONS = [
   "comercios",
@@ -25,6 +26,12 @@ export const recordViewMore = async (
   itemId: string,
   itemTitle?: string | null
 ) => {
+  trackAnalyticsEvent("view_more_click", {
+    content_section: section,
+    item_id: itemId,
+    item_title: itemTitle,
+  })
+
   const payload = JSON.stringify({
     section,
     itemId,

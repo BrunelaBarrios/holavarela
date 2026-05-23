@@ -1,4 +1,5 @@
 import { supabase } from "../supabase"
+import { trackAnalyticsEvent } from "./clientAnalytics"
 
 export const EXTERNAL_LINK_SECTIONS = [
   "comercios",
@@ -35,6 +36,13 @@ export const recordExternalLinkClick = async (
   itemTitle: string | null | undefined,
   linkType: ExternalLinkType
 ) => {
+  trackAnalyticsEvent("external_link_click", {
+    content_section: section,
+    item_id: itemId,
+    item_title: itemTitle,
+    link_type: linkType,
+  })
+
   const { error } = await supabase.from("external_link_clicks").insert([
     {
       section,

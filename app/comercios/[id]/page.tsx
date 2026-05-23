@@ -1,9 +1,12 @@
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { cache } from "react"
+import { JsonLd } from "../../components/JsonLd"
 import { PremiumListingPage } from "../../components/public/PremiumListingPage"
 import { isEventCurrentOrUpcoming } from "../../lib/eventDates"
+import { absoluteUrl } from "../../lib/seo"
 import { buildPageMetadata } from "../../lib/seo"
+import { buildLocalBusinessSchema } from "../../lib/schema"
 import { supabaseServer } from "../../lib/supabaseServer"
 
 // Admin and subscription flows call revalidatePath; this interval is only a fallback.
@@ -87,26 +90,39 @@ export default async function ComercioSharePage({
   const relatedCourses = relatedCoursesResult.data || []
 
   return (
-    <PremiumListingPage
-      kind="comercio"
-      id={data.id}
-      title={data.nombre}
-      imageSrc={data.imagen_url || data.imagen || null}
-      description={data.descripcion}
-      premiumDetail={data.premium_detalle}
-      premiumGallery={data.premium_galeria}
-      premiumExtraTitle={data.premium_extra_titulo}
-      premiumExtraDetail={data.premium_extra_detalle}
-      premiumExtraGallery={data.premium_extra_galeria}
-      address={data.direccion}
-      directionsAddress={data.direccion_mapa}
-      phone={data.telefono}
-      webUrl={data.web_url}
-      instagramUrl={data.instagram_url}
-      facebookUrl={data.facebook_url}
-      usesWhatsapp={data.usa_whatsapp}
-      relatedEvents={(relatedEvents || []).filter((event) => isEventCurrentOrUpcoming(event))}
-      relatedCourses={relatedCourses || []}
-    />
+    <>
+      <JsonLd
+        data={buildLocalBusinessSchema({
+          name: data.nombre,
+          description: data.premium_detalle || data.descripcion,
+          url: absoluteUrl(`/comercios/${data.id}`),
+          image: data.imagen_url || data.imagen,
+          address: data.direccion,
+          telephone: data.telefono,
+          category: "Comercio local",
+        })}
+      />
+      <PremiumListingPage
+        kind="comercio"
+        id={data.id}
+        title={data.nombre}
+        imageSrc={data.imagen_url || data.imagen || null}
+        description={data.descripcion}
+        premiumDetail={data.premium_detalle}
+        premiumGallery={data.premium_galeria}
+        premiumExtraTitle={data.premium_extra_titulo}
+        premiumExtraDetail={data.premium_extra_detalle}
+        premiumExtraGallery={data.premium_extra_galeria}
+        address={data.direccion}
+        directionsAddress={data.direccion_mapa}
+        phone={data.telefono}
+        webUrl={data.web_url}
+        instagramUrl={data.instagram_url}
+        facebookUrl={data.facebook_url}
+        usesWhatsapp={data.usa_whatsapp}
+        relatedEvents={(relatedEvents || []).filter((event) => isEventCurrentOrUpcoming(event))}
+        relatedCourses={relatedCourses || []}
+      />
+    </>
   )
 }

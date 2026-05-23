@@ -6,11 +6,13 @@ import { CalendarDays, MapPin, Phone } from "lucide-react"
 import { ContactActionLink } from "../../components/ContactActionLink"
 import { EventImageViewer } from "../../components/EventImageViewer"
 import { ExternalLinksButtons } from "../../components/ExternalLinksButtons"
+import { JsonLd } from "../../components/JsonLd"
 import { PublicHeader } from "../../components/PublicHeader"
 import { ShareButton } from "../../components/ShareButton"
 import { formatEventDateRange, isEventCurrentOrUpcoming } from "../../lib/eventDates"
 import { parseEventDescription, shouldHideEventDate } from "../../lib/eventSubmissionMeta"
 import { buildPublicNav } from "../../lib/publicNav"
+import { buildEventSchema } from "../../lib/schema"
 import { supabaseServer } from "../../lib/supabaseServer"
 
 // Shared event pages are SEO-sensitive but stable enough for longer caching.
@@ -243,9 +245,23 @@ export default async function EventoSharePage({ params }: EventPageParams) {
       ? `tel:${evento.telefono}`
       : whatsappLink(evento.telefono)
     : null
+  const eventImageUrl = evento.imagen ? getEventImageUrl(evento.id) : null
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)]">
+      <JsonLd
+        data={buildEventSchema({
+          name: evento.titulo,
+          description: parsedDescription,
+          url: eventUrl,
+          image: eventImageUrl,
+          startDate: evento.fecha,
+          endDate: evento.fecha_fin,
+          location: evento.ubicacion,
+          organizerName: ownerProfile?.name,
+          organizerUrl: ownerProfile ? `${getSiteUrl()}${ownerProfile.href}` : null,
+        })}
+      />
       <PublicHeader items={buildPublicNav("eventos")} />
 
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">

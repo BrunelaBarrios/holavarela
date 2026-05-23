@@ -1,8 +1,10 @@
 import type { Metadata } from "next"
+import { JsonLd } from "../components/JsonLd"
 import { EventosPageClient } from "../components/public/EventosPageClient"
 import type { Evento } from "../components/public/EventosPageClient"
 import { isEventCurrentOrUpcoming } from "../lib/eventDates"
-import { buildPageMetadata } from "../lib/seo"
+import { absoluteUrl, buildPageMetadata } from "../lib/seo"
+import { buildItemListSchema } from "../lib/schema"
 import { supabaseServer } from "../lib/supabaseServer"
 
 // Admin and user edits call revalidatePath; this interval is only a fallback.
@@ -114,5 +116,18 @@ export default async function EventosPage() {
     }
   })
 
-  return <EventosPageClient initialEventos={enrichedEvents as Evento[]} />
+  return (
+    <>
+      <JsonLd
+        data={buildItemListSchema(
+          "Eventos y novedades en José Pedro Varela",
+          enrichedEvents.slice(0, 24).map((evento) => ({
+            name: evento.titulo,
+            url: absoluteUrl(`/eventos/${evento.id}`),
+          }))
+        )}
+      />
+      <EventosPageClient initialEventos={enrichedEvents as Evento[]} />
+    </>
+  )
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Share2 } from "lucide-react"
+import { trackAnalyticsEvent } from "../lib/clientAnalytics"
 import { recordShare, type ShareSection } from "../lib/shareTracking"
 
 type ShareButtonProps = {
@@ -31,6 +32,12 @@ export function ShareButton({
   }, [feedback])
 
   const handleShare = async () => {
+    trackAnalyticsEvent("share_click", {
+      content_section: section,
+      item_id: itemId,
+      item_title: title,
+    })
+
     try {
       await recordShare(section, itemId, title)
     } catch (error) {

@@ -1,6 +1,7 @@
 'use client'
 
 import { supabase } from "../supabase"
+import { trackAnalyticsEvent } from "./clientAnalytics"
 
 export const CONTENT_VISIT_SECTIONS = [
   "comercios",
@@ -40,6 +41,12 @@ export const recordContentVisit = async (
   itemId: string,
   itemTitle?: string | null
 ) => {
+  trackAnalyticsEvent("content_visit", {
+    content_section: section,
+    item_id: itemId,
+    item_title: itemTitle,
+  })
+
   const browserKey = getContentVisitsBrowserKey()
 
   if (!browserKey) return
@@ -60,6 +67,11 @@ export const recordContentVisit = async (
 
 export const recordSiteVisit = async (pageId: string, pageTitle?: string | null) => {
   if (typeof window === "undefined") return
+
+  trackAnalyticsEvent("site_visit", {
+    page_id: pageId,
+    page_title: pageTitle,
+  })
 
   const browserKey = getContentVisitsBrowserKey()
   if (!browserKey) return
