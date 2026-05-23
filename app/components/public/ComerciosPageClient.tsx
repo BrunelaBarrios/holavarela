@@ -117,6 +117,14 @@ export function ComerciosPageClient({
     )
   }, [comercios, search])
 
+  const comerciosDestacados = useMemo(
+    () => comercios.filter((comercio) => comercio.premium_activo).slice(0, 3),
+    [comercios]
+  )
+
+  const showComerciosDestacados =
+    search.trim().length === 0 && comerciosDestacados.length > 0
+
   return (
     <main className="min-h-screen bg-white">
       <PublicDetailModal
@@ -228,8 +236,23 @@ export function ComerciosPageClient({
 
       <PublicHeader items={buildPublicNav("comercios")} />
 
-      <div className="mx-auto max-w-7xl px-6 py-16">
-        <h1 className="text-3xl font-bold text-gray-900">Comercios</h1>
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Comercios</h1>
+            <p className="mt-2 max-w-2xl text-gray-600">
+              Encontrá negocios locales, datos de contacto y perfiles completos.
+            </p>
+          </div>
+
+          <Link
+            href="/sumate"
+            className="inline-flex w-fit items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
+          >
+            Sumar mi comercio
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
 
         <div className="mt-6 max-w-xl">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">
@@ -238,11 +261,74 @@ export function ComerciosPageClient({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nombre, direccion o descripcion"
+              placeholder="Buscar por nombre, dirección o descripción"
               className="w-full text-sm outline-none"
             />
           </div>
         </div>
+
+        {showComerciosDestacados ? (
+          <section className="mt-8 rounded-3xl border border-violet-100 bg-violet-50/60 p-5 sm:p-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-slate-950">
+                  Comercios destacados
+                </h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Perfiles con más información, fotos y acceso rápido de contacto.
+                </p>
+              </div>
+              <Link
+                href="/comercios"
+                className="inline-flex w-fit items-center gap-2 rounded-full bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-500"
+              >
+                Ver todos
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              {comerciosDestacados.map((comercio) => {
+                const imagenSrc = comercio.imagen || comercio.imagen_url
+
+                return (
+                  <Link
+                    key={comercio.id}
+                    href={`/comercios/${comercio.id}`}
+                    onClick={() => handleOpenPremiumProfile(comercio)}
+                    className="group overflow-hidden rounded-2xl border border-white/80 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
+                  >
+                    {imagenSrc ? (
+                      <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100">
+                        <OptimizedImage
+                          src={imagenSrc}
+                          alt={comercio.nombre}
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                          quality={62}
+                          className="object-cover transition duration-300 group-hover:scale-105"
+                        />
+                      </div>
+                    ) : null}
+                    <div className="p-4">
+                      <h3 className="line-clamp-2 text-base font-bold text-slate-950 group-hover:text-violet-700">
+                        {comercio.nombre}
+                      </h3>
+                      {comercio.direccion ? (
+                        <p className="mt-2 line-clamp-2 text-sm text-slate-600">
+                          {comercio.direccion}
+                        </p>
+                      ) : null}
+                      <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-violet-700">
+                        Ver perfil completo
+                        <ArrowRight className="h-4 w-4" />
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        ) : null}
 
         {comerciosFiltrados.length === 0 ? (
           <div className="mt-10 rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
@@ -280,7 +366,7 @@ export function ComerciosPageClient({
                       handleOpenComercio(comercio)
                     })
                   }
-                  className={`cursor-pointer rounded-xl border p-5 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${comercio.premium_activo ? "border-violet-200 bg-violet-50/20" : "border-gray-200"}`}
+                  className={`cursor-pointer rounded-2xl border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${comercio.premium_activo ? "border-violet-200" : "border-gray-200 hover:border-blue-200"}`}
                 >
                   {imagenSrc && (
                     <div className="relative mb-3 h-40 w-full overflow-hidden rounded-lg">
@@ -296,6 +382,25 @@ export function ComerciosPageClient({
                   <h2 className="text-lg font-semibold text-gray-900">
                     {comercio.nombre}
                   </h2>
+
+                  {comercio.direccion ? (
+                    <p className="mt-2 line-clamp-2 text-sm text-gray-600">
+                      {comercio.direccion}
+                    </p>
+                  ) : null}
+
+                  {comercio.descripcion ? (
+                    <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-gray-700">
+                      {comercio.descripcion}
+                    </p>
+                  ) : null}
+
+                  {comercio.telefono ? (
+                    <p className="mt-3 text-sm font-medium text-slate-700">
+                      {comercio.usa_whatsapp === false ? "Teléfono" : "WhatsApp"}:{" "}
+                      {comercio.telefono}
+                    </p>
+                  ) : null}
 
                   <div className="mt-4 flex flex-wrap gap-3">
                     {comercio.premium_activo ? (

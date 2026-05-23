@@ -175,6 +175,22 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
     })
   }, [categoria, eventos, search])
 
+  const eventosMasApoyados = useMemo(
+    () =>
+      eventos
+        .map((evento) => ({
+          evento,
+          count: eventLikeCounts[String(evento.id)] || 0,
+        }))
+        .filter(({ count }) => count > 0)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3),
+    [eventLikeCounts, eventos]
+  )
+
+  const showEventosMasApoyados =
+    categoria === "Todos" && search.trim().length === 0 && eventosMasApoyados.length > 0
+
   return (
     <main className="min-h-screen bg-white">
       {sweepstakesPopup.config ? (
@@ -303,7 +319,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
 
       <PublicHeader items={buildPublicNav("eventos")} />
 
-      <div className="mx-auto max-w-7xl px-6 py-16">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Hoy en Varela</h1>
@@ -353,6 +369,52 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
           ))}
         </div>
 
+        {showEventosMasApoyados ? (
+          <section className="mt-8 rounded-3xl border border-emerald-100 bg-emerald-50/60 p-5 sm:p-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-slate-950">
+                  Eventos más apoyados
+                </h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Lo que la comunidad viene marcando con corazones.
+                </p>
+              </div>
+              <Link
+                href="/sorteo"
+                className="inline-flex w-fit items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+              >
+                Ver sorteo
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              {eventosMasApoyados.map(({ evento, count }) => (
+                <button
+                  key={evento.id}
+                  type="button"
+                  onClick={() => handleOpenEvento(evento)}
+                  className="group flex min-h-[132px] flex-col justify-between rounded-2xl border border-white/80 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                >
+                  <div>
+                    <div className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                      {count} {count === 1 ? "corazón" : "corazones"}
+                    </div>
+                    <h3 className="mt-3 line-clamp-2 text-base font-bold text-slate-950 group-hover:text-emerald-700">
+                      {evento.titulo}
+                    </h3>
+                  </div>
+                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700">
+                    Ver detalle
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {eventosFiltrados.length === 0 ? (
           <div className="mt-10 rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
             <p className="text-gray-600">
@@ -370,7 +432,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 tabIndex={0}
                 onClick={() => handleOpenEvento(evento)}
                 onKeyDown={(event) => handleCardKeyDown(event, () => handleOpenEvento(evento))}
-                className="cursor-pointer rounded-xl border border-gray-200 p-5 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                className="cursor-pointer rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
                 {evento.imagen && (
                   <div className="relative mb-4 h-48 w-full overflow-hidden rounded-lg">
