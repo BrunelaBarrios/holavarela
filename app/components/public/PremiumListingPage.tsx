@@ -168,6 +168,56 @@ export function PremiumListingPage({
       ? `Cursos y talleres de ${title}`
       : `Cursos y clases de ${title}`)
 
+  const renderPrimaryActions = () => (
+    <div className="flex flex-wrap gap-3">
+      {contactHref ? (
+        <ContactActionLink
+          href={contactHref}
+          mode={usesWhatsapp === false ? "phone" : "whatsapp"}
+          section={section}
+          itemId={String(id)}
+          itemTitle={title}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
+        >
+          <Phone className="h-4 w-4" />
+          {usesWhatsapp === false ? "Llamar" : "WhatsApp"}
+        </ContactActionLink>
+      ) : null}
+
+      {directionsUrl ? (
+        <a
+          href={directionsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-5 py-3 font-semibold text-sky-700 transition hover:border-sky-300 hover:bg-sky-100"
+        >
+          <MapPin className="h-4 w-4" />
+          Cómo llegar
+        </a>
+      ) : null}
+
+      <ShareButton
+        title={title}
+        text={description || premiumDetail || undefined}
+        url={shareUrl}
+        section={section}
+        itemId={String(id)}
+        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+      />
+
+      <ExternalLinksButtons
+        webUrl={webUrl}
+        instagramUrl={instagramUrl}
+        facebookUrl={facebookUrl}
+        section={section}
+        itemId={String(id)}
+        itemTitle={title}
+      />
+    </div>
+  )
+
   const openImageAt = (index: number, gallery: GalleryKind = "main") => {
     const images = gallery === "extra" ? extraGalleryImages : mainGalleryImages
     const safeIndex =
@@ -394,10 +444,24 @@ export function PremiumListingPage({
                   </div>
                 </div>
               ) : null}
+
+              <div className="mt-6 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm lg:hidden">
+                <div className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                  Datos y contacto
+                </div>
+                <div className="grid gap-3">
+                  {address ? <InfoPill icon={<MapPin className="h-4 w-4" />} text={address} /> : null}
+                  {phone ? <InfoPill icon={<Phone className="h-4 w-4" />} text={phone} /> : null}
+                  {contactName ? (
+                    <InfoPill icon={<UserRound className="h-4 w-4" />} text={contactName} />
+                  ) : null}
+                </div>
+                <div className="mt-5">{renderPrimaryActions()}</div>
+              </div>
             </div>
 
             <div className="bg-white p-6 sm:p-8 lg:p-8">
-              <div className="rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6">
+              <div className="hidden rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6 lg:block">
                 <div className="hidden lg:block">
                   {category ? (
                     <div className="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
