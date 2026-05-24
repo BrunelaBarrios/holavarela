@@ -2387,7 +2387,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   }
                   className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(34,197,94,0.3)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                 >
-                  <div className="flex items-center gap-3 border-b border-emerald-900/10 bg-[linear-gradient(135deg,#064e3b_0%,#047857_56%,#16a34a_100%)] px-4 py-4 sm:px-5">
+                  <div className="flex items-center gap-3 border-b border-emerald-900/10 bg-emerald-700 px-4 py-4 sm:px-5">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/95 text-emerald-700 shadow-sm">
                       <GraduationCap className="h-6 w-6" />
                     </div>
@@ -2464,7 +2464,7 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
                   }
                   className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(6,182,212,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
                 >
-                  <div className="flex items-center gap-3 border-b border-blue-950/10 bg-[linear-gradient(135deg,#0f2f66_0%,#1d4ed8_56%,#38bdf8_100%)] px-4 py-4 sm:px-5">
+                  <div className="flex items-center gap-3 border-b border-blue-950/10 bg-blue-800 px-4 py-4 sm:px-5">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/95 text-blue-700 shadow-sm">
                       <Building2 className="h-6 w-6" />
                     </div>
