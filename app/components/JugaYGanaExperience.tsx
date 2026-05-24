@@ -4,7 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import {
   ArrowLeft,
+  ArrowDown,
   ArrowRight,
+  ArrowUp,
   CheckCircle2,
   Clock3,
   Gift,
@@ -79,6 +81,12 @@ const CHALLENGES: ChallengeMeta[] = [
     key: "puzzle",
     title: "Puzzle",
     description: "Mueve las piezas vecinas al espacio libre hasta ordenar el tablero.",
+    points: 35,
+  },
+  {
+    key: "laberinto",
+    title: "Laberinto",
+    description: "Encuentra el camino hasta la meta con la menor cantidad de movimientos.",
     points: 35,
   },
 ]
@@ -589,6 +597,17 @@ const PUZZLE_STARTS = [
   { name: "Agenda Varela", tiles: [1, 2, 3, 0, 4, 6, 7, 5, 8] },
   { name: "Comunidad", tiles: [1, 0, 3, 4, 2, 5, 7, 8, 6] },
 ]
+const MAZE_TIME = 70
+const MAZE_LAYOUT = [
+  "S..#...",
+  "##.#.#.",
+  "...#.#.",
+  ".###.#.",
+  "...#...",
+  ".#.###.",
+  "..G#...",
+]
+const MAZE_START = { row: 0, col: 0 }
 
 function shuffleArray<T>(items: T[]) {
   const copy = [...items]
@@ -621,6 +640,15 @@ function arePuzzleTilesAdjacent(tileIndex: number, blankIndex: number) {
   const blankCol = blankIndex % PUZZLE_SIZE
 
   return Math.abs(tileRow - blankRow) + Math.abs(tileCol - blankCol) === 1
+}
+
+function getMazeCell(row: number, col: number) {
+  return MAZE_LAYOUT[row]?.[col] || "#"
+}
+
+function isMazeWalkable(row: number, col: number) {
+  const cell = getMazeCell(row, col)
+  return cell !== "#"
 }
 
 function createMemoryDeck(values: string[]) {
@@ -837,12 +865,14 @@ export function JugaYGanaExperience() {
     memoria: false,
     pelicula: false,
     puzzle: false,
+    laberinto: false,
   })
   const [earnedPoints, setEarnedPoints] = useState<Record<ChallengeKey, number>>({
     sopa: 0,
     memoria: 0,
     pelicula: 0,
     puzzle: 0,
+    laberinto: 0,
   })
 
   const [wordSearchVariantIndex, setWordSearchVariantIndex] = useState(() =>
@@ -875,6 +905,9 @@ export function JugaYGanaExperience() {
   const [puzzleTiles, setPuzzleTiles] = useState<number[]>(() => [...PUZZLE_STARTS[0].tiles])
   const [puzzleMoves, setPuzzleMoves] = useState(0)
   const [puzzleTimeLeft, setPuzzleTimeLeft] = useState(PUZZLE_TIME)
+  const [mazePosition, setMazePosition] = useState(MAZE_START)
+  const [mazeMoves, setMazeMoves] = useState(0)
+  const [mazeTimeLeft, setMazeTimeLeft] = useState(MAZE_TIME)
 
   const [participantName, setParticipantName] = useState("")
   const [participantPhone, setParticipantPhone] = useState("")
@@ -920,11 +953,14 @@ export function JugaYGanaExperience() {
     setMovieTitlesCompleted([])
     setPuzzleVariantIndex((current) => {
       const nextIndex = (current + 1) % PUZZLE_STARTS.length
-      setPuzzleTiles([...PUZZLE_STARTS[nextIndex].tiles])
+    setPuzzleTiles([...PUZZLE_STARTS[nextIndex].tiles])
       return nextIndex
     })
     setPuzzleMoves(0)
     setPuzzleTimeLeft(PUZZLE_TIME)
+    setMazePosition(MAZE_START)
+    setMazeMoves(0)
+    setMazeTimeLeft(MAZE_TIME)
   }
 
   const getWordFromSelection = (selection: number[]) =>
@@ -965,6 +1001,7 @@ export function JugaYGanaExperience() {
   const movieFailed = !movieRoundCompleted && wrongLetters.length >= MAX_MOVIE_ERRORS
   const canPlayAnotherMovie = movieRoundCompleted && movieRoundsCompleted < MAX_MOVIE_ROUNDS
   const puzzleFinished = completedChallenges.puzzle || puzzleTimeLeft === 0
+  const mazeFinished = completedChallenges.laberinto || mazeTimeLeft === 0
 
   useEffect(() => {
     let mounted = true
@@ -991,8 +1028,8 @@ export function JugaYGanaExperience() {
         juegosActivos: normalizeChallengeKeys(data?.juegos_activos),
       })
       setActiveChallengeIndex(0)
-      setCompletedChallenges({ sopa: false, memoria: false, pelicula: false, puzzle: false })
-      setEarnedPoints({ sopa: 0, memoria: 0, pelicula: 0, puzzle: 0 })
+      setCompletedChallenges({ sopa: false, memoria: false, pelicula: false, puzzle: false, laberinto: false })
+      setEarnedPoints({ sopa: 0, memoria: 0, pelicula: 0, puzzle: 0, laberinto: 0 })
       setStage("intro")
       setConfigLoading(false)
     }
@@ -1056,6 +1093,23 @@ export function JugaYGanaExperience() {
 
     return () => window.clearInterval(intervalId)
   }, [activeChallenge?.key, puzzleFinished, stage])
+
+  useEffect(() => {
+    if (stage !== "play" || activeChallenge?.key !== "laberinto") return
+    if (mazeFinished) return
+
+    const intervalId = window.setInterval(() => {
+      setMazeTimeLeft((current) => {
+        if (current <= 1) {
+          window.clearInterval(intervalId)
+          return 0
+        }
+        return current - 1
+      })
+    }, 1000)
+
+    return () => window.clearInterval(intervalId)
+  }, [activeChallenge?.key, mazeFinished, stage])
 
   const handleWordCellToggle = (cellIndex: number) => {
     if (wordSearchFinished || completedChallenges.sopa) return
@@ -1298,6 +1352,39 @@ export function JugaYGanaExperience() {
     setEarnedPoints((prev) => ({ ...prev, puzzle: 0 }))
   }
 
+  const handleMazeMove = (rowStep: number, colStep: number) => {
+    if (mazeFinished) return
+
+    const nextPosition = {
+      row: mazePosition.row + rowStep,
+      col: mazePosition.col + colStep,
+    }
+
+    if (!isMazeWalkable(nextPosition.row, nextPosition.col)) return
+
+    const nextMoves = mazeMoves + 1
+    setMazePosition(nextPosition)
+    setMazeMoves(nextMoves)
+
+    if (getMazeCell(nextPosition.row, nextPosition.col) === "G") {
+      const mazePoints =
+        (CHALLENGES.find((challenge) => challenge.key === "laberinto")?.points || 0) +
+        mazeTimeLeft +
+        Math.max(0, 50 - nextMoves * 2)
+
+      setCompletedChallenges((prev) => ({ ...prev, laberinto: true }))
+      setEarnedPoints((prev) => ({ ...prev, laberinto: mazePoints }))
+    }
+  }
+
+  const resetMazeGame = () => {
+    setMazePosition(MAZE_START)
+    setMazeMoves(0)
+    setMazeTimeLeft(MAZE_TIME)
+    setCompletedChallenges((prev) => ({ ...prev, laberinto: false }))
+    setEarnedPoints((prev) => ({ ...prev, laberinto: 0 }))
+  }
+
   const handleContinue = () => {
     if (activeChallengeIndex < activeChallenges.length - 1) {
       setActiveChallengeIndex((current) => current + 1)
@@ -1324,10 +1411,12 @@ export function JugaYGanaExperience() {
         puntos_memoria: earnedPoints.memoria,
         puntos_pelicula: earnedPoints.pelicula,
         puntos_puzzle: earnedPoints.puzzle,
+        puntos_laberinto: earnedPoints.laberinto,
         sopa_nombre: activeWordSearch.name,
         memoria_nombre: `Memoria ${memoryVariantIndex + 1}`,
         pelicula_nombre: movieTitlesCompleted.join(" | "),
         puzzle_nombre: activePuzzle.name,
+        laberinto_nombre: "Laberinto Varela",
       },
     ])
 
@@ -1411,7 +1500,7 @@ export function JugaYGanaExperience() {
               <p className="mt-5 max-w-xl text-base leading-8 text-sky-50/90 sm:text-lg">
                 Acumula puntos y participa de ganar premios.
               </p>
-              <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                 {activeChallenges.map((challenge, index) => (
                   <div key={challenge.key} className={`rounded-[24px] border px-4 py-4 ${completedChallenges[challenge.key] ? "border-emerald-300/40 bg-emerald-400/15" : activeChallengeIndex === index && stage === "play" ? "border-white/30 bg-white/10" : "border-white/10 bg-black/10"}`}>
                     <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-100/80">
@@ -1500,6 +1589,19 @@ export function JugaYGanaExperience() {
                   earnedPoints={earnedPoints.puzzle}
                   onTileClick={handlePuzzleTileClick}
                   onReset={resetPuzzleGame}
+                />
+              ) : null}
+              {stage === "play" && activeChallenge?.key === "laberinto" ? (
+                <MazePanel
+                  layout={MAZE_LAYOUT}
+                  position={mazePosition}
+                  moves={mazeMoves}
+                  timeLeft={mazeTimeLeft}
+                  completed={completedChallenges.laberinto}
+                  finished={mazeFinished}
+                  earnedPoints={earnedPoints.laberinto}
+                  onMove={handleMazeMove}
+                  onReset={resetMazeGame}
                 />
               ) : null}
               {stage === "form" ? (
@@ -2018,6 +2120,112 @@ function PuzzlePanel(props: {
       {props.completed ? (
         <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm leading-7 text-emerald-800">
           Puzzle completado. Sumaste {props.earnedPoints} puntos.
+        </div>
+      ) : null}
+      {props.finished && !props.completed ? (
+        <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm leading-7 text-rose-700">
+          Se termino el tiempo. Debes reiniciar este desafio para volver a intentarlo.
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function MazePanel(props: {
+  layout: string[]
+  position: { row: number; col: number }
+  moves: number
+  timeLeft: number
+  completed: boolean
+  finished: boolean
+  earnedPoints: number
+  onMove: (rowStep: number, colStep: number) => void
+  onReset: () => void
+}) {
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+            Desafio 5
+          </div>
+          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">
+            Laberinto
+          </h2>
+        </div>
+        <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
+          <Clock3 className="h-4 w-4 text-rose-500" />
+          {props.timeLeft}s
+        </div>
+      </div>
+
+      <p className="mt-4 text-sm leading-7 text-slate-600">
+        Llega desde Inicio hasta Meta. Las paredes bloquean el camino y cada movimiento cuenta.
+      </p>
+
+      <div
+        className="mt-6 grid w-full max-w-[420px] gap-2"
+        style={{ gridTemplateColumns: `repeat(${props.layout[0].length}, minmax(0, 1fr))` }}
+      >
+        {props.layout.flatMap((row, rowIndex) =>
+          row.split("").map((cell, colIndex) => {
+            const isPlayer = props.position.row === rowIndex && props.position.col === colIndex
+            const isWall = cell === "#"
+            const isGoal = cell === "G"
+            const isStart = cell === "S"
+
+            return (
+              <div
+                key={`${rowIndex}-${colIndex}`}
+                className={`aspect-square rounded-xl border text-[10px] font-semibold uppercase tracking-[0.12em] ${
+                  isPlayer
+                    ? "border-sky-500 bg-sky-500 text-white shadow-sm"
+                    : isWall
+                      ? "border-slate-800 bg-slate-950 text-slate-950"
+                      : isGoal
+                        ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                        : isStart
+                          ? "border-amber-300 bg-amber-50 text-amber-700"
+                          : "border-slate-200 bg-white text-slate-400"
+                } flex items-center justify-center`}
+              >
+                {isPlayer ? "Yo" : isGoal ? "Meta" : isStart ? "Inicio" : ""}
+              </div>
+            )
+          })
+        )}
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
+          Movimientos: {props.moves}
+        </div>
+        <button type="button" onClick={props.onReset} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+          <RefreshCcw className="h-4 w-4" />
+          Reiniciar
+        </button>
+      </div>
+
+      <div className="mt-6 grid w-full max-w-[220px] grid-cols-3 gap-2">
+        <span />
+        <button type="button" onClick={() => props.onMove(-1, 0)} disabled={props.finished} aria-label="Mover arriba" className="inline-flex aspect-square items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50">
+          <ArrowUp className="h-5 w-5" />
+        </button>
+        <span />
+        <button type="button" onClick={() => props.onMove(0, -1)} disabled={props.finished} aria-label="Mover izquierda" className="inline-flex aspect-square items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50">
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <button type="button" onClick={() => props.onMove(1, 0)} disabled={props.finished} aria-label="Mover abajo" className="inline-flex aspect-square items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50">
+          <ArrowDown className="h-5 w-5" />
+        </button>
+        <button type="button" onClick={() => props.onMove(0, 1)} disabled={props.finished} aria-label="Mover derecha" className="inline-flex aspect-square items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 transition hover:border-sky-300 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50">
+          <ArrowRight className="h-5 w-5" />
+        </button>
+      </div>
+
+      {props.completed ? (
+        <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm leading-7 text-emerald-800">
+          Laberinto completado. Sumaste {props.earnedPoints} puntos.
         </div>
       ) : null}
       {props.finished && !props.completed ? (

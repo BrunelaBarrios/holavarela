@@ -592,22 +592,24 @@ create table if not exists public.desafio_participaciones (
   puntos_memoria integer not null default 0,
   puntos_pelicula integer not null default 0,
   puntos_puzzle integer not null default 0,
+  puntos_laberinto integer not null default 0,
   sopa_nombre text,
   memoria_nombre text,
   pelicula_nombre text,
   puzzle_nombre text,
+  laberinto_nombre text,
   created_at timestamp with time zone default now()
 );
 
 create table if not exists public.desafio_config (
   id bigint primary key default 1 check (id = 1),
   activo boolean not null default true,
-  juegos_activos text[] not null default array['sopa', 'memoria', 'pelicula', 'puzzle'],
+  juegos_activos text[] not null default array['sopa', 'memoria', 'pelicula', 'puzzle', 'laberinto'],
   updated_at timestamp with time zone default now()
 );
 
 insert into public.desafio_config (id, activo, juegos_activos)
-values (1, true, array['sopa', 'memoria', 'pelicula', 'puzzle'])
+values (1, true, array['sopa', 'memoria', 'pelicula', 'puzzle', 'laberinto'])
 on conflict (id) do nothing;
 
 alter table public.desafio_participaciones
@@ -616,9 +618,19 @@ alter table public.desafio_participaciones
 alter table public.desafio_participaciones
   add column if not exists puzzle_nombre text;
 
+alter table public.desafio_participaciones
+  add column if not exists puntos_laberinto integer not null default 0;
+
+alter table public.desafio_participaciones
+  add column if not exists laberinto_nombre text;
+
 update public.desafio_config
 set juegos_activos = array(select distinct unnest(juegos_activos || array['puzzle']))
 where id = 1 and not ('puzzle' = any(juegos_activos));
+
+update public.desafio_config
+set juegos_activos = array(select distinct unnest(juegos_activos || array['laberinto']))
+where id = 1 and not ('laberinto' = any(juegos_activos));
 
 create table if not exists public.desafio_sorteos (
   id bigint generated always as identity primary key,

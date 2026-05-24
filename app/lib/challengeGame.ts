@@ -3,7 +3,7 @@ type SupabaseErrorLike = {
   message?: string
 }
 
-export type ChallengeKey = "sopa" | "memoria" | "pelicula" | "puzzle"
+export type ChallengeKey = "sopa" | "memoria" | "pelicula" | "puzzle" | "laberinto"
 
 export type ChallengeConfig = {
   activo: boolean
@@ -40,6 +40,11 @@ export const CHALLENGE_GAME_OPTIONS: Array<{
     key: "puzzle",
     label: "Puzzle",
     description: "Ordena las piezas antes de que termine el tiempo.",
+  },
+  {
+    key: "laberinto",
+    label: "Laberinto",
+    description: "Llega a la meta evitando paredes y sumando por velocidad.",
   },
 ]
 
