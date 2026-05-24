@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { readAdminSessionFromRequest } from "./app/lib/adminSession"
+import { canAccessAdminPath } from "./app/lib/adminPermissions"
 
 const ADMIN_LOGIN_PATH = "/admin/login"
 
@@ -29,6 +30,13 @@ export async function middleware(request: NextRequest) {
   }
 
   if (isAdminPage && isLoginRoute && session) {
+    const dashboardUrl = request.nextUrl.clone()
+    dashboardUrl.pathname = "/admin"
+    dashboardUrl.search = ""
+    return NextResponse.redirect(dashboardUrl)
+  }
+
+  if (isAdminPage && session && !canAccessAdminPath(pathname, session.role)) {
     const dashboardUrl = request.nextUrl.clone()
     dashboardUrl.pathname = "/admin"
     dashboardUrl.search = ""

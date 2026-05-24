@@ -1,49 +1,26 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
-  BarChart3,
-  Building2,
   Calendar,
   CreditCard,
-  Gamepad2,
-  Gift,
-  GraduationCap,
   Mail,
   ShieldAlert,
   Store,
-  Users,
 } from "lucide-react"
 import { recordSiteVisit } from "../lib/contentVisits"
-
-type StatCard = {
-  id: string
-  title: string
-  value: number
-  icon: typeof Store
-  color: string
-  action: () => void
-}
-
-type ConfigCard = {
-  id: string
-  title: string
-  description: string
-  icon: typeof Mail
-  color: string
-  action: () => void
-}
-
-type PriorityCard = {
-  id: string
-  title: string
-  value: number
-  description: string
-  icon: typeof Mail
-  color: string
-  action: () => void
-}
+import {
+  adminNavigationItems,
+  type AdminNavigationItem,
+} from "./adminNavigation"
+import {
+  AdminActionCard,
+  AdminLoadingPanel,
+  AdminNotice,
+  AdminPageHeader,
+  AdminSection,
+} from "./components/AdminUI"
 
 type DashboardCounts = {
   comercios: number
@@ -59,20 +36,109 @@ type DashboardCounts = {
   pendingSubscriptions: number
 }
 
+type CardTone =
+  | "blue"
+  | "emerald"
+  | "slate"
+  | "amber"
+  | "rose"
+  | "violet"
+  | "cyan"
+  | "sky"
+
+const emptyCounts: DashboardCounts = {
+  comercios: 0,
+  eventos: 0,
+  servicios: 0,
+  instituciones: 0,
+  cursos: 0,
+  usuarios: 0,
+  newComercios: 0,
+  newEventos: 0,
+  newContactos: 0,
+  pendingPasswordRequests: 0,
+  pendingSubscriptions: 0,
+}
+
+const priorityCards = [
+  {
+    id: "password-requests",
+    title: "Claves solicitadas",
+    countKey: "pendingPasswordRequests",
+    description: "Usuarios esperando una nueva contraseña.",
+    icon: ShieldAlert,
+    tone: "violet",
+    href: "/admin/usuarios",
+  },
+  {
+    id: "contactos",
+    title: "Contactos pendientes",
+    countKey: "newContactos",
+    description: "Mensajes nuevos esperando revisión.",
+    icon: Mail,
+    tone: "rose",
+    href: "/admin/contactos",
+  },
+  {
+    id: "eventos",
+    title: "Eventos borrador",
+    countKey: "newEventos",
+    description: "Publicaciones listas para revisar o publicar.",
+    icon: Calendar,
+    tone: "emerald",
+    href: "/admin/eventos",
+  },
+  {
+    id: "comercios",
+    title: "Comercios borrador",
+    countKey: "newComercios",
+    description: "Altas nuevas pendientes de publicación.",
+    icon: Store,
+    tone: "blue",
+    href: "/admin/comercios",
+  },
+  {
+    id: "suscripciones",
+    title: "Suscripciones pendientes",
+    countKey: "pendingSubscriptions",
+    description: "Fichas esperando confirmación o seguimiento.",
+    icon: CreditCard,
+    tone: "slate",
+    href: "/admin/suscripciones",
+  },
+] satisfies {
+  id: string
+  title: string
+  countKey: keyof DashboardCounts
+  description: string
+  icon: typeof Store
+  tone: CardTone
+  href: string
+}[]
+
+const sectionCards = [
+  { href: "/admin/comercios", countKey: "comercios", tone: "blue" },
+  { href: "/admin/eventos", countKey: "eventos", tone: "emerald" },
+  { href: "/admin/servicios", countKey: "servicios", tone: "amber" },
+  { href: "/admin/instituciones", countKey: "instituciones", tone: "cyan" },
+  { href: "/admin/cursos", countKey: "cursos", tone: "slate" },
+  { href: "/admin/usuarios", countKey: "usuarios", tone: "sky" },
+] satisfies {
+  href: string
+  countKey: keyof DashboardCounts
+  tone: CardTone
+}[]
+
+const systemHrefs = ["/admin/sitio", "/admin/sorteos", "/admin/desafios", "/admin/radio"]
+
+function getNavigationItem(href: string) {
+  return adminNavigationItems.find((item) => item.href === href)
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter()
+  const [counts, setCounts] = useState<DashboardCounts>(emptyCounts)
   const [loading, setLoading] = useState(true)
-  const [comerciosCount, setComerciosCount] = useState(0)
-  const [eventosCount, setEventosCount] = useState(0)
-  const [serviciosCount, setServiciosCount] = useState(0)
-  const [institucionesCount, setInstitucionesCount] = useState(0)
-  const [cursosCount, setCursosCount] = useState(0)
-  const [usuariosCount, setUsuariosCount] = useState(0)
-  const [newComerciosCount, setNewComerciosCount] = useState(0)
-  const [newEventosCount, setNewEventosCount] = useState(0)
-  const [newContactosCount, setNewContactosCount] = useState(0)
-  const [pendingSubscriptionsCount, setPendingSubscriptionsCount] = useState(0)
-  const [pendingPasswordRequestsCount, setPendingPasswordRequestsCount] = useState(0)
   const [loadError, setLoadError] = useState("")
 
   useEffect(() => {
@@ -90,17 +156,7 @@ export default function AdminDashboardPage() {
           throw new Error(result.error || "No se pudo cargar el dashboard.")
         }
 
-        setComerciosCount(result.counts.comercios)
-        setEventosCount(result.counts.eventos)
-        setServiciosCount(result.counts.servicios)
-        setInstitucionesCount(result.counts.instituciones)
-        setCursosCount(result.counts.cursos)
-        setUsuariosCount(result.counts.usuarios)
-        setNewComerciosCount(result.counts.newComercios)
-        setNewEventosCount(result.counts.newEventos)
-        setNewContactosCount(result.counts.newContactos)
-        setPendingPasswordRequestsCount(result.counts.pendingPasswordRequests)
-        setPendingSubscriptionsCount(result.counts.pendingSubscriptions)
+        setCounts(result.counts)
       } catch (error) {
         setLoadError(
           error instanceof Error ? error.message : "No se pudo cargar el dashboard."
@@ -117,247 +173,90 @@ export default function AdminDashboardPage() {
     void recordSiteVisit("admin-dashboard", "Panel de admin")
   }, [])
 
-  const priorityCards: PriorityCard[] = [
-    {
-      id: "password-requests",
-      title: "Claves solicitadas",
-      value: pendingPasswordRequestsCount,
-      description: "Usuarios esperando una nueva contrasena.",
-      icon: ShieldAlert,
-      color: "bg-violet-600",
-      action: () => router.push("/admin/usuarios"),
-    },
-    {
-      id: "contactos",
-      title: "Contactos pendientes",
-      value: newContactosCount,
-      description: "Mensajes nuevos esperando revision.",
-      icon: Mail,
-      color: "bg-rose-600",
-      action: () => router.push("/admin/contactos"),
-    },
-    {
-      id: "eventos",
-      title: "Eventos borrador",
-      value: newEventosCount,
-      description: "Publicaciones listas para revisar o publicar.",
-      icon: Calendar,
-      color: "bg-emerald-600",
-      action: () => router.push("/admin/eventos"),
-    },
-    {
-      id: "comercios",
-      title: "Comercios borrador",
-      value: newComerciosCount,
-      description: "Altas nuevas pendientes de publicacion.",
-      icon: Store,
-      color: "bg-blue-600",
-      action: () => router.push("/admin/comercios"),
-    },
-    {
-      id: "suscripciones",
-      title: "Suscripciones pendientes",
-      value: pendingSubscriptionsCount,
-      description: "Fichas esperando confirmacion o seguimiento.",
-      icon: CreditCard,
-      color: "bg-slate-800",
-      action: () => router.push("/admin/suscripciones"),
-    },
-  ]
+  const quickSections = useMemo(
+    () =>
+      sectionCards
+        .map((card) => ({
+          ...card,
+          item: getNavigationItem(card.href),
+        }))
+        .filter((card): card is typeof card & { item: AdminNavigationItem } =>
+          Boolean(card.item)
+        ),
+    []
+  )
 
-  const stats: StatCard[] = [
-    {
-      id: "comercios",
-      title: "Comercios",
-      value: comerciosCount,
-      icon: Store,
-      color: "bg-blue-600",
-      action: () => router.push("/admin/comercios"),
-    },
-    {
-      id: "eventos",
-      title: "Eventos",
-      value: eventosCount,
-      icon: Calendar,
-      color: "bg-emerald-600",
-      action: () => router.push("/admin/eventos"),
-    },
-    {
-      id: "servicios",
-      title: "Servicios",
-      value: serviciosCount,
-      icon: ShieldAlert,
-      color: "bg-amber-600",
-      action: () => router.push("/admin/servicios"),
-    },
-    {
-      id: "instituciones",
-      title: "Instituciones",
-      value: institucionesCount,
-      icon: Building2,
-      color: "bg-cyan-600",
-      action: () => router.push("/admin/instituciones"),
-    },
-    {
-      id: "cursos",
-      title: "Cursos",
-      value: cursosCount,
-      icon: GraduationCap,
-      color: "bg-slate-800",
-      action: () => router.push("/admin/cursos"),
-    },
-    {
-      id: "usuarios",
-      title: "Usuarios",
-      value: usuariosCount,
-      icon: Users,
-      color: "bg-sky-600",
-      action: () => router.push("/admin/usuarios"),
-    },
-  ]
-
-  const configCards: ConfigCard[] = [
-    {
-      id: "sitio",
-      title: "Sitio",
-      description: "Edita textos generales y contenido institucional de la home.",
-      icon: Building2,
-      color: "bg-slate-800",
-      action: () => router.push("/admin/sitio"),
-    },
-    {
-      id: "sorteos",
-      title: "Sorteos",
-      description: "Activa campañas, cambia el popup y define comercios participantes.",
-      icon: Gift,
-      color: "bg-emerald-600",
-      action: () => router.push("/admin/sorteos"),
-    },
-    {
-      id: "desafios",
-      title: "Desafíos",
-      description: "Ve participantes, puntajes y realiza sorteos aleatorios de los juegos.",
-      icon: Gamepad2,
-      color: "bg-blue-600",
-      action: () => router.push("/admin/desafios"),
-    },
-  ]
+  const systemSections = useMemo(
+    () =>
+      systemHrefs
+        .map((href) => getNavigationItem(href))
+        .filter((item): item is AdminNavigationItem => Boolean(item)),
+    []
+  )
 
   return (
     <div className="mx-auto max-w-7xl">
-      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="mb-2 text-3xl font-semibold text-slate-900">Dashboard</h1>
-          <p className="text-slate-500">
-            Un panel más simple para resolver rápido lo importante.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => router.push("/admin/metricas")}
-          className="inline-flex items-center gap-2 self-start rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm transition hover:border-blue-300 hover:text-blue-600"
-        >
-          <BarChart3 className="h-4 w-4" />
-          Ver metricas completas
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Dashboard"
+        description="Una bandeja simple para resolver lo urgente y entrar rápido al módulo correcto."
+      />
 
       {loading ? (
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 text-slate-500 shadow-sm">
-          Cargando panel...
-        </div>
+        <AdminLoadingPanel label="Cargando panel..." />
       ) : loadError ? (
-        <div className="rounded-3xl border border-red-200 bg-red-50 p-8 text-red-700 shadow-sm">
-          {loadError}
-        </div>
+        <AdminNotice tone="danger">{loadError}</AdminNotice>
       ) : (
-        <div className="space-y-8">
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {priorityCards.map((card) => {
-              const Icon = card.icon
-              return (
-                <button
-                  key={card.id}
-                  onClick={card.action}
-                  className="rounded-3xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className={`${card.color} rounded-2xl p-3 text-white`}>
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <span className="text-3xl font-semibold text-slate-900">{card.value}</span>
-                  </div>
-                  <h2 className="text-lg font-semibold text-slate-900">{card.title}</h2>
-                  <p className="mt-2 text-sm text-slate-500">{card.description}</p>
-                </button>
-              )
-            })}
+        <div className="space-y-6">
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {priorityCards.map((card) => (
+              <AdminActionCard
+                key={card.id}
+                title={card.title}
+                description={card.description}
+                value={counts[card.countKey]}
+                icon={card.icon}
+                tone={card.tone}
+                onClick={() => router.push(card.href)}
+              />
+            ))}
           </section>
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-                  Secciones
-                </p>
-                <h2 className="text-2xl font-semibold text-slate-900">Accesos principales</h2>
-                <p className="text-sm text-slate-500">
-                  Entra directo a cada parte del contenido sin mezclarlo con metricas.
-                </p>
-              </div>
+          <AdminSection
+            title="Accesos principales"
+            description="Contenido, usuarios y tareas frecuentes en un solo nivel de navegación."
+          >
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {quickSections.map((card) => (
+                <AdminActionCard
+                  key={card.href}
+                  title={card.item.label}
+                  description={card.item.description}
+                  value={counts[card.countKey]}
+                  icon={card.item.icon}
+                  tone={card.tone}
+                  onClick={() => router.push(card.href)}
+                />
+              ))}
             </div>
+          </AdminSection>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {stats.map((stat) => {
-                const Icon = stat.icon
-                return (
-                  <button
-                    key={stat.id}
-                    onClick={stat.action}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-white hover:shadow-sm"
-                  >
-                    <div className="mb-3 flex items-center justify-between">
-                      <div className={`${stat.color} rounded-xl p-3 text-white`}>
-                        <Icon className="h-6 w-6" />
-                      </div>
-                      <span className="text-2xl font-semibold text-slate-900">{stat.value}</span>
-                    </div>
-                    <h3 className="text-base font-semibold text-slate-900">{stat.title}</h3>
-                  </button>
-                )
-              })}
+          <AdminSection
+            title="Sistema"
+            description="Herramientas menos frecuentes, separadas para no competir con la gestión diaria."
+          >
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {systemSections.map((item) => (
+                <AdminActionCard
+                  key={item.href}
+                  title={item.label}
+                  description={item.description}
+                  icon={item.icon}
+                  tone="slate"
+                  onClick={() => router.push(item.href)}
+                />
+              ))}
             </div>
-          </section>
-
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-6">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-                Configuración
-              </p>
-              <h2 className="text-2xl font-semibold text-slate-900">Accesos de superadmin</h2>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {configCards.map((card) => {
-                const Icon = card.icon
-                return (
-                  <button
-                    key={card.id}
-                    onClick={card.action}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:-translate-y-0.5 hover:border-blue-300 hover:bg-white hover:shadow-sm"
-                  >
-                    <div className="mb-3 flex items-center justify-between">
-                      <div className={`${card.color} rounded-xl p-3 text-white`}>
-                        <Icon className="h-6 w-6" />
-                      </div>
-                    </div>
-                    <h3 className="text-base font-semibold text-slate-900">{card.title}</h3>
-                    <p className="mt-2 text-sm text-slate-500">{card.description}</p>
-                  </button>
-                )
-              })}
-            </div>
-          </section>
+          </AdminSection>
         </div>
       )}
     </div>
