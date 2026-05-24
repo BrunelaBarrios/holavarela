@@ -338,6 +338,11 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
             label="Sumar mi aviso"
           />
         </div>
+        <PublicAddButton
+          href="/usuarios/eventos/nuevo?public=1"
+          label="Sumar mi aviso"
+          variant="floating"
+        />
 
         <div className="mt-6 max-w-xl">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">

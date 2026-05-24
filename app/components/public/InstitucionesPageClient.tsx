@@ -247,10 +247,15 @@ export function InstitucionesPageClient({
           </div>
 
           <PublicAddButton
-            href="/sumate?tipo=institucion"
+            href="/sumate/institucion"
             label="Sumar mi institucion"
           />
         </div>
+        <PublicAddButton
+          href="/sumate/institucion"
+          label="Sumar mi institucion"
+          variant="floating"
+        />
 
         <div className="mt-6 max-w-xl">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">

@@ -169,8 +169,9 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
             </p>
           </div>
 
-          <PublicAddButton href="/sumate?tipo=curso" label="Sumar mi curso" />
+          <PublicAddButton href="/sumate/curso" label="Sumar mi curso" />
         </div>
+        <PublicAddButton href="/sumate/curso" label="Sumar mi curso" variant="floating" />
 
         <div className="mt-6 max-w-xl">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">

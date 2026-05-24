@@ -240,8 +240,9 @@ export function ServiciosPageClient({
             </p>
           </div>
 
-          <PublicAddButton href="/sumate?tipo=servicio" label="Sumar mi servicio" />
+          <PublicAddButton href="/sumate/servicio" label="Sumar mi servicio" />
         </div>
+        <PublicAddButton href="/sumate/servicio" label="Sumar mi servicio" variant="floating" />
 
         <div className="mt-6 max-w-xl">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">
