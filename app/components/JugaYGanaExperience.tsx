@@ -14,13 +14,14 @@ import {
 } from "lucide-react"
 import { supabase } from "../supabase"
 import {
+  type ChallengeKey,
+  DEFAULT_CHALLENGE_CONFIG,
   getChallengeAssignment,
   getChallengeBrowserKey,
   isMissingChallengesSchemaError,
+  normalizeChallengeKeys,
   resetChallengeAssignment,
 } from "../lib/challengeGame"
-
-type ChallengeKey = "sopa" | "memoria" | "pelicula"
 
 type ChallengeMeta = {
   key: ChallengeKey
@@ -800,6 +801,8 @@ export function JugaYGanaExperience() {
   })
 
   const [stage, setStage] = useState<"intro" | "play" | "form" | "done">("intro")
+  const [configLoading, setConfigLoading] = useState(true)
+  const [challengeConfig, setChallengeConfig] = useState(DEFAULT_CHALLENGE_CONFIG)
   const [activeChallengeIndex, setActiveChallengeIndex] = useState(0)
   const [completedChallenges, setCompletedChallenges] = useState<Record<ChallengeKey, boolean>>({
     sopa: false,
@@ -844,7 +847,11 @@ export function JugaYGanaExperience() {
   const [submitError, setSubmitError] = useState("")
   const [submitLoading, setSubmitLoading] = useState(false)
 
-  const activeChallenge = CHALLENGES[activeChallengeIndex]
+  const activeChallenges = useMemo(
+    () => CHALLENGES.filter((challenge) => challengeConfig.juegosActivos.includes(challenge.key)),
+    [challengeConfig.juegosActivos]
+  )
+  const activeChallenge = activeChallenges[activeChallengeIndex]
   const activeWordSearch = WORD_SEARCH_VARIANTS[wordSearchVariantIndex]
   const activeWordSearchGrid = useMemo(
     () => buildWordSearchGrid(activeWordSearch),
@@ -904,8 +911,8 @@ export function JugaYGanaExperience() {
   )
 
   const allChallengesCompleted = useMemo(
-    () => Object.values(completedChallenges).every(Boolean),
-    [completedChallenges]
+    () => activeChallenges.every((challenge) => completedChallenges[challenge.key]),
+    [activeChallenges, completedChallenges]
   )
 
   const matchedCardsCount = memoryCards.filter((card) => card.matched).length
@@ -915,6 +922,44 @@ export function JugaYGanaExperience() {
   const memoryFinished = completedChallenges.memoria || memoryTimeLeft === 0
   const movieFailed = !movieRoundCompleted && wrongLetters.length >= MAX_MOVIE_ERRORS
   const canPlayAnotherMovie = movieRoundCompleted && movieRoundsCompleted < MAX_MOVIE_ROUNDS
+
+  useEffect(() => {
+    let mounted = true
+
+    const loadChallengeConfig = async () => {
+      const { data, error } = await supabase
+        .from("desafio_config")
+        .select("activo, juegos_activos")
+        .eq("id", 1)
+        .maybeSingle()
+
+      if (!mounted) return
+
+      if (error) {
+        if (!isMissingChallengesSchemaError(error)) {
+          setSubmitError("No se pudo cargar la configuracion del desafio.")
+        }
+        setConfigLoading(false)
+        return
+      }
+
+      setChallengeConfig({
+        activo: data?.activo !== false,
+        juegosActivos: normalizeChallengeKeys(data?.juegos_activos),
+      })
+      setActiveChallengeIndex(0)
+      setCompletedChallenges({ sopa: false, memoria: false, pelicula: false })
+      setEarnedPoints({ sopa: 0, memoria: 0, pelicula: 0 })
+      setStage("intro")
+      setConfigLoading(false)
+    }
+
+    void loadChallengeConfig()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   useEffect(() => {
     if (stage !== "play" || activeChallenge?.key !== "sopa") return
@@ -1075,7 +1120,9 @@ export function JugaYGanaExperience() {
 
       if (nextCards.every((card) => card.matched)) {
         const memoryPoints =
-          CHALLENGES[1].points + memoryTimeLeft + activeMemoryValues.join("").length
+          (CHALLENGES.find((challenge) => challenge.key === "memoria")?.points || 0) +
+          memoryTimeLeft +
+          activeMemoryValues.join("").length
 
         setCompletedChallenges((prev) => ({ ...prev, memoria: true }))
         setEarnedPoints((prev) => ({
@@ -1117,7 +1164,7 @@ export function JugaYGanaExperience() {
 
       if (solved) {
         const moviePoints =
-          CHALLENGES[2].points +
+          (CHALLENGES.find((challenge) => challenge.key === "pelicula")?.points || 0) +
           Math.max(0, MAX_MOVIE_ERRORS - wrongLetters.length) * 4 +
           movieAnswer.length
 
@@ -1160,7 +1207,7 @@ export function JugaYGanaExperience() {
   }
 
   const handleContinue = () => {
-    if (activeChallengeIndex < CHALLENGES.length - 1) {
+    if (activeChallengeIndex < activeChallenges.length - 1) {
       setActiveChallengeIndex((current) => current + 1)
       return
     }
@@ -1205,6 +1252,45 @@ export function JugaYGanaExperience() {
     setStage("done")
   }
 
+  if (configLoading) {
+    return (
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff2d9_0%,#fffdf8_28%,#e9f7ff_64%,#f9fcff_100%)] text-slate-950">
+        <div className="mx-auto flex min-h-screen w-full max-w-3xl items-center justify-center px-4 py-10">
+          <div className="w-full rounded-[28px] border border-white/80 bg-white/90 p-8 text-center shadow-sm">
+            <div className="text-sm font-semibold text-slate-500">Cargando desafio...</div>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
+  if (!challengeConfig.activo || activeChallenges.length === 0) {
+    return (
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff2d9_0%,#fffdf8_28%,#e9f7ff_64%,#f9fcff_100%)] text-slate-950">
+        <div className="mx-auto flex min-h-screen w-full max-w-3xl items-center justify-center px-4 py-10">
+          <div className="w-full rounded-[28px] border border-white/80 bg-white/90 p-8 text-center shadow-sm">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">
+              <Gift className="h-6 w-6" />
+            </div>
+            <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950">
+              El desafio no esta activo.
+            </h1>
+            <p className="mt-3 text-base leading-7 text-slate-600">
+              Pronto vamos a publicar una nueva actividad para jugar y participar por premios.
+            </p>
+            <Link
+              href="/"
+              className="mt-6 inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Volver a Hola Varela
+            </Link>
+          </div>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff2d9_0%,#fffdf8_28%,#e9f7ff_64%,#f9fcff_100%)] text-slate-950">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
@@ -1232,7 +1318,7 @@ export function JugaYGanaExperience() {
                 Acumula puntos y participa de ganar premios.
               </p>
               <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                {CHALLENGES.map((challenge, index) => (
+                {activeChallenges.map((challenge, index) => (
                   <div key={challenge.key} className={`rounded-[24px] border px-4 py-4 ${completedChallenges[challenge.key] ? "border-emerald-300/40 bg-emerald-400/15" : activeChallengeIndex === index && stage === "play" ? "border-white/30 bg-white/10" : "border-white/10 bg-black/10"}`}>
                     <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-100/80">
                       Desafío {index + 1}
@@ -1248,7 +1334,12 @@ export function JugaYGanaExperience() {
             </div>
 
             <div className="p-6 sm:p-8 lg:p-10">
-              {stage === "intro" ? <IntroPanel onStart={() => setStage("play")} /> : null}
+              {stage === "intro" ? (
+                <IntroPanel
+                  challengeCount={activeChallenges.length}
+                  onStart={() => setStage("play")}
+                />
+              ) : null}
               {stage === "play" && activeChallenge?.key === "sopa" ? (
                 <WordSearchPanel
                   variantName={activeWordSearch.name}
@@ -1333,10 +1424,10 @@ export function JugaYGanaExperience() {
                     <button
                       type="button"
                       onClick={handleContinue}
-                      disabled={!completedChallenges[activeChallenge.key]}
+                      disabled={!activeChallenge || !completedChallenges[activeChallenge.key]}
                       className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {activeChallengeIndex === CHALLENGES.length - 1 ? "Terminar" : "Continuar"}
+                      {activeChallengeIndex === activeChallenges.length - 1 ? "Terminar" : "Continuar"}
                       <ArrowRight className="h-4 w-4" />
                     </button>
                   ) : null}
@@ -1350,7 +1441,13 @@ export function JugaYGanaExperience() {
   )
 }
 
-function IntroPanel({ onStart }: { onStart: () => void }) {
+function IntroPanel({
+  challengeCount,
+  onStart,
+}: {
+  challengeCount: number
+  onStart: () => void
+}) {
   return (
     <div className="flex h-full flex-col justify-between">
       <div>
@@ -1367,7 +1464,7 @@ function IntroPanel({ onStart }: { onStart: () => void }) {
         <div className="mt-8 grid gap-4">
           {[
             "Conoces todo lo que puedes encontrar en Hola Varela",
-            "Juegas 3 desafios cortos desde tu celular",
+            `Juegas ${challengeCount} desafio${challengeCount === 1 ? "" : "s"} corto${challengeCount === 1 ? "" : "s"} desde tu celular`,
             "Acumulas puntos para participar por premios",
           ].map((item) => (
             <div key={item} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-medium text-slate-700">

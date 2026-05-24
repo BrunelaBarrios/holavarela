@@ -597,6 +597,17 @@ create table if not exists public.desafio_participaciones (
   created_at timestamp with time zone default now()
 );
 
+create table if not exists public.desafio_config (
+  id bigint primary key default 1 check (id = 1),
+  activo boolean not null default true,
+  juegos_activos text[] not null default array['sopa', 'memoria', 'pelicula'],
+  updated_at timestamp with time zone default now()
+);
+
+insert into public.desafio_config (id, activo, juegos_activos)
+values (1, true, array['sopa', 'memoria', 'pelicula'])
+on conflict (id) do nothing;
+
 create table if not exists public.desafio_sorteos (
   id bigint generated always as identity primary key,
   cantidad_ganadores integer not null default 1,
@@ -619,6 +630,7 @@ alter table public.desafio_sorteo_ganadores
   add column if not exists entregado_at timestamp with time zone;
 
 alter table public.desafio_participaciones enable row level security;
+alter table public.desafio_config enable row level security;
 alter table public.desafio_sorteos enable row level security;
 alter table public.desafio_sorteo_ganadores enable row level security;
 
@@ -639,6 +651,15 @@ on public.desafio_participaciones
 for insert
 to anon, authenticated
 with check (true);
+
+drop policy if exists "Allow public read on desafio_config"
+on public.desafio_config;
+
+create policy "Allow public read on desafio_config"
+on public.desafio_config
+for select
+to anon, authenticated
+using (true);
 
 drop policy if exists "Allow public read on desafio_sorteos"
 on public.desafio_sorteos;

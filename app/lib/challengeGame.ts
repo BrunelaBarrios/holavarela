@@ -3,10 +3,44 @@ type SupabaseErrorLike = {
   message?: string
 }
 
+export type ChallengeKey = "sopa" | "memoria" | "pelicula"
+
+export type ChallengeConfig = {
+  activo: boolean
+  juegosActivos: ChallengeKey[]
+}
+
 type ChallengeAssignment = {
   wordSearchVariantIndex: number
   memoryVariantIndex: number
   movieChallengeIndex: number
+}
+
+export const CHALLENGE_GAME_OPTIONS: Array<{
+  key: ChallengeKey
+  label: string
+  description: string
+}> = [
+  {
+    key: "sopa",
+    label: "Sopa de letras",
+    description: "Encuentra palabras de la plataforma antes de que termine el tiempo.",
+  },
+  {
+    key: "memoria",
+    label: "Juego de memoria",
+    description: "Une pares relacionados a comercios, cursos, eventos y servicios.",
+  },
+  {
+    key: "pelicula",
+    label: "Adivina la pelicula",
+    description: "Resuelve titulos con pistas cortas y errores limitados.",
+  },
+]
+
+export const DEFAULT_CHALLENGE_CONFIG: ChallengeConfig = {
+  activo: true,
+  juegosActivos: CHALLENGE_GAME_OPTIONS.map((game) => game.key),
 }
 
 const CHALLENGE_BROWSER_KEY = "hola-varela-challenges-browser"
@@ -31,10 +65,22 @@ export function isMissingChallengesSchemaError(error: SupabaseErrorLike | null |
     error?.code === "42P01" ||
     error?.code === "42703" ||
     normalizedMessage.includes("desafio_participaciones") ||
+    normalizedMessage.includes("desafio_config") ||
     normalizedMessage.includes("desafio_sorteos") ||
     normalizedMessage.includes("desafio_sorteo_ganadores") ||
     normalizedMessage.includes("could not find the table")
   )
+}
+
+export function normalizeChallengeKeys(value: unknown): ChallengeKey[] {
+  if (!Array.isArray(value)) return DEFAULT_CHALLENGE_CONFIG.juegosActivos
+
+  const allowedKeys = new Set(CHALLENGE_GAME_OPTIONS.map((game) => game.key))
+  const normalized = value.filter((item): item is ChallengeKey => {
+    return typeof item === "string" && allowedKeys.has(item as ChallengeKey)
+  })
+
+  return normalized.length > 0 ? Array.from(new Set(normalized)) : []
 }
 
 export function getChallengeBrowserKey() {

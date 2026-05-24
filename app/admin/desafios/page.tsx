@@ -1,11 +1,17 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { Copy, Download, ExternalLink, QrCode, RotateCcw, Search, Shuffle, Trash2, Trophy } from "lucide-react"
+import { Copy, Download, ExternalLink, Power, QrCode, RotateCcw, Save, Search, Shuffle, Trash2, Trophy } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
-import { isMissingChallengesSchemaError } from "../../lib/challengeGame"
+import {
+  type ChallengeKey,
+  CHALLENGE_GAME_OPTIONS,
+  DEFAULT_CHALLENGE_CONFIG,
+  isMissingChallengesSchemaError,
+  normalizeChallengeKeys,
+} from "../../lib/challengeGame"
 import { printCouponsPdf } from "../../lib/couponPrint"
 
 type ChallengeEntry = {
@@ -62,6 +68,14 @@ export default function AdminDesafiosPage() {
   const [loading, setLoading] = useState(true)
   const [schemaReady, setSchemaReady] = useState(true)
   const [schemaMessage, setSchemaMessage] = useState("")
+  const [configLoading, setConfigLoading] = useState(true)
+  const [configSchemaReady, setConfigSchemaReady] = useState(true)
+  const [challengeActive, setChallengeActive] = useState(DEFAULT_CHALLENGE_CONFIG.activo)
+  const [activeGames, setActiveGames] = useState<ChallengeKey[]>(
+    DEFAULT_CHALLENGE_CONFIG.juegosActivos
+  )
+  const [savingConfig, setSavingConfig] = useState(false)
+  const [configMessage, setConfigMessage] = useState("")
   const [entries, setEntries] = useState<ChallengeEntry[]>([])
   const [draws, setDraws] = useState<ChallengeDraw[]>([])
   const [winners, setWinners] = useState<ChallengeWinner[]>([])
@@ -79,6 +93,37 @@ export default function AdminDesafiosPage() {
 
   const challengePublicUrl = buildChallengePublicUrl()
   const challengeQrUrl = buildChallengeQrUrl()
+
+  const loadConfig = async () => {
+    setConfigLoading(true)
+    setConfigMessage("")
+
+    try {
+      const response = await fetch("/api/admin/desafios/config")
+      const result = (await response.json()) as {
+        config?: { activo?: boolean; juegosActivos?: unknown }
+        schemaReady?: boolean
+        warning?: string
+        error?: string
+      }
+
+      if (!response.ok) {
+        setConfigMessage(result.error || "No se pudo cargar la configuracion del desafio.")
+        return
+      }
+
+      setConfigSchemaReady(result.schemaReady !== false)
+      if (result.warning) {
+        setConfigMessage(result.warning)
+      }
+      setChallengeActive(result.config?.activo !== false)
+      setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
+    } catch {
+      setConfigMessage("No se pudo cargar la configuracion del desafio.")
+    } finally {
+      setConfigLoading(false)
+    }
+  }
 
   const loadData = async () => {
     const [
@@ -154,10 +199,62 @@ export default function AdminDesafiosPage() {
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       void loadData()
+      void loadConfig()
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
   }, [])
+
+  const toggleActiveGame = (gameKey: ChallengeKey) => {
+    setActiveGames((current) =>
+      current.includes(gameKey)
+        ? current.filter((key) => key !== gameKey)
+        : [...current, gameKey]
+    )
+  }
+
+  const handleSaveConfig = async () => {
+    if (challengeActive && activeGames.length === 0) {
+      setConfigMessage("Activa al menos un juego para publicar el desafio.")
+      return
+    }
+
+    setSavingConfig(true)
+    setConfigMessage("")
+
+    try {
+      const response = await fetch("/api/admin/desafios/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          activo: challengeActive,
+          juegosActivos: activeGames,
+        }),
+      })
+      const result = (await response.json()) as {
+        config?: { activo?: boolean; juegosActivos?: unknown }
+        error?: string
+      }
+
+      if (!response.ok) {
+        setConfigMessage(result.error || "No se pudo guardar la configuracion.")
+        return
+      }
+
+      setChallengeActive(result.config?.activo === true)
+      setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
+      setConfigSchemaReady(true)
+      setConfigMessage(
+        result.config?.activo
+          ? "Desafio activo con los juegos seleccionados."
+          : "Desafio pausado."
+      )
+    } catch {
+      setConfigMessage("No se pudo guardar la configuracion.")
+    } finally {
+      setSavingConfig(false)
+    }
+  }
 
   const visibleEntries = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
@@ -540,6 +637,99 @@ export default function AdminDesafiosPage() {
         </div>
       ) : (
         <div className="space-y-6">
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Estado del desafio
+                </div>
+                <h2 className="mt-1 text-xl font-semibold text-slate-900">
+                  Activacion y juegos disponibles
+                </h2>
+                <p className="mt-2 text-sm text-slate-500">
+                  Define si la pagina publica esta disponible y que juegos forman parte del recorrido.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                role="switch"
+                aria-checked={challengeActive}
+                onClick={() => setChallengeActive((current) => !current)}
+                disabled={configLoading || savingConfig}
+                className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                  challengeActive
+                    ? "bg-emerald-600 text-white hover:bg-emerald-500"
+                    : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <Power className="h-4 w-4" />
+                {challengeActive ? "Activo" : "Pausado"}
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              {CHALLENGE_GAME_OPTIONS.map((game) => {
+                const selected = activeGames.includes(game.key)
+
+                return (
+                  <label
+                    key={game.key}
+                    className={`cursor-pointer rounded-2xl border p-4 transition ${
+                      selected
+                        ? "border-emerald-300 bg-emerald-50"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() => toggleActiveGame(game.key)}
+                        disabled={configLoading || savingConfig}
+                        className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <div>
+                        <div className="text-sm font-semibold text-slate-900">{game.label}</div>
+                        <div className="mt-1 text-sm leading-6 text-slate-500">
+                          {game.description}
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+                )
+              })}
+            </div>
+
+            {configMessage ? (
+              <div
+                className={`mt-4 rounded-xl border px-4 py-3 text-sm ${
+                  configSchemaReady
+                    ? "border-sky-200 bg-sky-50 text-sky-700"
+                    : "border-amber-200 bg-amber-50 text-amber-800"
+                }`}
+              >
+                {configMessage}
+              </div>
+            ) : null}
+
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+              <div className="text-sm text-slate-500">
+                Juegos activos:{" "}
+                <span className="font-semibold text-slate-900">{activeGames.length}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => void handleSaveConfig()}
+                disabled={configLoading || savingConfig || (challengeActive && activeGames.length === 0)}
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Save className="h-4 w-4" />
+                {savingConfig ? "Guardando..." : "Guardar configuracion"}
+              </button>
+            </div>
+          </section>
+
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
