@@ -591,22 +591,34 @@ create table if not exists public.desafio_participaciones (
   puntos_sopa integer not null default 0,
   puntos_memoria integer not null default 0,
   puntos_pelicula integer not null default 0,
+  puntos_puzzle integer not null default 0,
   sopa_nombre text,
   memoria_nombre text,
   pelicula_nombre text,
+  puzzle_nombre text,
   created_at timestamp with time zone default now()
 );
 
 create table if not exists public.desafio_config (
   id bigint primary key default 1 check (id = 1),
   activo boolean not null default true,
-  juegos_activos text[] not null default array['sopa', 'memoria', 'pelicula'],
+  juegos_activos text[] not null default array['sopa', 'memoria', 'pelicula', 'puzzle'],
   updated_at timestamp with time zone default now()
 );
 
 insert into public.desafio_config (id, activo, juegos_activos)
-values (1, true, array['sopa', 'memoria', 'pelicula'])
+values (1, true, array['sopa', 'memoria', 'pelicula', 'puzzle'])
 on conflict (id) do nothing;
+
+alter table public.desafio_participaciones
+  add column if not exists puntos_puzzle integer not null default 0;
+
+alter table public.desafio_participaciones
+  add column if not exists puzzle_nombre text;
+
+update public.desafio_config
+set juegos_activos = array(select distinct unnest(juegos_activos || array['puzzle']))
+where id = 1 and not ('puzzle' = any(juegos_activos));
 
 create table if not exists public.desafio_sorteos (
   id bigint generated always as identity primary key,

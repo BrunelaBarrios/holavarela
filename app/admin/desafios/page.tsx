@@ -22,9 +22,11 @@ type ChallengeEntry = {
   puntosSopa: number
   puntosMemoria: number
   puntosPelicula: number
+  puntosPuzzle: number
   sopaNombre: string | null
   memoriaNombre: string | null
   peliculaNombre: string | null
+  puzzleNombre: string | null
   createdAt: string | null
 }
 
@@ -134,7 +136,7 @@ export default function AdminDesafiosPage() {
       supabase
         .from("desafio_participaciones")
         .select(
-          "id, nombre, telefono, puntaje_total, puntos_sopa, puntos_memoria, puntos_pelicula, sopa_nombre, memoria_nombre, pelicula_nombre, created_at"
+          "id, nombre, telefono, puntaje_total, puntos_sopa, puntos_memoria, puntos_pelicula, puntos_puzzle, sopa_nombre, memoria_nombre, pelicula_nombre, puzzle_nombre, created_at"
         )
         .order("created_at", { ascending: false }),
       supabase
@@ -170,9 +172,11 @@ export default function AdminDesafiosPage() {
         puntosSopa: Number(entry.puntos_sopa || 0),
         puntosMemoria: Number(entry.puntos_memoria || 0),
         puntosPelicula: Number(entry.puntos_pelicula || 0),
+        puntosPuzzle: Number(entry.puntos_puzzle || 0),
         sopaNombre: entry.sopa_nombre ? String(entry.sopa_nombre) : null,
         memoriaNombre: entry.memoria_nombre ? String(entry.memoria_nombre) : null,
         peliculaNombre: entry.pelicula_nombre ? String(entry.pelicula_nombre) : null,
+        puzzleNombre: entry.puzzle_nombre ? String(entry.puzzle_nombre) : null,
         createdAt: entry.created_at ? String(entry.created_at) : null,
       }))
     )
@@ -343,9 +347,11 @@ export default function AdminDesafiosPage() {
         "puntos_sopa",
         "puntos_memoria",
         "puntos_pelicula",
+        "puntos_puzzle",
         "sopa",
         "memoria",
         "pelicula",
+        "puzzle",
         "fecha",
       ],
       ...visibleEntries.map((entry) => [
@@ -355,9 +361,11 @@ export default function AdminDesafiosPage() {
         entry.puntosSopa,
         entry.puntosMemoria,
         entry.puntosPelicula,
+        entry.puntosPuzzle,
         entry.sopaNombre || "",
         entry.memoriaNombre || "",
         entry.peliculaNombre || "",
+        entry.puzzleNombre || "",
         entry.createdAt
           ? new Date(entry.createdAt).toLocaleString("sv-SE", { hour12: false })
           : "",
@@ -385,7 +393,7 @@ export default function AdminDesafiosPage() {
       items: visibleEntries.map((entry) => ({
         title: entry.nombre,
         subtitle: entry.telefono,
-        meta: `Puntaje total: ${entry.puntajeTotal}\nSopa: ${entry.puntosSopa} | Memoria: ${entry.puntosMemoria} | Pelicula: ${entry.puntosPelicula}`,
+        meta: `Puntaje total: ${entry.puntajeTotal}\nSopa: ${entry.puntosSopa} | Memoria: ${entry.puntosMemoria} | Pelicula: ${entry.puntosPelicula} | Puzzle: ${entry.puntosPuzzle}`,
         footer: "Hola Varela - Desafíos",
       })),
     })
@@ -668,7 +676,7 @@ export default function AdminDesafiosPage() {
               </button>
             </div>
 
-            <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               {CHALLENGE_GAME_OPTIONS.map((game) => {
                 const selected = activeGames.includes(game.key)
 
@@ -868,6 +876,7 @@ export default function AdminDesafiosPage() {
                               <div>Sopa: {entry.puntosSopa}</div>
                               <div>Memoria: {entry.puntosMemoria}</div>
                               <div>Pelicula: {entry.puntosPelicula}</div>
+                              <div>Puzzle: {entry.puntosPuzzle}</div>
                             </td>
                             <td className="px-4 py-3">
                               {entry.createdAt

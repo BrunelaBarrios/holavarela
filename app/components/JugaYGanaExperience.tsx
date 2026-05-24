@@ -75,6 +75,12 @@ const CHALLENGES: ChallengeMeta[] = [
     description: "Adivina el titulo con la menor cantidad posible de errores.",
     points: 40,
   },
+  {
+    key: "puzzle",
+    title: "Puzzle",
+    description: "Mueve las piezas vecinas al espacio libre hasta ordenar el tablero.",
+    points: 35,
+  },
 ]
 
 const WORD_SEARCH_VARIANTS: WordSearchVariant[] = [
@@ -574,6 +580,15 @@ const MOVIE_CHALLENGES = [
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 const MAX_MOVIE_ERRORS = 6
 const MAX_MOVIE_ROUNDS = 4
+const PUZZLE_SIZE = 3
+const PUZZLE_TIME = 80
+const PUZZLE_GOAL = [1, 2, 3, 4, 5, 6, 7, 8, 0]
+const PUZZLE_STARTS = [
+  { name: "Plaza central", tiles: [1, 2, 3, 4, 5, 6, 0, 7, 8] },
+  { name: "Recorrido local", tiles: [1, 2, 3, 4, 0, 6, 7, 5, 8] },
+  { name: "Agenda Varela", tiles: [1, 2, 3, 0, 4, 6, 7, 5, 8] },
+  { name: "Comunidad", tiles: [1, 0, 3, 4, 2, 5, 7, 8, 6] },
+]
 
 function shuffleArray<T>(items: T[]) {
   const copy = [...items]
@@ -593,6 +608,19 @@ function getNextDifferentMovieIndex(currentIndex: number, total: number) {
   }
 
   return nextIndex
+}
+
+function isPuzzleSolved(tiles: number[]) {
+  return tiles.every((tile, index) => tile === PUZZLE_GOAL[index])
+}
+
+function arePuzzleTilesAdjacent(tileIndex: number, blankIndex: number) {
+  const tileRow = Math.floor(tileIndex / PUZZLE_SIZE)
+  const tileCol = tileIndex % PUZZLE_SIZE
+  const blankRow = Math.floor(blankIndex / PUZZLE_SIZE)
+  const blankCol = blankIndex % PUZZLE_SIZE
+
+  return Math.abs(tileRow - blankRow) + Math.abs(tileCol - blankCol) === 1
 }
 
 function createMemoryDeck(values: string[]) {
@@ -808,11 +836,13 @@ export function JugaYGanaExperience() {
     sopa: false,
     memoria: false,
     pelicula: false,
+    puzzle: false,
   })
   const [earnedPoints, setEarnedPoints] = useState<Record<ChallengeKey, number>>({
     sopa: 0,
     memoria: 0,
     pelicula: 0,
+    puzzle: 0,
   })
 
   const [wordSearchVariantIndex, setWordSearchVariantIndex] = useState(() =>
@@ -841,6 +871,10 @@ export function JugaYGanaExperience() {
   const [movieRoundPoints, setMovieRoundPoints] = useState(0)
   const [movieRoundsCompleted, setMovieRoundsCompleted] = useState(0)
   const [movieTitlesCompleted, setMovieTitlesCompleted] = useState<string[]>([])
+  const [puzzleVariantIndex, setPuzzleVariantIndex] = useState(0)
+  const [puzzleTiles, setPuzzleTiles] = useState<number[]>(() => [...PUZZLE_STARTS[0].tiles])
+  const [puzzleMoves, setPuzzleMoves] = useState(0)
+  const [puzzleTimeLeft, setPuzzleTimeLeft] = useState(PUZZLE_TIME)
 
   const [participantName, setParticipantName] = useState("")
   const [participantPhone, setParticipantPhone] = useState("")
@@ -859,6 +893,7 @@ export function JugaYGanaExperience() {
   )
   const activeMemoryValues = MEMORY_VARIANTS[memoryVariantIndex]
   const movieChallenge = MOVIE_CHALLENGES[movieChallengeIndex]
+  const activePuzzle = PUZZLE_STARTS[puzzleVariantIndex]
 
   const assignNextChallengeSet = () => {
     resetChallengeAssignment({
@@ -883,6 +918,13 @@ export function JugaYGanaExperience() {
     setMovieRoundPoints(0)
     setMovieRoundsCompleted(0)
     setMovieTitlesCompleted([])
+    setPuzzleVariantIndex((current) => {
+      const nextIndex = (current + 1) % PUZZLE_STARTS.length
+      setPuzzleTiles([...PUZZLE_STARTS[nextIndex].tiles])
+      return nextIndex
+    })
+    setPuzzleMoves(0)
+    setPuzzleTimeLeft(PUZZLE_TIME)
   }
 
   const getWordFromSelection = (selection: number[]) =>
@@ -922,6 +964,7 @@ export function JugaYGanaExperience() {
   const memoryFinished = completedChallenges.memoria || memoryTimeLeft === 0
   const movieFailed = !movieRoundCompleted && wrongLetters.length >= MAX_MOVIE_ERRORS
   const canPlayAnotherMovie = movieRoundCompleted && movieRoundsCompleted < MAX_MOVIE_ROUNDS
+  const puzzleFinished = completedChallenges.puzzle || puzzleTimeLeft === 0
 
   useEffect(() => {
     let mounted = true
@@ -948,8 +991,8 @@ export function JugaYGanaExperience() {
         juegosActivos: normalizeChallengeKeys(data?.juegos_activos),
       })
       setActiveChallengeIndex(0)
-      setCompletedChallenges({ sopa: false, memoria: false, pelicula: false })
-      setEarnedPoints({ sopa: 0, memoria: 0, pelicula: 0 })
+      setCompletedChallenges({ sopa: false, memoria: false, pelicula: false, puzzle: false })
+      setEarnedPoints({ sopa: 0, memoria: 0, pelicula: 0, puzzle: 0 })
       setStage("intro")
       setConfigLoading(false)
     }
@@ -996,6 +1039,23 @@ export function JugaYGanaExperience() {
 
     return () => window.clearInterval(intervalId)
   }, [activeChallenge?.key, memoryFinished, stage])
+
+  useEffect(() => {
+    if (stage !== "play" || activeChallenge?.key !== "puzzle") return
+    if (puzzleFinished) return
+
+    const intervalId = window.setInterval(() => {
+      setPuzzleTimeLeft((current) => {
+        if (current <= 1) {
+          window.clearInterval(intervalId)
+          return 0
+        }
+        return current - 1
+      })
+    }, 1000)
+
+    return () => window.clearInterval(intervalId)
+  }, [activeChallenge?.key, puzzleFinished, stage])
 
   const handleWordCellToggle = (cellIndex: number) => {
     if (wordSearchFinished || completedChallenges.sopa) return
@@ -1206,6 +1266,38 @@ export function JugaYGanaExperience() {
     setMovieRoundPoints(0)
   }
 
+  const handlePuzzleTileClick = (tileIndex: number) => {
+    if (puzzleFinished) return
+
+    const blankIndex = puzzleTiles.indexOf(0)
+    if (!arePuzzleTilesAdjacent(tileIndex, blankIndex)) return
+
+    const nextTiles = [...puzzleTiles]
+    ;[nextTiles[tileIndex], nextTiles[blankIndex]] = [nextTiles[blankIndex], nextTiles[tileIndex]]
+    const nextMoves = puzzleMoves + 1
+
+    setPuzzleTiles(nextTiles)
+    setPuzzleMoves(nextMoves)
+
+    if (isPuzzleSolved(nextTiles)) {
+      const puzzlePoints =
+        (CHALLENGES.find((challenge) => challenge.key === "puzzle")?.points || 0) +
+        puzzleTimeLeft +
+        Math.max(0, 40 - nextMoves * 2)
+
+      setCompletedChallenges((prev) => ({ ...prev, puzzle: true }))
+      setEarnedPoints((prev) => ({ ...prev, puzzle: puzzlePoints }))
+    }
+  }
+
+  const resetPuzzleGame = () => {
+    setPuzzleTiles([...activePuzzle.tiles])
+    setPuzzleMoves(0)
+    setPuzzleTimeLeft(PUZZLE_TIME)
+    setCompletedChallenges((prev) => ({ ...prev, puzzle: false }))
+    setEarnedPoints((prev) => ({ ...prev, puzzle: 0 }))
+  }
+
   const handleContinue = () => {
     if (activeChallengeIndex < activeChallenges.length - 1) {
       setActiveChallengeIndex((current) => current + 1)
@@ -1231,9 +1323,11 @@ export function JugaYGanaExperience() {
         puntos_sopa: earnedPoints.sopa,
         puntos_memoria: earnedPoints.memoria,
         puntos_pelicula: earnedPoints.pelicula,
+        puntos_puzzle: earnedPoints.puzzle,
         sopa_nombre: activeWordSearch.name,
         memoria_nombre: `Memoria ${memoryVariantIndex + 1}`,
         pelicula_nombre: movieTitlesCompleted.join(" | "),
+        puzzle_nombre: activePuzzle.name,
       },
     ])
 
@@ -1317,7 +1411,7 @@ export function JugaYGanaExperience() {
               <p className="mt-5 max-w-xl text-base leading-8 text-sky-50/90 sm:text-lg">
                 Acumula puntos y participa de ganar premios.
               </p>
-              <div className="mt-8 grid gap-3 sm:grid-cols-3">
+              <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {activeChallenges.map((challenge, index) => (
                   <div key={challenge.key} className={`rounded-[24px] border px-4 py-4 ${completedChallenges[challenge.key] ? "border-emerald-300/40 bg-emerald-400/15" : activeChallengeIndex === index && stage === "play" ? "border-white/30 bg-white/10" : "border-white/10 bg-black/10"}`}>
                     <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-100/80">
@@ -1395,9 +1489,23 @@ export function JugaYGanaExperience() {
                   onFinish={handleContinue}
                 />
               ) : null}
+              {stage === "play" && activeChallenge?.key === "puzzle" ? (
+                <PuzzlePanel
+                  variantName={activePuzzle.name}
+                  tiles={puzzleTiles}
+                  moves={puzzleMoves}
+                  timeLeft={puzzleTimeLeft}
+                  completed={completedChallenges.puzzle}
+                  finished={puzzleFinished}
+                  earnedPoints={earnedPoints.puzzle}
+                  onTileClick={handlePuzzleTileClick}
+                  onReset={resetPuzzleGame}
+                />
+              ) : null}
               {stage === "form" ? (
                 <EntryFormPanel
                   totalPoints={totalPoints}
+                  challengeCount={activeChallenges.length}
                   participantName={participantName}
                   participantPhone={participantPhone}
                   submitError={submitError}
@@ -1842,8 +1950,88 @@ function MoviePanel(props: {
   )
 }
 
+function PuzzlePanel(props: {
+  variantName: string
+  tiles: number[]
+  moves: number
+  timeLeft: number
+  completed: boolean
+  finished: boolean
+  earnedPoints: number
+  onTileClick: (index: number) => void
+  onReset: () => void
+}) {
+  return (
+    <div>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+            Desafio 4
+          </div>
+          <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">
+            Puzzle
+          </h2>
+        </div>
+        <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
+          <Clock3 className="h-4 w-4 text-rose-500" />
+          {props.timeLeft}s
+        </div>
+      </div>
+
+      <p className="mt-4 text-sm leading-7 text-slate-600">
+        Variante: {props.variantName}. Toca una pieza vecina al espacio libre para moverla y ordenar del 1 al 8.
+      </p>
+
+      <div className="mt-6 grid w-full max-w-[420px] grid-cols-3 gap-3">
+        {props.tiles.map((tile, index) => {
+          const isBlank = tile === 0
+
+          return (
+            <button
+              key={`${tile}-${index}`}
+              type="button"
+              onClick={() => props.onTileClick(index)}
+              disabled={isBlank || props.finished}
+              aria-label={isBlank ? "Espacio libre" : `Mover pieza ${tile}`}
+              className={`aspect-square rounded-2xl border text-3xl font-semibold transition ${
+                isBlank
+                  ? "border-slate-200 bg-slate-950"
+                  : "border-slate-200 bg-white text-slate-900 shadow-sm hover:border-sky-300 hover:bg-sky-50"
+              } disabled:cursor-not-allowed`}
+            >
+              {isBlank ? "" : tile}
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <div className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
+          Movimientos: {props.moves}
+        </div>
+        <button type="button" onClick={props.onReset} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+          <RefreshCcw className="h-4 w-4" />
+          Reiniciar
+        </button>
+      </div>
+
+      {props.completed ? (
+        <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm leading-7 text-emerald-800">
+          Puzzle completado. Sumaste {props.earnedPoints} puntos.
+        </div>
+      ) : null}
+      {props.finished && !props.completed ? (
+        <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm leading-7 text-rose-700">
+          Se termino el tiempo. Debes reiniciar este desafio para volver a intentarlo.
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function EntryFormPanel(props: {
   totalPoints: number
+  challengeCount: number
   participantName: string
   participantPhone: string
   submitError: string
@@ -1862,7 +2050,7 @@ function EntryFormPanel(props: {
       </h2>
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <ScoreCard label="Puntaje total" value={props.totalPoints} />
-        <ScoreCard label="Desafíos" value={3} />
+        <ScoreCard label="Desafíos" value={props.challengeCount} />
       </div>
       <form onSubmit={props.onSubmit} className="mt-8 space-y-4">
         <input value={props.participantName} onChange={(event) => props.onNameChange(event.target.value)} placeholder="Tu nombre" className="w-full rounded-2xl border border-slate-200 px-4 py-4 outline-none transition focus:border-sky-400" />
