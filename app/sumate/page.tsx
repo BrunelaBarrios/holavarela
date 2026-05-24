@@ -1,7 +1,10 @@
 import { SumateClient, type SumateType } from "./SumateClient"
 
 const isSumateType = (value: string | string[] | undefined): value is SumateType =>
-  value === "comercio" || value === "servicio" || value === "curso"
+  value === "comercio" ||
+  value === "servicio" ||
+  value === "curso" ||
+  value === "institucion"
 
 export default async function SumatePage({
   searchParams,

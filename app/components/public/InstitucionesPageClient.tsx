@@ -9,6 +9,7 @@ import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
+import { PublicAddButton } from "./PublicAddButton"
 import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { buildPublicNav } from "../../lib/publicNav"
 import { recordViewMore } from "../../lib/viewMoreTracking"
@@ -237,10 +238,19 @@ export function InstitucionesPageClient({
       <PublicHeader items={buildPublicNav("instituciones")} />
 
       <div className="mx-auto max-w-7xl px-6 py-16">
-        <h1 className="text-3xl font-bold text-gray-900">Instituciones</h1>
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Instituciones</h1>
         <p className="mt-2 text-gray-600">
           Conocé instituciones y espacios de referencia en la ciudad
-        </p>
+            </p>
+          </div>
+
+          <PublicAddButton
+            href="/sumate?tipo=institucion"
+            label="Sumar mi institucion"
+          />
+        </div>
 
         <div className="mt-6 max-w-xl">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">

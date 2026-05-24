@@ -6,7 +6,10 @@ import { PublicHeader } from "../components/PublicHeader"
 import { serializePublicLead, type PublicLeadType } from "../lib/publicLead"
 import { buildPublicNav } from "../lib/publicNav"
 
-export type SumateType = Extract<PublicLeadType, "comercio" | "servicio" | "curso">
+export type SumateType = Extract<
+  PublicLeadType,
+  "comercio" | "servicio" | "curso" | "institucion"
+>
 
 type SumateCopy = {
   title: string
@@ -50,6 +53,16 @@ const copyByType: Record<SumateType, SumateCopy> = {
     extraLabel: "Responsable",
     extraPlaceholder: "Persona, institucion o equipo a cargo",
   },
+  institucion: {
+    title: "Sumar institucion",
+    description: "Compartinos los datos de la institucion para revisarla y sumarla a Hola Varela.",
+    listingLabel: "Nombre de la institucion",
+    listingPlaceholder: "Ej: Club, escuela, espacio cultural",
+    detailsLabel: "Descripcion breve",
+    detailsPlaceholder: "Que actividades realiza o que informacion debe aparecer.",
+    extraLabel: "Direccion",
+    extraPlaceholder: "Calle, numero o referencia",
+  },
 }
 
 type SumateClientProps = {
@@ -76,6 +89,7 @@ export function SumateClient({ selectedType }: SumateClientProps) {
   const activeNav = useMemo(() => {
     if (selectedType === "curso") return "cursos"
     if (selectedType === "servicio") return "servicios"
+    if (selectedType === "institucion") return "instituciones"
     return "comercios"
   }, [selectedType])
 
@@ -97,7 +111,10 @@ export function SumateClient({ selectedType }: SumateClientProps) {
       senderPhone: form.senderPhone.trim(),
       listingName: form.listingName.trim(),
       listingDescription: form.listingDescription.trim(),
-      listingAddress: selectedType === "comercio" ? form.extra.trim() : "",
+      listingAddress:
+        selectedType === "comercio" || selectedType === "institucion"
+          ? form.extra.trim()
+          : "",
       listingPhone: form.listingPhone.trim(),
       listingImage: null,
       serviceCategory: selectedType === "servicio" ? form.extra.trim() : undefined,
