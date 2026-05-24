@@ -1,12 +1,21 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { CheckCheck, Mail, MessageSquare, Phone, Search, Trash2, UserRound } from "lucide-react"
+import { CheckCheck, Mail, MessageSquare, Phone, Trash2, UserRound } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { OptimizedImage } from "../../components/OptimizedImage"
 import { getPublicLeadTypeLabel, parsePublicLead } from "../../lib/publicLead"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
+import {
+  AdminEmptyState,
+  AdminLoadingPanel,
+  AdminMetricPill,
+  AdminNotice,
+  AdminPageHeader,
+  AdminSearchInput,
+  AdminSegmentedControl,
+} from "../components/AdminUI"
 
 type ContactoSolicitud = {
   id: number
@@ -164,93 +173,58 @@ export default function AdminContactosPage() {
         }}
       />
 
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-semibold text-slate-900">Contactos</h1>
-        <p className="text-slate-500">Solicitudes enviadas desde el formulario de Hola Varela.</p>
-      </div>
+      <AdminPageHeader
+        title="Contactos"
+        description="Solicitudes enviadas desde el formulario de Hola Varela, ordenadas por pendientes primero."
+      />
 
-      <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-3">
-            <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Pendientes: <span className="font-semibold">{pendingCount}</span>
-            </div>
-            <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              Total recibidos: <span className="font-semibold text-slate-900">{solicitudes.length}</span>
-            </div>
-            <div className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-              Altas: <span className="font-semibold">{altasCount}</span>
-            </div>
-            <div className="rounded-xl bg-sky-50 px-4 py-3 text-sm text-sky-700">
-              Contactos: <span className="font-semibold">{contactosCount}</span>
-            </div>
+            <AdminMetricPill label="Pendientes" value={pendingCount} tone="amber" />
+            <AdminMetricPill label="Total recibidos" value={solicitudes.length} />
+            <AdminMetricPill label="Altas" value={altasCount} tone="emerald" />
+            <AdminMetricPill label="Contactos" value={contactosCount} tone="sky" />
           </div>
 
           <div className="flex flex-col gap-3 md:w-[420px]">
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setFilter("all")}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                  filter === "all"
-                    ? "bg-slate-900 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                Todas
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter("alta")}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                  filter === "alta"
-                    ? "bg-emerald-600 text-white"
-                    : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                }`}
-              >
-                Altas
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilter("contacto")}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                  filter === "contacto"
-                    ? "bg-sky-600 text-white"
-                    : "bg-sky-50 text-sky-700 hover:bg-sky-100"
-                }`}
-              >
-                Contacto
-              </button>
-            </div>
+            <AdminSegmentedControl
+              value={filter}
+              onChange={setFilter}
+              options={[
+                { label: "Todas", value: "all" },
+                { label: "Altas", value: "alta", tone: "emerald" },
+                { label: "Contacto", value: "contacto", tone: "sky" },
+              ]}
+            />
 
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5">
-              <Search className="h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar por nombre, email, numero o mensaje"
-                className="w-full bg-transparent text-sm outline-none"
-              />
-            </div>
+            <AdminSearchInput
+              value={search}
+              onChange={setSearch}
+              placeholder="Buscar por nombre, email, número o mensaje"
+            />
           </div>
         </div>
-      </div>
+      </section>
 
       {error && (
-        <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <AdminNotice tone="danger" className="mb-6">
           {error}
-        </div>
+        </AdminNotice>
       )}
 
       {loading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-500 shadow-sm">
-          Cargando contactos...
-        </div>
+        <AdminLoadingPanel label="Cargando contactos..." />
       ) : solicitudesFiltradas.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-500 shadow-sm">
-          No hay solicitudes para mostrar.
-        </div>
+        <AdminEmptyState
+          icon={Mail}
+          title="No hay solicitudes para mostrar"
+          description={
+            search || filter !== "all"
+              ? "Probá limpiar la búsqueda o cambiar el filtro."
+              : "Cuando llegue una consulta o solicitud de alta, va a aparecer acá."
+          }
+        />
       ) : (
         <div className="space-y-4">
           {solicitudesFiltradas.map((item) => {

@@ -9,6 +9,7 @@ import { supabase } from "../../supabase"
 import { buildMonthEventRange, formatEventDateRange, getTodayInMontevideo } from "../../lib/eventDates"
 import { buildEventDescription, parseEventDescription } from "../../lib/eventSubmissionMeta"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
+import { postAdminAction } from "../lib/adminActions"
 
 type Evento = {
   id: number
@@ -88,22 +89,12 @@ export default function AdminEventosPage() {
   const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
   const today = getTodayInMontevideo()
 
-  const runAdminAction = async (body: unknown) => {
-    const response = await fetch("/api/admin/eventos", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    })
-
-    const result = await response.json()
-    if (!response.ok) {
-      throw new Error(result.error || "No pudimos guardar el evento.")
-    }
-
-    return result
-  }
+  const runAdminAction = (body: unknown) =>
+    postAdminAction<{ record?: Evento }>(
+      "/api/admin/eventos",
+      body,
+      "No pudimos guardar el evento."
+    )
 
   const isPastEvent = (evento: Evento) => {
     const endDate = evento.fecha_fin || evento.fecha

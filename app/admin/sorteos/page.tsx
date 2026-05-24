@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Copy, Download, Gift, Plus, QrCode, Save, Search } from "lucide-react"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
@@ -138,6 +138,7 @@ export default function AdminSorteosPage() {
   const [schemaReady, setSchemaReady] = useState(true)
   const [campaigns, setCampaigns] = useState<SorteoCampaign[]>([])
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  const selectedIdRef = useRef<number | null>(null)
   const [form, setForm] = useState<SorteoForm>(createEmptyForm())
   const [participantOptions, setParticipantOptions] = useState<ParticipantOption[]>([])
   const [entriesCount, setEntriesCount] = useState<number>(0)
@@ -187,13 +188,15 @@ export default function AdminSorteosPage() {
     return entries.filter((entry) => entry.sorteoId === selectedCampaign.id).length
   }, [entries, selectedCampaign])
 
-  const applyCampaign = (campaign: SorteoCampaign | null) => {
+  const applyCampaign = useCallback((campaign: SorteoCampaign | null) => {
     if (!campaign) {
+      selectedIdRef.current = null
       setSelectedId(null)
       setForm(createEmptyForm())
       return
     }
 
+    selectedIdRef.current = campaign.id
     setSelectedId(campaign.id)
     setForm({
       titulo: campaign.titulo,
@@ -202,9 +205,9 @@ export default function AdminSorteosPage() {
       participante1Key: campaign.participante1Key,
       participante2Key: campaign.participante2Key,
     })
-  }
+  }, [])
 
-  const loadData = async (preferredId?: number | null) => {
+  const loadData = useCallback(async (preferredId?: number | null) => {
     const [
       { data: configRows, error: configError },
       { data: comerciosRows, error: comerciosError },
@@ -350,13 +353,13 @@ export default function AdminSorteosPage() {
 
     const nextSelected =
       nextCampaigns.find((item) => item.id === preferredId) ||
-      nextCampaigns.find((item) => item.id === selectedId) ||
+      nextCampaigns.find((item) => item.id === selectedIdRef.current) ||
       nextCampaigns[0] ||
       null
 
     applyCampaign(nextSelected)
     setLoading(false)
-  }
+  }, [applyCampaign])
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -364,7 +367,7 @@ export default function AdminSorteosPage() {
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
-  }, [])
+  }, [loadData])
 
   const handleNew = () => {
     setSaveMessage("")

@@ -10,6 +10,7 @@ import { getSubscriptionStatusBadge, getSubscriptionStatusLabel, type Subscripti
 import { buildWhatsappCountMap } from "../../lib/whatsappTracking"
 import { supabase } from "../../supabase"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
+import { postAdminAction } from "../lib/adminActions"
 
 type Servicio = {
   id: number
@@ -86,22 +87,12 @@ export default function AdminServiciosPage() {
   const [deletingServicio, setDeletingServicio] = useState<Servicio | null>(null)
   const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
 
-  const runAdminAction = async (body: unknown) => {
-    const response = await fetch("/api/admin/servicios", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    })
-
-    const result = await response.json()
-    if (!response.ok) {
-      throw new Error(result.error || "No pudimos guardar el servicio.")
-    }
-
-    return result
-  }
+  const runAdminAction = (body: unknown) =>
+    postAdminAction<{ record?: Servicio }>(
+      "/api/admin/servicios",
+      body,
+      "No pudimos guardar el servicio."
+    )
 
   const cargarServicios = async () => {
     const [

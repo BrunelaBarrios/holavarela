@@ -8,6 +8,7 @@ import { fileToDataUrl } from "../../lib/fileToDataUrl"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { buildShareCountMap } from "../../lib/shareTracking"
 import { buildWhatsappCountMap } from "../../lib/whatsappTracking"
+import { postAdminAction } from "../lib/adminActions"
 
 type Curso = {
   id: number
@@ -69,22 +70,12 @@ export default function AdminCursosPage() {
   const [instituciones, setInstituciones] = useState<InstitucionOption[]>([])
   const [servicios, setServicios] = useState<ServicioOption[]>([])
 
-  const runAdminAction = async (body: unknown) => {
-    const response = await fetch("/api/admin/cursos", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    })
-
-    const result = await response.json()
-    if (!response.ok) {
-      throw new Error(result.error || "No pudimos guardar el curso o clase.")
-    }
-
-    return result
-  }
+  const runAdminAction = (body: unknown) =>
+    postAdminAction<{ record?: Curso }>(
+      "/api/admin/cursos",
+      body,
+      "No pudimos guardar el curso o clase."
+    )
 
   const cargarCursos = async () => {
     const [
