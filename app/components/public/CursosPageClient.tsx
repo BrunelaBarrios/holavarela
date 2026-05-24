@@ -9,6 +9,7 @@ import { PrimaryExternalLinkButton } from "../PrimaryExternalLinkButton"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
+import { PublicAddButton } from "./PublicAddButton"
 import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { buildPublicNav } from "../../lib/publicNav"
 import { recordViewMore } from "../../lib/viewMoreTracking"
@@ -160,10 +161,16 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
       <PublicHeader items={buildPublicNav("cursos")} />
 
       <div className="mx-auto max-w-7xl px-6 py-16">
-        <h1 className="text-3xl font-bold text-gray-900">Cursos y Clases</h1>
-        <p className="mt-2 text-gray-600">
-          Descubri propuestas de aprendizaje, talleres y clases disponibles en la ciudad
-        </p>
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Cursos y Clases</h1>
+            <p className="mt-2 text-gray-600">
+              Descubri propuestas de aprendizaje, talleres y clases disponibles en la ciudad
+            </p>
+          </div>
+
+          <PublicAddButton href="/sumate?tipo=curso" label="Sumar mi curso" />
+        </div>
 
         <div className="mt-6 max-w-xl">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">

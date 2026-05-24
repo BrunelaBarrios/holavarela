@@ -11,6 +11,7 @@ import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
 import { SweepstakesPopup } from "../SweepstakesPopup"
+import { PublicAddButton } from "./PublicAddButton"
 import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { formatEventDateRange } from "../../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../../lib/eventLikes"
@@ -332,15 +333,10 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
             </p>
           </div>
 
-          <div className="w-full max-w-sm rounded-2xl border border-blue-100 bg-blue-50 p-4 lg:w-auto">
-            <Link
-              href="/usuarios/eventos/nuevo?public=1"
-              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
-            >
-              Sumar mi aviso
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
+          <PublicAddButton
+            href="/usuarios/eventos/nuevo?public=1"
+            label="Sumar mi aviso"
+          />
         </div>
 
         <div className="mt-6 max-w-xl">

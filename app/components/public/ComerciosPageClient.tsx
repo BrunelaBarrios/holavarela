@@ -10,6 +10,7 @@ import { OptimizedImage } from "../OptimizedImage"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
+import { PublicAddButton } from "./PublicAddButton"
 import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { buildPublicNav } from "../../lib/publicNav"
 import { recordViewMore } from "../../lib/viewMoreTracking"
@@ -245,13 +246,7 @@ export function ComerciosPageClient({
             </p>
           </div>
 
-          <Link
-            href="/sumate"
-            className="inline-flex w-fit items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500"
-          >
-            Sumar mi comercio
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <PublicAddButton href="/sumate?tipo=comercio" label="Sumar mi comercio" />
         </div>
 
         <div className="mt-6 max-w-xl">
