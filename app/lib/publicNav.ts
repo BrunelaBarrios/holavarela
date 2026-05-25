@@ -5,6 +5,7 @@ type PublicNavKey =
   | "instituciones"
   | "comercios"
   | "servicios"
+  | "suscripciones"
   | "contacto"
 
 const publicNavItems: Record<PublicNavKey, { href: string; label: string }> = {
@@ -14,6 +15,7 @@ const publicNavItems: Record<PublicNavKey, { href: string; label: string }> = {
   instituciones: { href: "/instituciones", label: "Instituciones" },
   comercios: { href: "/comercios", label: "Comercios" },
   servicios: { href: "/servicios", label: "Servicios" },
+  suscripciones: { href: "/suscripciones", label: "Suscripciones" },
   contacto: { href: "/#contacto", label: "Contacto" },
 }
 
@@ -24,6 +26,7 @@ const publicNavOrder: PublicNavKey[] = [
   "instituciones",
   "comercios",
   "servicios",
+  "suscripciones",
   "contacto",
 ]
 
@@ -42,6 +45,7 @@ export function buildHomePublicNav() {
     { href: "/#instituciones", label: "Instituciones" },
     { href: "/#comercios", label: "Comercios" },
     { href: "/#servicios", label: "Servicios" },
+    { href: "/suscripciones", label: "Suscripciones" },
     { href: "/#contacto", label: "Contacto" },
   ]
 }

@@ -5,6 +5,7 @@ import { consumeRateLimit, getClientIp } from "../../lib/rateLimit"
 
 type ContactRequestPayload = {
   nombre?: string
+  email?: string
   telefono?: string
   mensaje?: string
 }
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
 
     const body = (await request.json()) as ContactRequestPayload
     const nombre = body.nombre?.trim() || ""
+    const email = body.email?.trim() || ""
     const telefono = body.telefono?.trim() || ""
     const mensaje = body.mensaje?.trim() || ""
 
@@ -40,7 +42,7 @@ export async function POST(request: Request) {
     const { error: insertError } = await supabaseAdmin.from("contacto_solicitudes").insert([
       {
         nombre,
-        email: null,
+        email: email || null,
         telefono,
         mensaje,
       },
@@ -56,6 +58,7 @@ export async function POST(request: Request) {
         intro: "Llego una nueva consulta desde el formulario de contacto del sitio.",
         fields: [
           { label: "Nombre", value: nombre },
+          { label: "Email", value: email },
           { label: "Teléfono", value: telefono },
           { label: "Mensaje", value: mensaje },
         ],

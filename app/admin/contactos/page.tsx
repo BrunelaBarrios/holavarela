@@ -27,10 +27,26 @@ type ContactoSolicitud = {
   visto?: boolean | null
 }
 
-type ContactFilter = "all" | "alta" | "contacto"
+type ContactFilter = "all" | "alta" | "suscripcion" | "contacto"
 
 function isAltaSolicitud(item: ContactoSolicitud) {
+  const parsedLead = parsePublicLead(item.mensaje)
+  if (parsedLead) return parsedLead.type !== "evento"
   return item.mensaje.startsWith("Solicitud de alta desde /sumate")
+}
+
+function isSubscriptionSolicitud(item: ContactoSolicitud) {
+  return parsePublicLead(item.mensaje)?.type === "suscripcion"
+}
+
+function getLeadNoteValue(notes: string | undefined, label: string) {
+  if (!notes) return ""
+
+  const line = notes
+    .split(/\r?\n/)
+    .find((item) => item.toLowerCase().startsWith(`${label.toLowerCase()}:`))
+
+  return line?.slice(label.length + 1).trim() || ""
 }
 
 export default function AdminContactosPage() {
@@ -75,8 +91,10 @@ export default function AdminContactosPage() {
         filter === "all"
           ? true
           : filter === "alta"
-            ? isAltaSolicitud(item)
-            : !isAltaSolicitud(item)
+            ? isAltaSolicitud(item) && !isSubscriptionSolicitud(item)
+            : filter === "suscripcion"
+              ? isSubscriptionSolicitud(item)
+              : !isAltaSolicitud(item)
 
       if (!matchesFilter) return false
       if (!term) return true
@@ -87,11 +105,16 @@ export default function AdminContactosPage() {
   }, [filter, search, solicitudes])
 
   const altasCount = useMemo(
-    () => solicitudes.filter((item) => isAltaSolicitud(item)).length,
+    () => solicitudes.filter((item) => isAltaSolicitud(item) && !isSubscriptionSolicitud(item)).length,
     [solicitudes]
   )
 
-  const contactosCount = solicitudes.length - altasCount
+  const subscriptionCount = useMemo(
+    () => solicitudes.filter((item) => isSubscriptionSolicitud(item)).length,
+    [solicitudes]
+  )
+
+  const contactosCount = solicitudes.length - altasCount - subscriptionCount
   const pendingCount = useMemo(
     () => solicitudes.filter((item) => item.visto !== true).length,
     [solicitudes]
@@ -184,6 +207,7 @@ export default function AdminContactosPage() {
             <AdminMetricPill label="Pendientes" value={pendingCount} tone="amber" />
             <AdminMetricPill label="Total recibidos" value={solicitudes.length} />
             <AdminMetricPill label="Altas" value={altasCount} tone="emerald" />
+            <AdminMetricPill label="Suscripciones" value={subscriptionCount} tone="emerald" />
             <AdminMetricPill label="Contactos" value={contactosCount} tone="sky" />
           </div>
 
@@ -194,6 +218,7 @@ export default function AdminContactosPage() {
               options={[
                 { label: "Todas", value: "all" },
                 { label: "Altas", value: "alta", tone: "emerald" },
+                { label: "Suscripciones", value: "suscripcion", tone: "emerald" },
                 { label: "Contacto", value: "contacto", tone: "sky" },
               ]}
             />
@@ -230,6 +255,9 @@ export default function AdminContactosPage() {
           {solicitudesFiltradas.map((item) => {
             const isAlta = isAltaSolicitud(item)
             const parsedLead = parsePublicLead(item.mensaje)
+            const isSubscriptionLead = parsedLead?.type === "suscripcion"
+            const planName = getLeadNoteValue(parsedLead?.notes, "Plan elegido")
+            const planPrice = getLeadNoteValue(parsedLead?.notes, "Precio")
 
             return (
               <article
@@ -254,7 +282,7 @@ export default function AdminContactosPage() {
                             : "bg-slate-100 text-slate-600"
                         }`}
                       >
-                        {isAlta ? "Alta / Sumate" : "Contacto"}
+                        {isSubscriptionLead ? "Suscripcion" : isAlta ? "Alta / Sumate" : "Contacto"}
                       </span>
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${
@@ -298,7 +326,7 @@ export default function AdminContactosPage() {
                 <div className={`mt-4 rounded-2xl p-4 ${isAlta ? "bg-emerald-50/70" : "bg-slate-50"}`}>
                   <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
                     <MessageSquare className={`h-4 w-4 ${isAlta ? "text-emerald-600" : "text-sky-600"}`} />
-                    {isAlta ? "Detalle de alta" : "Mensaje"}
+                    {isSubscriptionLead ? "Detalle de suscripcion" : isAlta ? "Detalle de alta" : "Mensaje"}
                   </div>
                   {parsedLead ? (
                     <div className="space-y-4 text-sm leading-7 text-slate-600">
@@ -313,9 +341,30 @@ export default function AdminContactosPage() {
                             </div>
                           </div>
 
+                          {isSubscriptionLead ? (
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4">
+                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
+                                  Plan elegido
+                                </div>
+                                <div className="mt-2 text-base font-semibold text-slate-900">
+                                  {planName || "Sin plan"}
+                                </div>
+                              </div>
+                              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4">
+                                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
+                                  Precio
+                                </div>
+                                <div className="mt-2 text-base font-semibold text-slate-900">
+                                  {planPrice || "Sin precio"}
+                                </div>
+                              </div>
+                            </div>
+                          ) : null}
+
                           <div className="rounded-2xl border border-slate-200 bg-white p-4">
                             <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                              Ficha enviada
+                              {isSubscriptionLead ? "Ficha solicitada" : "Ficha enviada"}
                             </div>
                             <div className="mt-2 text-base font-semibold text-slate-900">
                               {parsedLead.listingName}
@@ -328,13 +377,16 @@ export default function AdminContactosPage() {
                           <div className="grid gap-3 sm:grid-cols-2">
                             <div className="rounded-2xl border border-slate-200 bg-white p-4">
                               <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                                Dirección
+                                {isSubscriptionLead ? "Tipo de ficha" : "Dirección"}
                               </div>
-                              <div className="mt-2">{parsedLead.listingAddress || "Sin dirección"}</div>
+                              <div className="mt-2">
+                                {parsedLead.listingAddress ||
+                                  (isSubscriptionLead ? "Sin tipo" : "Sin dirección")}
+                              </div>
                             </div>
                             <div className="rounded-2xl border border-slate-200 bg-white p-4">
                               <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
-                                Teléfono de la ficha
+                                {isSubscriptionLead ? "Teléfono de contacto" : "Teléfono de la ficha"}
                               </div>
                               <div className="mt-2">{parsedLead.listingPhone || "Sin teléfono"}</div>
                             </div>
