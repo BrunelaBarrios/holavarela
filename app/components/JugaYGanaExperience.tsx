@@ -1511,15 +1511,15 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
               <p className="mt-5 max-w-xl text-base leading-8 text-sky-50/90 sm:text-lg">
                 Acumula puntos y participa de ganar premios.
               </p>
-              <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+              <div className="mt-8 grid gap-3 sm:grid-cols-2">
                 {activeChallenges.map((challenge, index) => (
-                  <div key={challenge.key} className={`rounded-[24px] border px-4 py-4 ${completedChallenges[challenge.key] ? "border-emerald-300/40 bg-emerald-400/15" : activeChallengeIndex === index && stage === "play" ? "border-white/30 bg-white/10" : "border-white/10 bg-black/10"}`}>
+                  <div key={challenge.key} className={`min-w-0 rounded-[24px] border px-4 py-4 ${completedChallenges[challenge.key] ? "border-emerald-300/40 bg-emerald-400/15" : activeChallengeIndex === index && stage === "play" ? "border-white/30 bg-white/10" : "border-white/10 bg-black/10"}`}>
                     <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-100/80">
                       Desafío {index + 1}
                     </div>
-                    <div className="mt-2 flex items-center gap-2 text-lg font-semibold">
+                    <div className="mt-2 flex min-w-0 items-start gap-2 text-lg font-semibold leading-7">
                       {completedChallenges[challenge.key] ? <CheckCircle2 className="h-5 w-5 text-emerald-300" /> : null}
-                      <span>{challenge.title}</span>
+                      <span className="min-w-0 break-words">{challenge.title}</span>
                     </div>
                     <div className="mt-2 text-sm text-sky-50/80">{challenge.points} pts base</div>
                   </div>
