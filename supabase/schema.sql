@@ -605,12 +605,36 @@ create table if not exists public.desafio_config (
   id bigint primary key default 1 check (id = 1),
   activo boolean not null default true,
   juegos_activos text[] not null default array['sopa', 'memoria', 'pelicula', 'puzzle', 'laberinto'],
+  slug text,
+  titulo text,
   updated_at timestamp with time zone default now()
 );
 
-insert into public.desafio_config (id, activo, juegos_activos)
-values (1, true, array['sopa', 'memoria', 'pelicula', 'puzzle', 'laberinto'])
+alter table public.desafio_config
+  add column if not exists slug text;
+
+alter table public.desafio_config
+  add column if not exists titulo text;
+
+insert into public.desafio_config (id, activo, juegos_activos, slug, titulo)
+values (
+  1,
+  true,
+  array['sopa', 'memoria', 'pelicula', 'puzzle', 'laberinto'],
+  'desafio-inicial',
+  'Desafio inicial'
+)
 on conflict (id) do nothing;
+
+update public.desafio_config
+set
+  slug = coalesce(slug, 'desafio-' || to_char(now(), 'YYYYMMDD') || '-' || substr(md5(random()::text), 1, 8)),
+  titulo = coalesce(titulo, 'Desafio inicial')
+where id = 1;
+
+create unique index if not exists desafio_config_slug_key
+on public.desafio_config (slug)
+where slug is not null;
 
 alter table public.desafio_participaciones
   add column if not exists puntos_puzzle integer not null default 0;
@@ -624,6 +648,13 @@ alter table public.desafio_participaciones
 alter table public.desafio_participaciones
   add column if not exists laberinto_nombre text;
 
+alter table public.desafio_participaciones
+  add column if not exists desafio_slug text;
+
+update public.desafio_participaciones
+set desafio_slug = (select slug from public.desafio_config where id = 1)
+where desafio_slug is null;
+
 update public.desafio_config
 set juegos_activos = array(select distinct unnest(juegos_activos || array['puzzle']))
 where id = 1 and not ('puzzle' = any(juegos_activos));
@@ -634,9 +665,17 @@ where id = 1 and not ('laberinto' = any(juegos_activos));
 
 create table if not exists public.desafio_sorteos (
   id bigint generated always as identity primary key,
+  desafio_slug text,
   cantidad_ganadores integer not null default 1,
   created_at timestamp with time zone default now()
 );
+
+alter table public.desafio_sorteos
+  add column if not exists desafio_slug text;
+
+update public.desafio_sorteos
+set desafio_slug = (select slug from public.desafio_config where id = 1)
+where desafio_slug is null;
 
 create table if not exists public.desafio_sorteo_ganadores (
   id bigint generated always as identity primary key,

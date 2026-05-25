@@ -13,6 +13,8 @@ import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin"
 type ChallengeConfigRow = {
   activo?: boolean | null
   juegos_activos?: unknown
+  slug?: string | null
+  titulo?: string | null
 }
 
 function configFromRow(row: ChallengeConfigRow | null | undefined) {
@@ -21,7 +23,19 @@ function configFromRow(row: ChallengeConfigRow | null | undefined) {
   return {
     activo: row.activo !== false,
     juegosActivos: normalizeChallengeKeys(row.juegos_activos),
+    slug: row.slug || undefined,
+    titulo: row.titulo || undefined,
   }
+}
+
+function createChallengeSlug() {
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, "")
+  const suffix =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID().slice(0, 8)
+      : Math.random().toString(36).slice(2, 10)
+
+  return `desafio-${date}-${suffix}`
 }
 
 async function requireAdminSession(request: NextRequest) {
@@ -36,7 +50,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await getSupabaseAdmin()
     .from("desafio_config")
-    .select("activo, juegos_activos")
+    .select("activo, juegos_activos, slug, titulo")
     .eq("id", 1)
     .maybeSingle()
 
@@ -65,11 +79,13 @@ export async function POST(request: NextRequest) {
   }
 
   const body = (await request.json()) as {
+    action?: unknown
     activo?: unknown
     juegosActivos?: unknown
   }
   const juegosActivos = normalizeChallengeKeys(body.juegosActivos)
   const activo = body.activo === true
+  const creatingChallenge = body.action === "create"
 
   if (activo && juegosActivos.length === 0) {
     return NextResponse.json(
@@ -78,6 +94,11 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  const nextSlug = creatingChallenge ? createChallengeSlug() : undefined
+  const nextTitle = creatingChallenge
+    ? `Desafio ${new Date().toLocaleDateString("es-UY")}`
+    : undefined
+
   const { data, error } = await getSupabaseAdmin()
     .from("desafio_config")
     .upsert(
@@ -85,11 +106,13 @@ export async function POST(request: NextRequest) {
         id: 1,
         activo,
         juegos_activos: juegosActivos,
+        ...(nextSlug ? { slug: nextSlug } : {}),
+        ...(nextTitle ? { titulo: nextTitle } : {}),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" }
     )
-    .select("activo, juegos_activos")
+    .select("activo, juegos_activos, slug, titulo")
     .single()
 
   if (error) {
@@ -110,9 +133,9 @@ export async function POST(request: NextRequest) {
     .join(", ")
 
   await logAdminActivityServer(session, {
-    action: activo ? "Activar desafio" : "Pausar desafio",
+    action: creatingChallenge ? "Crear desafio" : activo ? "Activar desafio" : "Pausar desafio",
     section: "Desafios",
-    target: "Configuracion del desafio",
+    target: creatingChallenge ? nextSlug || "Nuevo desafio" : "Configuracion del desafio",
     details: `Juegos activos: ${selectedLabels || "ninguno"}.`,
   })
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { Copy, Download, ExternalLink, Power, QrCode, RotateCcw, Save, Search, Shuffle, Trash2, Trophy } from "lucide-react"
+import { Copy, Download, ExternalLink, Plus, Power, QrCode, RotateCcw, Save, Search, Shuffle, Trash2, Trophy } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
@@ -47,15 +47,22 @@ type ChallengeDraw = {
   createdAt: string | null
 }
 
-const PUBLIC_SITE_URL = "https://www.holavarela.uy"
-
-function buildChallengePublicUrl() {
-  return `${PUBLIC_SITE_URL}/juga-y-gana`
+type LoadedChallengeConfig = {
+  activo?: boolean
+  juegosActivos?: unknown
+  slug?: string
+  titulo?: string
 }
 
-function buildChallengeQrUrl() {
+const PUBLIC_SITE_URL = "https://www.holavarela.uy"
+
+function buildChallengePublicUrl(slug?: string) {
+  return slug ? `${PUBLIC_SITE_URL}/juga-y-gana/${slug}` : `${PUBLIC_SITE_URL}/juga-y-gana`
+}
+
+function buildChallengeQrUrl(slug?: string) {
   return `https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&data=${encodeURIComponent(
-    buildChallengePublicUrl()
+    buildChallengePublicUrl(slug)
   )}`
 }
 
@@ -78,7 +85,10 @@ export default function AdminDesafiosPage() {
   const [activeGames, setActiveGames] = useState<ChallengeKey[]>(
     DEFAULT_CHALLENGE_CONFIG.juegosActivos
   )
+  const [challengeSlug, setChallengeSlug] = useState("")
+  const [challengeTitle, setChallengeTitle] = useState("")
   const [savingConfig, setSavingConfig] = useState(false)
+  const [creatingChallenge, setCreatingChallenge] = useState(false)
   const [configMessage, setConfigMessage] = useState("")
   const [entries, setEntries] = useState<ChallengeEntry[]>([])
   const [draws, setDraws] = useState<ChallengeDraw[]>([])
@@ -94,9 +104,10 @@ export default function AdminDesafiosPage() {
   const [entryToDelete, setEntryToDelete] = useState<ChallengeEntry | null>(null)
   const [deletingEntry, setDeletingEntry] = useState(false)
   const [showResetDrawsConfirm, setShowResetDrawsConfirm] = useState(false)
+  const [showCreateChallengeConfirm, setShowCreateChallengeConfirm] = useState(false)
 
-  const challengePublicUrl = buildChallengePublicUrl()
-  const challengeQrUrl = buildChallengeQrUrl()
+  const challengePublicUrl = buildChallengePublicUrl(challengeSlug)
+  const challengeQrUrl = buildChallengeQrUrl(challengeSlug)
 
   const loadConfig = async () => {
     setConfigLoading(true)
@@ -105,7 +116,7 @@ export default function AdminDesafiosPage() {
     try {
       const response = await fetch("/api/admin/desafios/config")
       const result = (await response.json()) as {
-        config?: { activo?: boolean; juegosActivos?: unknown }
+        config?: LoadedChallengeConfig
         schemaReady?: boolean
         warning?: string
         error?: string
@@ -113,7 +124,7 @@ export default function AdminDesafiosPage() {
 
       if (!response.ok) {
         setConfigMessage(result.error || "No se pudo cargar la configuracion del desafio.")
-        return
+        return null
       }
 
       setConfigSchemaReady(result.schemaReady !== false)
@@ -122,29 +133,41 @@ export default function AdminDesafiosPage() {
       }
       setChallengeActive(result.config?.activo !== false)
       setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
+      setChallengeSlug(result.config?.slug || "")
+      setChallengeTitle(result.config?.titulo || "")
+      return result.config || null
     } catch {
       setConfigMessage("No se pudo cargar la configuracion del desafio.")
+      return null
     } finally {
       setConfigLoading(false)
     }
   }
 
-  const loadData = async () => {
+  const loadData = async (activeSlug = challengeSlug) => {
+    let entriesQuery = supabase
+      .from("desafio_participaciones")
+      .select(
+        "id, nombre, telefono, puntaje_total, puntos_sopa, puntos_memoria, puntos_pelicula, puntos_puzzle, puntos_laberinto, sopa_nombre, memoria_nombre, pelicula_nombre, puzzle_nombre, laberinto_nombre, created_at"
+      )
+      .order("created_at", { ascending: false })
+    let drawsQuery = supabase
+      .from("desafio_sorteos")
+      .select("id, cantidad_ganadores, created_at")
+      .order("created_at", { ascending: false })
+
+    if (activeSlug) {
+      entriesQuery = entriesQuery.eq("desafio_slug", activeSlug)
+      drawsQuery = drawsQuery.eq("desafio_slug", activeSlug)
+    }
+
     const [
       { data: entriesRows, error: entriesError },
       { data: drawsRows, error: drawsError },
       { data: winnersRows, error: winnersError },
     ] = await Promise.all([
-      supabase
-        .from("desafio_participaciones")
-        .select(
-          "id, nombre, telefono, puntaje_total, puntos_sopa, puntos_memoria, puntos_pelicula, puntos_puzzle, puntos_laberinto, sopa_nombre, memoria_nombre, pelicula_nombre, puzzle_nombre, laberinto_nombre, created_at"
-        )
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("desafio_sorteos")
-        .select("id, cantidad_ganadores, created_at")
-        .order("created_at", { ascending: false }),
+      entriesQuery,
+      drawsQuery,
       supabase
         .from("desafio_sorteo_ganadores")
         .select("id, sorteo_id, participacion_id, entregado, entregado_at, created_at")
@@ -206,8 +229,10 @@ export default function AdminDesafiosPage() {
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      void loadData()
-      void loadConfig()
+      void (async () => {
+        const loadedConfig = await loadConfig()
+        await loadData(loadedConfig?.slug || "")
+      })()
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
@@ -240,7 +265,7 @@ export default function AdminDesafiosPage() {
         }),
       })
       const result = (await response.json()) as {
-        config?: { activo?: boolean; juegosActivos?: unknown }
+        config?: LoadedChallengeConfig
         error?: string
       }
 
@@ -251,6 +276,8 @@ export default function AdminDesafiosPage() {
 
       setChallengeActive(result.config?.activo === true)
       setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
+      setChallengeSlug(result.config?.slug || "")
+      setChallengeTitle(result.config?.titulo || "")
       setConfigSchemaReady(true)
       setConfigMessage(
         result.config?.activo
@@ -261,6 +288,56 @@ export default function AdminDesafiosPage() {
       setConfigMessage("No se pudo guardar la configuracion.")
     } finally {
       setSavingConfig(false)
+    }
+  }
+
+  const handleCreateChallenge = async () => {
+    if (challengeActive && activeGames.length === 0) {
+      setConfigMessage("Activa al menos un juego antes de crear un nuevo desafio.")
+      return
+    }
+
+    setCreatingChallenge(true)
+    setConfigMessage("")
+    setErrorMessage("")
+    setMessage("")
+    setShareMessage("")
+
+    try {
+      const response = await fetch("/api/admin/desafios/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create",
+          activo: challengeActive,
+          juegosActivos: activeGames,
+        }),
+      })
+      const result = (await response.json()) as {
+        config?: LoadedChallengeConfig
+        error?: string
+      }
+
+      if (!response.ok) {
+        setConfigMessage(result.error || "No se pudo crear el nuevo desafio.")
+        return
+      }
+
+      setChallengeActive(result.config?.activo === true)
+      setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
+      setChallengeSlug(result.config?.slug || "")
+      setChallengeTitle(result.config?.titulo || "")
+      setEntries([])
+      setDraws([])
+      setWinners([])
+      setShowCreateChallengeConfirm(false)
+      setConfigSchemaReady(true)
+      setConfigMessage("Nuevo desafio creado. Ya tienes un link y QR nuevos.")
+      await loadData(result.config?.slug || "")
+    } catch {
+      setConfigMessage("No se pudo crear el nuevo desafio.")
+    } finally {
+      setCreatingChallenge(false)
     }
   }
 
@@ -431,7 +508,7 @@ export default function AdminDesafiosPage() {
 
     const { data: drawRow, error: drawError } = await supabase
       .from("desafio_sorteos")
-      .insert([{ cantidad_ganadores: selectedWinners.length }])
+      .insert([{ cantidad_ganadores: selectedWinners.length, desafio_slug: challengeSlug || null }])
       .select("id")
       .single()
 
@@ -460,10 +537,10 @@ export default function AdminDesafiosPage() {
       action: "Sortear",
       section: "Desafíos",
       target: `Sorteo de ${selectedWinners.length} ganadores`,
-      details: "Realizo un sorteo aleatorio desde los participantes de desafios.",
+      details: `Realizo un sorteo aleatorio desde los participantes de desafios (${challengeSlug || "sin slug"}).`,
     })
 
-    await loadData()
+    await loadData(challengeSlug)
     setMessage(`Sorteo realizado con ${selectedWinners.length} ganador(es).`)
     setDrawing(false)
   }
@@ -473,10 +550,12 @@ export default function AdminDesafiosPage() {
     setErrorMessage("")
     setMessage("")
 
-    const { error: deleteWinnersError } = await supabase
-      .from("desafio_sorteo_ganadores")
-      .delete()
-      .gte("id", 0)
+    const drawIds = draws.map((draw) => draw.id)
+
+    const { error: deleteWinnersError } =
+      drawIds.length > 0
+        ? await supabase.from("desafio_sorteo_ganadores").delete().in("sorteo_id", drawIds)
+        : { error: null }
 
     if (deleteWinnersError) {
       setErrorMessage(`No se pudieron reiniciar los ganadores: ${deleteWinnersError.message}`)
@@ -487,7 +566,7 @@ export default function AdminDesafiosPage() {
     const { error: deleteDrawsError } = await supabase
       .from("desafio_sorteos")
       .delete()
-      .gte("id", 0)
+      .eq("desafio_slug", challengeSlug || "")
 
     if (deleteDrawsError) {
       setErrorMessage(`No se pudieron reiniciar los sorteos: ${deleteDrawsError.message}`)
@@ -638,11 +717,35 @@ export default function AdminDesafiosPage() {
         isLoading={resettingDraws}
       />
 
+      <AdminConfirmModal
+        isOpen={showCreateChallengeConfirm}
+        title="Crear nuevo desafio"
+        description="Se generara un link y QR nuevos. La lista de participantes y sorteos de esta nueva edicion empezara vacia."
+        confirmLabel="Crear desafio"
+        confirmVariant="primary"
+        onCancel={() => setShowCreateChallengeConfirm(false)}
+        onConfirm={() => {
+          void handleCreateChallenge()
+        }}
+        isLoading={creatingChallenge}
+      />
+
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-slate-900">Desafíos</h1>
         <p className="mt-2 text-slate-500">
           Aqui ves participantes, puntajes, telefonos y puedes realizar sorteos aleatorios.
         </p>
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setShowCreateChallengeConfirm(true)}
+            disabled={configLoading || savingConfig || creatingChallenge}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Plus className="h-4 w-4" />
+            Nuevo desafio
+          </button>
+        </div>
       </div>
 
       {!schemaReady ? (
@@ -758,6 +861,14 @@ export default function AdminDesafiosPage() {
                 <p className="mt-2 text-sm text-slate-500">
                   Usa este acceso para compartir la experiencia de desafios en ferias, eventos o actividades.
                 </p>
+                {challengeTitle || challengeSlug ? (
+                  <div className="mt-3 text-sm text-slate-500">
+                    Edicion actual:{" "}
+                    <span className="font-semibold text-slate-900">
+                      {challengeTitle || challengeSlug}
+                    </span>
+                  </div>
+                ) : null}
                 <div className="mt-3 break-all rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
                   {challengePublicUrl}
                 </div>

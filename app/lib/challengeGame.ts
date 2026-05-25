@@ -8,6 +8,8 @@ export type ChallengeKey = "sopa" | "memoria" | "pelicula" | "puzzle" | "laberin
 export type ChallengeConfig = {
   activo: boolean
   juegosActivos: ChallengeKey[]
+  slug?: string
+  titulo?: string
 }
 
 type ChallengeAssignment = {

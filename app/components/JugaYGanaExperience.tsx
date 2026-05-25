@@ -849,7 +849,11 @@ function ScoreCard({ label, value }: { label: string; value: string | number }) 
   )
 }
 
-export function JugaYGanaExperience() {
+type JugaYGanaExperienceProps = {
+  challengeSlug?: string
+}
+
+export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps = {}) {
   const initialAssignment = getChallengeAssignment({
     wordSearchVariantsCount: WORD_SEARCH_VARIANTS.length,
     memoryVariantsCount: MEMORY_VARIANTS.length,
@@ -1007,11 +1011,15 @@ export function JugaYGanaExperience() {
     let mounted = true
 
     const loadChallengeConfig = async () => {
-      const { data, error } = await supabase
+      let configQuery = supabase
         .from("desafio_config")
-        .select("activo, juegos_activos")
-        .eq("id", 1)
-        .maybeSingle()
+        .select("activo, juegos_activos, slug, titulo")
+
+      configQuery = challengeSlug
+        ? configQuery.eq("slug", challengeSlug)
+        : configQuery.eq("id", 1)
+
+      const { data, error } = await configQuery.maybeSingle()
 
       if (!mounted) return
 
@@ -1026,6 +1034,8 @@ export function JugaYGanaExperience() {
       setChallengeConfig({
         activo: data?.activo !== false,
         juegosActivos: normalizeChallengeKeys(data?.juegos_activos),
+        slug: data?.slug || undefined,
+        titulo: data?.titulo || undefined,
       })
       setActiveChallengeIndex(0)
       setCompletedChallenges({ sopa: false, memoria: false, pelicula: false, puzzle: false, laberinto: false })
@@ -1039,7 +1049,7 @@ export function JugaYGanaExperience() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [challengeSlug])
 
   useEffect(() => {
     if (stage !== "play" || activeChallenge?.key !== "sopa") return
@@ -1404,6 +1414,7 @@ export function JugaYGanaExperience() {
     const { error } = await supabase.from("desafio_participaciones").insert([
       {
         browser_key: browserKey,
+        desafio_slug: challengeConfig.slug || challengeSlug || null,
         nombre: participantName.trim(),
         telefono: participantPhone.trim(),
         puntaje_total: totalPoints,
