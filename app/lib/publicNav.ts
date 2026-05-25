@@ -26,7 +26,6 @@ const publicNavOrder: PublicNavKey[] = [
   "instituciones",
   "comercios",
   "servicios",
-  "suscripciones",
   "contacto",
 ]
 
@@ -45,7 +44,6 @@ export function buildHomePublicNav() {
     { href: "/#instituciones", label: "Instituciones" },
     { href: "/#comercios", label: "Comercios" },
     { href: "/#servicios", label: "Servicios" },
-    { href: "/suscripciones", label: "Suscripciones" },
     { href: "/#contacto", label: "Contacto" },
   ]
 }
