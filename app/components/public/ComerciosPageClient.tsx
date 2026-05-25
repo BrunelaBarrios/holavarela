@@ -246,9 +246,9 @@ export function ComerciosPageClient({
             </p>
           </div>
 
-          <PublicAddButton href="/sumate/comercio" label="Sumar mi comercio" />
+          <PublicAddButton href="/?sumate=comercio" label="Sumar mi comercio" />
         </div>
-        <PublicAddButton href="/sumate/comercio" label="Sumar mi comercio" variant="floating" />
+        <PublicAddButton href="/?sumate=comercio" label="Sumar mi comercio" variant="floating" />
 
         <div className="mt-6 max-w-xl">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">

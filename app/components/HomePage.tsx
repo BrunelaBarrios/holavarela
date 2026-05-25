@@ -383,6 +383,14 @@ const initialContactLeadForm: ContactLeadForm = {
   mensaje: "",
 }
 
+function getSumateLeadMessage(value: string | null) {
+  if (value === "comercio") return "Quiero sumar un comercio a Hola Varela."
+  if (value === "servicio") return "Quiero sumar un servicio a Hola Varela."
+  if (value === "curso") return "Quiero sumar un curso a Hola Varela."
+  if (value === "institucion") return "Quiero sumar una institucion a Hola Varela."
+  return ""
+}
+
 const SOCIAL_LINKS = [
   {
     id: "instagram",
@@ -472,7 +480,13 @@ function getInitialDelayedPromo(
   return nextItem
 }
 
-export function HomePage({ initialData }: { initialData: HomePageData }) {
+export function HomePage({
+  initialData,
+  initialSumateType = null,
+}: {
+  initialData: HomePageData
+  initialSumateType?: string | null
+}) {
   const router = useRouter()
   const featuredBusinesses = initialData.featuredBusinesses
   const eventos = initialData.eventos
@@ -492,15 +506,21 @@ export function HomePage({ initialData }: { initialData: HomePageData }) {
   const [likedEvents, setLikedEvents] = useState<Record<string, boolean>>({})
   const [likingEventId, setLikingEventId] = useState<string | null>(null)
   const [contactLeadForm, setContactLeadForm] = useState<ContactLeadForm>(
-    initialContactLeadForm
+    () => ({
+      ...initialContactLeadForm,
+      mensaje: getSumateLeadMessage(initialSumateType),
+    })
   )
   const [contactLeadStatus, setContactLeadStatus] = useState("")
 
   useEffect(() => {
     void recordSiteVisit("home", "Inicio")
   }, [])
+
   const [contactLeadLoading, setContactLeadLoading] = useState(false)
-  const [isContactLeadOpen, setIsContactLeadOpen] = useState(false)
+  const [isContactLeadOpen, setIsContactLeadOpen] = useState(() =>
+    Boolean(getSumateLeadMessage(initialSumateType))
+  )
   const [isDelayedPromoOpen, setIsDelayedPromoOpen] = useState(false)
   const [delayedPromoConfig, setDelayedPromoConfig] = useState<DelayedPromoConfig>(
     defaultDelayedPromoConfig

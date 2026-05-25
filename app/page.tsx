@@ -57,7 +57,13 @@ function withInstitutionImage<T extends { id: number | string; foto?: string | n
   }
 }
 
-export default async function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ sumate?: string | string[] }>
+}) {
+  const params = await searchParams
+  const initialSumateType = Array.isArray(params.sumate) ? params.sumate[0] : params.sumate || null
   const today = getTodayInMontevideo()
 
   const weatherPromise = fetch(
@@ -186,5 +192,5 @@ export default async function Page() {
     weather,
   }
 
-  return <HomePage initialData={initialData} />
+  return <HomePage initialData={initialData} initialSumateType={initialSumateType} />
 }

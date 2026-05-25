@@ -1,5 +1,5 @@
-import { SumateClient } from "../SumateClient"
+import { redirect } from "next/navigation"
 
 export default function SumateComercioPage() {
-  return <SumateClient selectedType="comercio" />
+  redirect("/?sumate=comercio")
 }
