@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { Copy, Download, ExternalLink, Plus, Power, QrCode, RotateCcw, Save, Search, Shuffle, Trash2, Trophy } from "lucide-react"
+import { Archive, Copy, Download, ExternalLink, Plus, Power, QrCode, RotateCcw, Save, Search, Shuffle, Trash2, Trophy } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
@@ -54,6 +54,15 @@ type LoadedChallengeConfig = {
   titulo?: string
 }
 
+type ChallengeEdition = {
+  slug: string
+  titulo: string
+  activo: boolean
+  juegosActivos: ChallengeKey[]
+  createdAt: string | null
+  updatedAt: string | null
+}
+
 const PUBLIC_SITE_URL = "https://www.holavarela.uy"
 
 function buildChallengePublicUrl(slug?: string) {
@@ -86,9 +95,13 @@ export default function AdminDesafiosPage() {
     DEFAULT_CHALLENGE_CONFIG.juegosActivos
   )
   const [challengeSlug, setChallengeSlug] = useState("")
+  const [currentChallengeSlug, setCurrentChallengeSlug] = useState("")
   const [challengeTitle, setChallengeTitle] = useState("")
+  const [editions, setEditions] = useState<ChallengeEdition[]>([])
+  const [activatingEdition, setActivatingEdition] = useState(false)
   const [savingConfig, setSavingConfig] = useState(false)
   const [creatingChallenge, setCreatingChallenge] = useState(false)
+  const [newChallengeTitle, setNewChallengeTitle] = useState("")
   const [configMessage, setConfigMessage] = useState("")
   const [entries, setEntries] = useState<ChallengeEntry[]>([])
   const [draws, setDraws] = useState<ChallengeDraw[]>([])
@@ -108,6 +121,8 @@ export default function AdminDesafiosPage() {
 
   const challengePublicUrl = buildChallengePublicUrl(challengeSlug)
   const challengeQrUrl = buildChallengeQrUrl(challengeSlug)
+  const selectedEdition = editions.find((edition) => edition.slug === challengeSlug) || null
+  const isViewingCurrentEdition = !currentChallengeSlug || challengeSlug === currentChallengeSlug
 
   const loadConfig = async () => {
     setConfigLoading(true)
@@ -117,6 +132,14 @@ export default function AdminDesafiosPage() {
       const response = await fetch("/api/admin/desafios/config")
       const result = (await response.json()) as {
         config?: LoadedChallengeConfig
+        editions?: Array<{
+          slug?: string
+          titulo?: string
+          activo?: boolean
+          juegosActivos?: unknown
+          createdAt?: string | null
+          updatedAt?: string | null
+        }>
         schemaReady?: boolean
         warning?: string
         error?: string
@@ -134,7 +157,22 @@ export default function AdminDesafiosPage() {
       setChallengeActive(result.config?.activo !== false)
       setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
       setChallengeSlug(result.config?.slug || "")
+      setCurrentChallengeSlug(result.config?.slug || "")
       setChallengeTitle(result.config?.titulo || "")
+      setEditions(
+        (result.editions || [])
+          .filter((edition): edition is Required<Pick<ChallengeEdition, "slug" | "titulo">> & Partial<ChallengeEdition> =>
+            typeof edition.slug === "string" && edition.slug.length > 0
+          )
+          .map((edition) => ({
+            slug: edition.slug,
+            titulo: edition.titulo || edition.slug,
+            activo: edition.activo !== false,
+            juegosActivos: normalizeChallengeKeys(edition.juegosActivos),
+            createdAt: edition.createdAt || null,
+            updatedAt: edition.updatedAt || null,
+          }))
+      )
       return result.config || null
     } catch {
       setConfigMessage("No se pudo cargar la configuracion del desafio.")
@@ -277,6 +315,7 @@ export default function AdminDesafiosPage() {
       setChallengeActive(result.config?.activo === true)
       setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
       setChallengeSlug(result.config?.slug || "")
+      setCurrentChallengeSlug(result.config?.slug || "")
       setChallengeTitle(result.config?.titulo || "")
       setConfigSchemaReady(true)
       setConfigMessage(
@@ -311,6 +350,7 @@ export default function AdminDesafiosPage() {
           action: "create",
           activo: challengeActive,
           juegosActivos: activeGames,
+          titulo: newChallengeTitle,
         }),
       })
       const result = (await response.json()) as {
@@ -326,18 +366,79 @@ export default function AdminDesafiosPage() {
       setChallengeActive(result.config?.activo === true)
       setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
       setChallengeSlug(result.config?.slug || "")
+      setCurrentChallengeSlug(result.config?.slug || "")
       setChallengeTitle(result.config?.titulo || "")
       setEntries([])
       setDraws([])
       setWinners([])
       setShowCreateChallengeConfirm(false)
+      setNewChallengeTitle("")
       setConfigSchemaReady(true)
       setConfigMessage("Nuevo desafio creado. Ya tienes un link y QR nuevos.")
+      await loadConfig()
       await loadData(result.config?.slug || "")
     } catch {
       setConfigMessage("No se pudo crear el nuevo desafio.")
     } finally {
       setCreatingChallenge(false)
+    }
+  }
+
+  const handleSelectEdition = async (slug: string) => {
+    const edition = editions.find((item) => item.slug === slug)
+    if (!edition) return
+
+    setChallengeSlug(edition.slug)
+    setChallengeTitle(edition.titulo)
+    setChallengeActive(edition.activo)
+    setActiveGames(edition.juegosActivos)
+    setSearch("")
+    setMessage("")
+    setErrorMessage("")
+    setShareMessage("")
+    setLoading(true)
+    await loadData(edition.slug)
+  }
+
+  const handleActivateEdition = async () => {
+    if (!selectedEdition) return
+
+    setActivatingEdition(true)
+    setConfigMessage("")
+    setErrorMessage("")
+    setMessage("")
+
+    try {
+      const response = await fetch("/api/admin/desafios/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "activate",
+          slug: selectedEdition.slug,
+        }),
+      })
+      const result = (await response.json()) as {
+        config?: LoadedChallengeConfig
+        error?: string
+      }
+
+      if (!response.ok) {
+        setConfigMessage(result.error || "No se pudo activar esta edicion.")
+        return
+      }
+
+      setCurrentChallengeSlug(result.config?.slug || selectedEdition.slug)
+      setChallengeSlug(result.config?.slug || selectedEdition.slug)
+      setChallengeTitle(result.config?.titulo || selectedEdition.titulo)
+      setChallengeActive(result.config?.activo === true)
+      setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
+      setConfigMessage("Edicion activada. El link y QR actuales apuntan a este desafio.")
+      await loadConfig()
+      await loadData(result.config?.slug || selectedEdition.slug)
+    } catch {
+      setConfigMessage("No se pudo activar esta edicion.")
+    } finally {
+      setActivatingEdition(false)
     }
   }
 
@@ -720,7 +821,7 @@ export default function AdminDesafiosPage() {
       <AdminConfirmModal
         isOpen={showCreateChallengeConfirm}
         title="Crear nuevo desafio"
-        description="Se generara un link y QR nuevos. La lista de participantes y sorteos de esta nueva edicion empezara vacia."
+        description={`Se generara un link y QR nuevos para "${newChallengeTitle.trim() || "Desafio sin nombre"}". La lista de participantes y sorteos de esta nueva edicion empezara vacia.`}
         confirmLabel="Crear desafio"
         confirmVariant="primary"
         onCancel={() => setShowCreateChallengeConfirm(false)}
@@ -735,7 +836,17 @@ export default function AdminDesafiosPage() {
         <p className="mt-2 text-slate-500">
           Aqui ves participantes, puntajes, telefonos y puedes realizar sorteos aleatorios.
         </p>
-        <div className="mt-4">
+        <div className="mt-4 grid gap-3 md:max-w-3xl md:grid-cols-[minmax(0,1fr)_auto]">
+          <label className="block">
+            <span className="sr-only">Nombre del nuevo desafio</span>
+            <input
+              type="text"
+              value={newChallengeTitle}
+              onChange={(event) => setNewChallengeTitle(event.target.value)}
+              placeholder="Nombre del nuevo desafio, por ejemplo Feria de junio"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-emerald-500"
+            />
+          </label>
           <button
             type="button"
             onClick={() => setShowCreateChallengeConfirm(true)}
@@ -760,6 +871,91 @@ export default function AdminDesafiosPage() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Historial
+                </div>
+                <h2 className="mt-1 text-xl font-semibold text-slate-900">
+                  Ediciones de desafios
+                </h2>
+                <p className="mt-2 text-sm text-slate-500">
+                  Revisa participantes y sorteos de ediciones anteriores, o vuelve a activar una edicion existente.
+                </p>
+              </div>
+
+              {!isViewingCurrentEdition ? (
+                <button
+                  type="button"
+                  onClick={() => void handleActivateEdition()}
+                  disabled={activatingEdition}
+                  className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Power className="h-4 w-4" />
+                  {activatingEdition ? "Activando..." : "Activar esta edicion"}
+                </button>
+              ) : null}
+            </div>
+
+            <div className="mt-5 grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-slate-900">
+                  Ver edicion
+                </span>
+                <select
+                  value={challengeSlug}
+                  onChange={(event) => void handleSelectEdition(event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition focus:border-emerald-500"
+                >
+                  {editions.map((edition) => (
+                    <option key={edition.slug} value={edition.slug}>
+                      {edition.titulo}
+                      {edition.slug === currentChallengeSlug ? " - activa" : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Estado
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-slate-900">
+                    {isViewingCurrentEdition ? "Activa" : "Historial"}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Participantes
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-slate-900">{entries.length}</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Sorteos
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-slate-900">{draws.length}</div>
+                </div>
+              </div>
+            </div>
+
+            {selectedEdition ? (
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                <Archive className="h-4 w-4" />
+                <span>
+                  {selectedEdition.createdAt
+                    ? `Creada el ${new Date(selectedEdition.createdAt).toLocaleString("es-UY", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}`
+                    : "Edicion migrada desde el desafio actual"}
+                </span>
+              </div>
+            ) : null}
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Estado del desafio
                 </div>
                 <h2 className="mt-1 text-xl font-semibold text-slate-900">
@@ -775,7 +971,7 @@ export default function AdminDesafiosPage() {
                 role="switch"
                 aria-checked={challengeActive}
                 onClick={() => setChallengeActive((current) => !current)}
-                disabled={configLoading || savingConfig}
+                disabled={configLoading || savingConfig || !isViewingCurrentEdition}
                 className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
                   challengeActive
                     ? "bg-emerald-600 text-white hover:bg-emerald-500"
@@ -805,7 +1001,7 @@ export default function AdminDesafiosPage() {
                         type="checkbox"
                         checked={selected}
                         onChange={() => toggleActiveGame(game.key)}
-                        disabled={configLoading || savingConfig}
+                        disabled={configLoading || savingConfig || !isViewingCurrentEdition}
                         className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                       />
                       <div>
@@ -840,13 +1036,23 @@ export default function AdminDesafiosPage() {
               <button
                 type="button"
                 onClick={() => void handleSaveConfig()}
-                disabled={configLoading || savingConfig || (challengeActive && activeGames.length === 0)}
+                disabled={
+                  configLoading ||
+                  savingConfig ||
+                  !isViewingCurrentEdition ||
+                  (challengeActive && activeGames.length === 0)
+                }
                 className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Save className="h-4 w-4" />
                 {savingConfig ? "Guardando..." : "Guardar configuracion"}
               </button>
             </div>
+            {!isViewingCurrentEdition ? (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Estas viendo una edicion del historial. Activala si quieres cambiar su configuracion publica.
+              </div>
+            ) : null}
           </section>
 
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

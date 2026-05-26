@@ -636,6 +636,32 @@ create unique index if not exists desafio_config_slug_key
 on public.desafio_config (slug)
 where slug is not null;
 
+create table if not exists public.desafio_ediciones (
+  slug text primary key,
+  titulo text not null,
+  activo boolean not null default true,
+  juegos_activos text[] not null default array['sopa', 'memoria', 'pelicula', 'puzzle', 'laberinto'],
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+
+insert into public.desafio_ediciones (slug, titulo, activo, juegos_activos, created_at, updated_at)
+select
+  slug,
+  coalesce(titulo, slug),
+  activo,
+  juegos_activos,
+  coalesce(updated_at, now()),
+  coalesce(updated_at, now())
+from public.desafio_config
+where slug is not null
+on conflict (slug) do update
+set
+  titulo = excluded.titulo,
+  activo = excluded.activo,
+  juegos_activos = excluded.juegos_activos,
+  updated_at = excluded.updated_at;
+
 alter table public.desafio_participaciones
   add column if not exists puntos_puzzle integer not null default 0;
 
@@ -694,6 +720,7 @@ alter table public.desafio_sorteo_ganadores
 
 alter table public.desafio_participaciones enable row level security;
 alter table public.desafio_config enable row level security;
+alter table public.desafio_ediciones enable row level security;
 alter table public.desafio_sorteos enable row level security;
 alter table public.desafio_sorteo_ganadores enable row level security;
 
@@ -720,6 +747,15 @@ on public.desafio_config;
 
 create policy "Allow public read on desafio_config"
 on public.desafio_config
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Allow public read on desafio_ediciones"
+on public.desafio_ediciones;
+
+create policy "Allow public read on desafio_ediciones"
+on public.desafio_ediciones
 for select
 to anon, authenticated
 using (true);

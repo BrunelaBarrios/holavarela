@@ -1011,19 +1011,46 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     let mounted = true
 
     const loadChallengeConfig = async () => {
-      let configQuery = supabase
-        .from("desafio_config")
-        .select("activo, juegos_activos, slug, titulo")
-
-      configQuery = challengeSlug
-        ? configQuery.eq("slug", challengeSlug)
-        : configQuery.eq("id", 1)
-
-      const { data, error } = await configQuery.maybeSingle()
+      const { data, error } = challengeSlug
+        ? await supabase
+            .from("desafio_ediciones")
+            .select("activo, juegos_activos, slug, titulo")
+            .eq("slug", challengeSlug)
+            .maybeSingle()
+        : await supabase
+            .from("desafio_config")
+            .select("activo, juegos_activos, slug, titulo")
+            .eq("id", 1)
+            .maybeSingle()
 
       if (!mounted) return
 
       if (error) {
+        if (challengeSlug && isMissingChallengesSchemaError(error)) {
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from("desafio_config")
+            .select("activo, juegos_activos, slug, titulo")
+            .eq("slug", challengeSlug)
+            .maybeSingle()
+
+          if (!mounted) return
+
+          if (!fallbackError && fallbackData) {
+            setChallengeConfig({
+              activo: fallbackData.activo !== false,
+              juegosActivos: normalizeChallengeKeys(fallbackData.juegos_activos),
+              slug: fallbackData.slug || undefined,
+              titulo: fallbackData.titulo || undefined,
+            })
+            setActiveChallengeIndex(0)
+            setCompletedChallenges({ sopa: false, memoria: false, pelicula: false, puzzle: false, laberinto: false })
+            setEarnedPoints({ sopa: 0, memoria: 0, pelicula: 0, puzzle: 0, laberinto: 0 })
+            setStage("intro")
+            setConfigLoading(false)
+            return
+          }
+        }
+
         if (!isMissingChallengesSchemaError(error)) {
           setSubmitError("No se pudo cargar la configuracion del desafio.")
         }
