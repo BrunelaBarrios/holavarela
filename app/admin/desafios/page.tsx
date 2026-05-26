@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { Archive, Copy, Download, ExternalLink, Plus, Power, QrCode, RotateCcw, Save, Search, Shuffle, Trash2, Trophy } from "lucide-react"
+import { Archive, CheckCircle2, Copy, Download, ExternalLink, Plus, Power, QrCode, RotateCcw, Save, Search, Shuffle, Trash2, Trophy, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
@@ -102,6 +102,10 @@ export default function AdminDesafiosPage() {
   const [savingConfig, setSavingConfig] = useState(false)
   const [creatingChallenge, setCreatingChallenge] = useState(false)
   const [newChallengeTitle, setNewChallengeTitle] = useState("")
+  const [newChallengeActive, setNewChallengeActive] = useState(true)
+  const [newChallengeGames, setNewChallengeGames] = useState<ChallengeKey[]>(
+    DEFAULT_CHALLENGE_CONFIG.juegosActivos
+  )
   const [configMessage, setConfigMessage] = useState("")
   const [entries, setEntries] = useState<ChallengeEntry[]>([])
   const [draws, setDraws] = useState<ChallengeDraw[]>([])
@@ -123,6 +127,17 @@ export default function AdminDesafiosPage() {
   const challengeQrUrl = buildChallengeQrUrl(challengeSlug)
   const selectedEdition = editions.find((edition) => edition.slug === challengeSlug) || null
   const isViewingCurrentEdition = !currentChallengeSlug || challengeSlug === currentChallengeSlug
+
+  const openCreateChallengePanel = () => {
+    setNewChallengeTitle("")
+    setNewChallengeActive(true)
+    setNewChallengeGames(activeGames.length > 0 ? activeGames : DEFAULT_CHALLENGE_CONFIG.juegosActivos)
+    setConfigMessage("")
+    setErrorMessage("")
+    setMessage("")
+    setShareMessage("")
+    setShowCreateChallengeConfirm(true)
+  }
 
   const loadConfig = async () => {
     setConfigLoading(true)
@@ -284,6 +299,14 @@ export default function AdminDesafiosPage() {
     )
   }
 
+  const toggleNewChallengeGame = (gameKey: ChallengeKey) => {
+    setNewChallengeGames((current) =>
+      current.includes(gameKey)
+        ? current.filter((key) => key !== gameKey)
+        : [...current, gameKey]
+    )
+  }
+
   const handleSaveConfig = async () => {
     if (challengeActive && activeGames.length === 0) {
       setConfigMessage("Activa al menos un juego para publicar el desafio.")
@@ -331,7 +354,7 @@ export default function AdminDesafiosPage() {
   }
 
   const handleCreateChallenge = async () => {
-    if (challengeActive && activeGames.length === 0) {
+    if (newChallengeActive && newChallengeGames.length === 0) {
       setConfigMessage("Activa al menos un juego antes de crear un nuevo desafio.")
       return
     }
@@ -348,8 +371,8 @@ export default function AdminDesafiosPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "create",
-          activo: challengeActive,
-          juegosActivos: activeGames,
+          activo: newChallengeActive,
+          juegosActivos: newChallengeGames,
           titulo: newChallengeTitle,
         }),
       })
@@ -373,6 +396,8 @@ export default function AdminDesafiosPage() {
       setWinners([])
       setShowCreateChallengeConfirm(false)
       setNewChallengeTitle("")
+      setNewChallengeActive(true)
+      setNewChallengeGames(DEFAULT_CHALLENGE_CONFIG.juegosActivos)
       setConfigSchemaReady(true)
       setConfigMessage("Nuevo desafio creado. Ya tienes un link y QR nuevos.")
       await loadConfig()
@@ -818,26 +843,28 @@ export default function AdminDesafiosPage() {
         isLoading={resettingDraws}
       />
 
-      <AdminConfirmModal
+      <CreateChallengePanel
         isOpen={showCreateChallengeConfirm}
-        title="Crear nuevo desafio"
-        description={`Se generara un link y QR nuevos para "${newChallengeTitle.trim() || "Desafio sin nombre"}". La lista de participantes y sorteos de esta nueva edicion empezara vacia.`}
-        confirmLabel="Crear desafio"
-        confirmVariant="primary"
+        title={newChallengeTitle}
+        active={newChallengeActive}
+        selectedGames={newChallengeGames}
+        isCreating={creatingChallenge}
+        onTitleChange={setNewChallengeTitle}
+        onActiveChange={setNewChallengeActive}
+        onToggleGame={toggleNewChallengeGame}
         onCancel={() => setShowCreateChallengeConfirm(false)}
         onConfirm={() => {
           void handleCreateChallenge()
         }}
-        isLoading={creatingChallenge}
       />
 
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-slate-900">Desafíos</h1>
-        <p className="mt-2 text-slate-500">
-          Aqui ves participantes, puntajes, telefonos y puedes realizar sorteos aleatorios.
+        <p className="mt-2 max-w-3xl text-slate-500">
+          Crea ediciones, comparte links y QR unicos, revisa historiales y realiza sorteos por desafio.
         </p>
-        <div className="mt-4 grid gap-3 md:max-w-3xl md:grid-cols-[minmax(0,1fr)_auto]">
-          <label className="block">
+        <div className="mt-4 flex flex-wrap gap-3">
+          <label className="hidden">
             <span className="sr-only">Nombre del nuevo desafio</span>
             <input
               type="text"
@@ -849,7 +876,7 @@ export default function AdminDesafiosPage() {
           </label>
           <button
             type="button"
-            onClick={() => setShowCreateChallengeConfirm(true)}
+            onClick={openCreateChallengePanel}
             disabled={configLoading || savingConfig || creatingChallenge}
             className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -1380,6 +1407,192 @@ export default function AdminDesafiosPage() {
           </section>
         </div>
       )}
+    </div>
+  )
+}
+
+function CreateChallengePanel({
+  isOpen,
+  title,
+  active,
+  selectedGames,
+  isCreating,
+  onTitleChange,
+  onActiveChange,
+  onToggleGame,
+  onCancel,
+  onConfirm,
+}: {
+  isOpen: boolean
+  title: string
+  active: boolean
+  selectedGames: ChallengeKey[]
+  isCreating: boolean
+  onTitleChange: (value: string) => void
+  onActiveChange: (value: boolean) => void
+  onToggleGame: (game: ChallengeKey) => void
+  onCancel: () => void
+  onConfirm: () => void
+}) {
+  if (!isOpen) return null
+
+  const canCreate = !active || selectedGames.length > 0
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/55 p-4">
+      <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl">
+        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">
+              Nuevo desafio
+            </div>
+            <h2 className="mt-1 text-2xl font-semibold text-slate-950">
+              Configurar nueva edicion
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+              Esta pantalla crea una edicion independiente con link y QR propios. Los participantes y sorteos empiezan vacios.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-900"
+            aria-label="Cerrar"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="grid gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+          <div className="space-y-6">
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-900">
+                Nombre de la edicion
+              </span>
+              <input
+                type="text"
+                value={title}
+                onChange={(event) => onTitleChange(event.target.value)}
+                placeholder="Ejemplo: Feria de junio, Expo local, Vacaciones"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500"
+              />
+            </label>
+
+            <section>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-950">Juegos incluidos</h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Elige el recorrido que van a jugar los participantes.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={active}
+                  onClick={() => onActiveChange(!active)}
+                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                    active
+                      ? "bg-emerald-600 text-white hover:bg-emerald-500"
+                      : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  <Power className="h-4 w-4" />
+                  {active ? "Crear activo" : "Crear pausado"}
+                </button>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {CHALLENGE_GAME_OPTIONS.map((game) => {
+                  const selected = selectedGames.includes(game.key)
+
+                  return (
+                    <button
+                      key={game.key}
+                      type="button"
+                      onClick={() => onToggleGame(game.key)}
+                      className={`rounded-xl border p-4 text-left transition ${
+                        selected
+                          ? "border-emerald-300 bg-emerald-50"
+                          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div
+                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                            selected
+                              ? "border-emerald-500 bg-emerald-500 text-white"
+                              : "border-slate-300 bg-white"
+                          }`}
+                        >
+                          {selected ? <CheckCircle2 className="h-4 w-4" /> : null}
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-slate-950">{game.label}</div>
+                          <div className="mt-1 text-sm leading-6 text-slate-500">
+                            {game.description}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </section>
+          </div>
+
+          <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+              Resumen
+            </div>
+            <div className="mt-4 space-y-4 text-sm">
+              <div>
+                <div className="text-slate-500">Nombre</div>
+                <div className="mt-1 font-semibold text-slate-950">
+                  {title.trim() || "Desafio sin nombre"}
+                </div>
+              </div>
+              <div>
+                <div className="text-slate-500">Estado inicial</div>
+                <div className="mt-1 font-semibold text-slate-950">
+                  {active ? "Activo y listo para compartir" : "Pausado"}
+                </div>
+              </div>
+              <div>
+                <div className="text-slate-500">Juegos</div>
+                <div className="mt-1 font-semibold text-slate-950">
+                  {selectedGames.length} seleccionado(s)
+                </div>
+              </div>
+            </div>
+
+            {!canCreate ? (
+              <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                Para publicar activo, selecciona al menos un juego.
+              </div>
+            ) : null}
+          </aside>
+        </div>
+
+        <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 px-6 py-4">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={!canCreate || isCreating}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Plus className="h-4 w-4" />
+            {isCreating ? "Creando..." : "Crear desafio"}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
