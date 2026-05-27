@@ -134,6 +134,7 @@ export function PremiumListingPage({
     },
     [imageSrc, premiumGallery]
   )
+  const visibleMainGalleryImages = mainGalleryImages.slice(0, 6)
   const extraGalleryImages = useMemo(
     () =>
       Array.from(new Set((premiumExtraGallery || []).filter(Boolean) as string[])),
@@ -381,7 +382,7 @@ export function PremiumListingPage({
                       alt={title}
                       sizes="(max-width: 1280px) 100vw, 55vw"
                       priority
-                      className="object-contain bg-white p-2 sm:p-4"
+                      className="object-contain bg-white p-6 sm:p-8 lg:p-10"
                     />
                   </button>
                 ) : (
@@ -421,8 +422,8 @@ export function PremiumListingPage({
                       </button>
                     </div>
                   </div>
-                  <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-                    {mainGalleryImages.map((image, index) => (
+                  <div className="mt-4 grid grid-cols-3 gap-3">
+                    {visibleMainGalleryImages.map((image, index) => (
                       <button
                         type="button"
                         key={`${image}-${index}`}
@@ -442,6 +443,11 @@ export function PremiumListingPage({
                       </button>
                     ))}
                   </div>
+                  {mainGalleryImages.length > visibleMainGalleryImages.length ? (
+                    <div className="mt-3 rounded-2xl border border-slate-200 bg-white/75 px-4 py-2 text-xs font-semibold text-slate-500">
+                      {mainGalleryImages.length - visibleMainGalleryImages.length} imÃ¡genes mÃ¡s disponibles al ampliar.
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
 
