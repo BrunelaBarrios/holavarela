@@ -61,7 +61,7 @@ function buildSweepstakesPublicUrl(sorteoId?: number | null) {
 }
 
 function buildSweepstakesQrUrl(sorteoId?: number | null) {
-  const publicUrl = buildSweepstakesPublicUrl(sorteoId)
+  const publicUrl = `${buildSweepstakesPublicUrl(sorteoId)}?origen=qr`
   return `https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&data=${encodeURIComponent(publicUrl)}`
 }
 
@@ -128,6 +128,7 @@ function parseParticipantKey(
 
 function getEntrySourceLabel(source?: string | null) {
   if (source === "qr") return "QR"
+  if (source === "web") return "Web"
   if (source === "corazones") return "Corazones"
   return "Sin dato"
 }

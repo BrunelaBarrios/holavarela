@@ -10,8 +10,18 @@ import {
   fetchSweepstakesConfig,
   fetchSweepstakesConfigById,
   type SweepstakesConfig,
+  type SweepstakesEntrySource,
 } from "../lib/sweepstakes"
 import { getEventLikesBrowserKey } from "../lib/eventLikes"
+
+function getLandingEntrySource(): SweepstakesEntrySource {
+  if (typeof window === "undefined") return "web"
+
+  const params = new URLSearchParams(window.location.search)
+  const rawSource = params.get("origen") || params.get("source") || params.get("utm_source")
+
+  return rawSource?.toLowerCase() === "qr" ? "qr" : "web"
+}
 
 export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
   const [config, setConfig] = useState<SweepstakesConfig | null>(null)
@@ -58,7 +68,7 @@ export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
       nombre,
       telefono,
       totalLikes: 3,
-      source: "qr",
+      source: getLandingEntrySource(),
     })
 
     if (result.status === "error") {

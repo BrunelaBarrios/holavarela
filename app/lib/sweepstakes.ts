@@ -42,6 +42,8 @@ export type SweepstakesConfig = {
   participants: SweepstakesParticipant[]
 }
 
+export type SweepstakesEntrySource = "corazones" | "qr" | "web"
+
 type SupabaseErrorLike = {
   code?: string
   message?: string
@@ -234,7 +236,7 @@ export async function createSweepstakesEntry(params: {
   nombre: string
   telefono: string
   totalLikes: number
-  source: "corazones" | "qr"
+  source: SweepstakesEntrySource
 }) {
   if (params.totalLikes < 3) {
     return {
