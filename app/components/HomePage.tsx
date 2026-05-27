@@ -17,12 +17,14 @@ import { EventLikeButton } from "./EventLikeButton"
 import { OptimizedImage } from "./OptimizedImage"
 import { PublicHeader } from "./PublicHeader"
 import { ShareButton } from "./ShareButton"
+import { SweepstakesPopup } from "./SweepstakesPopup"
 import { formatEventDateRange } from "../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
 import { parseEventDescription, shouldHideEventDate } from "../lib/eventSubmissionMeta"
 import { recordContentVisit, recordSiteVisit } from "../lib/contentVisits"
 import { DELAYED_PROMO_STORAGE_KEY, RADIO_STORAGE_KEY } from "../lib/localStorageKeys"
 import { buildHomePublicNav } from "../lib/publicNav"
+import { useSweepstakesPopup } from "../lib/useSweepstakesPopup"
 import { recordViewMore, type ViewMoreSection } from "../lib/viewMoreTracking"
 import {
   ArrowRight,
@@ -528,6 +530,7 @@ export function HomePage({
   const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(null)
   const [zoomedImage, setZoomedImage] = useState<{ src: string; alt: string } | null>(null)
   const [shouldLoadRadioWidget, setShouldLoadRadioWidget] = useState(false)
+  const sweepstakesPopup = useSweepstakesPopup()
   const eventsSectionRef = useRef<HTMLElement | null>(null)
   const radioSectionRef = useRef<HTMLElement | null>(null)
 
@@ -870,6 +873,7 @@ export function HomePage({
       }))
     }
 
+    await sweepstakesPopup.handleLikeResult(result)
     setLikingEventId(null)
   }
 
@@ -954,6 +958,19 @@ export function HomePage({
     "Te vamos a contactar usando el teléfono que nos compartas."
   return (
       <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#f2f7f5_48%,#ffffff_100%)] text-slate-900">
+        {sweepstakesPopup.config ? (
+          <SweepstakesPopup
+            open={sweepstakesPopup.open}
+            title={sweepstakesPopup.config.title}
+            description={sweepstakesPopup.config.description}
+            participants={sweepstakesPopup.config.participants}
+            loading={sweepstakesPopup.submitting}
+            error={sweepstakesPopup.submitError}
+            onClose={sweepstakesPopup.closePopup}
+            onSubmit={sweepstakesPopup.submitEntry}
+          />
+        ) : null}
+
         {isDelayedPromoOpen && delayedPromo ? (
           <div
             className="fixed inset-0 z-[84] overflow-y-auto bg-slate-950/55 px-3 py-4 sm:p-4"
