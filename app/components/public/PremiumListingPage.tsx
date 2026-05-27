@@ -538,9 +538,37 @@ export function PremiumListingPage({
             </div>
 
             <div className="bg-white p-6 pt-0 sm:p-8 sm:pt-0 lg:col-span-2 lg:p-8 lg:pt-0">
+              {description || premiumDetail ? (
+                <div className="mb-5 hidden rounded-[24px] border border-slate-100 bg-slate-50/80 p-7 xl:block">
+                  <div className="columns-2 gap-10 [column-fill:balance]">
+                    {description ? (
+                      <>
+                        <div className="mb-3 break-after-avoid text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                          Sobre este perfil
+                        </div>
+                        <p className="mb-7 whitespace-pre-line text-base leading-8 text-slate-700">
+                          {description}
+                        </p>
+                      </>
+                    ) : null}
+
+                    {premiumDetail ? (
+                      <>
+                        <div className="mb-3 break-after-avoid text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
+                          InformaciÃ³n ampliada
+                        </div>
+                        <p className="whitespace-pre-line text-base leading-8 text-slate-700">
+                          {premiumDetail}
+                        </p>
+                      </>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+
               <div className="grid gap-5 xl:grid-cols-2">
               {description ? (
-                <div className="rounded-[24px] border border-slate-100 bg-slate-50/80 p-6">
+                <div className="rounded-[24px] border border-slate-100 bg-slate-50/80 p-6 xl:hidden">
                   <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
                     Sobre este perfil
                   </div>
@@ -551,7 +579,7 @@ export function PremiumListingPage({
               ) : null}
 
               {premiumDetail ? (
-                <div className="rounded-[24px] border border-sky-100 bg-sky-50/70 p-6">
+                <div className="rounded-[24px] border border-sky-100 bg-sky-50/70 p-6 xl:hidden">
                   <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
                     Información ampliada
                   </div>
