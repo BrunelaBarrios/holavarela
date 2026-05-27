@@ -8,8 +8,8 @@ import { absoluteUrl, buildPageMetadata } from "../../lib/seo"
 import { buildLocalBusinessSchema } from "../../lib/schema"
 import { supabaseServer } from "../../lib/supabaseServer"
 
-// Premium detail pages are stable enough for a longer cache window.
-export const revalidate = 43200
+// Premium detail pages include editable public content and layout changes should show quickly.
+export const revalidate = 60
 
 function hasInstitutionPremium(data: {
   premium_activo?: boolean | null
