@@ -10,11 +10,11 @@ type PublicNavKey =
 
 const publicNavItems: Record<PublicNavKey, { href: string; label: string }> = {
   inicio: { href: "/#inicio", label: "Inicio" },
-  eventos: { href: "/eventos", label: "Hoy en Varela" },
-  cursos: { href: "/cursos", label: "Cursos y Clases" },
-  instituciones: { href: "/instituciones", label: "Instituciones" },
-  comercios: { href: "/comercios", label: "Comercios" },
-  servicios: { href: "/servicios", label: "Servicios" },
+  eventos: { href: "/#eventos", label: "Hoy en Varela" },
+  cursos: { href: "/#cursos", label: "Cursos y Clases" },
+  instituciones: { href: "/#instituciones", label: "Instituciones" },
+  comercios: { href: "/#comercios", label: "Comercios" },
+  servicios: { href: "/#servicios", label: "Servicios" },
   suscripciones: { href: "/suscripciones", label: "Suscripciones" },
   contacto: { href: "/#contacto", label: "Contacto" },
 }
