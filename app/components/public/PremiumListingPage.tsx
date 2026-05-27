@@ -536,8 +536,9 @@ export function PremiumListingPage({
                 </div>
               </div>
 
+              <div className="mt-6 grid gap-5 xl:grid-cols-2">
               {description ? (
-                <div className="mt-6 rounded-[24px] border border-slate-100 bg-slate-50/80 p-6">
+                <div className="rounded-[24px] border border-slate-100 bg-slate-50/80 p-6">
                   <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
                     Sobre este perfil
                   </div>
@@ -548,7 +549,7 @@ export function PremiumListingPage({
               ) : null}
 
               {premiumDetail ? (
-                <div className="mt-5 rounded-[24px] border border-sky-100 bg-sky-50/70 p-6">
+                <div className="rounded-[24px] border border-sky-100 bg-sky-50/70 p-6">
                   <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
                     Información ampliada
                   </div>
@@ -559,42 +560,45 @@ export function PremiumListingPage({
               ) : null}
 
               {premiumExtraTitle || premiumExtraDetail || extraGalleryImages.length ? (
-                <div className="mt-5 rounded-[24px] border border-amber-100 bg-amber-50/80 p-6">
+                <div className="rounded-[24px] border border-amber-100 bg-amber-50/80 p-6 xl:col-span-2">
                   {premiumExtraTitle ? (
                     <h3 className="text-2xl font-semibold tracking-tight text-slate-950">
                       {premiumExtraTitle}
                     </h3>
                   ) : null}
-                  {premiumExtraDetail ? (
-                    <p className="mt-3 whitespace-pre-line text-base leading-8 text-slate-700">
-                      {premiumExtraDetail}
-                    </p>
-                  ) : null}
-                  {extraGalleryImages.length ? (
-                    <div className="mt-5 grid grid-cols-2 gap-4">
-                      {extraGalleryImages.map((image, index) => (
-                        <button
-                          type="button"
-                          key={`${image}-${index}`}
-                          onClick={() => openImageAt(index, "extra")}
-                          className={`relative aspect-[4/3] overflow-hidden rounded-[22px] border bg-white ${
-                            activeGallery === "extra" && selectedImageIndex === index
-                              ? "border-amber-400 ring-2 ring-amber-100"
-                              : "border-amber-200"
-                          }`}
-                        >
-                          <OptimizedImage
-                            src={image}
-                            alt={`${premiumExtraTitle || title} ${index + 1}`}
-                            sizes="(max-width: 768px) 50vw, 33vw"
-                            className="object-cover"
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
+                  <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.9fr)]">
+                    {premiumExtraDetail ? (
+                      <p className="mt-3 whitespace-pre-line text-base leading-8 text-slate-700 lg:mt-4">
+                        {premiumExtraDetail}
+                      </p>
+                    ) : null}
+                    {extraGalleryImages.length ? (
+                      <div className="mt-5 grid grid-cols-2 gap-4 lg:mt-0">
+                        {extraGalleryImages.map((image, index) => (
+                          <button
+                            type="button"
+                            key={`${image}-${index}`}
+                            onClick={() => openImageAt(index, "extra")}
+                            className={`relative aspect-[4/3] overflow-hidden rounded-[22px] border bg-white ${
+                              activeGallery === "extra" && selectedImageIndex === index
+                                ? "border-amber-400 ring-2 ring-amber-100"
+                                : "border-amber-200"
+                            }`}
+                          >
+                            <OptimizedImage
+                              src={image}
+                              alt={`${premiumExtraTitle || title} ${index + 1}`}
+                              sizes="(max-width: 768px) 50vw, 33vw"
+                              className="object-cover"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               ) : null}
+              </div>
 
             </div>
           </div>
