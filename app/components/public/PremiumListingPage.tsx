@@ -355,7 +355,7 @@ export function PremiumListingPage({
         </div>
 
         <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
-          <div className="bg-white p-6 pb-0 lg:hidden">
+          <div className="hidden bg-white p-6 pb-0 lg:hidden">
             {category ? (
               <div className="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
                 {category}
@@ -445,13 +445,13 @@ export function PremiumListingPage({
                   </div>
                   {mainGalleryImages.length > visibleMainGalleryImages.length ? (
                     <div className="mt-3 rounded-2xl border border-slate-200 bg-white/75 px-4 py-2 text-xs font-semibold text-slate-500">
-                      {mainGalleryImages.length - visibleMainGalleryImages.length} imÃ¡genes mÃ¡s disponibles al ampliar.
+                      {mainGalleryImages.length - visibleMainGalleryImages.length} imagenes mas disponibles al ampliar.
                     </div>
                   ) : null}
                 </div>
               ) : null}
 
-              <div className="mt-6 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm lg:hidden">
+              <div className="hidden mt-6 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm lg:hidden">
                 <div className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
                   Datos y contacto
                 </div>
@@ -466,21 +466,46 @@ export function PremiumListingPage({
               </div>
             </div>
 
-            <div className="bg-white p-6 sm:p-8 lg:p-7 lg:pb-4">
-              <div className="hidden rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6 lg:block">
-                <div className="hidden lg:block">
-                  {category ? (
-                    <div className="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
-                      {category}
-                    </div>
-                  ) : null}
+            <div className="bg-white p-5 sm:p-7 lg:p-7 lg:pb-4">
+              <div className="rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-5 shadow-sm sm:p-6">
+                <div className="grid gap-5 sm:grid-cols-[112px_minmax(0,1fr)] lg:grid-cols-[128px_minmax(0,1fr)]">
+                  <div className="relative h-28 w-28 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm lg:h-32 lg:w-32">
+                    {selectedImage ? (
+                      <button
+                        type="button"
+                        onClick={() => openImageAt(selectedImageIndex)}
+                        className="relative block h-full w-full"
+                        aria-label="Ver imagen mas grande"
+                      >
+                        <OptimizedImage
+                          src={selectedImage}
+                          alt={title}
+                          sizes="128px"
+                          priority
+                          className="object-contain bg-white p-3"
+                        />
+                      </button>
+                    ) : (
+                      <div className="flex h-full items-center justify-center px-3 text-center text-sm text-slate-400">
+                        Sin imagen
+                      </div>
+                    )}
+                  </div>
 
-                  <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                    {title}
-                  </h1>
+                  <div className="min-w-0">
+                    {category ? (
+                      <div className="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
+                        {category}
+                      </div>
+                    ) : null}
+
+                    <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl lg:text-5xl">
+                      {title}
+                    </h1>
+                  </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2 lg:mt-6">
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   {address ? <InfoPill icon={<MapPin className="h-4 w-4" />} text={address} /> : null}
                   {phone ? <InfoPill icon={<Phone className="h-4 w-4" />} text={phone} /> : null}
                   {contactName ? (
@@ -561,7 +586,7 @@ export function PremiumListingPage({
                     {premiumDetail ? (
                       <section>
                         <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
-                          InformaciÃ³n ampliada
+                          Informacion ampliada
                         </div>
                         <p className="whitespace-pre-line text-base leading-8 text-slate-700">
                           {premiumDetail}
