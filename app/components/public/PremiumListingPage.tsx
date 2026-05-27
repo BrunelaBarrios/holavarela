@@ -366,7 +366,7 @@ export function PremiumListingPage({
             </h1>
           </div>
 
-          <div className="grid lg:grid-cols-[minmax(0,0.94fr)_minmax(0,1.06fr)]">
+          <div className="grid lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)]">
             <div className="bg-[radial-gradient(circle_at_top_left,#e8f6ec_0%,#f4f9ff_38%,#eef4ff_100%)] p-5 sm:p-7 lg:p-8">
               <div className="overflow-hidden rounded-[30px] border border-white/80 bg-white/90 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.45)]">
                 {selectedImage ? (
@@ -535,8 +535,10 @@ export function PremiumListingPage({
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div className="mt-6 grid gap-5 xl:grid-cols-2">
+            <div className="bg-white p-6 pt-0 sm:p-8 sm:pt-0 lg:col-span-2 lg:p-8 lg:pt-0">
+              <div className="grid gap-5 xl:grid-cols-2">
               {description ? (
                 <div className="rounded-[24px] border border-slate-100 bg-slate-50/80 p-6">
                   <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
@@ -599,7 +601,6 @@ export function PremiumListingPage({
                 </div>
               ) : null}
               </div>
-
             </div>
           </div>
         </section>
