@@ -343,7 +343,7 @@ export function PremiumListingPage({
 
       <PublicHeader items={buildPublicNav(section)} />
 
-      <div className="mx-auto max-w-[1520px] px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <Link
             href={basePath}
@@ -354,7 +354,7 @@ export function PremiumListingPage({
           </Link>
         </div>
 
-        <section className="overflow-hidden rounded-[36px] border border-slate-200 bg-white shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
+        <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
           <div className="bg-white p-6 pb-0 lg:hidden">
             {category ? (
               <div className="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
@@ -367,9 +367,9 @@ export function PremiumListingPage({
             </h1>
           </div>
 
-          <div className="grid lg:grid-cols-[minmax(280px,0.72fr)_minmax(0,1.28fr)]">
-            <div className="bg-[radial-gradient(circle_at_top_left,#e8f6ec_0%,#f4f9ff_38%,#eef4ff_100%)] p-5 sm:p-7 lg:p-8">
-              <div className="overflow-hidden rounded-[30px] border border-white/80 bg-white/90 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.45)]">
+          <div className="grid lg:grid-cols-[minmax(300px,420px)_minmax(0,1fr)]">
+            <div className="bg-[radial-gradient(circle_at_top_left,#e8f6ec_0%,#f4f9ff_38%,#eef4ff_100%)] p-5 sm:p-7 lg:row-span-2 lg:p-7">
+              <div className="overflow-hidden rounded-[26px] border border-white/80 bg-white/90 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.45)]">
                 {selectedImage ? (
                   <button
                     type="button"
@@ -382,7 +382,7 @@ export function PremiumListingPage({
                       alt={title}
                       sizes="(max-width: 1280px) 100vw, 55vw"
                       priority
-                      className="object-contain bg-white p-6 sm:p-8 lg:p-10"
+                      className="object-contain bg-white p-5 sm:p-7 lg:p-8"
                     />
                   </button>
                 ) : (
@@ -407,17 +407,17 @@ export function PremiumListingPage({
                       <button
                         type="button"
                         onClick={goToPrevious}
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                        aria-label="Ver imagen anterior"
                       >
                         <ChevronLeft className="h-4 w-4" />
-                        Anterior
                       </button>
                       <button
                         type="button"
                         onClick={goToNext}
-                        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                        aria-label="Ver siguiente imagen"
                       >
-                        Siguiente
                         <ChevronRight className="h-4 w-4" />
                       </button>
                     </div>
@@ -466,8 +466,8 @@ export function PremiumListingPage({
               </div>
             </div>
 
-            <div className="bg-white p-6 sm:p-8 lg:p-8">
-              <div className="hidden rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6 lg:block">
+            <div className="bg-white p-6 sm:p-8 lg:p-7 lg:pb-4">
+              <div className="hidden rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-6 lg:block">
                 <div className="hidden lg:block">
                   {category ? (
                     <div className="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
@@ -543,30 +543,30 @@ export function PremiumListingPage({
               </div>
             </div>
 
-            <div className="bg-white p-6 pt-0 sm:p-8 sm:pt-0 lg:col-span-2 lg:p-8 lg:pt-0">
+            <div className="bg-white p-6 pt-0 sm:p-8 sm:pt-0 lg:col-start-2 lg:p-7 lg:pt-0">
               {description || premiumDetail ? (
-                <div className="mb-5 hidden rounded-[24px] border border-slate-100 bg-slate-50/80 p-7 xl:block">
-                  <div className="columns-2 gap-10 [column-fill:balance]">
+                <div className="mb-5 hidden rounded-[24px] border border-slate-100 bg-slate-50/80 p-6 xl:block">
+                  <div className="grid gap-6 2xl:grid-cols-2">
                     {description ? (
-                      <>
-                        <div className="mb-3 break-after-avoid text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
+                      <section>
+                        <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
                           Sobre este perfil
                         </div>
-                        <p className="mb-7 whitespace-pre-line text-base leading-8 text-slate-700">
+                        <p className="whitespace-pre-line text-base leading-8 text-slate-700">
                           {description}
                         </p>
-                      </>
+                      </section>
                     ) : null}
 
                     {premiumDetail ? (
-                      <>
-                        <div className="mb-3 break-after-avoid text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
+                      <section>
+                        <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
                           InformaciÃ³n ampliada
                         </div>
                         <p className="whitespace-pre-line text-base leading-8 text-slate-700">
                           {premiumDetail}
                         </p>
-                      </>
+                      </section>
                     ) : null}
                   </div>
                 </div>
