@@ -242,8 +242,6 @@ export function ServiciosPageClient({
 
           <PublicAddButton href="/sumate/servicio" label="Sumar mi servicio" />
         </div>
-        <PublicAddButton href="/sumate/servicio" label="Sumar mi servicio" variant="floating" />
-
         <div className="mt-6 max-w-xl">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">
             <Search className="h-4 w-4 text-gray-400" />
@@ -293,12 +291,12 @@ export function ServiciosPageClient({
                 className={`cursor-pointer overflow-hidden rounded-xl border shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${servicio.premium_activo ? "border-violet-200 bg-violet-50/20" : "border-gray-200"}`}
               >
                 {servicio.imagen && (
-                  <div className="relative h-56 w-full">
+                  <div className="relative h-56 w-full border-b border-slate-100 bg-white">
                     <OptimizedImage
                       src={servicio.imagen}
                       alt={servicio.nombre}
                       sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                      className="object-cover"
+                      className="object-contain p-3"
                     />
                   </div>
                 )}

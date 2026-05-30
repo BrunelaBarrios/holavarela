@@ -2011,13 +2011,13 @@ export function HomePage({
                   className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.5)] transition hover:-translate-y-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${business.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(59,130,246,0.35)]"}`}
                 >
                   {imageSrc && (
-                    <div className="relative h-36 w-full sm:h-52">
+                    <div className="relative h-36 w-full bg-white sm:h-52">
                       <OptimizedImage
                         src={imageSrc}
                         alt={business.nombre}
                         sizes="(max-width: 640px) 50vw, (max-width: 1280px) 25vw, 25vw"
                         quality={60}
-                        className="object-cover"
+                        className="object-contain p-3"
                       />
                     </div>
                   )}
@@ -2134,13 +2134,13 @@ export function HomePage({
                         className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${servicio.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"}`}
                       >
                         {servicio.imagen && (
-                          <div className="relative h-36 w-full sm:h-48">
+                          <div className="relative h-36 w-full bg-white sm:h-48">
                             <OptimizedImage
                               src={servicio.imagen}
                               alt={servicio.nombre}
                               sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 25vw"
                               quality={60}
-                              className="object-cover"
+                              className="object-contain p-3"
                             />
                           </div>
                         )}
@@ -2700,13 +2700,13 @@ function HomeEventCard({
       }`}
     >
       {event.imagen && (
-        <div className="relative h-64 w-full">
+        <div className="relative h-64 w-full bg-white">
           <OptimizedImage
             src={event.imagen}
             alt={event.titulo}
             sizes="(max-width: 1024px) 100vw, 33vw"
             quality={62}
-            className="object-cover"
+            className="object-contain p-2"
           />
         </div>
       )}

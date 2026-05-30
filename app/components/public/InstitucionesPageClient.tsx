@@ -251,12 +251,6 @@ export function InstitucionesPageClient({
             label="Sumar mi institucion"
           />
         </div>
-        <PublicAddButton
-          href="/sumate/institucion"
-          label="Sumar mi institucion"
-          variant="floating"
-        />
-
         <div className="mt-6 max-w-xl">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">
             <Search className="h-4 w-4 text-gray-400" />
@@ -292,12 +286,12 @@ export function InstitucionesPageClient({
                 className="cursor-pointer overflow-hidden rounded-xl border border-gray-200 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
               >
                 {institucion.foto ? (
-                  <div className="relative h-56 w-full">
+                  <div className="relative h-56 w-full border-b border-slate-100 bg-white">
                     <OptimizedImage
                       src={institucion.foto}
                       alt={institucion.nombre}
                       sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 20vw"
-                      className="object-cover"
+                      className="object-contain p-4"
                     />
                   </div>
                 ) : (

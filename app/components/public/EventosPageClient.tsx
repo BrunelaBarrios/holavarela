@@ -338,12 +338,6 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
             label="Sumar mi aviso"
           />
         </div>
-        <PublicAddButton
-          href="/usuarios/eventos/nuevo?public=1"
-          label="Sumar mi aviso"
-          variant="floating"
-        />
-
         <div className="mt-6 max-w-xl">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">
             <Search className="h-4 w-4 text-gray-400" />
@@ -394,13 +388,13 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 className="cursor-pointer rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
                 {evento.imagen && (
-                  <div className="relative mb-4 h-48 w-full overflow-hidden rounded-lg">
+                  <div className="relative mb-4 h-48 w-full overflow-hidden rounded-lg border border-slate-100 bg-white">
                     <OptimizedImage
                       src={evento.imagen}
                       alt={evento.titulo}
                       sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
                       quality={62}
-                      className="object-cover"
+                      className="object-contain p-2"
                     />
                   </div>
                 )}

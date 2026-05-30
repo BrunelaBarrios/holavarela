@@ -175,7 +175,7 @@ export default function UsuariosPerfilPage() {
         [key]: [...current[key], ...nextImages],
       }))
     } catch (imageError) {
-      setError(imageError instanceof Error ? imageError.message : "No pudimos cargar las imagenes.")
+      setError(imageError instanceof Error ? imageError.message : "No pudimos cargar las imágenes.")
     } finally {
       event.target.value = ""
     }
@@ -291,7 +291,7 @@ export default function UsuariosPerfilPage() {
                 Mi perfil
               </div>
               <h1 className="mt-6 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-                {activeSection === "premium" ? "Version extendida" : "Edita tus datos"}
+                {activeSection === "premium" ? "Perfil ampliado" : "Edita tus datos"}
               </h1>
               <p className="mt-4 text-lg leading-8 text-slate-600">
                 Mantén actualizada la ficha de tu espacio para que el panel y la publicación siempre muestren información correcta.
@@ -310,7 +310,7 @@ export default function UsuariosPerfilPage() {
                       ? "Visible"
                       : normalizeUserEntityStatus(ownedEntity.record.estado) === "oculto"
                         ? "Oculto"
-                        : "En revision"
+                        : "En revisión"
                     : "Cargando"}
                 </p>
               </div>
@@ -345,7 +345,7 @@ export default function UsuariosPerfilPage() {
                       >
                         <div className="text-sm font-semibold">Ficha base</div>
                         <div className="mt-1 text-sm leading-6">
-                          Datos principales, contacto, ubicacion, redes e imagen principal.
+                          Datos principales, contacto, ubicación, redes e imagen principal.
                         </div>
                       </button>
                       {supportsExtendedProfile ? (
@@ -358,11 +358,11 @@ export default function UsuariosPerfilPage() {
                               : "border border-transparent bg-slate-50 text-slate-600 hover:bg-slate-100"
                           }`}
                         >
-                          <div className="text-sm font-semibold">Version extendida</div>
+                          <div className="text-sm font-semibold">Perfil ampliado</div>
                           <div className="mt-1 text-sm leading-6">
                             {hasExtendedProfile
-                              ? "Galeria destacada y bloque complementario del perfil."
-                              : "Disponible cuando tu plan o admin activa el perfil extendido."}
+                              ? "Galería destacada y bloque complementario del perfil."
+                              : "Disponible cuando tu plan o la administración activa el perfil ampliado."}
                           </div>
                         </button>
                       ) : null}
@@ -531,7 +531,7 @@ export default function UsuariosPerfilPage() {
                         Gestiona tu plan desde el panel
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-slate-600">
-                        La versión extendida se administra aparte porque depende del plan que tengas activo.
+                        El perfil ampliado se administra aparte porque depende del plan que tengas activo.
                       </p>
                       <div className="mt-4">
                         <Link
@@ -571,13 +571,13 @@ export default function UsuariosPerfilPage() {
                       <div className="space-y-6 rounded-[32px] border border-violet-200 bg-violet-50/60 p-6 sm:p-7">
                         <div>
                           <div className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-500">
-                            Perfil extendido
+                            Perfil ampliado
                           </div>
                           <h3 className="mt-2 text-xl font-semibold text-slate-950">
                             Contenido ampliado
                           </h3>
                           <p className="mt-2 text-sm leading-6 text-slate-600">
-                            Aquí editas solo la parte diferencial del perfil: galería destacada y bloque complementario.
+                            Aquí editás solo la parte diferencial del perfil: galería destacada y bloque complementario.
                           </p>
                         </div>
 
@@ -595,7 +595,7 @@ export default function UsuariosPerfilPage() {
                             />
 
                             <ImageUploadField
-                              label="Galeria principal del perfil ampliado"
+                              label="Galería principal del perfil ampliado"
                               helper="Estas imágenes se verán grandes al inicio del perfil completo. Se suben optimizadas en WebP, con ancho máximo de 800 px."
                               images={formData.premiumGaleria}
                               onUpload={(event) => void handleGalleryUpload(event, "premiumGaleria")}
@@ -610,7 +610,7 @@ export default function UsuariosPerfilPage() {
                           </div>
                           <div className="space-y-5">
                             <Field
-                              label="Titulo del bloque"
+                              label="Título del bloque"
                               value={formData.premiumExtraTitulo}
                               onChange={(value) =>
                                 setFormData((current) => ({ ...current, premiumExtraTitulo: value }))
@@ -636,7 +636,7 @@ export default function UsuariosPerfilPage() {
                       </div>
                     ) : (
                       <div className="rounded-[28px] border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-600">
-                        La versión extendida aún no está activa para esta ficha. Cuando se habilite desde tu plan o desde admin, vas a poder editarla aquí.
+                        El perfil ampliado aún no está activo para esta ficha. Cuando se habilite desde tu plan o desde la administración, vas a poder editarlo aquí.
                       </div>
                     )
                   ) : null}
@@ -653,7 +653,7 @@ export default function UsuariosPerfilPage() {
                     {saving
                       ? "Guardando cambios..."
                       : activeSection === "premium"
-                        ? "Guardar versión extendida"
+                        ? "Guardar perfil ampliado"
                         : "Guardar ficha base"}
                   </button>
                 </form>

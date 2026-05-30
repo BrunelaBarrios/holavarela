@@ -2,7 +2,19 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, MapPin, Phone, UserRound } from "lucide-react"
+import {
+  ArrowLeft,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  MapPin,
+  MessageCircle,
+  Navigation,
+  Phone,
+  Sparkles,
+  UserRound,
+} from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
@@ -91,12 +103,14 @@ export function PremiumListingPage({
       : kind === "servicio"
         ? "/servicios"
         : "/instituciones"
+
   const section =
     kind === "comercio"
       ? "comercios"
       : kind === "servicio"
         ? "servicios"
         : "instituciones"
+
   const shareUrl =
     typeof window === "undefined"
       ? `${basePath}/${id}`
@@ -116,120 +130,66 @@ export function PremiumListingPage({
       ? `tel:${phone}`
       : whatsappLink(phone)
     : null
+
   const directionsUrl = address || directionsAddress
     ? buildJosePedroVarelaDirectionsUrl(address, directionsAddress)
     : null
 
-  const mainGalleryImages = useMemo(
-    () => {
-      const uniqueImages = Array.from(
-        new Set(
-          [imageSrc, ...(premiumGallery || [])].filter(
-            Boolean
-          ) as string[]
-        )
+  const mainGalleryImages = useMemo(() => {
+    return Array.from(
+      new Set(
+        [imageSrc, ...(premiumGallery || [])].filter(Boolean) as string[]
       )
+    )
+  }, [imageSrc, premiumGallery])
 
-      return uniqueImages
-    },
-    [imageSrc, premiumGallery]
-  )
-  const visibleMainGalleryImages = mainGalleryImages.slice(0, 6)
   const extraGalleryImages = useMemo(
-    () =>
-      Array.from(new Set((premiumExtraGallery || []).filter(Boolean) as string[])),
+    () => Array.from(new Set((premiumExtraGallery || []).filter(Boolean) as string[])),
     [premiumExtraGallery]
   )
+
   const [activeGallery, setActiveGallery] = useState<GalleryKind>("main")
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [zoomedImage, setZoomedImage] = useState<string | null>(null)
   const touchStartXRef = useRef<number | null>(null)
   const touchDeltaXRef = useRef(0)
+
   const currentGalleryImages = activeGallery === "extra" ? extraGalleryImages : mainGalleryImages
-  const selectedImage =
-    currentGalleryImages[selectedImageIndex] ||
-    mainGalleryImages[0] ||
-    extraGalleryImages[0] ||
-    null
+  const logoImage = imageSrc || mainGalleryImages[0] || extraGalleryImages[0] || null
+
   const eventsSectionEyebrow = kind === "institucion" ? "Actividades" : "Actividad del local"
+
   const eventsSectionTitle =
     kind === "institucion"
       ? `Próximos eventos y actividades de ${title}`
       : `Próximos eventos de ${title}`
-  const emptyEventsTitle =
-    kind === "institucion" ? "Todavía no tiene actividades activas" : "Todavía no tiene eventos activos"
-  const emptyEventsDescription =
-    kind === "institucion"
-      ? "Cuando esta institución publique actividades o eventos activos en Hola Varela, van a aparecer en esta sección."
-      : "Cuando este perfil publique eventos y queden activos en Hola Varela, van a aparecer en esta sección."
+
   const coursesSectionEyebrow = kind === "institucion" ? "Cursos y talleres" : "Cursos del perfil"
+
   const coursesSectionTitle =
     relatedCoursesTitle ||
     (kind === "institucion"
       ? `Cursos y talleres de ${title}`
       : `Cursos y clases de ${title}`)
 
-  const renderPrimaryActions = () => (
-    <div className="flex flex-wrap gap-3">
-      {contactHref ? (
-        <ContactActionLink
-          href={contactHref}
-          mode={usesWhatsapp === false ? "phone" : "whatsapp"}
-          section={section}
-          itemId={String(id)}
-          itemTitle={title}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
-        >
-          <Phone className="h-4 w-4" />
-          {usesWhatsapp === false ? "Llamar" : "WhatsApp"}
-        </ContactActionLink>
-      ) : null}
+  const getSafeImageIndex = (index: number, gallery: GalleryKind = "main") => {
+    const images = gallery === "extra" ? extraGalleryImages : mainGalleryImages
+    if (images.length === 0) return 0
+    if (index < 0) return images.length - 1
+    if (index >= images.length) return 0
+    return index
+  }
 
-      {directionsUrl ? (
-        <a
-          href={directionsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-5 py-3 font-semibold text-sky-700 transition hover:border-sky-300 hover:bg-sky-100"
-        >
-          <MapPin className="h-4 w-4" />
-          Cómo llegar
-        </a>
-      ) : null}
-
-      <ShareButton
-        title={title}
-        text={description || premiumDetail || undefined}
-        url={shareUrl}
-        section={section}
-        itemId={String(id)}
-        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-      />
-
-      <ExternalLinksButtons
-        webUrl={webUrl}
-        instagramUrl={instagramUrl}
-        facebookUrl={facebookUrl}
-        section={section}
-        itemId={String(id)}
-        itemTitle={title}
-      />
-    </div>
-  )
+  const selectImageAt = (index: number, gallery: GalleryKind = "main") => {
+    const safeIndex = getSafeImageIndex(index, gallery)
+    setActiveGallery(gallery)
+    setSelectedImageIndex(safeIndex)
+  }
 
   const openImageAt = (index: number, gallery: GalleryKind = "main") => {
     const images = gallery === "extra" ? extraGalleryImages : mainGalleryImages
-    const safeIndex =
-      index < 0
-        ? Math.max(images.length - 1, 0)
-        : index >= images.length
-          ? 0
-          : index
-
-    setActiveGallery(gallery)
-    setSelectedImageIndex(safeIndex)
+    const safeIndex = getSafeImageIndex(index, gallery)
+    selectImageAt(safeIndex, gallery)
     setZoomedImage(images[safeIndex] || null)
   }
 
@@ -245,18 +205,22 @@ export function PremiumListingPage({
     void recordContentVisit(section, String(id), title)
   }, [id, kind, section, title])
 
-  const goToPrevious = () => {
-    openImageAt(
-      selectedImageIndex === 0 ? currentGalleryImages.length - 1 : selectedImageIndex - 1,
-      activeGallery
-    )
+  const goToPrevious = (openZoom = false) => {
+    const nextIndex = getSafeImageIndex(selectedImageIndex - 1, activeGallery)
+    if (openZoom) {
+      openImageAt(nextIndex, activeGallery)
+      return
+    }
+    selectImageAt(nextIndex, activeGallery)
   }
 
-  const goToNext = () => {
-    openImageAt(
-      selectedImageIndex >= currentGalleryImages.length - 1 ? 0 : selectedImageIndex + 1,
-      activeGallery
-    )
+  const goToNext = (openZoom = false) => {
+    const nextIndex = getSafeImageIndex(selectedImageIndex + 1, activeGallery)
+    if (openZoom) {
+      openImageAt(nextIndex, activeGallery)
+      return
+    }
+    selectImageAt(nextIndex, activeGallery)
   }
 
   const handleZoomTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
@@ -277,9 +241,9 @@ export function PremiumListingPage({
     }
 
     if (touchDeltaXRef.current <= -50) {
-      goToNext()
+      goToNext(true)
     } else if (touchDeltaXRef.current >= 50) {
-      goToPrevious()
+      goToPrevious(true)
     }
 
     touchStartXRef.current = null
@@ -300,6 +264,7 @@ export function PremiumListingPage({
           >
             Cerrar
           </button>
+
           <div
             className="relative h-[78vh] w-full max-w-6xl overflow-hidden rounded-[28px] border border-white/10 bg-white/5 shadow-2xl"
             onClick={(event) => event.stopPropagation()}
@@ -311,31 +276,34 @@ export function PremiumListingPage({
               <>
                 <button
                   type="button"
-                  onClick={goToPrevious}
+                  onClick={() => goToPrevious(true)}
                   className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-slate-950/45 p-3 text-white transition hover:bg-slate-950/70"
                   aria-label="Ver imagen anterior"
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </button>
+
                 <button
                   type="button"
-                  onClick={goToNext}
+                  onClick={() => goToNext(true)}
                   className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full border border-white/20 bg-slate-950/45 p-3 text-white transition hover:bg-slate-950/70"
                   aria-label="Ver siguiente imagen"
                 >
                   <ChevronRight className="h-6 w-6" />
                 </button>
+
                 <div className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 rounded-full border border-white/20 bg-slate-950/55 px-4 py-2 text-sm font-medium text-white">
                   {selectedImageIndex + 1} / {currentGalleryImages.length}
                 </div>
               </>
             ) : null}
+
             <OptimizedImage
               src={zoomedImage}
               alt={title}
               sizes="100vw"
               priority
-              className="object-contain bg-transparent p-3 sm:p-6"
+              className="bg-transparent object-contain p-3 sm:p-6"
             />
           </div>
         </div>
@@ -343,7 +311,7 @@ export function PremiumListingPage({
 
       <PublicHeader items={buildPublicNav(section)} />
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+      <div className="mx-auto max-w-[1180px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <Link
             href={basePath}
@@ -354,406 +322,323 @@ export function PremiumListingPage({
           </Link>
         </div>
 
-        <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)]">
-          <div className="hidden bg-white p-6 pb-0 lg:hidden">
-            {category ? (
-              <div className="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
-                {category}
+        <section className="overflow-hidden rounded-[30px] border border-slate-200/80 bg-white shadow-[0_24px_70px_-40px_rgba(15,23,42,0.42)]">
+          <div className="mx-auto flex w-full max-w-[860px] flex-col gap-6 p-5 sm:p-7 lg:p-8">
+            <section className="rounded-[26px] border border-slate-100 bg-white/80 p-5 shadow-sm sm:p-6">
+              <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-7">
+                <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm sm:h-36 sm:w-36">
+                  {logoImage ? (
+                    <button
+                      type="button"
+                      onClick={() => openImageAt(0, "main")}
+                      className="relative block h-full w-full"
+                      aria-label="Ver logo más grande"
+                    >
+                      <OptimizedImage
+                        src={logoImage}
+                        alt={title}
+                        sizes="150px"
+                        priority
+                        className="bg-white object-contain p-3"
+                      />
+                    </button>
+                  ) : (
+                    <div className="flex h-full items-center justify-center px-3 text-center text-sm text-slate-400">
+                      Sin imagen
+                    </div>
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  {category ? (
+                    <div className="inline-flex rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                      {category}
+                    </div>
+                  ) : null}
+
+                  <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+                    {title}
+                  </h1>
+                </div>
               </div>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                {address ? <InfoPill icon={<MapPin className="h-4 w-4" />} text={address} /> : null}
+                {phone ? <InfoPill icon={<Phone className="h-4 w-4" />} text={phone} /> : null}
+                {contactName ? (
+                  <InfoPill icon={<UserRound className="h-4 w-4" />} text={contactName} />
+                ) : null}
+              </div>
+
+              <div className="mt-7">
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                  {contactHref ? (
+                    <ContactActionLink
+                      href={contactHref}
+                      mode={usesWhatsapp === false ? "phone" : "whatsapp"}
+                      section={section}
+                      itemId={String(id)}
+                      itemTitle={title}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 font-semibold text-white shadow-[0_16px_34px_-18px_rgba(5,150,105,0.95)] transition hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-[0_18px_38px_-18px_rgba(5,150,105,0.95)] focus:outline-none focus:ring-2 focus:ring-emerald-300 sm:min-w-40"
+                    >
+                      {usesWhatsapp === false ? <Phone className="h-4 w-4" /> : <MessageCircle className="h-4 w-4" />}
+                      {usesWhatsapp === false ? "Llamar" : "WhatsApp"}
+                    </ContactActionLink>
+                  ) : null}
+
+                  {directionsUrl ? (
+                    <a
+                      href={directionsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-5 py-3 font-semibold text-sky-700 transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-100 focus:outline-none focus:ring-2 focus:ring-sky-200"
+                    >
+                      <Navigation className="h-4 w-4" />
+                      Cómo llegar
+                    </a>
+                  ) : null}
+
+                  <ShareButton
+                    title={title}
+                    text={description || premiumDetail || undefined}
+                    url={shareUrl}
+                    section={section}
+                    itemId={String(id)}
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-sky-300 hover:text-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                  />
+
+                  <ExternalLinksButtons
+                    webUrl={webUrl}
+                    instagramUrl={instagramUrl}
+                    facebookUrl={facebookUrl}
+                    section={section}
+                    itemId={String(id)}
+                    itemTitle={title}
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-sky-300 hover:text-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                  />
+                </div>
+              </div>
+            </section>
+
+            {description ? (
+              <section className="rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5 shadow-sm sm:p-6">
+                <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <Sparkles className="h-4 w-4 text-emerald-600" />
+                  Sobre este perfil
+                </div>
+                <p className="whitespace-pre-line text-base leading-8 text-slate-700 sm:text-[17px]">
+                  {description}
+                </p>
+              </section>
             ) : null}
 
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950">
-              {title}
-            </h1>
-          </div>
-
-          <div className="grid lg:grid-cols-[minmax(300px,420px)_minmax(0,1fr)]">
-            <div className="bg-[radial-gradient(circle_at_top_left,#e8f6ec_0%,#f4f9ff_38%,#eef4ff_100%)] p-5 sm:p-7 lg:row-span-2 lg:p-7">
-              <div className="overflow-hidden rounded-[26px] border border-white/80 bg-white/90 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.45)]">
-                {selectedImage ? (
-                  <button
-                    type="button"
-                    onClick={() => openImageAt(selectedImageIndex)}
-                    className="relative block aspect-[4/3] w-full transition hover:scale-[1.01]"
-                    aria-label="Ver imagen más grande"
-                  >
-                    <OptimizedImage
-                      src={selectedImage}
-                      alt={title}
-                      sizes="(max-width: 1280px) 100vw, 55vw"
-                      priority
-                      className="object-contain bg-white p-5 sm:p-7 lg:p-8"
-                    />
-                  </button>
-                ) : (
-                  <div className="flex min-h-[320px] items-center justify-center text-slate-400">
-                    Sin imagen principal
-                  </div>
-                )}
-              </div>
-
-              {mainGalleryImages.length > 1 ? (
-                <div className="mt-6">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                        Imágenes
-                      </div>
-                      <p className="mt-2 text-sm text-slate-500">
-                        Toca una miniatura para verla grande y recorre las imágenes.
-                      </p>
+            {mainGalleryImages.length > 1 ? (
+              <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      Galería
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={goToPrevious}
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                        aria-label="Ver imagen anterior"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={goToNext}
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                        aria-label="Ver siguiente imagen"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </button>
-                    </div>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Deslizá para ver más imágenes
+                    </p>
                   </div>
-                  <div className="mt-4 grid grid-cols-3 gap-3">
-                    {visibleMainGalleryImages.map((image, index) => (
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => goToPrevious()}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-300 hover:text-sky-700"
+                      aria-label="Ver imagen anterior"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => goToNext()}
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-300 hover:text-sky-700"
+                      aria-label="Ver siguiente imagen"
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-5 overflow-x-auto pb-2">
+                  <div className="flex min-w-max gap-3">
+                    {mainGalleryImages.map((image, index) => (
                       <button
                         type="button"
                         key={`${image}-${index}`}
                         onClick={() => openImageAt(index, "main")}
-                        className={`relative aspect-[4/3] overflow-hidden rounded-[24px] border bg-white shadow-sm transition ${
+                        className={`relative h-[120px] w-[120px] shrink-0 overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:h-[130px] sm:w-[130px] lg:h-[145px] lg:w-[145px] ${
                           activeGallery === "main" && selectedImageIndex === index
-                            ? "border-blue-400 ring-2 ring-blue-100"
-                            : "border-slate-200 hover:border-blue-300"
+                            ? "border-sky-500 ring-2 ring-sky-100"
+                            : "border-slate-200 hover:border-sky-300"
                         }`}
                       >
                         <OptimizedImage
                           src={image}
                           alt={`${title} ${index + 1}`}
-                          sizes="(max-width: 768px) 50vw, 25vw"
+                          sizes="150px"
                           className="object-cover"
                         />
                       </button>
                     ))}
                   </div>
-                  {mainGalleryImages.length > visibleMainGalleryImages.length ? (
-                    <div className="mt-3 rounded-2xl border border-slate-200 bg-white/75 px-4 py-2 text-xs font-semibold text-slate-500">
-                      {mainGalleryImages.length - visibleMainGalleryImages.length} imagenes mas disponibles al ampliar.
+                </div>
+              </section>
+            ) : null}
+
+            {premiumDetail ? (
+              <section className="rounded-[24px] border border-sky-100 bg-sky-50/70 p-5 shadow-sm sm:p-6">
+                <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                  <ExternalLink className="h-4 w-4" />
+                  Información ampliada
+                </div>
+                <p className="whitespace-pre-line text-base leading-8 text-slate-700 sm:text-[17px]">
+                  {premiumDetail}
+                </p>
+              </section>
+            ) : null}
+
+            {premiumExtraTitle || premiumExtraDetail || extraGalleryImages.length ? (
+              <section className="rounded-[24px] border border-amber-100 bg-amber-50/80 p-5 shadow-sm sm:p-6">
+                {premiumExtraTitle ? (
+                  <h3 className="text-2xl font-semibold tracking-tight text-slate-950">
+                    {premiumExtraTitle}
+                  </h3>
+                ) : null}
+
+                {premiumExtraDetail ? (
+                  <p className="mt-3 whitespace-pre-line text-base leading-8 text-slate-700">
+                    {premiumExtraDetail}
+                  </p>
+                ) : null}
+
+                {extraGalleryImages.length ? (
+                  <div className="mt-5 overflow-x-auto pb-2">
+                    <div className="flex min-w-max gap-3">
+                      {extraGalleryImages.map((image, index) => (
+                        <button
+                          type="button"
+                          key={`${image}-${index}`}
+                          onClick={() => openImageAt(index, "extra")}
+                          className={`relative h-[120px] w-[120px] shrink-0 overflow-hidden rounded-[22px] border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:h-[130px] sm:w-[130px] lg:h-[145px] lg:w-[145px] ${
+                            activeGallery === "extra" && selectedImageIndex === index
+                              ? "border-amber-400 ring-2 ring-amber-100"
+                              : "border-amber-200 hover:border-amber-300"
+                          }`}
+                        >
+                          <OptimizedImage
+                            src={image}
+                            alt={`${premiumExtraTitle || title} ${index + 1}`}
+                            sizes="150px"
+                            className="object-cover"
+                          />
+                        </button>
+                      ))}
                     </div>
-                  ) : null}
-                </div>
-              ) : null}
-
-              <div className="hidden mt-6 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm lg:hidden">
-                <div className="mb-4 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                  Datos y contacto
-                </div>
-                <div className="grid gap-3">
-                  {address ? <InfoPill icon={<MapPin className="h-4 w-4" />} text={address} /> : null}
-                  {phone ? <InfoPill icon={<Phone className="h-4 w-4" />} text={phone} /> : null}
-                  {contactName ? (
-                    <InfoPill icon={<UserRound className="h-4 w-4" />} text={contactName} />
-                  ) : null}
-                </div>
-                <div className="mt-5">{renderPrimaryActions()}</div>
-              </div>
-            </div>
-
-            <div className="bg-white p-5 sm:p-7 lg:p-7 lg:pb-4">
-              <div className="rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-5 shadow-sm sm:p-6">
-                <div className="grid gap-5 sm:grid-cols-[112px_minmax(0,1fr)] lg:grid-cols-[128px_minmax(0,1fr)]">
-                  <div className="relative h-28 w-28 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm lg:h-32 lg:w-32">
-                    {selectedImage ? (
-                      <button
-                        type="button"
-                        onClick={() => openImageAt(selectedImageIndex)}
-                        className="relative block h-full w-full"
-                        aria-label="Ver imagen mas grande"
-                      >
-                        <OptimizedImage
-                          src={selectedImage}
-                          alt={title}
-                          sizes="128px"
-                          priority
-                          className="object-contain bg-white p-3"
-                        />
-                      </button>
-                    ) : (
-                      <div className="flex h-full items-center justify-center px-3 text-center text-sm text-slate-400">
-                        Sin imagen
-                      </div>
-                    )}
                   </div>
-
-                  <div className="min-w-0">
-                    {category ? (
-                      <div className="inline-flex rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
-                        {category}
-                      </div>
-                    ) : null}
-
-                    <h1 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl lg:text-5xl">
-                      {title}
-                    </h1>
-                  </div>
-                </div>
-
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  {address ? <InfoPill icon={<MapPin className="h-4 w-4" />} text={address} /> : null}
-                  {phone ? <InfoPill icon={<Phone className="h-4 w-4" />} text={phone} /> : null}
-                  {contactName ? (
-                    <InfoPill icon={<UserRound className="h-4 w-4" />} text={contactName} />
-                  ) : null}
-                </div>
-
-                <div className="mt-8">
-                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                    Acciones
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    {contactHref ? (
-                      <ContactActionLink
-                        href={contactHref}
-                        mode={usesWhatsapp === false ? "phone" : "whatsapp"}
-                        section={section}
-                        itemId={String(id)}
-                        itemTitle={title}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-2xl bg-green-600 px-5 py-3 font-semibold text-white transition hover:bg-green-500"
-                      >
-                        <Phone className="h-4 w-4" />
-                        {usesWhatsapp === false ? "Llamar" : "WhatsApp"}
-                      </ContactActionLink>
-                    ) : null}
-
-                    {directionsUrl ? (
-                      <a
-                        href={directionsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-2xl border border-sky-200 bg-sky-50 px-5 py-3 font-semibold text-sky-700 transition hover:border-sky-300 hover:bg-sky-100"
-                      >
-                        <MapPin className="h-4 w-4" />
-                        Cómo llegar
-                      </a>
-                    ) : null}
-
-                    <ShareButton
-                      title={title}
-                      text={description || premiumDetail || undefined}
-                      url={shareUrl}
-                      section={section}
-                      itemId={String(id)}
-                      className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                    />
-
-                    <ExternalLinksButtons
-                      webUrl={webUrl}
-                      instagramUrl={instagramUrl}
-                      facebookUrl={facebookUrl}
-                      section={section}
-                      itemId={String(id)}
-                      itemTitle={title}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 pt-0 sm:p-8 sm:pt-0 lg:col-start-2 lg:p-7 lg:pt-0">
-              {description || premiumDetail ? (
-                <div className="mb-5 hidden rounded-[24px] border border-slate-100 bg-slate-50/80 p-6 xl:block">
-                  <div className="grid gap-6 2xl:grid-cols-2">
-                    {description ? (
-                      <section>
-                        <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                          Sobre este perfil
-                        </div>
-                        <p className="whitespace-pre-line text-base leading-8 text-slate-700">
-                          {description}
-                        </p>
-                      </section>
-                    ) : null}
-
-                    {premiumDetail ? (
-                      <section>
-                        <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
-                          Informacion ampliada
-                        </div>
-                        <p className="whitespace-pre-line text-base leading-8 text-slate-700">
-                          {premiumDetail}
-                        </p>
-                      </section>
-                    ) : null}
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="grid gap-5 xl:grid-cols-2">
-              {description ? (
-                <div className="rounded-[24px] border border-slate-100 bg-slate-50/80 p-6 xl:hidden">
-                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-                    Sobre este perfil
-                  </div>
-                  <p className="whitespace-pre-line text-base leading-8 text-slate-700">
-                    {description}
-                  </p>
-                </div>
-              ) : null}
-
-              {premiumDetail ? (
-                <div className="rounded-[24px] border border-sky-100 bg-sky-50/70 p-6 xl:hidden">
-                  <div className="mb-3 text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">
-                    Información ampliada
-                  </div>
-                  <p className="whitespace-pre-line text-base leading-8 text-slate-700">
-                    {premiumDetail}
-                  </p>
-                </div>
-              ) : null}
-
-              {premiumExtraTitle || premiumExtraDetail || extraGalleryImages.length ? (
-                <div className="rounded-[24px] border border-amber-100 bg-amber-50/80 p-6 xl:col-span-2">
-                  {premiumExtraTitle ? (
-                    <h3 className="text-2xl font-semibold tracking-tight text-slate-950">
-                      {premiumExtraTitle}
-                    </h3>
-                  ) : null}
-                  <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.9fr)]">
-                    {premiumExtraDetail ? (
-                      <p className="mt-3 whitespace-pre-line text-base leading-8 text-slate-700 lg:mt-4">
-                        {premiumExtraDetail}
-                      </p>
-                    ) : null}
-                    {extraGalleryImages.length ? (
-                      <div className="mt-5 grid grid-cols-2 gap-4 lg:mt-0">
-                        {extraGalleryImages.map((image, index) => (
-                          <button
-                            type="button"
-                            key={`${image}-${index}`}
-                            onClick={() => openImageAt(index, "extra")}
-                            className={`relative aspect-[4/3] overflow-hidden rounded-[22px] border bg-white ${
-                              activeGallery === "extra" && selectedImageIndex === index
-                                ? "border-amber-400 ring-2 ring-amber-100"
-                                : "border-amber-200"
-                            }`}
-                          >
-                            <OptimizedImage
-                              src={image}
-                              alt={`${premiumExtraTitle || title} ${index + 1}`}
-                              sizes="(max-width: 768px) 50vw, 33vw"
-                              className="object-cover"
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              ) : null}
-              </div>
-            </div>
+                ) : null}
+              </section>
+            ) : null}
           </div>
         </section>
 
-        <section id="eventos-del-local" className="mt-8 rounded-[36px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.2)] sm:p-8">
+        {relatedEvents.length > 0 ? (
+          <section id="eventos-del-local" className="mt-8 rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_22px_70px_-42px_rgba(15,23,42,0.32)] sm:p-7 lg:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                   {eventsSectionEyebrow}
                 </div>
-                <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
                   {eventsSectionTitle}
                 </h2>
               </div>
+
               <Link
                 href="/eventos"
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-sky-300 hover:text-sky-700"
               >
                 Ver todos los eventos
               </Link>
             </div>
 
-            {relatedEvents.length === 0 ? (
-              <div className="mt-6 rounded-[28px] border border-dashed border-slate-200 bg-[linear-gradient(135deg,#f8fbff_0%,#f4faf6_100%)] p-8">
-                <h3 className="text-lg font-semibold text-slate-900">{emptyEventsTitle}</h3>
-                <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
-                  {emptyEventsDescription}
-                </p>
-              </div>
-            ) : (
-              <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                {relatedEvents.map((event) => (
-                  <article key={event.id} className="overflow-hidden rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-sm">
-                    {event.imagen ? (
-                      <div className="relative h-56 w-full bg-white">
-                        <OptimizedImage
-                          src={event.imagen}
-                          alt={event.titulo}
-                          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                          className="object-contain p-2"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex h-48 items-center justify-center bg-slate-100 text-slate-400">
-                        Sin imagen
-                      </div>
-                    )}
-                    <div className="p-5">
-                      {event.categoria ? (
-                        <div className="mb-3 inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
-                          {event.categoria}
-                        </div>
-                      ) : null}
-                      <h3 className="text-xl font-semibold text-slate-900">{event.titulo}</h3>
-                      {!shouldHideEventDate(event.descripcion, event.categoria) ? (
-                        <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
-                          <CalendarDays className="h-4 w-4 text-slate-400" />
-                          <span>{formatEventDateRange(event.fecha, event.fecha_fin, event.fecha_solo_mes ?? false)}</span>
-                        </div>
-                      ) : null}
-                      {event.descripcion ? (
-                        <p className="mt-4 line-clamp-4 whitespace-pre-line text-sm leading-7 text-slate-500">
-                          {parseEventDescription(event.descripcion).baseDescription}
-                        </p>
-                      ) : null}
-                      <div className="mt-5">
-                        <Link
-                          href={`/eventos/${event.id}`}
-                          className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
-                        >
-                          Ver evento
-                        </Link>
-                      </div>
+            <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {relatedEvents.map((event) => (
+                <article key={event.id} className="overflow-hidden rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-sm transition hover:-translate-y-1 hover:shadow-[0_20px_46px_-32px_rgba(15,23,42,0.55)]">
+                  {event.imagen ? (
+                    <div className="relative h-56 w-full bg-white">
+                      <OptimizedImage
+                        src={event.imagen}
+                        alt={event.titulo}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        className="object-contain p-2"
+                      />
                     </div>
-                  </article>
-                ))}
-              </div>
-            )}
+                  ) : (
+                    <div className="flex h-48 items-center justify-center bg-slate-100 text-slate-400">
+                      Sin imagen
+                    </div>
+                  )}
+
+                  <div className="p-5">
+                    {event.categoria ? (
+                      <div className="mb-3 inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
+                        {event.categoria}
+                      </div>
+                    ) : null}
+
+                    <h3 className="text-xl font-semibold text-slate-900">{event.titulo}</h3>
+
+                    {!shouldHideEventDate(event.descripcion, event.categoria) ? (
+                      <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+                        <CalendarDays className="h-4 w-4 text-slate-400" />
+                        <span>{formatEventDateRange(event.fecha, event.fecha_fin, event.fecha_solo_mes ?? false)}</span>
+                      </div>
+                    ) : null}
+
+                    {event.descripcion ? (
+                      <p className="mt-4 line-clamp-4 whitespace-pre-line text-sm leading-7 text-slate-500">
+                        {parseEventDescription(event.descripcion).baseDescription}
+                      </p>
+                    ) : null}
+
+                    <div className="mt-5">
+                      <Link
+                        href={`/eventos/${event.id}`}
+                        className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-300 hover:bg-sky-100"
+                      >
+                        Ver evento
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
           </section>
+        ) : null}
 
         {relatedCourses.length > 0 ? (
-          <section className="mt-8 rounded-[36px] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.2)] sm:p-8">
+          <section className="mt-8 rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_22px_70px_-42px_rgba(15,23,42,0.32)] sm:p-7 lg:p-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                   {coursesSectionEyebrow}
                 </div>
-                <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
                   {coursesSectionTitle}
                 </h2>
               </div>
+
               <Link
                 href="/cursos"
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-sky-300 hover:text-sky-700"
               >
                 Ver todos los cursos
               </Link>
@@ -763,7 +648,7 @@ export function PremiumListingPage({
               {relatedCourses.map((course) => (
                 <article
                   key={course.id}
-                  className="overflow-hidden rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-sm"
+                  className="overflow-hidden rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-sm transition hover:-translate-y-1 hover:shadow-[0_20px_46px_-32px_rgba(15,23,42,0.55)]"
                 >
                   {course.imagen ? (
                     <div className="relative h-48 w-full">
@@ -779,23 +664,27 @@ export function PremiumListingPage({
                       Sin imagen
                     </div>
                   )}
+
                   <div className="p-5">
                     <h3 className="text-xl font-semibold text-slate-900">{course.nombre}</h3>
+
                     {course.responsable ? (
                       <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
                         <UserRound className="h-4 w-4 text-slate-400" />
                         <span>{course.responsable}</span>
                       </div>
                     ) : null}
+
                     {course.descripcion ? (
                       <p className="mt-4 line-clamp-4 whitespace-pre-line text-sm leading-7 text-slate-500">
                         {course.descripcion}
                       </p>
                     ) : null}
+
                     <div className="mt-5">
                       <Link
                         href={`/cursos/${course.id}`}
-                        className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+                        className="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-300 hover:bg-sky-100"
                       >
                         Ver curso
                       </Link>
@@ -813,11 +702,11 @@ export function PremiumListingPage({
 
 function InfoPill({ icon, text }: { icon: ReactNode; text: string }) {
   return (
-    <div className="flex min-h-[68px] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-3 text-sm text-slate-700">
+    <div className="flex min-h-[64px] items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm text-slate-700">
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-sm">
         {icon}
       </div>
-      <span className="leading-6">{text}</span>
+      <span className="min-w-0 leading-6">{text}</span>
     </div>
   )
 }

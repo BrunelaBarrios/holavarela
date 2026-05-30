@@ -1,23 +1,36 @@
 import { NextResponse } from "next/server"
+import { unstable_cache } from "next/cache"
 import { supabaseServer } from "./supabaseServer"
 
 const DATA_URL_PATTERN = /^data:([^;]+);base64,([\s\S]+)$/
+
+const getCachedDataUrlImage = unstable_cache(
+  async (table: string, field: string, id: string) => {
+    const { data, error } = await supabaseServer
+      .from(table)
+      .select(field)
+      .eq("id", id)
+      .maybeSingle()
+
+    if (error) return null
+
+    const row = data as Record<string, unknown> | null
+    const imageValue = row?.[field]
+
+    return typeof imageValue === "string" ? imageValue : null
+  },
+  ["data-url-image"],
+  { revalidate: 86400 }
+)
 
 export async function dataUrlImageResponse(
   table: string,
   field: string,
   id: string
 ) {
-  const { data, error } = await supabaseServer
-    .from(table)
-    .select(field)
-    .eq("id", id)
-    .maybeSingle()
+  const imageValue = await getCachedDataUrlImage(table, field, id)
 
-  const row = data as Record<string, unknown> | null
-  const imageValue = row?.[field]
-
-  if (error || typeof imageValue !== "string") {
+  if (!imageValue) {
     return new NextResponse(null, { status: 404 })
   }
 

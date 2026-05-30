@@ -101,7 +101,7 @@ export default function UsuariosMetricasHolaVarelaPage() {
       courseRows48,
       institutionRows48,
     ] = await Promise.all([
-      fetch("/api/metricas/trafico", { cache: "no-store" })
+      fetch("/api/metricas/trafico")
         .then(async (response) => {
           if (!response.ok) {
             throw new Error("No pudimos cargar el trafico general.")

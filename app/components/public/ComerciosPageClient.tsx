@@ -248,8 +248,6 @@ export function ComerciosPageClient({
 
           <PublicAddButton href="/?sumate=comercio" label="Sumar mi comercio" />
         </div>
-        <PublicAddButton href="/?sumate=comercio" label="Sumar mi comercio" variant="floating" />
-
         <div className="mt-6 max-w-xl">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">
             <Search className="h-4 w-4 text-gray-400" />
@@ -295,13 +293,13 @@ export function ComerciosPageClient({
                     className="group overflow-hidden rounded-2xl border border-white/80 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"
                   >
                     {imagenSrc ? (
-                      <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100">
+                      <div className="relative aspect-[16/9] w-full overflow-hidden bg-white">
                         <OptimizedImage
                           src={imagenSrc}
                           alt={comercio.nombre}
                           sizes="(max-width: 768px) 100vw, 33vw"
                           quality={62}
-                          className="object-cover transition duration-300 group-hover:scale-105"
+                          className="object-contain p-3 transition duration-300 group-hover:scale-105"
                         />
                       </div>
                     ) : null}
@@ -365,12 +363,12 @@ export function ComerciosPageClient({
                   className={`cursor-pointer rounded-2xl border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${comercio.premium_activo ? "border-violet-200" : "border-gray-200 hover:border-blue-200"}`}
                 >
                   {imagenSrc && (
-                    <div className="relative mb-3 h-40 w-full overflow-hidden rounded-lg">
+                    <div className="relative mb-3 h-40 w-full overflow-hidden rounded-lg border border-slate-100 bg-white">
                       <OptimizedImage
                         src={imagenSrc}
                         alt={comercio.nombre}
                         sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                        className="object-cover"
+                        className="object-contain p-3"
                       />
                     </div>
                   )}

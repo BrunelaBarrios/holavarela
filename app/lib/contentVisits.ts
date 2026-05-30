@@ -13,7 +13,9 @@ export const CONTENT_VISIT_SECTIONS = [
 ] as const
 
 const CONTENT_VISITS_BROWSER_KEY = "hola-varela-content-visits-browser"
+const CONTENT_VISITS_SESSION_PREFIX = "hola-varela-content-visit"
 const SITE_VISITS_SESSION_PREFIX = "hola-varela-site-visit"
+const SITE_VISITS_DAILY_PREFIX = "hola-varela-site-visit-day"
 
 export type ContentVisitSection = (typeof CONTENT_VISIT_SECTIONS)[number]
 
@@ -51,6 +53,12 @@ export const recordContentVisit = async (
 
   if (!browserKey) return
 
+  if (typeof window !== "undefined") {
+    const sessionKey = `${CONTENT_VISITS_SESSION_PREFIX}:${section}:${itemId}`
+    if (window.sessionStorage.getItem(sessionKey)) return
+    window.sessionStorage.setItem(sessionKey, "1")
+  }
+
   const { error } = await supabase.from("content_visits").insert([
     {
       section,
@@ -80,6 +88,12 @@ export const recordSiteVisit = async (pageId: string, pageTitle?: string | null)
   if (window.sessionStorage.getItem(sessionKey)) return
 
   window.sessionStorage.setItem(sessionKey, "1")
+
+  const todayKey = new Date().toISOString().slice(0, 10)
+  const dailyKey = `${SITE_VISITS_DAILY_PREFIX}:${pageId}`
+  if (window.localStorage.getItem(dailyKey) === todayKey) return
+
+  window.localStorage.setItem(dailyKey, todayKey)
 
   const { error } = await supabase.from("content_visits").insert([
     {

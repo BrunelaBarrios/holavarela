@@ -787,6 +787,44 @@ for select
 to anon, authenticated
 using (true);
 
+create index if not exists comercios_public_active_id_desc_idx
+on public.comercios (id desc)
+where estado is null or estado = 'activo';
+
+create index if not exists servicios_public_active_id_desc_idx
+on public.servicios (id desc)
+where estado is null or estado = 'activo';
+
+create index if not exists cursos_public_active_id_desc_idx
+on public.cursos (id desc)
+where estado is null or estado = 'activo';
+
+create index if not exists instituciones_public_active_id_desc_idx
+on public.instituciones (id desc)
+where estado is null or estado = 'activo';
+
+create index if not exists eventos_public_active_fecha_idx
+on public.eventos (fecha, fecha_fin)
+where estado is null or estado = 'activo';
+
+create index if not exists content_visits_section_created_at_idx
+on public.content_visits (section, created_at desc);
+
+create index if not exists content_visits_section_item_browser_idx
+on public.content_visits (section, item_id, browser_key);
+
+create index if not exists share_events_section_created_at_idx
+on public.share_events (section, created_at desc);
+
+create index if not exists whatsapp_clicks_section_created_at_idx
+on public.whatsapp_clicks (section, created_at desc);
+
+create index if not exists view_more_clicks_section_created_at_idx
+on public.view_more_clicks (section, created_at desc);
+
+create index if not exists event_likes_created_at_idx
+on public.event_likes (created_at desc);
+
 drop policy if exists "Allow public insert on desafio_sorteo_ganadores"
 on public.desafio_sorteo_ganadores;
 
