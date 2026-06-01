@@ -122,10 +122,10 @@ const getHomePageData = unstable_cache(
         .limit(72),
       supabaseServer
         .from("instituciones")
-        .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, premium_activo")
+        .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, premium_activo, plan_suscripcion")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
-        .limit(10),
+        .limit(48),
       supabaseServer
         .from("sitio")
         .select("titulo, texto_1, texto_2, texto_3, imagen_url")

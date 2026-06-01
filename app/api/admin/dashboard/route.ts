@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
       pendingPasswordRequests,
       pendingComercios,
       pendingServicios,
+      pendingInstituciones,
     ] = await Promise.all([
       safeCount(
         "Comercios",
@@ -115,6 +116,13 @@ export async function GET(request: NextRequest) {
           .select("id", { count: "exact", head: true })
           .eq("estado_suscripcion", "pendiente")
       ),
+      safeCount(
+        "Instituciones con suscripcion pendiente",
+        supabaseAdmin
+          .from("instituciones")
+          .select("id", { count: "exact", head: true })
+          .eq("estado_suscripcion", "pendiente")
+      ),
     ])
     const warnings = [
       comercios.warning,
@@ -129,6 +137,7 @@ export async function GET(request: NextRequest) {
       pendingPasswordRequests.warning,
       pendingComercios.warning,
       pendingServicios.warning,
+      pendingInstituciones.warning,
     ].filter(Boolean)
 
     return NextResponse.json({
@@ -143,7 +152,8 @@ export async function GET(request: NextRequest) {
         newEventos: newEventos.count,
         newContactos: newContactos.count,
         pendingPasswordRequests: pendingPasswordRequests.count,
-        pendingSubscriptions: pendingComercios.count + pendingServicios.count,
+        pendingSubscriptions:
+          pendingComercios.count + pendingServicios.count + pendingInstituciones.count,
       },
       warnings,
     })

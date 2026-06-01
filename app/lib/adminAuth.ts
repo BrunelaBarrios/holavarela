@@ -7,6 +7,12 @@ export type AdminSession = {
 }
 
 const ADMIN_SESSION_STORAGE_KEY = "hola-varela-admin-session"
+export const ADMIN_SESSION_UPDATED_EVENT = "hola-varela-admin-session-updated"
+
+function notifyAdminSessionUpdated() {
+  if (typeof window === "undefined") return
+  window.dispatchEvent(new Event(ADMIN_SESSION_UPDATED_EVENT))
+}
 
 export function getAdminSession(): AdminSession | null {
   if (typeof window === "undefined") return null
@@ -24,9 +30,11 @@ export function getAdminSession(): AdminSession | null {
 export function saveAdminSession(session: AdminSession) {
   if (typeof window === "undefined") return
   window.localStorage.setItem(ADMIN_SESSION_STORAGE_KEY, JSON.stringify(session))
+  notifyAdminSessionUpdated()
 }
 
 export function clearAdminSession() {
   if (typeof window === "undefined") return
   window.localStorage.removeItem(ADMIN_SESSION_STORAGE_KEY)
+  notifyAdminSessionUpdated()
 }

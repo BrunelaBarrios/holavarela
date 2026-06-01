@@ -116,7 +116,7 @@ export function supportsPremiumProfile(type: UserEntityType) {
 }
 
 export function supportsSubscription(type: UserEntityType) {
-  return type === "comercio" || type === "servicio"
+  return type === "comercio" || type === "servicio" || type === "institucion"
 }
 
 export function normalizeUserEntityStatus(status?: string | null) {

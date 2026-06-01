@@ -172,6 +172,18 @@ add column if not exists premium_cursos_activo boolean default false;
 alter table public.instituciones
 add column if not exists premium_cursos_titulo text;
 
+alter table public.instituciones
+add column if not exists plan_suscripcion text;
+
+alter table public.instituciones
+add column if not exists estado_suscripcion text default 'pendiente';
+
+alter table public.instituciones
+add column if not exists suscripcion_actualizada_at timestamp with time zone;
+
+alter table public.instituciones
+add column if not exists mp_preapproval_id text;
+
 alter table public.sitio
 add column if not exists plan_presencia_titulo text;
 

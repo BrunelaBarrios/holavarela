@@ -191,6 +191,7 @@ type Institucion = {
   foto: string | null
   usa_whatsapp?: boolean | null
   premium_activo?: boolean | null
+  plan_suscripcion?: string | null
 }
 
 type SobreVarelaConfig = {
@@ -269,7 +270,7 @@ type WelcomeHighlight = {
 
 type DelayedPromo = {
   key: string
-  kind: "comercio" | "servicio" | "curso"
+  kind: "comercio" | "servicio" | "curso" | "institucion"
   title: string
   description: string
   image: string | null
@@ -595,7 +596,13 @@ export function HomePage({
     [eventos]
   )
   const visibleCursos = useMemo(() => cursos.slice(0, 8), [cursos])
-  const visibleInstituciones = useMemo(() => instituciones.slice(0, 10), [instituciones])
+  const visibleInstituciones = useMemo(
+    () =>
+      [...instituciones]
+        .sort((left, right) => Number(isFeaturedListing(right)) - Number(isFeaturedListing(left)))
+        .slice(0, 10),
+    [instituciones]
+  )
   const delayedPromoOptions = useMemo<DelayedPromo[]>(() => {
     const comercioOptions = featuredBusinesses
       .filter((item) => isFeaturedListing(item))
@@ -636,8 +643,21 @@ export function HomePage({
       href: `/cursos?item=${item.id}`,
     }))
 
-    return [...comercioOptions, ...servicioOptions, ...cursoOptions]
-  }, [allCursos, allServicios, featuredBusinesses])
+    const institucionOptions = instituciones
+      .filter((item) => isFeaturedListing(item))
+      .map((item) => ({
+      key: `institucion:${item.id}`,
+      kind: "institucion" as const,
+      title: item.nombre,
+      description:
+        item.descripcion || "Conoce esta institucion destacada dentro de Hola Varela.",
+      image: item.foto || null,
+      subtitle: item.direccion || null,
+      href: item.premium_activo ? `/instituciones/${item.id}` : `/instituciones?item=${item.id}`,
+    }))
+
+    return [...comercioOptions, ...servicioOptions, ...cursoOptions, ...institucionOptions]
+  }, [allCursos, allServicios, featuredBusinesses, instituciones])
 
 
   const weather = initialData.weather
@@ -1024,7 +1044,7 @@ export function HomePage({
                       {delayedPromo.description}
                     </p>
                     <div className="mt-5 rounded-[20px] border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600 sm:mt-6 sm:rounded-[24px] sm:p-4 sm:leading-7">
-                      Esta tarjeta es una promocion destacada. Puedes entrar a ver el comercio o cerrarla y seguir navegando.
+                      Esta tarjeta es una promocion destacada. Puedes entrar a ver la ficha o cerrarla y seguir navegando.
                     </div>
                     <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:flex-wrap">
                       <Link
@@ -1032,7 +1052,7 @@ export function HomePage({
                         onClick={() => setIsDelayedPromoOpen(false)}
                         className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600 sm:w-auto"
                       >
-                        Ver comercio
+                        Ver ficha
                         <ArrowRight className="h-4 w-4" />
                       </Link>
                       <button

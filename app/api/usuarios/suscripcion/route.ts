@@ -5,8 +5,8 @@ import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
 import { subscriptionPlans, type SubscriptionPlanKey } from "../../../lib/subscriptionPlans"
 import { updateMercadoPagoPreapproval } from "../../../lib/mercadoPago"
 
-type EntityType = "comercio" | "servicio"
-type EntityTable = "comercios" | "servicios"
+type EntityType = "comercio" | "servicio" | "institucion"
+type EntityTable = "comercios" | "servicios" | "instituciones"
 
 type ActionPayload =
   | { action: "save_plan"; planKey: SubscriptionPlanKey }
@@ -23,8 +23,14 @@ function revalidateOwnedEntityPages(type: EntityType, id?: number) {
     return
   }
 
-  revalidatePath("/servicios")
-  if (id) revalidatePath(`/servicios/${id}`)
+  if (type === "servicio") {
+    revalidatePath("/servicios")
+    if (id) revalidatePath(`/servicios/${id}`)
+    return
+  }
+
+  revalidatePath("/instituciones")
+  if (id) revalidatePath(`/instituciones/${id}`)
 }
 
 function getServerSupabase() {
@@ -64,6 +70,7 @@ async function findOwnedEntity(email: string) {
   const configs: Array<{ type: EntityType; table: EntityTable }> = [
     { type: "comercio", table: "comercios" },
     { type: "servicio", table: "servicios" },
+    { type: "institucion", table: "instituciones" },
   ]
 
   for (const config of configs) {

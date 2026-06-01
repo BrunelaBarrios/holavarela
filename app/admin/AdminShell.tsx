@@ -11,6 +11,7 @@ import {
   isActiveAdminRoute,
 } from "./adminNavigation"
 import {
+  ADMIN_SESSION_UPDATED_EVENT,
   clearAdminSession,
   getAdminSession,
   saveAdminSession,
@@ -69,9 +70,13 @@ export default function AdminLayout({
     let mounted = true
 
     const syncSession = async () => {
+      const controller = new AbortController()
+      const timeoutId = window.setTimeout(() => controller.abort(), 8000)
+
       try {
         const response = await fetch("/api/admin/session", {
           cache: "no-store",
+          signal: controller.signal,
         })
         const result = (await response.json()) as {
           session?: { username: string; name: string; role: AdminRole } | null
@@ -88,9 +93,9 @@ export default function AdminLayout({
         }
       } catch {
         if (!mounted) return
-        clearAdminSession()
-        setSession(null)
+        setSession(getAdminSession())
       } finally {
+        window.clearTimeout(timeoutId)
         if (mounted) {
           setIsCheckingSession(false)
         }
@@ -101,6 +106,21 @@ export default function AdminLayout({
 
     return () => {
       mounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    const handleSessionUpdated = () => {
+      setSession(getAdminSession())
+      setIsCheckingSession(false)
+    }
+
+    window.addEventListener(ADMIN_SESSION_UPDATED_EVENT, handleSessionUpdated)
+    window.addEventListener("storage", handleSessionUpdated)
+
+    return () => {
+      window.removeEventListener(ADMIN_SESSION_UPDATED_EVENT, handleSessionUpdated)
+      window.removeEventListener("storage", handleSessionUpdated)
     }
   }, [])
 

@@ -8,11 +8,12 @@ import {
   parseExternalReference,
 } from "../../../lib/mercadoPago"
 
-type EntityTable = "comercios" | "servicios"
+type EntityTable = "comercios" | "servicios" | "instituciones"
 
 const tableByType = {
   comercio: "comercios",
   servicio: "servicios",
+  institucion: "instituciones",
 } as const
 
 const keepsPremiumProfile = (planKey: string | null, statusKey: string) =>
@@ -26,8 +27,14 @@ function revalidateEntityPages(table: EntityTable, id?: number) {
     return
   }
 
-  revalidatePath("/servicios")
-  if (id) revalidatePath(`/servicios/${id}`)
+  if (table === "servicios") {
+    revalidatePath("/servicios")
+    if (id) revalidatePath(`/servicios/${id}`)
+    return
+  }
+
+  revalidatePath("/instituciones")
+  if (id) revalidatePath(`/instituciones/${id}`)
 }
 
 async function updateEntityByReference(params: {
@@ -66,7 +73,7 @@ async function updateEntityByEmail(params: {
   statusKey: string
 }) {
   const supabaseAdmin = getSupabaseAdmin()
-  const tables: EntityTable[] = ["comercios", "servicios"]
+  const tables: EntityTable[] = ["comercios", "servicios", "instituciones"]
 
   for (const table of tables) {
     const { data } = await supabaseAdmin
