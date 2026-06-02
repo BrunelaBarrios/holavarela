@@ -24,6 +24,7 @@ export type Curso = {
   instagram_url?: string | null
   facebook_url?: string | null
   imagen: string | null
+  premium_galeria?: string[] | null
   estado?: string | null
   usa_whatsapp?: boolean | null
 }
@@ -108,6 +109,30 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
         imageSrc={selectedCurso?.imagen || null}
         imageAlt={selectedCurso?.nombre || "Curso"}
         description={selectedCurso?.descripcion || null}
+        extraContent={
+          selectedCurso?.premium_galeria?.length ? (
+            <div>
+              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Galeria
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {selectedCurso.premium_galeria.map((image, index) => (
+                  <div
+                    key={`${image}-${index}`}
+                    className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100"
+                  >
+                    <OptimizedImage
+                      src={image}
+                      alt={`${selectedCurso.nombre} ${index + 1}`}
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                      className="object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null
+        }
         meta={[
           ...(selectedCurso?.responsable
             ? [{ icon: GraduationCap, text: selectedCurso.responsable }]

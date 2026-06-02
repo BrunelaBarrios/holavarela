@@ -110,7 +110,7 @@ const getHomePageData = unstable_cache(
         .order("fecha", { ascending: true }),
       supabaseServer
         .from("cursos")
-        .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, destacado, usa_whatsapp")
+        .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, premium_galeria, destacado, usa_whatsapp")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
         .limit(24),

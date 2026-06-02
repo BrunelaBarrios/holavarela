@@ -38,6 +38,7 @@ import {
   Mail,
   MapPin,
   Phone,
+  Plus,
   UserRound,
   X,
 } from "lucide-react"
@@ -155,6 +156,7 @@ type Curso = {
   instagram_url?: string | null
   facebook_url?: string | null
   imagen: string | null
+  premium_galeria?: string[] | null
   destacado?: boolean | null
   usa_whatsapp?: boolean | null
 }
@@ -1690,6 +1692,36 @@ export function HomePage({
                     {selectedCurso.descripcion}
                   </p>
 
+                {selectedCurso.premium_galeria?.length ? (
+                  <div className="mt-6">
+                    <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                      Galeria
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {selectedCurso.premium_galeria.map((image, index) => (
+                        <button
+                          key={`${image}-${index}`}
+                          type="button"
+                          onClick={() =>
+                            setZoomedImage({
+                              src: image,
+                              alt: `${selectedCurso.nombre} ${index + 1}`,
+                            })
+                          }
+                          className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 transition hover:scale-[1.01]"
+                        >
+                          <OptimizedImage
+                            src={image}
+                            alt={`${selectedCurso.nombre} ${index + 1}`}
+                            sizes="(max-width: 768px) 50vw, 25vw"
+                            className="object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
                 <div className="mt-8 flex flex-wrap gap-3">
                   {selectedCurso.contacto?.trim() ? (
                     <ContactActionLink
@@ -1909,11 +1941,25 @@ export function HomePage({
           </p>
 
           <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Link
+              href="/usuarios/eventos/nuevo?public=1"
+              className="group inline-flex w-full max-w-xs items-center justify-center gap-3 rounded-2xl bg-[linear-gradient(135deg,#16a34a_0%,#0ea5e9_100%)] px-7 py-4 text-base font-black text-white shadow-[0_22px_55px_-22px_rgba(14,165,233,0.9)] ring-1 ring-white/30 transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-24px_rgba(22,163,74,0.75)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 sm:w-auto sm:px-8"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-emerald-600 shadow-sm transition group-hover:scale-105">
+                <Plus className="h-5 w-5 stroke-[3]" />
+              </span>
+              <span className="flex flex-col items-start leading-tight">
+                <span>Sumar evento</span>
+                <span className="mt-1 text-xs font-semibold text-white/85">
+                  Carga una actividad, promo o aviso
+                </span>
+              </span>
+            </Link>
             <button
               onClick={() =>
                 document.getElementById("eventos")?.scrollIntoView({ behavior: "smooth" })
               }
-              className="inline-flex items-center gap-3 rounded-2xl bg-slate-950 px-8 py-4 text-base font-semibold text-white shadow-[0_18px_40px_-20px_rgba(15,23,42,0.85)] transition hover:-translate-y-0.5 hover:bg-slate-900"
+              className="inline-flex w-full max-w-xs items-center justify-center gap-3 rounded-2xl bg-slate-950 px-8 py-4 text-base font-semibold text-white shadow-[0_18px_40px_-20px_rgba(15,23,42,0.85)] transition hover:-translate-y-0.5 hover:bg-slate-900 sm:w-auto"
             >
               Hoy en Varela
               <ArrowRight className="h-5 w-5" />
@@ -2239,7 +2285,14 @@ export function HomePage({
             <p className="mt-4 text-xl text-slate-500">
               Eventos, aviso, promos y sorteos activos
             </p>
-            <div className="mt-6">
+            <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link
+                href="/usuarios/eventos/nuevo?public=1"
+                className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-[0_14px_32px_-18px_rgba(22,163,74,0.85)] transition hover:-translate-y-0.5 hover:bg-emerald-500"
+              >
+                <Plus className="h-4 w-4 stroke-[3]" />
+                Sumar evento
+              </Link>
               <Link
                 href="/eventos"
                 className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"

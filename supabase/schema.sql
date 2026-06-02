@@ -86,6 +86,9 @@ alter table public.cursos
 add column if not exists facebook_url text;
 
 alter table public.cursos
+add column if not exists premium_galeria text[];
+
+alter table public.cursos
 add column if not exists plan_suscripcion text;
 
 alter table public.cursos

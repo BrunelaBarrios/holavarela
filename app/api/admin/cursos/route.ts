@@ -17,6 +17,7 @@ type SaveCursoPayload = {
     instagram_url?: string | null
     facebook_url?: string | null
     imagen?: string | null
+    premium_galeria?: string[] | null
     destacado?: boolean
     estado?: string | null
     usa_whatsapp?: boolean
@@ -59,6 +60,12 @@ function normalizeUrl(value?: string | null) {
   } catch {
     return null
   }
+}
+
+function normalizeTextList(value?: string[] | null) {
+  return Array.isArray(value)
+    ? value.map((item) => item.trim()).filter(Boolean)
+    : []
 }
 
 export async function POST(request: NextRequest) {
@@ -190,6 +197,7 @@ export async function POST(request: NextRequest) {
       instagram_url: normalizeUrl(body.payload.instagram_url),
       facebook_url: normalizeUrl(body.payload.facebook_url),
       imagen: normalizeText(body.payload.imagen),
+      premium_galeria: normalizeTextList(body.payload.premium_galeria),
       destacado: Boolean(body.payload.destacado),
       estado: body.payload.estado || "activo",
       usa_whatsapp: Boolean(body.payload.usa_whatsapp),
