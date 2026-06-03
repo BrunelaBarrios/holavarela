@@ -63,20 +63,9 @@ export function InstitucionesPageClient({
 
     if (!institution) return
 
-    if (hasInstitutionPremium(institution)) {
-      void recordViewMore("instituciones", String(institution.id), institution.nombre)
-      void recordContentVisit("instituciones", String(institution.id), institution.nombre)
-      router.replace(`/instituciones/${institution.id}`)
-      return
-    }
-
     void recordViewMore("instituciones", String(institution.id), institution.nombre)
     void recordContentVisit("instituciones", String(institution.id), institution.nombre)
-    const timeoutId = window.setTimeout(() => {
-      setSelectedInstitucion(institution)
-    }, 0)
-
-    return () => window.clearTimeout(timeoutId)
+    router.replace(`/instituciones/${institution.id}`)
   }, [instituciones, router])
 
   const institucionesFiltradas = useMemo(() => {
@@ -114,14 +103,7 @@ export function InstitucionesPageClient({
   }
 
   const handleOpenInstitucion = (institucion: Institucion) => {
-    if (hasInstitutionPremium(institucion)) {
-      handleOpenPremiumProfile(institucion)
-      return
-    }
-
-    void recordViewMore("instituciones", String(institucion.id), institucion.nombre)
-    void recordContentVisit("instituciones", String(institucion.id), institucion.nombre)
-    setSelectedInstitucion(institucion)
+    handleOpenPremiumProfile(institucion)
   }
 
   const handleOpenPremiumProfile = (institucion: Institucion) => {

@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { notFound, redirect } from "next/navigation"
+import { notFound } from "next/navigation"
 import { cache } from "react"
 import { JsonLd } from "../../components/JsonLd"
 import { PremiumListingPage } from "../../components/public/PremiumListingPage"
@@ -72,10 +72,6 @@ export default async function InstitucionSharePage({
 
   if (data.estado && data.estado !== "activo") {
     notFound()
-  }
-
-  if (!hasInstitutionPremium(data)) {
-    redirect(`/instituciones?item=${encodeURIComponent(id)}`)
   }
 
   const eventRelationFilter = data.owner_email
