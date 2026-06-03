@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
+import { useRouter } from "next/navigation"
 import { ArrowRight, Building2, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
@@ -41,6 +42,7 @@ export function InstitucionesPageClient({
 }: {
   initialInstituciones: Institucion[]
 }) {
+  const router = useRouter()
   const [instituciones] = useState<Institucion[]>(initialInstituciones)
   const [search, setSearch] = useState("")
   const [selectedInstitucion, setSelectedInstitucion] = useState<Institucion | null>(null)
@@ -61,6 +63,13 @@ export function InstitucionesPageClient({
 
     if (!institution) return
 
+    if (hasInstitutionPremium(institution)) {
+      void recordViewMore("instituciones", String(institution.id), institution.nombre)
+      void recordContentVisit("instituciones", String(institution.id), institution.nombre)
+      router.replace(`/instituciones/${institution.id}`)
+      return
+    }
+
     void recordViewMore("instituciones", String(institution.id), institution.nombre)
     void recordContentVisit("instituciones", String(institution.id), institution.nombre)
     const timeoutId = window.setTimeout(() => {
@@ -68,7 +77,7 @@ export function InstitucionesPageClient({
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
-  }, [instituciones])
+  }, [instituciones, router])
 
   const institucionesFiltradas = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -105,6 +114,11 @@ export function InstitucionesPageClient({
   }
 
   const handleOpenInstitucion = (institucion: Institucion) => {
+    if (hasInstitutionPremium(institucion)) {
+      handleOpenPremiumProfile(institucion)
+      return
+    }
+
     void recordViewMore("instituciones", String(institucion.id), institucion.nombre)
     void recordContentVisit("instituciones", String(institucion.id), institucion.nombre)
     setSelectedInstitucion(institucion)
@@ -113,6 +127,7 @@ export function InstitucionesPageClient({
   const handleOpenPremiumProfile = (institucion: Institucion) => {
     void recordViewMore("instituciones", String(institucion.id), institucion.nombre)
     void recordContentVisit("instituciones", String(institucion.id), institucion.nombre)
+    router.push(`/instituciones/${institucion.id}`)
   }
 
   const handleCardKeyDown = (
@@ -128,7 +143,7 @@ export function InstitucionesPageClient({
   return (
     <main className="min-h-screen bg-white">
       <PublicDetailModal
-        open={Boolean(selectedInstitucion)}
+        open={Boolean(selectedInstitucion && !hasInstitutionPremium(selectedInstitucion))}
         onClose={() => setSelectedInstitucion(null)}
         title={selectedInstitucion?.nombre || ""}
         imageSrc={selectedInstitucion?.foto || null}

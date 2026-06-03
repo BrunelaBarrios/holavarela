@@ -57,6 +57,12 @@ export function ComerciosPageClient({
   )
 
   useEffect(() => {
+    if (!selectedComercio?.premium_activo) return
+
+    router.replace(`/comercios/${selectedComercio.id}`)
+  }, [router, selectedComercio])
+
+  useEffect(() => {
     void recordSiteVisit("comercios-page", "Listado de comercios")
   }, [])
 
@@ -121,7 +127,7 @@ export function ComerciosPageClient({
   return (
     <main className="min-h-screen bg-white">
       <PublicDetailModal
-        open={Boolean(selectedComercio)}
+        open={Boolean(selectedComercio && !selectedComercio.premium_activo)}
         onClose={() => setSelectedComercioId(null)}
         title={selectedComercio?.nombre || ""}
         imageSrc={

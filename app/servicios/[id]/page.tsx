@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation"
 import { cache } from "react"
 import { JsonLd } from "../../components/JsonLd"
 import { PremiumListingPage } from "../../components/public/PremiumListingPage"
-import { isEventCurrentOrUpcoming } from "../../lib/eventDates"
+import { compareUpcomingEvents, getTodayInMontevideo, isEventCurrentOrUpcoming } from "../../lib/eventDates"
 import { absoluteUrl, buildPageMetadata } from "../../lib/seo"
 import { buildLocalBusinessSchema } from "../../lib/schema"
 import { supabaseServer } from "../../lib/supabaseServer"
@@ -80,14 +80,16 @@ export default async function ServicioSharePage({
   }
 
   const [relatedEventsResult, relatedCoursesResult] = await Promise.all([
-    data.owner_email
-      ? supabaseServer
-          .from("eventos")
-          .select("id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, descripcion, imagen")
-          .eq("owner_email", data.owner_email)
-          .or("estado.is.null,estado.eq.activo")
-          .order("fecha", { ascending: true })
-      : Promise.resolve({ data: [] as unknown[] }),
+    supabaseServer
+      .from("eventos")
+      .select("id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, descripcion, imagen, estado, servicio_id")
+      .or(
+        data.owner_email
+          ? `servicio_id.eq.${data.id},owner_email.eq.${data.owner_email}`
+          : `servicio_id.eq.${data.id}`
+      )
+      .or("estado.is.null,estado.eq.activo")
+      .order("fecha", { ascending: true }),
     supabaseServer
       .from("cursos")
       // Prefer explicit service-course links to avoid relying on owner email.
@@ -99,6 +101,7 @@ export default async function ServicioSharePage({
 
   const relatedEvents = relatedEventsResult.data || []
   const typedRelatedEvents = relatedEvents as RelatedEvent[]
+  const today = getTodayInMontevideo()
   const relatedCourses = (relatedCoursesResult.data || []) as Array<{
     id: number
     nombre: string
@@ -157,7 +160,9 @@ export default async function ServicioSharePage({
         instagramUrl={data.instagram_url}
         facebookUrl={data.facebook_url}
         usesWhatsapp={data.usa_whatsapp}
-        relatedEvents={typedRelatedEvents.filter((event) => isEventCurrentOrUpcoming(event))}
+        relatedEvents={typedRelatedEvents
+          .filter((event) => isEventCurrentOrUpcoming(event))
+          .sort((first, second) => compareUpcomingEvents(first, second, today))}
         relatedCourses={relatedCourses.length > 0 ? relatedCourses : fallbackCourses}
       />
     </>

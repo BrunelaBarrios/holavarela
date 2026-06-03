@@ -60,6 +60,12 @@ export function ServiciosPageClient({
   )
 
   useEffect(() => {
+    if (!selectedServicio?.premium_activo) return
+
+    router.replace(`/servicios/${selectedServicio.id}`)
+  }, [router, selectedServicio])
+
+  useEffect(() => {
     void recordSiteVisit("servicios-page", "Listado de servicios")
   }, [])
 
@@ -124,7 +130,7 @@ export function ServiciosPageClient({
   return (
     <main className="min-h-screen bg-white">
       <PublicDetailModal
-        open={Boolean(selectedServicio)}
+        open={Boolean(selectedServicio && !selectedServicio.premium_activo)}
         onClose={() => setSelectedServicioId(null)}
         title={selectedServicio?.nombre || ""}
         imageSrc={selectedServicio?.imagen || null}

@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { JsonLd } from "../components/JsonLd"
 import { EventosPageClient } from "../components/public/EventosPageClient"
 import type { Evento } from "../components/public/EventosPageClient"
-import { isEventCurrentOrUpcoming } from "../lib/eventDates"
+import { compareUpcomingEvents, getTodayInMontevideo, isEventCurrentOrUpcoming } from "../lib/eventDates"
 import { absoluteUrl, buildPageMetadata } from "../lib/seo"
 import { buildItemListSchema } from "../lib/schema"
 import { supabaseServer } from "../lib/supabaseServer"
@@ -97,8 +97,10 @@ export default async function EventosPage() {
   )
 
   // Public listings only surface current or upcoming events.
+  const today = getTodayInMontevideo()
   const enrichedEvents = activeEvents
     .filter((evento) => isEventCurrentOrUpcoming(evento))
+    .sort((first, second) => compareUpcomingEvents(first, second, today))
     .map((evento) => {
     const ownerInfo =
       (typeof evento.institucion_id === "number"

@@ -80,14 +80,14 @@ export function PublicDetailModal({
           <X className="h-5 w-5" />
         </button>
 
-        <div className="grid grid-cols-1 xl:items-start xl:grid-cols-[minmax(0,1.1fr)_390px]">
+        <div className="grid grid-cols-1 xl:items-start xl:grid-cols-[minmax(280px,0.78fr)_minmax(0,1.22fr)]">
           <div className="relative bg-[radial-gradient(circle_at_top_left,#e8f6ec_0%,#f4f9ff_38%,#eef4ff_100%)] xl:self-start">
             {imageSrc ? (
-              <div className="flex min-h-[260px] w-full items-center justify-center p-4 md:min-h-[340px] md:p-6 xl:p-8">
+              <div className="flex min-h-[220px] w-full items-center justify-center p-4 md:min-h-[300px] md:p-6 xl:p-6">
                 <button
                   type="button"
                   onClick={() => setIsImageZoomed(true)}
-                  className="group relative flex aspect-[4/5] w-full max-w-[620px] items-center justify-center overflow-hidden rounded-[30px] border border-white/80 bg-white/90 p-3 shadow-[0_28px_80px_-36px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] hover:shadow-[0_32px_90px_-34px_rgba(15,23,42,0.5)] md:max-w-[680px] md:p-4"
+                  className="group relative flex aspect-[4/5] w-full max-w-[420px] items-center justify-center overflow-hidden rounded-[30px] border border-white/80 bg-white/90 p-3 shadow-[0_24px_62px_-34px_rgba(15,23,42,0.42)] transition hover:scale-[1.01] hover:shadow-[0_28px_72px_-34px_rgba(15,23,42,0.48)] md:max-w-[460px] md:p-4"
                   aria-label="Ver imagen más grande"
                 >
                   <span className="absolute left-4 top-4 z-10 rounded-full bg-slate-950/75 px-3 py-1 text-xs font-semibold tracking-[0.2em] text-white/90 uppercase">
@@ -104,7 +104,7 @@ export function PublicDetailModal({
                 </button>
               </div>
             ) : (
-              <div className="flex min-h-[320px] items-center justify-center text-slate-400">
+              <div className="flex min-h-[260px] items-center justify-center text-slate-400">
                 Sin imagen
               </div>
             )}

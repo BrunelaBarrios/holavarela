@@ -125,6 +125,12 @@ alter table public.eventos
 add column if not exists institucion_id bigint;
 
 alter table public.eventos
+add column if not exists servicio_id bigint;
+
+alter table public.eventos
+add column if not exists comercio_id bigint;
+
+alter table public.eventos
 add column if not exists web_url text;
 
 alter table public.eventos

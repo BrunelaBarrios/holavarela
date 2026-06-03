@@ -56,14 +56,21 @@ const initialForm: EventForm = {
   submitterPhone: "",
 }
 
-const revalidateEventPages = async (id?: string | null) => {
+const revalidateEventPages = async (
+  id?: string | null,
+  related?: {
+    comercio_id?: number | null
+    servicio_id?: number | null
+    institucion_id?: number | null
+  }
+) => {
   try {
     await fetch("/api/eventos/revalidate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id, ...related }),
     })
   } catch (error) {
     console.error("No pudimos actualizar la cache de eventos:", error)
@@ -86,6 +93,13 @@ export default function UsuariosNuevoEventoPage() {
 
   const hasMissingInstitutionIdColumn = (message?: string | null) =>
     Boolean(message && message.toLowerCase().includes("institucion_id"))
+  const hasMissingProfileRelationColumn = (message?: string | null) =>
+    Boolean(
+      message &&
+        (message.toLowerCase().includes("institucion_id") ||
+          message.toLowerCase().includes("servicio_id") ||
+          message.toLowerCase().includes("comercio_id"))
+    )
 
   useEffect(() => {
     const loadContext = async () => {
@@ -257,8 +271,12 @@ export default function UsuariosNuevoEventoPage() {
       estado: "borrador",
       usa_whatsapp: formData.usaWhatsapp,
       owner_email: publicMode ? null : ownerEmail,
-      // Institutions keep a stable relation via institucion_id so premium pages
-      // can show their events even if owner_email changes or is missing.
+      // Keep a stable relation so premium pages can show events even if
+      // owner_email changes or is missing.
+      comercio_id:
+        publicMode || ownedEntity?.type !== "comercio" ? null : ownedEntity.record.id,
+      servicio_id:
+        publicMode || ownedEntity?.type !== "servicio" ? null : ownedEntity.record.id,
       institucion_id:
         publicMode || ownedEntity?.type !== "institucion" ? null : ownedEntity.record.id,
     }
@@ -283,9 +301,11 @@ export default function UsuariosNuevoEventoPage() {
       }
 
       setSuccess(result?.message || "Recibimos tu contenido y lo vamos a revisar.")
-    } else {
+      } else {
       const runEventSave = (
-        payloadToSave: typeof payload | Omit<typeof payload, "institucion_id">
+        payloadToSave:
+          | typeof payload
+          | Omit<typeof payload, "comercio_id" | "servicio_id" | "institucion_id">
       ) =>
         editingEventId
           ? supabase
@@ -297,10 +317,12 @@ export default function UsuariosNuevoEventoPage() {
 
       let { error: saveError } = await runEventSave(payload)
 
-      if (saveError && hasMissingInstitutionIdColumn(saveError.message)) {
+      if (saveError && (hasMissingInstitutionIdColumn(saveError.message) || hasMissingProfileRelationColumn(saveError.message))) {
         const legacyPayload = Object.fromEntries(
-          Object.entries(payload).filter(([key]) => key !== "institucion_id")
-        ) as Omit<typeof payload, "institucion_id">
+          Object.entries(payload).filter(
+            ([key]) => !["comercio_id", "servicio_id", "institucion_id"].includes(key)
+          )
+        ) as Omit<typeof payload, "comercio_id" | "servicio_id" | "institucion_id">
         ;({ error: saveError } = await runEventSave(legacyPayload))
       }
 
@@ -310,7 +332,11 @@ export default function UsuariosNuevoEventoPage() {
         return
       }
 
-      await revalidateEventPages(editingEventId)
+      await revalidateEventPages(editingEventId, {
+        comercio_id: payload.comercio_id,
+        servicio_id: payload.servicio_id,
+        institucion_id: payload.institucion_id,
+      })
 
       setSuccess(
         editingEventId

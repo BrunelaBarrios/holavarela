@@ -6,7 +6,14 @@ import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { OptimizedImage } from "../../components/OptimizedImage"
 import { buildShareCountMap } from "../../lib/shareTracking"
 import { supabase } from "../../supabase"
-import { buildMonthEventRange, formatEventDateRange, getTodayInMontevideo } from "../../lib/eventDates"
+import {
+  buildMonthEventRange,
+  comparePastEvents,
+  compareUpcomingEvents,
+  formatEventDateRange,
+  getEventEndDate,
+  getTodayInMontevideo,
+} from "../../lib/eventDates"
 import { buildEventDescription, parseEventDescription } from "../../lib/eventSubmissionMeta"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 import { postAdminAction } from "../lib/adminActions"
@@ -29,6 +36,9 @@ type Evento = {
   usa_whatsapp?: boolean | null
   share_count?: number
   owner_email?: string | null
+  comercio_id?: number | null
+  servicio_id?: number | null
+  institucion_id?: number | null
 }
 
 type EventoForm = {
@@ -47,6 +57,13 @@ type EventoForm = {
   descripcion: string
   imagen: string
   usaWhatsapp: boolean
+  relatedProfile: string
+}
+
+type RelatedProfileOption = {
+  type: "comercio" | "servicio" | "institucion"
+  id: number
+  nombre: string
 }
 
 const initialForm: EventoForm = {
@@ -65,6 +82,7 @@ const initialForm: EventoForm = {
   descripcion: "",
   imagen: "",
   usaWhatsapp: true,
+  relatedProfile: "",
 }
 
 const normalizeAdminEventCategory = (categoria?: string | null) => {
@@ -87,6 +105,7 @@ export default function AdminEventosPage() {
   const [saveError, setSaveError] = useState("")
   const [deletingEvento, setDeletingEvento] = useState<Evento | null>(null)
   const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
+  const [relatedProfileOptions, setRelatedProfileOptions] = useState<RelatedProfileOption[]>([])
   const today = getTodayInMontevideo()
 
   const runAdminAction = (body: unknown) =>
@@ -97,7 +116,7 @@ export default function AdminEventosPage() {
     )
 
   const isPastEvent = (evento: Evento) => {
-    const endDate = evento.fecha_fin || evento.fecha
+    const endDate = getEventEndDate(evento) || evento.fecha
     return endDate < today
   }
 
@@ -106,7 +125,7 @@ export default function AdminEventosPage() {
       supabase
         .from("eventos")
         .select(
-          "id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, descripcion, estado, usa_whatsapp, owner_email"
+          "id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, descripcion, estado, usa_whatsapp, owner_email, comercio_id, servicio_id, institucion_id"
         )
         .order("fecha", { ascending: true }),
       supabase.from("share_events").select("item_id").eq("section", "eventos"),
@@ -132,19 +151,78 @@ export default function AdminEventosPage() {
     )
   }
 
+  const cargarPerfilesRelacionados = async () => {
+    const [comerciosResult, serviciosResult, institucionesResult] = await Promise.all([
+      supabase
+        .from("comercios")
+        .select("id, nombre")
+        .or("estado.is.null,estado.eq.activo")
+        .order("nombre", { ascending: true }),
+      supabase
+        .from("servicios")
+        .select("id, nombre")
+        .or("estado.is.null,estado.eq.activo")
+        .order("nombre", { ascending: true }),
+      supabase
+        .from("instituciones")
+        .select("id, nombre")
+        .or("estado.is.null,estado.eq.activo")
+        .order("nombre", { ascending: true }),
+    ])
+
+    const warnings: string[] = []
+    if (comerciosResult.error) {
+      warnings.push(`No se pudieron cargar los comercios: ${comerciosResult.error.message}`)
+    }
+    if (serviciosResult.error) {
+      warnings.push(`No se pudieron cargar los servicios: ${serviciosResult.error.message}`)
+    }
+    if (institucionesResult.error) {
+      warnings.push(`No se pudieron cargar las instituciones: ${institucionesResult.error.message}`)
+    }
+
+    if (warnings.length) {
+      setSaveError(warnings.join(" "))
+    }
+
+    setRelatedProfileOptions([
+      ...((comerciosResult.data || []) as Array<{ id: number; nombre: string }>).map((item) => ({
+        type: "comercio" as const,
+        id: item.id,
+        nombre: item.nombre,
+      })),
+      ...((serviciosResult.data || []) as Array<{ id: number; nombre: string }>).map((item) => ({
+        type: "servicio" as const,
+        id: item.id,
+        nombre: item.nombre,
+      })),
+      ...((institucionesResult.data || []) as Array<{ id: number; nombre: string }>).map((item) => ({
+        type: "institucion" as const,
+        id: item.id,
+        nombre: item.nombre,
+      })),
+    ])
+  }
+
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
-      void cargarEventos()
+      void Promise.all([cargarEventos(), cargarPerfilesRelacionados()])
     }, 0)
 
     return () => window.clearTimeout(timeoutId)
   }, [])
 
-  const visibleEventos = eventos.filter((evento) => {
-    if (activeTab === "borradores") return evento.estado === "borrador"
-    if (evento.estado === "borrador") return false
-    return activeTab === "vigentes" ? !isPastEvent(evento) : isPastEvent(evento)
-  })
+  const visibleEventos = eventos
+    .filter((evento) => {
+      if (activeTab === "borradores") return evento.estado === "borrador"
+      if (evento.estado === "borrador") return false
+      return activeTab === "vigentes" ? !isPastEvent(evento) : isPastEvent(evento)
+    })
+    .sort((first, second) =>
+      activeTab === "pasados"
+        ? comparePastEvents(first, second)
+        : compareUpcomingEvents(first, second, today)
+    )
   const vigentesCount = eventos.filter(
     (evento) => evento.estado !== "borrador" && !isPastEvent(evento)
   ).length
@@ -159,6 +237,24 @@ export default function AdminEventosPage() {
     setIsFormOpen(false)
     setSaveError("")
     setSubmitMode("publish")
+  }
+
+  const getRelatedProfileValue = (evento: Evento) => {
+    if (evento.comercio_id) return `comercio:${evento.comercio_id}`
+    if (evento.servicio_id) return `servicio:${evento.servicio_id}`
+    if (evento.institucion_id) return `institucion:${evento.institucion_id}`
+    return ""
+  }
+
+  const parseRelatedProfileValue = (value: string) => {
+    const [type, id] = value.split(":")
+    const numericId = Number(id)
+
+    return {
+      comercio_id: type === "comercio" && numericId ? numericId : null,
+      servicio_id: type === "servicio" && numericId ? numericId : null,
+      institucion_id: type === "institucion" && numericId ? numericId : null,
+    }
   }
 
   const handleEdit = async (evento: Evento) => {
@@ -197,6 +293,7 @@ export default function AdminEventosPage() {
       descripcion: parseEventDescription(eventoToEdit.descripcion).baseDescription || "",
       imagen: eventoToEdit.imagen || "",
       usaWhatsapp: eventoToEdit.usa_whatsapp ?? true,
+      relatedProfile: getRelatedProfileValue(eventoToEdit),
     })
     setIsFormOpen(true)
   }
@@ -327,6 +424,7 @@ export default function AdminEventosPage() {
     }
 
     const payload = {
+      ...parseRelatedProfileValue(formData.relatedProfile),
       titulo: formData.titulo,
       categoria: formData.categoria,
       fecha: startDate,
@@ -458,6 +556,39 @@ export default function AdminEventosPage() {
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-900">
+                  Mostrar en perfil completo
+                </label>
+                <select
+                  value={formData.relatedProfile}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      relatedProfile: e.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
+                >
+                  <option value="">Sin perfil asociado</option>
+                  {relatedProfileOptions.map((option) => (
+                    <option
+                      key={`${option.type}:${option.id}`}
+                      value={`${option.type}:${option.id}`}
+                    >
+                      {option.type === "comercio"
+                        ? "Comercio"
+                        : option.type === "servicio"
+                          ? "Servicio"
+                          : "Institucion"}: {option.nombre}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-2 text-sm text-slate-500">
+                  Si elegis un perfil premium, el evento va a aparecer dentro de su ficha completa.
+                </p>
               </div>
 
               <div>

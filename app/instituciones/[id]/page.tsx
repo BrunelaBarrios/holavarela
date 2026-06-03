@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation"
 import { cache } from "react"
 import { JsonLd } from "../../components/JsonLd"
 import { PremiumListingPage } from "../../components/public/PremiumListingPage"
-import { isEventCurrentOrUpcoming } from "../../lib/eventDates"
+import { compareUpcomingEvents, getTodayInMontevideo, isEventCurrentOrUpcoming } from "../../lib/eventDates"
 import { absoluteUrl, buildPageMetadata } from "../../lib/seo"
 import { buildLocalBusinessSchema } from "../../lib/schema"
 import { supabaseServer } from "../../lib/supabaseServer"
@@ -108,6 +108,7 @@ export default async function InstitucionSharePage({
   const relatedEvents = (relatedEventsResult.data || []).filter(
     (event) => !event.estado || event.estado === "activo"
   )
+  const today = getTodayInMontevideo()
   const relatedCourses = relatedCoursesResult.data || []
 
   return (
@@ -141,7 +142,9 @@ export default async function InstitucionSharePage({
         instagramUrl={data.instagram_url}
         facebookUrl={data.facebook_url}
         usesWhatsapp={data.usa_whatsapp}
-        relatedEvents={(relatedEvents || []).filter((event) => isEventCurrentOrUpcoming(event))}
+        relatedEvents={(relatedEvents || [])
+          .filter((event) => isEventCurrentOrUpcoming(event))
+          .sort((first, second) => compareUpcomingEvents(first, second, today))}
         relatedCourses={data.premium_cursos_activo ? relatedCourses || [] : []}
         relatedCoursesTitle={
           data.premium_cursos_titulo?.trim() || `Cursos, clases y talleres de ${data.nombre}`

@@ -3,6 +3,9 @@ import { NextResponse } from "next/server"
 
 type RevalidateEventPayload = {
   id?: string | number | null
+  comercio_id?: number | null
+  servicio_id?: number | null
+  institucion_id?: number | null
 }
 
 export async function POST(request: Request) {
@@ -13,6 +16,15 @@ export async function POST(request: Request) {
 
   if (body.id) {
     revalidatePath(`/eventos/${body.id}`)
+  }
+  if (body.comercio_id) {
+    revalidatePath(`/comercios/${body.comercio_id}`)
+  }
+  if (body.servicio_id) {
+    revalidatePath(`/servicios/${body.servicio_id}`)
+  }
+  if (body.institucion_id) {
+    revalidatePath(`/instituciones/${body.institucion_id}`)
   }
 
   return NextResponse.json({ ok: true })

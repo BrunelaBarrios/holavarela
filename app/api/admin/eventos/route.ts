@@ -22,6 +22,9 @@ type SaveEventoPayload = {
     imagen?: string | null
     estado?: string | null
     usa_whatsapp?: boolean
+    comercio_id?: number | null
+    servicio_id?: number | null
+    institucion_id?: number | null
   }
 }
 
@@ -63,11 +66,27 @@ function normalizeUrl(value?: string | null) {
   }
 }
 
-function revalidateEventoPages(id?: number | string) {
+function revalidateEventoPages(
+  id?: number | string,
+  related?: {
+    comercio_id?: number | null
+    servicio_id?: number | null
+    institucion_id?: number | null
+  }
+) {
   revalidatePath("/")
   revalidatePath("/eventos")
   if (id) {
     revalidatePath(`/eventos/${id}`)
+  }
+  if (related?.comercio_id) {
+    revalidatePath(`/comercios/${related.comercio_id}`)
+  }
+  if (related?.servicio_id) {
+    revalidatePath(`/servicios/${related.servicio_id}`)
+  }
+  if (related?.institucion_id) {
+    revalidatePath(`/instituciones/${related.institucion_id}`)
   }
 }
 
@@ -88,7 +107,7 @@ export async function POST(request: NextRequest) {
 
       const { data: existing, error: loadError } = await supabaseAdmin
         .from("eventos")
-        .select("id, titulo")
+        .select("id, titulo, comercio_id, servicio_id, institucion_id")
         .eq("id", body.id)
         .maybeSingle()
 
@@ -106,7 +125,7 @@ export async function POST(request: NextRequest) {
         target: existing.titulo,
       })
 
-      revalidateEventoPages(body.id)
+      revalidateEventoPages(body.id, existing)
 
       return NextResponse.json({ ok: true })
     }
@@ -118,7 +137,7 @@ export async function POST(request: NextRequest) {
 
       const { data: existing, error: loadError } = await supabaseAdmin
         .from("eventos")
-        .select("id, titulo, estado")
+        .select("id, titulo, estado, comercio_id, servicio_id, institucion_id")
         .eq("id", body.id)
         .maybeSingle()
 
@@ -150,7 +169,7 @@ export async function POST(request: NextRequest) {
         target: existing.titulo,
       })
 
-      revalidateEventoPages(body.id)
+      revalidateEventoPages(body.id, data)
 
       return NextResponse.json({ ok: true, record: data })
     }
@@ -187,6 +206,9 @@ export async function POST(request: NextRequest) {
         estado: "borrador",
         usa_whatsapp: Boolean(existing.usa_whatsapp),
         owner_email: normalizeText(existing.owner_email),
+        comercio_id: existing.comercio_id || null,
+        servicio_id: existing.servicio_id || null,
+        institucion_id: existing.institucion_id || null,
       }
 
       const { data, error } = await supabaseAdmin
@@ -203,7 +225,7 @@ export async function POST(request: NextRequest) {
         target: existing.titulo,
       })
 
-      revalidateEventoPages(data.id)
+      revalidateEventoPages(data.id, data)
 
       return NextResponse.json({ ok: true, record: data })
     }
@@ -227,6 +249,9 @@ export async function POST(request: NextRequest) {
       imagen: normalizeText(body.payload.imagen),
       estado: body.payload.estado || "activo",
       usa_whatsapp: Boolean(body.payload.usa_whatsapp),
+      comercio_id: body.payload.comercio_id || null,
+      servicio_id: body.payload.servicio_id || null,
+      institucion_id: body.payload.institucion_id || null,
     }
 
     if (!payload.titulo || !payload.fecha || !payload.ubicacion || !payload.descripcion) {
@@ -239,6 +264,19 @@ export async function POST(request: NextRequest) {
     if (!body.id && !payload.imagen) {
       return NextResponse.json(
         { error: "Tenes que cargar una foto para crear un evento." },
+        { status: 400 }
+      )
+    }
+
+    const relatedProfilesCount = [
+      payload.comercio_id,
+      payload.servicio_id,
+      payload.institucion_id,
+    ].filter(Boolean).length
+
+    if (relatedProfilesCount > 1) {
+      return NextResponse.json(
+        { error: "El evento puede estar asociado a un solo perfil." },
         { status: 400 }
       )
     }
@@ -260,7 +298,7 @@ export async function POST(request: NextRequest) {
         target: payload.titulo,
       })
 
-      revalidateEventoPages(body.id)
+      revalidateEventoPages(body.id, data)
 
       return NextResponse.json({ ok: true, record: data })
     }
@@ -279,7 +317,7 @@ export async function POST(request: NextRequest) {
       target: payload.titulo,
     })
 
-    revalidateEventoPages(data.id)
+    revalidateEventoPages(data.id, data)
 
     return NextResponse.json({ ok: true, record: data })
   } catch (error) {

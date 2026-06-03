@@ -947,6 +947,14 @@ export function HomePage({
         (item) => `comercio-${item.id}` === welcomeHighlight.key
       )
       if (comercio) {
+        if (comercio.premium_activo) {
+          void recordViewMore("comercios", String(comercio.id), comercio.nombre)
+          void recordContentVisit("comercios", String(comercio.id), comercio.nombre)
+          router.push(`/comercios/${comercio.id}`)
+          closeWelcomeHighlight()
+          return
+        }
+
         setSelectedComercio(comercio)
       }
     }
@@ -958,6 +966,14 @@ export function HomePage({
         (item) => `servicio-${item.id}` === welcomeHighlight.key
       )
       if (servicio) {
+        if (servicio.premium_activo) {
+          void recordViewMore("servicios", String(servicio.id), servicio.nombre)
+          void recordContentVisit("servicios", String(servicio.id), servicio.nombre)
+          router.push(`/servicios/${servicio.id}`)
+          closeWelcomeHighlight()
+          return
+        }
+
         setSelectedServicio(servicio)
       }
     }
@@ -1643,10 +1659,10 @@ export function HomePage({
               <X className="h-5 w-5" />
             </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_0.55fr]">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,0.78fr)_minmax(0,1.22fr)]">
                 <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                   {selectedCurso.imagen ? (
-                    <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
+                    <div className="flex min-h-[260px] w-full items-center justify-center bg-slate-100 p-5 md:min-h-[340px]">
                       <button
                         type="button"
                         onClick={() =>
@@ -1655,7 +1671,7 @@ export function HomePage({
                             alt: selectedCurso.nombre,
                           })
                         }
-                        className="relative aspect-[4/5] h-[380px] w-full max-w-[680px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[560px]"
+                        className="relative aspect-[4/5] h-[300px] w-full max-w-[430px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[420px]"
                         aria-label="Ver imagen más grande"
                       >
                         <OptimizedImage
@@ -1667,7 +1683,7 @@ export function HomePage({
                       </button>
                     </div>
                   ) : (
-                  <div className="flex min-h-[320px] items-center justify-center text-slate-400">
+                  <div className="flex min-h-[260px] items-center justify-center text-slate-400">
                     Sin imagen
                   </div>
                 )}
@@ -1777,10 +1793,10 @@ export function HomePage({
               <X className="h-5 w-5" />
             </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1.45fr_0.55fr]">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,0.78fr)_minmax(0,1.22fr)]">
               <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
                 {selectedInstitucion.foto ? (
-                  <div className="flex min-h-[320px] w-full items-center justify-center bg-slate-100 p-6 md:min-h-[420px]">
+                  <div className="flex min-h-[260px] w-full items-center justify-center bg-slate-100 p-5 md:min-h-[340px]">
                     <button
                       type="button"
                       onClick={() =>
@@ -1789,7 +1805,7 @@ export function HomePage({
                           alt: selectedInstitucion.nombre,
                         })
                       }
-                      className="relative aspect-[4/5] h-[380px] w-full max-w-[680px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[560px]"
+                      className="relative aspect-[4/5] h-[300px] w-full max-w-[430px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] transition hover:scale-[1.01] md:h-[420px]"
                       aria-label="Ver imagen más grande"
                     >
                       <OptimizedImage
@@ -1801,7 +1817,7 @@ export function HomePage({
                     </button>
                   </div>
                 ) : (
-                  <div className="flex min-h-[320px] items-center justify-center bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_50%,#f8fafc_100%)] text-slate-500">
+                  <div className="flex min-h-[260px] items-center justify-center bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_50%,#f8fafc_100%)] text-slate-500">
                     <div className="flex flex-col items-center text-center">
                       <div className="flex h-20 w-20 items-center justify-center rounded-[28px] border border-cyan-100 bg-white text-cyan-700 shadow-sm">
                         <Building2 className="h-10 w-10" />

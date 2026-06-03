@@ -37,6 +37,69 @@ const getMonthEndDate = (year: number, month: number) => {
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`
 }
 
+type EventDateFields = {
+  id?: number | string | null
+  fecha?: string | null
+  fecha_fin?: string | null
+  fecha_solo_mes?: boolean | null
+}
+
+const fallbackFutureDate = "9999-12-31"
+const fallbackPastDate = "0000-01-01"
+
+const getEventStartDate = (event: EventDateFields) => event.fecha || fallbackFutureDate
+
+export const getEventEndDate = (event: EventDateFields) => {
+  if (!event.fecha) return null
+
+  if (event.fecha_solo_mes) {
+    return buildMonthEventRange(event.fecha.slice(0, 7))?.endDate || event.fecha
+  }
+
+  return event.fecha_fin || event.fecha
+}
+
+const getEventSortDate = (event: EventDateFields, today: string) => {
+  if (!event.fecha) return fallbackFutureDate
+
+  const endDate = getEventEndDate(event)
+  if (endDate && event.fecha <= today && endDate >= today) return today
+
+  return event.fecha
+}
+
+export const compareUpcomingEvents = <T extends EventDateFields>(
+  first: T,
+  second: T,
+  today = getTodayInMontevideo()
+) => {
+  const firstSortDate = getEventSortDate(first, today)
+  const secondSortDate = getEventSortDate(second, today)
+  if (firstSortDate !== secondSortDate) return firstSortDate.localeCompare(secondSortDate)
+
+  const firstMonthOnly = first.fecha_solo_mes ? 1 : 0
+  const secondMonthOnly = second.fecha_solo_mes ? 1 : 0
+  if (firstMonthOnly !== secondMonthOnly) return firstMonthOnly - secondMonthOnly
+
+  const firstStartDate = getEventStartDate(first)
+  const secondStartDate = getEventStartDate(second)
+  if (firstStartDate !== secondStartDate) return firstStartDate.localeCompare(secondStartDate)
+
+  return String(first.id || "").localeCompare(String(second.id || ""))
+}
+
+export const comparePastEvents = <T extends EventDateFields>(first: T, second: T) => {
+  const firstEndDate = getEventEndDate(first) || fallbackPastDate
+  const secondEndDate = getEventEndDate(second) || fallbackPastDate
+  if (firstEndDate !== secondEndDate) return secondEndDate.localeCompare(firstEndDate)
+
+  const firstStartDate = getEventStartDate(first)
+  const secondStartDate = getEventStartDate(second)
+  if (firstStartDate !== secondStartDate) return secondStartDate.localeCompare(firstStartDate)
+
+  return String(second.id || "").localeCompare(String(first.id || ""))
+}
+
 const formatLongDate = (value: string, locale = "es-UY") => {
   const date = parseEventDate(value)
   if (!date) return value
@@ -125,11 +188,7 @@ export const isEventCurrentOrUpcoming = ({
     return Boolean(monthRange && monthRange.endDate >= today)
   }
 
-  if (fecha_fin) {
-    return fecha_fin >= today
-  }
-
-  return fecha >= today
+  return (getEventEndDate({ fecha, fecha_fin, fecha_solo_mes }) || fecha) >= today
 }
 
 export const isEventExpiredBefore = (

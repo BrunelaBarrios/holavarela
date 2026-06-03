@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation"
 import { cache } from "react"
 import { JsonLd } from "../../components/JsonLd"
 import { PremiumListingPage } from "../../components/public/PremiumListingPage"
-import { isEventCurrentOrUpcoming } from "../../lib/eventDates"
+import { compareUpcomingEvents, getTodayInMontevideo, isEventCurrentOrUpcoming } from "../../lib/eventDates"
 import { absoluteUrl } from "../../lib/seo"
 import { buildPageMetadata } from "../../lib/seo"
 import { buildLocalBusinessSchema } from "../../lib/schema"
@@ -69,25 +69,38 @@ export default async function ComercioSharePage({
     redirect(`/comercios?item=${encodeURIComponent(id)}`)
   }
 
-  const [relatedEventsResult, relatedCoursesResult] = data.owner_email
-    ? await Promise.all([
-        supabaseServer
-          .from("eventos")
-          .select("id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, descripcion, imagen")
-          .eq("owner_email", data.owner_email)
-          .or("estado.is.null,estado.eq.activo")
-          .order("fecha", { ascending: true }),
-        supabaseServer
+  const eventRelationFilter = data.owner_email
+    ? `comercio_id.eq.${data.id},owner_email.eq.${data.owner_email}`
+    : `comercio_id.eq.${data.id}`
+
+  const [relatedEventsResult, relatedCoursesResult] = await Promise.all([
+    supabaseServer
+      .from("eventos")
+      .select("id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, descripcion, imagen, estado, comercio_id")
+      .or(eventRelationFilter)
+      .or("estado.is.null,estado.eq.activo")
+      .order("fecha", { ascending: true }),
+    data.owner_email
+      ? supabaseServer
           .from("cursos")
           .select("id, nombre, descripcion, responsable, contacto, imagen, estado")
           .eq("owner_email", data.owner_email)
           .eq("estado", "activo")
-          .order("id", { ascending: false }),
-      ])
-    : [{ data: [] }, { data: [] }]
+          .order("id", { ascending: false })
+      : Promise.resolve({ data: [] as unknown[] }),
+  ])
 
   const relatedEvents = relatedEventsResult.data || []
-  const relatedCourses = relatedCoursesResult.data || []
+  const today = getTodayInMontevideo()
+  const relatedCourses = (relatedCoursesResult.data || []) as Array<{
+    id: number
+    nombre: string
+    descripcion?: string | null
+    responsable?: string | null
+    contacto?: string | null
+    imagen?: string | null
+    estado?: string | null
+  }>
 
   return (
     <>
@@ -120,7 +133,9 @@ export default async function ComercioSharePage({
         instagramUrl={data.instagram_url}
         facebookUrl={data.facebook_url}
         usesWhatsapp={data.usa_whatsapp}
-        relatedEvents={(relatedEvents || []).filter((event) => isEventCurrentOrUpcoming(event))}
+        relatedEvents={(relatedEvents || [])
+          .filter((event) => isEventCurrentOrUpcoming(event))
+          .sort((first, second) => compareUpcomingEvents(first, second, today))}
         relatedCourses={relatedCourses || []}
       />
     </>

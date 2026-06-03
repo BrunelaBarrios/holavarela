@@ -2,6 +2,7 @@ import { HomePage, type HomePageData, type WeatherData } from "./components/Home
 import { unstable_cache } from "next/cache"
 import {
   buildActiveEventsFilter,
+  compareUpcomingEvents,
   getDateKeyDaysAgo,
   getTodayInMontevideo,
   isEventCurrentOrUpcoming,
@@ -162,6 +163,7 @@ const getHomePageData = unstable_cache(
         // Show current/upcoming items in home, and only allow very recent
         // commercial posts without a usable event date as a fallback.
         return (eventsForHome.length ? eventsForHome : activeEvents)
+          .sort((first, second) => compareUpcomingEvents(first, second, today))
           .slice(0, 30)
           .map((item) => withDataUrlImage(item, "eventos"))
       })(),

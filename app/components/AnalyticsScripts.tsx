@@ -1,3 +1,5 @@
+import Script from "next/script"
+
 const GA_MEASUREMENT_ID =
   process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-8HD2BZ2N3T"
 const CLARITY_PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID
@@ -7,12 +9,15 @@ export function AnalyticsScripts() {
     <>
       {GA_MEASUREMENT_ID ? (
         <>
-          <script
+          <Script
+            id="ga4-loader"
+            strategy="afterInteractive"
             async
             src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
           />
-          <script
+          <Script
             id="ga4-init"
+            strategy="afterInteractive"
             dangerouslySetInnerHTML={{
               __html: `
               window.dataLayer = window.dataLayer || [];
@@ -29,8 +34,9 @@ export function AnalyticsScripts() {
       ) : null}
 
       {CLARITY_PROJECT_ID ? (
-        <script
+        <Script
           id="clarity-init"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
             (function(c,l,a,r,i,t,y){
