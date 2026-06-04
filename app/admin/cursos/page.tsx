@@ -327,9 +327,9 @@ export default function AdminCursosPage() {
 
     try {
       const imageDataUrl = await fileToDataUrl(file, {
-        maxWidth: 720,
-        maxHeight: 1440,
-        targetFileSizeBytes: 160 * 1024,
+        maxWidth: 1200,
+        maxHeight: 1600,
+        targetFileSizeBytes: 320 * 1024,
       })
       setFormData((prev) => ({ ...prev, imagen: imageDataUrl }))
     } catch (error) {
@@ -360,9 +360,9 @@ export default function AdminCursosPage() {
       const nextImages = await Promise.all(
         files.map((file) =>
           fileToDataUrl(file, {
-            maxWidth: 560,
-            maxHeight: 1120,
-            targetFileSizeBytes: 120 * 1024,
+            maxWidth: 900,
+            maxHeight: 1400,
+            targetFileSizeBytes: 240 * 1024,
           })
         )
       )
@@ -654,12 +654,12 @@ export default function AdminCursosPage() {
                 </p>
                 {formData.imagen && (
                   <div className="mt-4 space-y-3">
-                    <div className="relative h-40 w-full overflow-hidden rounded-2xl">
+                    <div className="relative h-52 w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
                       <OptimizedImage
                         src={formData.imagen}
                         alt="Vista previa del curso"
                         sizes="100vw"
-                        className="object-cover"
+                        className="object-contain p-3"
                       />
                     </div>
                     <button
@@ -711,13 +711,13 @@ export default function AdminCursosPage() {
                         .map((image, index) => (
                           <div
                             key={`${image}-${index}`}
-                            className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100"
+                            className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
                           >
                             <OptimizedImage
                               src={image}
                               alt={`Foto adicional ${index + 1}`}
                               sizes="(max-width: 768px) 50vw, 25vw"
-                              className="object-cover"
+                              className="object-contain p-2"
                             />
                           </div>
                         ))}
@@ -777,12 +777,12 @@ export default function AdminCursosPage() {
             className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
           >
             {curso.imagen && (
-              <div className="relative h-56 w-full">
+              <div className="relative h-56 w-full border-b border-slate-100 bg-slate-50">
                 <OptimizedImage
                   src={curso.imagen}
                   alt={curso.nombre}
                   sizes="(max-width: 1280px) 50vw, 33vw"
-                  className="object-cover"
+                  className="object-contain p-3"
                 />
               </div>
             )}

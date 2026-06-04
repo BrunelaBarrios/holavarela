@@ -1724,13 +1724,13 @@ export function HomePage({
                               alt: `${selectedCurso.nombre} ${index + 1}`,
                             })
                           }
-                          className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 transition hover:scale-[1.01]"
+                          className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 transition hover:scale-[1.01]"
                         >
                           <OptimizedImage
                             src={image}
                             alt={`${selectedCurso.nombre} ${index + 1}`}
                             sizes="(max-width: 768px) 50vw, 25vw"
-                            className="object-cover"
+                            className="object-contain p-2"
                           />
                         </button>
                       ))}

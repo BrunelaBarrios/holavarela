@@ -119,13 +119,13 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                 {selectedCurso.premium_galeria.map((image, index) => (
                   <div
                     key={`${image}-${index}`}
-                    className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-100"
+                    className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
                   >
                     <OptimizedImage
                       src={image}
                       alt={`${selectedCurso.nombre} ${index + 1}`}
                       sizes="(max-width: 768px) 50vw, 25vw"
-                      className="object-cover"
+                      className="object-contain p-2"
                     />
                   </div>
                 ))}
@@ -229,12 +229,12 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                 className="cursor-pointer overflow-hidden rounded-xl border border-gray-200 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
                 {curso.imagen ? (
-                  <div className="relative h-56 w-full">
+                  <div className="relative h-56 w-full border-b border-slate-100 bg-slate-50">
                     <OptimizedImage
                       src={curso.imagen}
                       alt={curso.nombre}
                       sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                      className="object-cover"
+                      className="object-contain p-3"
                     />
                   </div>
                 ) : (
