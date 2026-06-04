@@ -4,10 +4,14 @@ type SupabaseErrorLike = {
 }
 
 export type ChallengeKey = "sopa" | "memoria" | "pelicula" | "puzzle" | "laberinto"
+export type ChallengeMemoryMode = "palabras" | "logos"
 
 export type ChallengeConfig = {
   activo: boolean
   juegosActivos: ChallengeKey[]
+  sopaPalabras: string[]
+  memoriaModo: ChallengeMemoryMode
+  puzzleImagenes: string[]
   slug?: string
   titulo?: string
 }
@@ -53,6 +57,9 @@ export const CHALLENGE_GAME_OPTIONS: Array<{
 export const DEFAULT_CHALLENGE_CONFIG: ChallengeConfig = {
   activo: true,
   juegosActivos: CHALLENGE_GAME_OPTIONS.map((game) => game.key),
+  sopaPalabras: [],
+  memoriaModo: "palabras",
+  puzzleImagenes: [],
 }
 
 const CHALLENGE_BROWSER_KEY = "hola-varela-challenges-browser"
@@ -93,6 +100,52 @@ export function normalizeChallengeKeys(value: unknown): ChallengeKey[] {
   })
 
   return normalized.length > 0 ? Array.from(new Set(normalized)) : []
+}
+
+export function normalizeMemoryMode(value: unknown): ChallengeMemoryMode {
+  return value === "logos" ? "logos" : "palabras"
+}
+
+export function normalizeWordSearchWords(value: unknown): string[] {
+  const rawItems = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? value.split(/[\n,;]+/)
+      : []
+
+  const normalized = rawItems
+    .map((item) =>
+      String(item)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .replace(/[^A-ZÑ]/g, "")
+        .slice(0, 10)
+    )
+    .filter((word) => word.length >= 2)
+
+  return Array.from(new Set(normalized)).slice(0, 40)
+}
+
+export function normalizePuzzleImages(value: unknown): string[] {
+  const rawItems = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? value.split(/[\n,;]+/)
+      : []
+
+  const normalized = rawItems
+    .map((item) => String(item).trim())
+    .filter((item) => {
+      return (
+        item.startsWith("/") ||
+        item.startsWith("https://") ||
+        item.startsWith("http://") ||
+        item.startsWith("data:image/")
+      )
+    })
+
+  return Array.from(new Set(normalized)).slice(0, 12)
 }
 
 export function getChallengeBrowserKey() {

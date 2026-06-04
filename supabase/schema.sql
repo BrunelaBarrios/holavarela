@@ -143,6 +143,9 @@ alter table public.instituciones
 add column if not exists usa_whatsapp boolean default true;
 
 alter table public.instituciones
+add column if not exists destacado boolean default false;
+
+alter table public.instituciones
 add column if not exists estado text default 'activo';
 
 alter table public.instituciones
@@ -626,6 +629,9 @@ create table if not exists public.desafio_config (
   id bigint primary key default 1 check (id = 1),
   activo boolean not null default true,
   juegos_activos text[] not null default array['sopa', 'memoria', 'pelicula', 'puzzle', 'laberinto'],
+  sopa_palabras text[] not null default array[]::text[],
+  memoria_modo text not null default 'palabras',
+  puzzle_imagenes text[] not null default array[]::text[],
   slug text,
   titulo text,
   updated_at timestamp with time zone default now()
@@ -636,6 +642,15 @@ alter table public.desafio_config
 
 alter table public.desafio_config
   add column if not exists titulo text;
+
+alter table public.desafio_config
+  add column if not exists sopa_palabras text[] not null default array[]::text[];
+
+alter table public.desafio_config
+  add column if not exists memoria_modo text not null default 'palabras';
+
+alter table public.desafio_config
+  add column if not exists puzzle_imagenes text[] not null default array[]::text[];
 
 insert into public.desafio_config (id, activo, juegos_activos, slug, titulo)
 values (
@@ -662,16 +677,31 @@ create table if not exists public.desafio_ediciones (
   titulo text not null,
   activo boolean not null default true,
   juegos_activos text[] not null default array['sopa', 'memoria', 'pelicula', 'puzzle', 'laberinto'],
+  sopa_palabras text[] not null default array[]::text[],
+  memoria_modo text not null default 'palabras',
+  puzzle_imagenes text[] not null default array[]::text[],
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
 
-insert into public.desafio_ediciones (slug, titulo, activo, juegos_activos, created_at, updated_at)
+alter table public.desafio_ediciones
+  add column if not exists sopa_palabras text[] not null default array[]::text[];
+
+alter table public.desafio_ediciones
+  add column if not exists memoria_modo text not null default 'palabras';
+
+alter table public.desafio_ediciones
+  add column if not exists puzzle_imagenes text[] not null default array[]::text[];
+
+insert into public.desafio_ediciones (slug, titulo, activo, juegos_activos, sopa_palabras, memoria_modo, puzzle_imagenes, created_at, updated_at)
 select
   slug,
   coalesce(titulo, slug),
   activo,
   juegos_activos,
+  coalesce(sopa_palabras, array[]::text[]),
+  coalesce(memoria_modo, 'palabras'),
+  coalesce(puzzle_imagenes, array[]::text[]),
   coalesce(updated_at, now()),
   coalesce(updated_at, now())
 from public.desafio_config
@@ -681,6 +711,9 @@ set
   titulo = excluded.titulo,
   activo = excluded.activo,
   juegos_activos = excluded.juegos_activos,
+  sopa_palabras = excluded.sopa_palabras,
+  memoria_modo = excluded.memoria_modo,
+  puzzle_imagenes = excluded.puzzle_imagenes,
   updated_at = excluded.updated_at;
 
 alter table public.desafio_participaciones

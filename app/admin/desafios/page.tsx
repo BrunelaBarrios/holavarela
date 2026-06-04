@@ -6,11 +6,15 @@ import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import {
+  type ChallengeMemoryMode,
   type ChallengeKey,
   CHALLENGE_GAME_OPTIONS,
   DEFAULT_CHALLENGE_CONFIG,
   isMissingChallengesSchemaError,
   normalizeChallengeKeys,
+  normalizeMemoryMode,
+  normalizePuzzleImages,
+  normalizeWordSearchWords,
 } from "../../lib/challengeGame"
 import { printCouponsPdf } from "../../lib/couponPrint"
 
@@ -50,6 +54,9 @@ type ChallengeDraw = {
 type LoadedChallengeConfig = {
   activo?: boolean
   juegosActivos?: unknown
+  sopaPalabras?: unknown
+  memoriaModo?: unknown
+  puzzleImagenes?: unknown
   slug?: string
   titulo?: string
 }
@@ -59,6 +66,9 @@ type ChallengeEdition = {
   titulo: string
   activo: boolean
   juegosActivos: ChallengeKey[]
+  sopaPalabras: string[]
+  memoriaModo: ChallengeMemoryMode
+  puzzleImagenes: string[]
   createdAt: string | null
   updatedAt: string | null
 }
@@ -94,6 +104,10 @@ export default function AdminDesafiosPage() {
   const [activeGames, setActiveGames] = useState<ChallengeKey[]>(
     DEFAULT_CHALLENGE_CONFIG.juegosActivos
   )
+  const [soupWordsInput, setSoupWordsInput] = useState("")
+  const [memoryMode, setMemoryMode] = useState<ChallengeMemoryMode>(
+    DEFAULT_CHALLENGE_CONFIG.memoriaModo
+  )
   const [challengeSlug, setChallengeSlug] = useState("")
   const [currentChallengeSlug, setCurrentChallengeSlug] = useState("")
   const [challengeTitle, setChallengeTitle] = useState("")
@@ -106,6 +120,12 @@ export default function AdminDesafiosPage() {
   const [newChallengeGames, setNewChallengeGames] = useState<ChallengeKey[]>(
     DEFAULT_CHALLENGE_CONFIG.juegosActivos
   )
+  const [newChallengeSoupWords, setNewChallengeSoupWords] = useState("")
+  const [newChallengeMemoryMode, setNewChallengeMemoryMode] = useState<ChallengeMemoryMode>(
+    DEFAULT_CHALLENGE_CONFIG.memoriaModo
+  )
+  const [puzzleImagesInput, setPuzzleImagesInput] = useState("")
+  const [newChallengePuzzleImages, setNewChallengePuzzleImages] = useState("")
   const [configMessage, setConfigMessage] = useState("")
   const [entries, setEntries] = useState<ChallengeEntry[]>([])
   const [draws, setDraws] = useState<ChallengeDraw[]>([])
@@ -127,11 +147,16 @@ export default function AdminDesafiosPage() {
   const challengeQrUrl = buildChallengeQrUrl(challengeSlug)
   const selectedEdition = editions.find((edition) => edition.slug === challengeSlug) || null
   const isViewingCurrentEdition = !currentChallengeSlug || challengeSlug === currentChallengeSlug
+  const normalizedSoupWords = normalizeWordSearchWords(soupWordsInput)
+  const normalizedPuzzleImages = normalizePuzzleImages(puzzleImagesInput)
 
   const openCreateChallengePanel = () => {
     setNewChallengeTitle("")
     setNewChallengeActive(true)
     setNewChallengeGames(activeGames.length > 0 ? activeGames : DEFAULT_CHALLENGE_CONFIG.juegosActivos)
+    setNewChallengeSoupWords(soupWordsInput)
+    setNewChallengeMemoryMode(memoryMode)
+    setNewChallengePuzzleImages(puzzleImagesInput)
     setConfigMessage("")
     setErrorMessage("")
     setMessage("")
@@ -152,6 +177,9 @@ export default function AdminDesafiosPage() {
           titulo?: string
           activo?: boolean
           juegosActivos?: unknown
+          sopaPalabras?: unknown
+          memoriaModo?: unknown
+          puzzleImagenes?: unknown
           createdAt?: string | null
           updatedAt?: string | null
         }>
@@ -171,6 +199,9 @@ export default function AdminDesafiosPage() {
       }
       setChallengeActive(result.config?.activo !== false)
       setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
+      setSoupWordsInput(normalizeWordSearchWords(result.config?.sopaPalabras).join("\n"))
+      setMemoryMode(normalizeMemoryMode(result.config?.memoriaModo))
+      setPuzzleImagesInput(normalizePuzzleImages(result.config?.puzzleImagenes).join("\n"))
       setChallengeSlug(result.config?.slug || "")
       setCurrentChallengeSlug(result.config?.slug || "")
       setChallengeTitle(result.config?.titulo || "")
@@ -184,6 +215,9 @@ export default function AdminDesafiosPage() {
             titulo: edition.titulo || edition.slug,
             activo: edition.activo !== false,
             juegosActivos: normalizeChallengeKeys(edition.juegosActivos),
+            sopaPalabras: normalizeWordSearchWords(edition.sopaPalabras),
+            memoriaModo: normalizeMemoryMode(edition.memoriaModo),
+            puzzleImagenes: normalizePuzzleImages(edition.puzzleImagenes),
             createdAt: edition.createdAt || null,
             updatedAt: edition.updatedAt || null,
           }))
@@ -217,15 +251,22 @@ export default function AdminDesafiosPage() {
     const [
       { data: entriesRows, error: entriesError },
       { data: drawsRows, error: drawsError },
-      { data: winnersRows, error: winnersError },
     ] = await Promise.all([
       entriesQuery,
       drawsQuery,
-      supabase
-        .from("desafio_sorteo_ganadores")
-        .select("id, sorteo_id, participacion_id, entregado, entregado_at, created_at")
-        .order("created_at", { ascending: false }),
     ])
+
+    const drawIds = ((drawsRows || []) as Array<Record<string, unknown>>).map((draw) =>
+      Number(draw.id)
+    )
+    const { data: winnersRows, error: winnersError } =
+      drawIds.length > 0
+        ? await supabase
+            .from("desafio_sorteo_ganadores")
+            .select("id, sorteo_id, participacion_id, entregado, entregado_at, created_at")
+            .in("sorteo_id", drawIds)
+            .order("created_at", { ascending: false })
+        : { data: [], error: null }
 
     const schemaError = entriesError || drawsError || winnersError
     if (schemaError) {
@@ -323,6 +364,9 @@ export default function AdminDesafiosPage() {
         body: JSON.stringify({
           activo: challengeActive,
           juegosActivos: activeGames,
+          sopaPalabras: soupWordsInput,
+          memoriaModo: memoryMode,
+          puzzleImagenes: puzzleImagesInput,
         }),
       })
       const result = (await response.json()) as {
@@ -337,6 +381,9 @@ export default function AdminDesafiosPage() {
 
       setChallengeActive(result.config?.activo === true)
       setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
+      setSoupWordsInput(normalizeWordSearchWords(result.config?.sopaPalabras).join("\n"))
+      setMemoryMode(normalizeMemoryMode(result.config?.memoriaModo))
+      setPuzzleImagesInput(normalizePuzzleImages(result.config?.puzzleImagenes).join("\n"))
       setChallengeSlug(result.config?.slug || "")
       setCurrentChallengeSlug(result.config?.slug || "")
       setChallengeTitle(result.config?.titulo || "")
@@ -373,6 +420,9 @@ export default function AdminDesafiosPage() {
           action: "create",
           activo: newChallengeActive,
           juegosActivos: newChallengeGames,
+          sopaPalabras: newChallengeSoupWords,
+          memoriaModo: newChallengeMemoryMode,
+          puzzleImagenes: newChallengePuzzleImages,
           titulo: newChallengeTitle,
         }),
       })
@@ -388,6 +438,9 @@ export default function AdminDesafiosPage() {
 
       setChallengeActive(result.config?.activo === true)
       setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
+      setSoupWordsInput(normalizeWordSearchWords(result.config?.sopaPalabras).join("\n"))
+      setMemoryMode(normalizeMemoryMode(result.config?.memoriaModo))
+      setPuzzleImagesInput(normalizePuzzleImages(result.config?.puzzleImagenes).join("\n"))
       setChallengeSlug(result.config?.slug || "")
       setCurrentChallengeSlug(result.config?.slug || "")
       setChallengeTitle(result.config?.titulo || "")
@@ -398,6 +451,9 @@ export default function AdminDesafiosPage() {
       setNewChallengeTitle("")
       setNewChallengeActive(true)
       setNewChallengeGames(DEFAULT_CHALLENGE_CONFIG.juegosActivos)
+      setNewChallengeSoupWords("")
+      setNewChallengeMemoryMode(DEFAULT_CHALLENGE_CONFIG.memoriaModo)
+      setNewChallengePuzzleImages("")
       setConfigSchemaReady(true)
       setConfigMessage("Nuevo desafio creado. Ya tienes un link y QR nuevos.")
       await loadConfig()
@@ -417,6 +473,9 @@ export default function AdminDesafiosPage() {
     setChallengeTitle(edition.titulo)
     setChallengeActive(edition.activo)
     setActiveGames(edition.juegosActivos)
+    setSoupWordsInput(edition.sopaPalabras.join("\n"))
+    setMemoryMode(edition.memoriaModo)
+    setPuzzleImagesInput(edition.puzzleImagenes.join("\n"))
     setSearch("")
     setMessage("")
     setErrorMessage("")
@@ -457,6 +516,9 @@ export default function AdminDesafiosPage() {
       setChallengeTitle(result.config?.titulo || selectedEdition.titulo)
       setChallengeActive(result.config?.activo === true)
       setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
+      setSoupWordsInput(normalizeWordSearchWords(result.config?.sopaPalabras).join("\n"))
+      setMemoryMode(normalizeMemoryMode(result.config?.memoriaModo))
+      setPuzzleImagesInput(normalizePuzzleImages(result.config?.puzzleImagenes).join("\n"))
       setConfigMessage("Edicion activada. El link y QR actuales apuntan a este desafio.")
       await loadConfig()
       await loadData(result.config?.slug || selectedEdition.slug)
@@ -848,10 +910,16 @@ export default function AdminDesafiosPage() {
         title={newChallengeTitle}
         active={newChallengeActive}
         selectedGames={newChallengeGames}
+        soupWords={newChallengeSoupWords}
+        memoryMode={newChallengeMemoryMode}
+        puzzleImages={newChallengePuzzleImages}
         isCreating={creatingChallenge}
         onTitleChange={setNewChallengeTitle}
         onActiveChange={setNewChallengeActive}
         onToggleGame={toggleNewChallengeGame}
+        onSoupWordsChange={setNewChallengeSoupWords}
+        onMemoryModeChange={setNewChallengeMemoryMode}
+        onPuzzleImagesChange={setNewChallengePuzzleImages}
         onCancel={() => setShowCreateChallengeConfirm(false)}
         onConfirm={() => {
           void handleCreateChallenge()
@@ -1042,6 +1110,80 @@ export default function AdminDesafiosPage() {
                 )
               })}
             </div>
+
+            {activeGames.includes("sopa") ? (
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="text-sm font-semibold text-slate-950">Palabras de la sopa</div>
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  Escribe una palabra por linea. El juego arma rondas rotativas de hasta 4 palabras. Si lo dejas vacio, usa las rondas clasicas.
+                </p>
+                <textarea
+                  value={soupWordsInput}
+                  onChange={(event) => setSoupWordsInput(event.target.value)}
+                  disabled={configLoading || savingConfig || !isViewingCurrentEdition}
+                  rows={5}
+                  placeholder="PANADERIA&#10;FARMACIA&#10;TALLER&#10;CAFETERIA"
+                  className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                />
+                <div className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  {normalizedSoupWords.length} palabra(s) validas
+                </div>
+              </div>
+            ) : null}
+
+            {activeGames.includes("memoria") ? (
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="text-sm font-semibold text-slate-950">Contenido de la memoria</div>
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  El modo logos usa imagenes de comercios y servicios activos. Si no hay suficientes, el juego usa palabras automaticamente.
+                </p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {[
+                    { value: "palabras" as const, label: "Palabras", description: "Rondas clasicas con textos cortos." },
+                    { value: "logos" as const, label: "Logos de comercios y servicios", description: "Cartas con imagenes de perfiles activos." },
+                  ].map((option) => {
+                    const selected = memoryMode === option.value
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setMemoryMode(option.value)}
+                        disabled={configLoading || savingConfig || !isViewingCurrentEdition}
+                        className={`rounded-xl border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                          selected
+                            ? "border-emerald-300 bg-white"
+                            : "border-slate-200 bg-white hover:border-slate-300"
+                        }`}
+                      >
+                        <div className="text-sm font-semibold text-slate-950">{option.label}</div>
+                        <div className="mt-1 text-sm leading-6 text-slate-500">{option.description}</div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {activeGames.includes("puzzle") ? (
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="text-sm font-semibold text-slate-950">Imagenes del puzzle</div>
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  Agrega una imagen por linea. Puede ser una URL publica, una ruta local del sitio o una imagen en base64. El juego va rotando entre estas opciones.
+                </p>
+                <textarea
+                  value={puzzleImagesInput}
+                  onChange={(event) => setPuzzleImagesInput(event.target.value)}
+                  disabled={configLoading || savingConfig || !isViewingCurrentEdition}
+                  rows={5}
+                  placeholder="/logo-varela-grande.png&#10;https://ejemplo.com/imagen.jpg"
+                  className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                />
+                <div className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  {normalizedPuzzleImages.length} imagen(es) validas
+                </div>
+              </div>
+            ) : null}
 
             {configMessage ? (
               <div
@@ -1416,10 +1558,16 @@ function CreateChallengePanel({
   title,
   active,
   selectedGames,
+  soupWords,
+  memoryMode,
+  puzzleImages,
   isCreating,
   onTitleChange,
   onActiveChange,
   onToggleGame,
+  onSoupWordsChange,
+  onMemoryModeChange,
+  onPuzzleImagesChange,
   onCancel,
   onConfirm,
 }: {
@@ -1427,16 +1575,24 @@ function CreateChallengePanel({
   title: string
   active: boolean
   selectedGames: ChallengeKey[]
+  soupWords: string
+  memoryMode: ChallengeMemoryMode
+  puzzleImages: string
   isCreating: boolean
   onTitleChange: (value: string) => void
   onActiveChange: (value: boolean) => void
   onToggleGame: (game: ChallengeKey) => void
+  onSoupWordsChange: (value: string) => void
+  onMemoryModeChange: (value: ChallengeMemoryMode) => void
+  onPuzzleImagesChange: (value: string) => void
   onCancel: () => void
   onConfirm: () => void
 }) {
   if (!isOpen) return null
 
   const canCreate = !active || selectedGames.length > 0
+  const normalizedSoupWords = normalizeWordSearchWords(soupWords)
+  const normalizedPuzzleImages = normalizePuzzleImages(puzzleImages)
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/55 p-4">
@@ -1539,6 +1695,77 @@ function CreateChallengePanel({
                 })}
               </div>
             </section>
+
+            {selectedGames.includes("sopa") ? (
+              <section>
+                <h3 className="text-base font-semibold text-slate-950">Palabras de la sopa</h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Una palabra por linea. Se agrupan automaticamente en rondas rotativas de hasta 4.
+                </p>
+                <textarea
+                  value={soupWords}
+                  onChange={(event) => onSoupWordsChange(event.target.value)}
+                  rows={5}
+                  placeholder="PANADERIA&#10;FARMACIA&#10;TALLER&#10;CAFETERIA"
+                  className="mt-4 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500"
+                />
+                <div className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  {normalizedSoupWords.length} palabra(s) validas
+                </div>
+              </section>
+            ) : null}
+
+            {selectedGames.includes("memoria") ? (
+              <section>
+                <h3 className="text-base font-semibold text-slate-950">Contenido de la memoria</h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Puedes usar las palabras clasicas o imagenes de comercios y servicios activos.
+                </p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {[
+                    { value: "palabras" as const, label: "Palabras", description: "Cartas con textos cortos." },
+                    { value: "logos" as const, label: "Logos locales", description: "Cartas con imagenes de comercios y servicios." },
+                  ].map((option) => {
+                    const selected = memoryMode === option.value
+
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => onMemoryModeChange(option.value)}
+                        className={`rounded-xl border p-4 text-left transition ${
+                          selected
+                            ? "border-emerald-300 bg-emerald-50"
+                            : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className="text-sm font-semibold text-slate-950">{option.label}</div>
+                        <div className="mt-1 text-sm leading-6 text-slate-500">{option.description}</div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            ) : null}
+
+            {selectedGames.includes("puzzle") ? (
+              <section>
+                <h3 className="text-base font-semibold text-slate-950">Imagenes del puzzle</h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Una imagen por linea. El juego rota entre estas opciones y el participante elige dificultad.
+                </p>
+                <textarea
+                  value={puzzleImages}
+                  onChange={(event) => onPuzzleImagesChange(event.target.value)}
+                  rows={5}
+                  placeholder="/logo-varela-grande.png&#10;https://ejemplo.com/imagen.jpg"
+                  className="mt-4 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500"
+                />
+                <div className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  {normalizedPuzzleImages.length} imagen(es) validas
+                </div>
+              </section>
+            ) : null}
           </div>
 
           <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
@@ -1564,6 +1791,34 @@ function CreateChallengePanel({
                   {selectedGames.length} seleccionado(s)
                 </div>
               </div>
+              {selectedGames.includes("sopa") ? (
+                <div>
+                  <div className="text-slate-500">Sopa</div>
+                  <div className="mt-1 font-semibold text-slate-950">
+                    {normalizedSoupWords.length > 0
+                      ? `${normalizedSoupWords.length} palabra(s)`
+                      : "Rondas clasicas"}
+                  </div>
+                </div>
+              ) : null}
+              {selectedGames.includes("memoria") ? (
+                <div>
+                  <div className="text-slate-500">Memoria</div>
+                  <div className="mt-1 font-semibold text-slate-950">
+                    {memoryMode === "logos" ? "Logos locales" : "Palabras"}
+                  </div>
+                </div>
+              ) : null}
+              {selectedGames.includes("puzzle") ? (
+                <div>
+                  <div className="text-slate-500">Puzzle</div>
+                  <div className="mt-1 font-semibold text-slate-950">
+                    {normalizedPuzzleImages.length > 0
+                      ? `${normalizedPuzzleImages.length} imagen(es)`
+                      : "Imagen por defecto"}
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             {!canCreate ? (
