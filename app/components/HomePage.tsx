@@ -1977,6 +1977,36 @@ export function HomePage({
         </div>
       </section>
 
+      <section className="py-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-6 rounded-[28px] border border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#f8fafc_52%,#eff6ff_100%)] p-6 shadow-[0_22px_55px_-36px_rgba(15,118,110,0.42)] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:p-8">
+            <div>
+              <div className="inline-flex rounded-full bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 ring-1 ring-emerald-100">
+                Desafío Hola Varela
+              </div>
+              <h2 className="mt-4 text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">
+                Jugá, descubrí comercios locales y sumá puntos
+              </h2>
+              <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
+                Participá en desafíos cortos: sopa de letras, memoria con logos, puzzle de imágenes y más. Completá el juego y quedá participando por premios.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                <span className="rounded-full bg-white/85 px-3 py-1 ring-1 ring-slate-200">Sopa</span>
+                <span className="rounded-full bg-white/85 px-3 py-1 ring-1 ring-slate-200">Memoria</span>
+                <span className="rounded-full bg-white/85 px-3 py-1 ring-1 ring-slate-200">Puzzle</span>
+                <span className="rounded-full bg-white/85 px-3 py-1 ring-1 ring-slate-200">Premios</span>
+              </div>
+            </div>
+            <Link
+              href="/juga-y-gana"
+              className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-950 px-6 py-4 text-base font-semibold text-white shadow-[0_18px_40px_-22px_rgba(15,23,42,0.9)] transition hover:-translate-y-0.5 hover:bg-emerald-700 md:w-auto"
+            >
+              Entrar al juego
+              <ArrowRight className="h-5 w-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
       {weather && (
         <section className="py-6">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

@@ -2506,6 +2506,28 @@ function MazePanel(props: {
   onMove: (rowStep: number, colStep: number) => void
   onReset: () => void
 }) {
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null)
+
+  const handleSwipeEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+    const start = swipeStartRef.current
+    swipeStartRef.current = null
+
+    if (!start || props.finished) return
+
+    const deltaX = event.clientX - start.x
+    const deltaY = event.clientY - start.y
+    const minSwipeDistance = 24
+
+    if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < minSwipeDistance) return
+
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      props.onMove(0, deltaX > 0 ? 1 : -1)
+      return
+    }
+
+    props.onMove(deltaY > 0 ? 1 : -1, 0)
+  }
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -2524,11 +2546,19 @@ function MazePanel(props: {
       </div>
 
       <p className="mt-4 text-sm leading-7 text-slate-600">
-        Llega desde Inicio hasta Meta. Las paredes bloquean el camino y cada movimiento cuenta.
+        Ayuda al caballo a llegar desde Inicio hasta Meta. Desliza el dedo sobre el tablero o usa las flechas.
       </p>
 
       <div
-        className="mt-6 grid w-full max-w-[420px] gap-2"
+        className="mt-6 grid w-full max-w-[420px] touch-none gap-2"
+        onPointerDown={(event) => {
+          if (props.finished) return
+          swipeStartRef.current = { x: event.clientX, y: event.clientY }
+        }}
+        onPointerUp={handleSwipeEnd}
+        onPointerCancel={() => {
+          swipeStartRef.current = null
+        }}
         style={{ gridTemplateColumns: `repeat(${props.layout[0].length}, minmax(0, 1fr))` }}
       >
         {props.layout.flatMap((row, rowIndex) =>
@@ -2543,7 +2573,7 @@ function MazePanel(props: {
                 key={`${rowIndex}-${colIndex}`}
                 className={`aspect-square rounded-xl border text-[10px] font-semibold uppercase tracking-[0.12em] ${
                   isPlayer
-                    ? "border-sky-500 bg-sky-500 text-white shadow-sm"
+                    ? "border-amber-400 bg-amber-100 text-2xl shadow-sm"
                     : isWall
                       ? "border-slate-800 bg-slate-950 text-slate-950"
                       : isGoal
@@ -2553,7 +2583,17 @@ function MazePanel(props: {
                           : "border-slate-200 bg-white text-slate-400"
                 } flex items-center justify-center`}
               >
-                {isPlayer ? "Yo" : isGoal ? "Meta" : isStart ? "Inicio" : ""}
+                {isPlayer ? (
+                  <span aria-label="Caballo" role="img">
+                    🐴
+                  </span>
+                ) : isGoal ? (
+                  "Meta"
+                ) : isStart ? (
+                  "Inicio"
+                ) : (
+                  ""
+                )}
               </div>
             )
           })
