@@ -22,6 +22,7 @@ import {
   getChallengeBrowserKey,
   isMissingChallengesSchemaError,
   normalizeChallengeKeys,
+  normalizeMemoryLogoProfiles,
   normalizeMemoryMode,
   normalizePuzzleImages,
   normalizeWordSearchWords,
@@ -52,22 +53,27 @@ type MemoryItem = {
 }
 
 type PuzzleDifficulty = "facil" | "dificil"
-type MatchType = "individual" | "familiar"
+type ChallengeLevel = "facil" | "intermedio" | "dificil"
 
-const MATCH_TYPE_OPTIONS: Array<{
-  key: MatchType
+const CHALLENGE_LEVEL_OPTIONS: Array<{
+  key: ChallengeLevel
   title: string
   description: string
 }> = [
   {
-    key: "individual",
-    title: "Partida individual",
+    key: "facil",
+    title: "Facil",
     description: "Jugá solo y registrá tus puntos.",
   },
   {
-    key: "familiar",
-    title: "Partida familiar",
+    key: "intermedio",
+    title: "Intermedio",
     description: "Jugá acompañado y participá en familia.",
+  },
+  {
+    key: "dificil",
+    title: "Dificil",
+    description: "Mas exigente, pensado para quienes quieren competir fuerte.",
   },
 ]
 
@@ -939,7 +945,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
   })
 
   const [stage, setStage] = useState<"intro" | "play" | "form" | "done">("intro")
-  const [matchType, setMatchType] = useState<MatchType | null>(null)
+  const [challengeLevel, setChallengeLevel] = useState<ChallengeLevel | null>(null)
   const [configLoading, setConfigLoading] = useState(true)
   const [challengeConfig, setChallengeConfig] = useState(DEFAULT_CHALLENGE_CONFIG)
   const [activeChallengeIndex, setActiveChallengeIndex] = useState(0)
@@ -1048,8 +1054,10 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     () => wordsToMemoryItems(MEMORY_VARIANTS[memoryVariantIndex]),
     [memoryVariantIndex]
   )
+  const hasSelectedLogoProfiles = challengeConfig.memoriaLogos.length > 0
   const canUseLogoMemory =
-    challengeConfig.memoriaModo === "logos" && logoMemoryItems.length >= MIN_LOGO_MEMORY_ITEMS
+    challengeConfig.memoriaModo === "logos" &&
+    logoMemoryItems.length >= (hasSelectedLogoProfiles ? 2 : MIN_LOGO_MEMORY_ITEMS)
   const activeMemoryItems = canUseLogoMemory
     ? logoMemoryItems.slice(0, MIN_LOGO_MEMORY_ITEMS)
     : fallbackMemoryItems
@@ -1153,27 +1161,63 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     let mounted = true
 
     const loadChallengeConfig = async () => {
-      const { data, error } = challengeSlug
+      const fullConfigSelect =
+        "activo, juegos_activos, sopa_palabras, memoria_modo, memoria_logos, puzzle_imagenes, slug, titulo"
+      const legacyConfigSelect =
+        "activo, juegos_activos, sopa_palabras, memoria_modo, puzzle_imagenes, slug, titulo"
+      let configResult = challengeSlug
         ? await supabase
             .from("desafio_ediciones")
-            .select("activo, juegos_activos, sopa_palabras, memoria_modo, puzzle_imagenes, slug, titulo")
+            .select(fullConfigSelect)
             .eq("slug", challengeSlug)
             .maybeSingle()
         : await supabase
             .from("desafio_config")
-            .select("activo, juegos_activos, sopa_palabras, memoria_modo, puzzle_imagenes, slug, titulo")
+            .select(fullConfigSelect)
             .eq("id", 1)
             .maybeSingle()
+
+      if (
+        configResult.error?.code === "42703" &&
+        configResult.error.message?.includes("memoria_logos")
+      ) {
+        configResult = challengeSlug
+          ? await supabase
+              .from("desafio_ediciones")
+              .select(legacyConfigSelect)
+              .eq("slug", challengeSlug)
+              .maybeSingle()
+          : await supabase
+              .from("desafio_config")
+              .select(legacyConfigSelect)
+              .eq("id", 1)
+              .maybeSingle()
+      }
+
+      const { data, error } = configResult
 
       if (!mounted) return
 
       if (error) {
         if (challengeSlug && isMissingChallengesSchemaError(error)) {
-          const { data: fallbackData, error: fallbackError } = await supabase
+          let fallbackResult = await supabase
             .from("desafio_config")
-            .select("activo, juegos_activos, sopa_palabras, memoria_modo, puzzle_imagenes, slug, titulo")
+            .select(fullConfigSelect)
             .eq("slug", challengeSlug)
             .maybeSingle()
+
+          if (
+            fallbackResult.error?.code === "42703" &&
+            fallbackResult.error.message?.includes("memoria_logos")
+          ) {
+            fallbackResult = await supabase
+              .from("desafio_config")
+              .select(legacyConfigSelect)
+              .eq("slug", challengeSlug)
+              .maybeSingle()
+          }
+
+          const { data: fallbackData, error: fallbackError } = fallbackResult
 
           if (!mounted) return
 
@@ -1183,6 +1227,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
               juegosActivos: normalizeChallengeKeys(fallbackData.juegos_activos),
               sopaPalabras: normalizeWordSearchWords(fallbackData.sopa_palabras),
               memoriaModo: normalizeMemoryMode(fallbackData.memoria_modo),
+              memoriaLogos: normalizeMemoryLogoProfiles(fallbackData.memoria_logos),
               puzzleImagenes: normalizePuzzleImages(fallbackData.puzzle_imagenes),
               slug: fallbackData.slug || undefined,
               titulo: fallbackData.titulo || undefined,
@@ -1206,6 +1251,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
         juegosActivos: normalizeChallengeKeys(data?.juegos_activos),
         sopaPalabras: normalizeWordSearchWords(data?.sopa_palabras),
         memoriaModo: normalizeMemoryMode(data?.memoria_modo),
+        memoriaLogos: normalizeMemoryLogoProfiles(data?.memoria_logos),
         puzzleImagenes: normalizePuzzleImages(data?.puzzle_imagenes),
         slug: data?.slug || undefined,
         titulo: data?.titulo || undefined,
@@ -1232,19 +1278,41 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     let mounted = true
 
     const loadLogoMemoryItems = async () => {
+      const selectedLogoProfiles = normalizeMemoryLogoProfiles(challengeConfig.memoriaLogos)
+      const selectedCommerceIds = selectedLogoProfiles
+        .filter((item) => item.startsWith("comercio:"))
+        .map((item) => Number(item.split(":")[1]))
+      const selectedServiceIds = selectedLogoProfiles
+        .filter((item) => item.startsWith("servicio:"))
+        .map((item) => Number(item.split(":")[1]))
+      const hasSelectedProfiles = selectedLogoProfiles.length > 0
+      let commerceQuery = supabase
+        .from("comercios")
+        .select("id, nombre, imagen, imagen_url")
+        .or("estado.is.null,estado.eq.activo")
+        .order("id", { ascending: false })
+        .limit(24)
+      let serviceQuery = supabase
+        .from("servicios")
+        .select("id, nombre, imagen")
+        .or("estado.is.null,estado.eq.activo")
+        .order("id", { ascending: false })
+        .limit(24)
+
+      if (hasSelectedProfiles) {
+        commerceQuery =
+          selectedCommerceIds.length > 0
+            ? commerceQuery.in("id", selectedCommerceIds)
+            : commerceQuery.eq("id", -1)
+        serviceQuery =
+          selectedServiceIds.length > 0
+            ? serviceQuery.in("id", selectedServiceIds)
+            : serviceQuery.eq("id", -1)
+      }
+
       const [{ data: comercios }, { data: servicios }] = await Promise.all([
-        supabase
-          .from("comercios")
-          .select("id, nombre, imagen, imagen_url")
-          .or("estado.is.null,estado.eq.activo")
-          .order("id", { ascending: false })
-          .limit(24),
-        supabase
-          .from("servicios")
-          .select("id, nombre, imagen")
-          .or("estado.is.null,estado.eq.activo")
-          .order("id", { ascending: false })
-          .limit(24),
+        commerceQuery,
+        serviceQuery,
       ])
 
       if (!mounted) return
@@ -1271,7 +1339,9 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
       setLogoMemoryItems(nextItems)
       setMemoryCards(
         createMemoryDeck(
-          nextItems.length >= MIN_LOGO_MEMORY_ITEMS ? nextItems : fallbackMemoryItems
+          nextItems.length >= (hasSelectedProfiles ? 2 : MIN_LOGO_MEMORY_ITEMS)
+            ? nextItems
+            : fallbackMemoryItems
         )
       )
       setFlippedCards([])
@@ -1283,7 +1353,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     return () => {
       mounted = false
     }
-  }, [challengeConfig.memoriaModo, fallbackMemoryItems])
+  }, [challengeConfig.memoriaLogos, challengeConfig.memoriaModo, fallbackMemoryItems])
 
   useEffect(() => {
     if (stage !== "play" || activeChallenge?.key !== "sopa") return
@@ -1749,7 +1819,9 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     )
   }
 
-  const selectedMatchType = MATCH_TYPE_OPTIONS.find((option) => option.key === matchType)
+  const selectedChallengeLevel = CHALLENGE_LEVEL_OPTIONS.find(
+    (option) => option.key === challengeLevel
+  )
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff2d9_0%,#fffdf8_28%,#e9f7ff_64%,#f9fcff_100%)] text-slate-950">
@@ -1777,11 +1849,12 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
               <p className="mt-5 max-w-xl text-base leading-8 text-sky-50/90 sm:text-lg">
                 Acumula puntos y participa de ganar premios.
               </p>
-              {selectedMatchType && stage !== "intro" ? (
+              {selectedChallengeLevel && stage !== "intro" ? (
                 <div className="mt-5 inline-flex rounded-full border border-white/20 bg-white/12 px-4 py-2 text-sm font-semibold text-sky-50">
-                  {selectedMatchType.title}
+                  Nivel {selectedChallengeLevel.title}
                 </div>
               ) : null}
+              {stage !== "intro" ? (
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
                 {activeChallenges.map((challenge, index) => (
                   <div key={challenge.key} className={`min-w-0 rounded-[24px] border px-4 py-4 ${completedChallenges[challenge.key] ? "border-emerald-300/40 bg-emerald-400/15" : activeChallengeIndex === index && stage === "play" ? "border-white/30 bg-white/10" : "border-white/10 bg-black/10"}`}>
@@ -1796,28 +1869,26 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
                   </div>
                 ))}
               </div>
+              ) : null}
 
               {stage === "intro" ? (
                 <div className="mt-8">
                   <div className="text-sm font-semibold uppercase tracking-[0.16em] text-sky-100">
-                    Elegir tipo de partida
+                    Seleccionar nivel
                   </div>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    {MATCH_TYPE_OPTIONS.map((option) => (
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    {CHALLENGE_LEVEL_OPTIONS.map((option) => (
                       <button
                         key={option.key}
                         type="button"
                         onClick={() => {
-                          setMatchType(option.key)
+                          setChallengeLevel(option.key)
                           setStage("play")
                         }}
                         className="rounded-2xl border border-white/25 bg-white/12 p-5 text-left transition hover:-translate-y-0.5 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/70"
                       >
                         <span className="block text-lg font-semibold text-white">
                           {option.title}
-                        </span>
-                        <span className="mt-2 block text-sm leading-6 text-sky-50/90">
-                          {option.description}
                         </span>
                       </button>
                     ))}

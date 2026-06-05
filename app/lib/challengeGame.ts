@@ -5,12 +5,14 @@ type SupabaseErrorLike = {
 
 export type ChallengeKey = "sopa" | "memoria" | "pelicula" | "puzzle" | "laberinto"
 export type ChallengeMemoryMode = "palabras" | "logos"
+export type ChallengeMemoryLogoProfile = `comercio:${number}` | `servicio:${number}`
 
 export type ChallengeConfig = {
   activo: boolean
   juegosActivos: ChallengeKey[]
   sopaPalabras: string[]
   memoriaModo: ChallengeMemoryMode
+  memoriaLogos: ChallengeMemoryLogoProfile[]
   puzzleImagenes: string[]
   slug?: string
   titulo?: string
@@ -59,6 +61,7 @@ export const DEFAULT_CHALLENGE_CONFIG: ChallengeConfig = {
   juegosActivos: CHALLENGE_GAME_OPTIONS.map((game) => game.key),
   sopaPalabras: [],
   memoriaModo: "palabras",
+  memoriaLogos: [],
   puzzleImagenes: [],
 }
 
@@ -104,6 +107,22 @@ export function normalizeChallengeKeys(value: unknown): ChallengeKey[] {
 
 export function normalizeMemoryMode(value: unknown): ChallengeMemoryMode {
   return value === "logos" ? "logos" : "palabras"
+}
+
+export function normalizeMemoryLogoProfiles(value: unknown): ChallengeMemoryLogoProfile[] {
+  const rawItems = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? value.split(/[\n,;]+/)
+      : []
+
+  const normalized = rawItems
+    .map((item) => String(item).trim())
+    .filter((item): item is ChallengeMemoryLogoProfile => {
+      return /^(comercio|servicio):\d+$/.test(item)
+    })
+
+  return Array.from(new Set(normalized)).slice(0, 80)
 }
 
 export function normalizeWordSearchWords(value: unknown): string[] {

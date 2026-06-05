@@ -12,6 +12,7 @@ import {
   DEFAULT_CHALLENGE_CONFIG,
   isMissingChallengesSchemaError,
   normalizeChallengeKeys,
+  normalizeMemoryLogoProfiles,
   normalizeMemoryMode,
   normalizePuzzleImages,
   normalizeWordSearchWords,
@@ -56,6 +57,7 @@ type LoadedChallengeConfig = {
   juegosActivos?: unknown
   sopaPalabras?: unknown
   memoriaModo?: unknown
+  memoriaLogos?: unknown
   puzzleImagenes?: unknown
   slug?: string
   titulo?: string
@@ -68,12 +70,20 @@ type ChallengeEdition = {
   juegosActivos: ChallengeKey[]
   sopaPalabras: string[]
   memoriaModo: ChallengeMemoryMode
+  memoriaLogos: ReturnType<typeof normalizeMemoryLogoProfiles>
   puzzleImagenes: string[]
   createdAt: string | null
   updatedAt: string | null
 }
 
 const PUBLIC_SITE_URL = "https://www.holavarela.uy"
+
+type MemoryLogoProfileOption = {
+  key: ReturnType<typeof normalizeMemoryLogoProfiles>[number]
+  label: string
+  typeLabel: "Comercio" | "Servicio"
+  imageUrl: string
+}
 
 function buildChallengePublicUrl(slug?: string) {
   return slug ? `${PUBLIC_SITE_URL}/juga-y-gana/${slug}` : `${PUBLIC_SITE_URL}/juga-y-gana`
@@ -108,6 +118,12 @@ export default function AdminDesafiosPage() {
   const [memoryMode, setMemoryMode] = useState<ChallengeMemoryMode>(
     DEFAULT_CHALLENGE_CONFIG.memoriaModo
   )
+  const [memoryLogoProfiles, setMemoryLogoProfiles] = useState<
+    ReturnType<typeof normalizeMemoryLogoProfiles>
+  >(DEFAULT_CHALLENGE_CONFIG.memoriaLogos)
+  const [availableMemoryLogoProfiles, setAvailableMemoryLogoProfiles] = useState<
+    MemoryLogoProfileOption[]
+  >([])
   const [challengeSlug, setChallengeSlug] = useState("")
   const [currentChallengeSlug, setCurrentChallengeSlug] = useState("")
   const [challengeTitle, setChallengeTitle] = useState("")
@@ -124,6 +140,9 @@ export default function AdminDesafiosPage() {
   const [newChallengeMemoryMode, setNewChallengeMemoryMode] = useState<ChallengeMemoryMode>(
     DEFAULT_CHALLENGE_CONFIG.memoriaModo
   )
+  const [newChallengeMemoryLogoProfiles, setNewChallengeMemoryLogoProfiles] = useState<
+    ReturnType<typeof normalizeMemoryLogoProfiles>
+  >(DEFAULT_CHALLENGE_CONFIG.memoriaLogos)
   const [puzzleImagesInput, setPuzzleImagesInput] = useState("")
   const [newChallengePuzzleImages, setNewChallengePuzzleImages] = useState("")
   const [configMessage, setConfigMessage] = useState("")
@@ -149,6 +168,7 @@ export default function AdminDesafiosPage() {
   const isViewingCurrentEdition = !currentChallengeSlug || challengeSlug === currentChallengeSlug
   const normalizedSoupWords = normalizeWordSearchWords(soupWordsInput)
   const normalizedPuzzleImages = normalizePuzzleImages(puzzleImagesInput)
+  const selectedMemoryLogoCount = memoryLogoProfiles.length
 
   const openCreateChallengePanel = () => {
     setNewChallengeTitle("")
@@ -156,6 +176,7 @@ export default function AdminDesafiosPage() {
     setNewChallengeGames(activeGames.length > 0 ? activeGames : DEFAULT_CHALLENGE_CONFIG.juegosActivos)
     setNewChallengeSoupWords(soupWordsInput)
     setNewChallengeMemoryMode(memoryMode)
+    setNewChallengeMemoryLogoProfiles(memoryLogoProfiles)
     setNewChallengePuzzleImages(puzzleImagesInput)
     setConfigMessage("")
     setErrorMessage("")
@@ -179,6 +200,7 @@ export default function AdminDesafiosPage() {
           juegosActivos?: unknown
           sopaPalabras?: unknown
           memoriaModo?: unknown
+          memoriaLogos?: unknown
           puzzleImagenes?: unknown
           createdAt?: string | null
           updatedAt?: string | null
@@ -201,6 +223,7 @@ export default function AdminDesafiosPage() {
       setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
       setSoupWordsInput(normalizeWordSearchWords(result.config?.sopaPalabras).join("\n"))
       setMemoryMode(normalizeMemoryMode(result.config?.memoriaModo))
+      setMemoryLogoProfiles(normalizeMemoryLogoProfiles(result.config?.memoriaLogos))
       setPuzzleImagesInput(normalizePuzzleImages(result.config?.puzzleImagenes).join("\n"))
       setChallengeSlug(result.config?.slug || "")
       setCurrentChallengeSlug(result.config?.slug || "")
@@ -217,6 +240,7 @@ export default function AdminDesafiosPage() {
             juegosActivos: normalizeChallengeKeys(edition.juegosActivos),
             sopaPalabras: normalizeWordSearchWords(edition.sopaPalabras),
             memoriaModo: normalizeMemoryMode(edition.memoriaModo),
+            memoriaLogos: normalizeMemoryLogoProfiles(edition.memoriaLogos),
             puzzleImagenes: normalizePuzzleImages(edition.puzzleImagenes),
             createdAt: edition.createdAt || null,
             updatedAt: edition.updatedAt || null,
@@ -229,6 +253,41 @@ export default function AdminDesafiosPage() {
     } finally {
       setConfigLoading(false)
     }
+  }
+
+  const loadMemoryLogoProfiles = async () => {
+    const [{ data: comercios }, { data: servicios }] = await Promise.all([
+      supabase
+        .from("comercios")
+        .select("id, nombre, imagen, imagen_url")
+        .or("estado.is.null,estado.eq.activo")
+        .order("nombre", { ascending: true }),
+      supabase
+        .from("servicios")
+        .select("id, nombre, imagen")
+        .or("estado.is.null,estado.eq.activo")
+        .order("nombre", { ascending: true }),
+    ])
+
+    const comercioOptions = ((comercios || []) as Array<Record<string, unknown>>)
+      .map((item) => ({
+        key: `comercio:${Number(item.id)}` as const,
+        label: String(item.nombre || "Comercio"),
+        typeLabel: "Comercio" as const,
+        imageUrl: String(item.imagen_url || item.imagen || ""),
+      }))
+      .filter((item) => item.imageUrl && Number.isFinite(Number(item.key.split(":")[1])))
+
+    const servicioOptions = ((servicios || []) as Array<Record<string, unknown>>)
+      .map((item) => ({
+        key: `servicio:${Number(item.id)}` as const,
+        label: String(item.nombre || "Servicio"),
+        typeLabel: "Servicio" as const,
+        imageUrl: String(item.imagen || ""),
+      }))
+      .filter((item) => item.imageUrl && Number.isFinite(Number(item.key.split(":")[1])))
+
+    setAvailableMemoryLogoProfiles([...comercioOptions, ...servicioOptions])
   }
 
   const loadData = async (activeSlug = challengeSlug) => {
@@ -324,7 +383,10 @@ export default function AdminDesafiosPage() {
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       void (async () => {
-        const loadedConfig = await loadConfig()
+        const [loadedConfig] = await Promise.all([
+          loadConfig(),
+          loadMemoryLogoProfiles(),
+        ])
         await loadData(loadedConfig?.slug || "")
       })()
     }, 0)
@@ -348,6 +410,22 @@ export default function AdminDesafiosPage() {
     )
   }
 
+  const toggleMemoryLogoProfile = (profileKey: MemoryLogoProfileOption["key"]) => {
+    setMemoryLogoProfiles((current) =>
+      current.includes(profileKey)
+        ? current.filter((key) => key !== profileKey)
+        : normalizeMemoryLogoProfiles([...current, profileKey])
+    )
+  }
+
+  const toggleNewChallengeMemoryLogoProfile = (profileKey: MemoryLogoProfileOption["key"]) => {
+    setNewChallengeMemoryLogoProfiles((current) =>
+      current.includes(profileKey)
+        ? current.filter((key) => key !== profileKey)
+        : normalizeMemoryLogoProfiles([...current, profileKey])
+    )
+  }
+
   const handleSaveConfig = async () => {
     if (challengeActive && activeGames.length === 0) {
       setConfigMessage("Activa al menos un juego para publicar el desafio.")
@@ -366,6 +444,7 @@ export default function AdminDesafiosPage() {
           juegosActivos: activeGames,
           sopaPalabras: soupWordsInput,
           memoriaModo: memoryMode,
+          memoriaLogos: memoryLogoProfiles,
           puzzleImagenes: puzzleImagesInput,
         }),
       })
@@ -383,6 +462,7 @@ export default function AdminDesafiosPage() {
       setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
       setSoupWordsInput(normalizeWordSearchWords(result.config?.sopaPalabras).join("\n"))
       setMemoryMode(normalizeMemoryMode(result.config?.memoriaModo))
+      setMemoryLogoProfiles(normalizeMemoryLogoProfiles(result.config?.memoriaLogos))
       setPuzzleImagesInput(normalizePuzzleImages(result.config?.puzzleImagenes).join("\n"))
       setChallengeSlug(result.config?.slug || "")
       setCurrentChallengeSlug(result.config?.slug || "")
@@ -422,6 +502,7 @@ export default function AdminDesafiosPage() {
           juegosActivos: newChallengeGames,
           sopaPalabras: newChallengeSoupWords,
           memoriaModo: newChallengeMemoryMode,
+          memoriaLogos: newChallengeMemoryLogoProfiles,
           puzzleImagenes: newChallengePuzzleImages,
           titulo: newChallengeTitle,
         }),
@@ -440,6 +521,7 @@ export default function AdminDesafiosPage() {
       setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
       setSoupWordsInput(normalizeWordSearchWords(result.config?.sopaPalabras).join("\n"))
       setMemoryMode(normalizeMemoryMode(result.config?.memoriaModo))
+      setMemoryLogoProfiles(normalizeMemoryLogoProfiles(result.config?.memoriaLogos))
       setPuzzleImagesInput(normalizePuzzleImages(result.config?.puzzleImagenes).join("\n"))
       setChallengeSlug(result.config?.slug || "")
       setCurrentChallengeSlug(result.config?.slug || "")
@@ -453,6 +535,7 @@ export default function AdminDesafiosPage() {
       setNewChallengeGames(DEFAULT_CHALLENGE_CONFIG.juegosActivos)
       setNewChallengeSoupWords("")
       setNewChallengeMemoryMode(DEFAULT_CHALLENGE_CONFIG.memoriaModo)
+      setNewChallengeMemoryLogoProfiles(DEFAULT_CHALLENGE_CONFIG.memoriaLogos)
       setNewChallengePuzzleImages("")
       setConfigSchemaReady(true)
       setConfigMessage("Nuevo desafio creado. Ya tienes un link y QR nuevos.")
@@ -475,6 +558,7 @@ export default function AdminDesafiosPage() {
     setActiveGames(edition.juegosActivos)
     setSoupWordsInput(edition.sopaPalabras.join("\n"))
     setMemoryMode(edition.memoriaModo)
+    setMemoryLogoProfiles(edition.memoriaLogos)
     setPuzzleImagesInput(edition.puzzleImagenes.join("\n"))
     setSearch("")
     setMessage("")
@@ -518,6 +602,7 @@ export default function AdminDesafiosPage() {
       setActiveGames(normalizeChallengeKeys(result.config?.juegosActivos))
       setSoupWordsInput(normalizeWordSearchWords(result.config?.sopaPalabras).join("\n"))
       setMemoryMode(normalizeMemoryMode(result.config?.memoriaModo))
+      setMemoryLogoProfiles(normalizeMemoryLogoProfiles(result.config?.memoriaLogos))
       setPuzzleImagesInput(normalizePuzzleImages(result.config?.puzzleImagenes).join("\n"))
       setConfigMessage("Edicion activada. El link y QR actuales apuntan a este desafio.")
       await loadConfig()
@@ -912,6 +997,8 @@ export default function AdminDesafiosPage() {
         selectedGames={newChallengeGames}
         soupWords={newChallengeSoupWords}
         memoryMode={newChallengeMemoryMode}
+        memoryLogoProfiles={newChallengeMemoryLogoProfiles}
+        availableMemoryLogoProfiles={availableMemoryLogoProfiles}
         puzzleImages={newChallengePuzzleImages}
         isCreating={creatingChallenge}
         onTitleChange={setNewChallengeTitle}
@@ -919,6 +1006,7 @@ export default function AdminDesafiosPage() {
         onToggleGame={toggleNewChallengeGame}
         onSoupWordsChange={setNewChallengeSoupWords}
         onMemoryModeChange={setNewChallengeMemoryMode}
+        onToggleMemoryLogoProfile={toggleNewChallengeMemoryLogoProfile}
         onPuzzleImagesChange={setNewChallengePuzzleImages}
         onCancel={() => setShowCreateChallengeConfirm(false)}
         onConfirm={() => {
@@ -1162,6 +1250,14 @@ export default function AdminDesafiosPage() {
                     )
                   })}
                 </div>
+                {memoryMode === "logos" ? (
+                  <MemoryLogoProfileSelector
+                    profiles={availableMemoryLogoProfiles}
+                    selectedProfiles={memoryLogoProfiles}
+                    disabled={configLoading || savingConfig || !isViewingCurrentEdition}
+                    onToggle={toggleMemoryLogoProfile}
+                  />
+                ) : null}
               </div>
             ) : null}
 
@@ -1201,6 +1297,14 @@ export default function AdminDesafiosPage() {
               <div className="text-sm text-slate-500">
                 Juegos activos:{" "}
                 <span className="font-semibold text-slate-900">{activeGames.length}</span>
+                {activeGames.includes("memoria") && memoryMode === "logos" ? (
+                  <span className="ml-3">
+                    Logos seleccionados:{" "}
+                    <span className="font-semibold text-slate-900">
+                      {selectedMemoryLogoCount || "automatico"}
+                    </span>
+                  </span>
+                ) : null}
               </div>
               <button
                 type="button"
@@ -1553,6 +1657,91 @@ export default function AdminDesafiosPage() {
   )
 }
 
+function MemoryLogoProfileSelector({
+  profiles,
+  selectedProfiles,
+  disabled = false,
+  onToggle,
+}: {
+  profiles: MemoryLogoProfileOption[]
+  selectedProfiles: ReturnType<typeof normalizeMemoryLogoProfiles>
+  disabled?: boolean
+  onToggle: (profileKey: MemoryLogoProfileOption["key"]) => void
+}) {
+  const selectedCount = selectedProfiles.length
+
+  return (
+    <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold text-slate-950">
+            Comercios y servicios para la memoria
+          </div>
+          <p className="mt-1 text-sm leading-6 text-slate-500">
+            Marca los perfiles que pueden aparecer. Si no seleccionas ninguno, se usan perfiles activos automaticamente.
+          </p>
+        </div>
+        <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+          {selectedCount > 0 ? `${selectedCount} seleccionado(s)` : "Automatico"}
+        </div>
+      </div>
+
+      {profiles.length === 0 ? (
+        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          No hay comercios o servicios activos con imagen para seleccionar.
+        </div>
+      ) : (
+        <div className="mt-4 grid max-h-80 gap-3 overflow-y-auto pr-1 sm:grid-cols-2 xl:grid-cols-3">
+          {profiles.map((profile) => {
+            const selected = selectedProfiles.includes(profile.key)
+
+            return (
+              <button
+                key={profile.key}
+                type="button"
+                onClick={() => onToggle(profile.key)}
+                disabled={disabled}
+                className={`flex min-w-0 items-center gap-3 rounded-xl border p-3 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                  selected
+                    ? "border-emerald-300 bg-emerald-50"
+                    : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                }`}
+              >
+                <span className="relative flex h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={profile.imageUrl}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold text-slate-950">
+                    {profile.label}
+                  </span>
+                  <span className="mt-1 block text-xs font-medium text-slate-500">
+                    {profile.typeLabel}
+                  </span>
+                </span>
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                    selected
+                      ? "border-emerald-500 bg-emerald-500 text-white"
+                      : "border-slate-300 bg-white"
+                  }`}
+                >
+                  {selected ? <CheckCircle2 className="h-4 w-4" /> : null}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function CreateChallengePanel({
   isOpen,
   title,
@@ -1560,6 +1749,8 @@ function CreateChallengePanel({
   selectedGames,
   soupWords,
   memoryMode,
+  memoryLogoProfiles,
+  availableMemoryLogoProfiles,
   puzzleImages,
   isCreating,
   onTitleChange,
@@ -1567,6 +1758,7 @@ function CreateChallengePanel({
   onToggleGame,
   onSoupWordsChange,
   onMemoryModeChange,
+  onToggleMemoryLogoProfile,
   onPuzzleImagesChange,
   onCancel,
   onConfirm,
@@ -1577,6 +1769,8 @@ function CreateChallengePanel({
   selectedGames: ChallengeKey[]
   soupWords: string
   memoryMode: ChallengeMemoryMode
+  memoryLogoProfiles: ReturnType<typeof normalizeMemoryLogoProfiles>
+  availableMemoryLogoProfiles: MemoryLogoProfileOption[]
   puzzleImages: string
   isCreating: boolean
   onTitleChange: (value: string) => void
@@ -1584,6 +1778,7 @@ function CreateChallengePanel({
   onToggleGame: (game: ChallengeKey) => void
   onSoupWordsChange: (value: string) => void
   onMemoryModeChange: (value: ChallengeMemoryMode) => void
+  onToggleMemoryLogoProfile: (profileKey: MemoryLogoProfileOption["key"]) => void
   onPuzzleImagesChange: (value: string) => void
   onCancel: () => void
   onConfirm: () => void
@@ -1745,6 +1940,13 @@ function CreateChallengePanel({
                     )
                   })}
                 </div>
+                {memoryMode === "logos" ? (
+                  <MemoryLogoProfileSelector
+                    profiles={availableMemoryLogoProfiles}
+                    selectedProfiles={memoryLogoProfiles}
+                    onToggle={onToggleMemoryLogoProfile}
+                  />
+                ) : null}
               </section>
             ) : null}
 
@@ -1805,7 +2007,11 @@ function CreateChallengePanel({
                 <div>
                   <div className="text-slate-500">Memoria</div>
                   <div className="mt-1 font-semibold text-slate-950">
-                    {memoryMode === "logos" ? "Logos locales" : "Palabras"}
+                    {memoryMode === "logos"
+                      ? memoryLogoProfiles.length > 0
+                        ? `${memoryLogoProfiles.length} logo(s)`
+                        : "Logos automaticos"
+                      : "Palabras"}
                   </div>
                 </div>
               ) : null}

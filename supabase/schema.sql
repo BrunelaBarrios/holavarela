@@ -241,6 +241,12 @@ add column if not exists plan_destacado_plus_precio text;
 alter table public.sitio
 add column if not exists plan_destacado_plus_features text;
 
+alter table public.sitio
+add column if not exists mostrar_juegos_home boolean not null default true;
+
+alter table public.sitio
+add column if not exists mostrar_ranking_juego_home boolean not null default false;
+
 create table if not exists public.cursos (
   id bigint generated always as identity primary key,
   nombre text not null,
@@ -301,6 +307,8 @@ create table if not exists public.sitio (
   plan_destacado_plus_descripcion text,
   plan_destacado_plus_precio text,
   plan_destacado_plus_features text,
+  mostrar_juegos_home boolean not null default true,
+  mostrar_ranking_juego_home boolean not null default false,
   updated_at timestamp with time zone default now()
 );
 
@@ -631,6 +639,7 @@ create table if not exists public.desafio_config (
   juegos_activos text[] not null default array['sopa', 'memoria', 'pelicula', 'puzzle', 'laberinto'],
   sopa_palabras text[] not null default array[]::text[],
   memoria_modo text not null default 'palabras',
+  memoria_logos text[] not null default array[]::text[],
   puzzle_imagenes text[] not null default array[]::text[],
   slug text,
   titulo text,
@@ -648,6 +657,9 @@ alter table public.desafio_config
 
 alter table public.desafio_config
   add column if not exists memoria_modo text not null default 'palabras';
+
+alter table public.desafio_config
+  add column if not exists memoria_logos text[] not null default array[]::text[];
 
 alter table public.desafio_config
   add column if not exists puzzle_imagenes text[] not null default array[]::text[];
@@ -679,6 +691,7 @@ create table if not exists public.desafio_ediciones (
   juegos_activos text[] not null default array['sopa', 'memoria', 'pelicula', 'puzzle', 'laberinto'],
   sopa_palabras text[] not null default array[]::text[],
   memoria_modo text not null default 'palabras',
+  memoria_logos text[] not null default array[]::text[],
   puzzle_imagenes text[] not null default array[]::text[],
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
@@ -691,9 +704,12 @@ alter table public.desafio_ediciones
   add column if not exists memoria_modo text not null default 'palabras';
 
 alter table public.desafio_ediciones
+  add column if not exists memoria_logos text[] not null default array[]::text[];
+
+alter table public.desafio_ediciones
   add column if not exists puzzle_imagenes text[] not null default array[]::text[];
 
-insert into public.desafio_ediciones (slug, titulo, activo, juegos_activos, sopa_palabras, memoria_modo, puzzle_imagenes, created_at, updated_at)
+insert into public.desafio_ediciones (slug, titulo, activo, juegos_activos, sopa_palabras, memoria_modo, memoria_logos, puzzle_imagenes, created_at, updated_at)
 select
   slug,
   coalesce(titulo, slug),
@@ -701,6 +717,7 @@ select
   juegos_activos,
   coalesce(sopa_palabras, array[]::text[]),
   coalesce(memoria_modo, 'palabras'),
+  coalesce(memoria_logos, array[]::text[]),
   coalesce(puzzle_imagenes, array[]::text[]),
   coalesce(updated_at, now()),
   coalesce(updated_at, now())
@@ -713,6 +730,7 @@ set
   juegos_activos = excluded.juegos_activos,
   sopa_palabras = excluded.sopa_palabras,
   memoria_modo = excluded.memoria_modo,
+  memoria_logos = excluded.memoria_logos,
   puzzle_imagenes = excluded.puzzle_imagenes,
   updated_at = excluded.updated_at;
 

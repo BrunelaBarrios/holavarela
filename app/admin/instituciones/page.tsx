@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { Building2, Eye, EyeOff, Pencil, Plus, Trash2, X } from "lucide-react"
+import { Building2, Eye, EyeOff, Pencil, Plus, Star, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { supabase } from "../../supabase"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
@@ -18,6 +18,7 @@ type Institucion = {
   foto: string | null
   estado?: string | null
   usa_whatsapp?: boolean | null
+  destacado?: boolean | null
   premium_activo?: boolean | null
   premium_cursos_activo?: boolean | null
   premium_cursos_titulo?: string | null
@@ -35,6 +36,7 @@ const initialForm: InstitucionForm = {
   facebook_url: "",
   foto: "",
   usa_whatsapp: true,
+  destacado: false,
   premium_activo: false,
   premium_cursos_activo: false,
   premium_cursos_titulo: "",
@@ -90,6 +92,7 @@ export default function AdminInstitucionesPage() {
       facebook_url: institucion.facebook_url || "",
       foto: institucion.foto || "",
       usa_whatsapp: institucion.usa_whatsapp ?? true,
+      destacado: institucion.destacado ?? false,
       premium_activo: institucion.premium_activo ?? false,
       premium_cursos_activo: institucion.premium_cursos_activo ?? false,
       premium_cursos_titulo: institucion.premium_cursos_titulo || "",
@@ -142,6 +145,29 @@ export default function AdminInstitucionesPage() {
     )
   }
 
+  const toggleFeatured = async (institucion: Institucion) => {
+    const response = await fetch("/api/admin/instituciones", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "toggle_featured",
+        id: institucion.id,
+      }),
+    })
+    const result = (await response.json()) as { error?: string; record?: Institucion }
+
+    if (!response.ok || !result.record) {
+      setSaveError(result.error || "No pudimos cambiar el destacado.")
+      return
+    }
+
+    setInstituciones((prev) =>
+      prev.map((item) => (item.id === institucion.id ? result.record! : item))
+    )
+  }
+
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -179,6 +205,7 @@ export default function AdminInstitucionesPage() {
       foto: formData.foto || null,
       estado: editingInstitucion?.estado ?? "activo",
       usa_whatsapp: formData.usa_whatsapp,
+      destacado: formData.destacado ?? false,
       premium_activo: formData.premium_activo ?? false,
       premium_cursos_activo: formData.premium_cursos_activo ?? false,
       premium_cursos_titulo: formData.premium_cursos_titulo?.trim() || null,
@@ -555,6 +582,11 @@ export default function AdminInstitucionesPage() {
                     Premium
                   </span>
                 ) : null}
+                {institucion.destacado ? (
+                  <span className="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+                    Destacado
+                  </span>
+                ) : null}
                 {institucion.premium_cursos_activo ? (
                   <span className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
                     Cursos en premium
@@ -576,6 +608,18 @@ export default function AdminInstitucionesPage() {
                   ) : (
                     <EyeOff className="h-4 w-4" />
                   )}
+                </button>
+
+                <button
+                  onClick={() => toggleFeatured(institucion)}
+                  className={`rounded-lg p-2 transition ${
+                    institucion.destacado
+                      ? "bg-amber-50 text-amber-700"
+                      : "text-slate-500 hover:bg-slate-100"
+                  }`}
+                  title="Destacar"
+                >
+                  <Star className={`h-4 w-4 ${institucion.destacado ? "fill-current" : ""}`} />
                 </button>
 
                 <button

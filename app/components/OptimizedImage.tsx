@@ -8,6 +8,8 @@ type OptimizedImageProps = {
   sizes: string
   className?: string
   priority?: boolean
+  fetchPriority?: "high" | "low" | "auto"
+  preload?: boolean
   quality?: number
 }
 
@@ -15,10 +17,6 @@ const DEFAULT_QUALITY = 72
 
 function isSupabaseStorageUrl(src: string) {
   return src.includes("/storage/v1/object/public/")
-}
-
-function isDynamicApiImageUrl(src: string) {
-  return src.startsWith("/api/") && src.endsWith("/image")
 }
 
 function buildSupabaseResponsiveUrl(src: string, width: number, quality?: number) {
@@ -57,6 +55,8 @@ export function OptimizedImage({
   sizes,
   className,
   priority = false,
+  fetchPriority,
+  preload,
   quality,
 }: OptimizedImageProps) {
   return (
@@ -66,10 +66,12 @@ export function OptimizedImage({
       fill
       sizes={sizes}
       priority={priority}
+      fetchPriority={fetchPriority}
+      preload={preload}
       quality={quality}
       loading={priority ? "eager" : "lazy"}
       loader={isSupabaseStorageUrl(src) ? supabaseLoader : undefined}
-      unoptimized={src.startsWith("data:") || isDynamicApiImageUrl(src)}
+      unoptimized={src.startsWith("data:")}
       className={className}
     />
   )

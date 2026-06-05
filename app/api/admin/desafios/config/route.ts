@@ -7,6 +7,7 @@ import {
   DEFAULT_CHALLENGE_CONFIG,
   isMissingChallengesSchemaError,
   normalizeChallengeKeys,
+  normalizeMemoryLogoProfiles,
   normalizeMemoryMode,
   normalizePuzzleImages,
   normalizeWordSearchWords,
@@ -18,6 +19,7 @@ type ChallengeConfigRow = {
   juegos_activos?: unknown
   sopa_palabras?: unknown
   memoria_modo?: unknown
+  memoria_logos?: unknown
   puzzle_imagenes?: unknown
   slug?: string | null
   titulo?: string | null
@@ -32,6 +34,7 @@ type ChallengeEdition = {
   juegosActivos: ReturnType<typeof normalizeChallengeKeys>
   sopaPalabras: ReturnType<typeof normalizeWordSearchWords>
   memoriaModo: ReturnType<typeof normalizeMemoryMode>
+  memoriaLogos: ReturnType<typeof normalizeMemoryLogoProfiles>
   puzzleImagenes: ReturnType<typeof normalizePuzzleImages>
   createdAt: string | null
   updatedAt: string | null
@@ -45,6 +48,7 @@ function configFromRow(row: ChallengeConfigRow | null | undefined) {
     juegosActivos: normalizeChallengeKeys(row.juegos_activos),
     sopaPalabras: normalizeWordSearchWords(row.sopa_palabras),
     memoriaModo: normalizeMemoryMode(row.memoria_modo),
+    memoriaLogos: normalizeMemoryLogoProfiles(row.memoria_logos),
     puzzleImagenes: normalizePuzzleImages(row.puzzle_imagenes),
     slug: row.slug || undefined,
     titulo: row.titulo || undefined,
@@ -61,6 +65,7 @@ function editionFromRow(row: ChallengeConfigRow): ChallengeEdition | null {
     juegosActivos: normalizeChallengeKeys(row.juegos_activos),
     sopaPalabras: normalizeWordSearchWords(row.sopa_palabras),
     memoriaModo: normalizeMemoryMode(row.memoria_modo),
+    memoriaLogos: normalizeMemoryLogoProfiles(row.memoria_logos),
     puzzleImagenes: normalizePuzzleImages(row.puzzle_imagenes),
     createdAt: row.created_at || null,
     updatedAt: row.updated_at || null,
@@ -97,7 +102,7 @@ export async function GET(request: NextRequest) {
   const supabase = getSupabaseAdmin()
   const configResult = await supabase
     .from("desafio_config")
-    .select("activo, juegos_activos, sopa_palabras, memoria_modo, puzzle_imagenes, slug, titulo, updated_at")
+    .select("activo, juegos_activos, sopa_palabras, memoria_modo, memoria_logos, puzzle_imagenes, slug, titulo, updated_at")
     .eq("id", 1)
     .maybeSingle()
   let data = configResult.data as ChallengeConfigRow | null
@@ -106,6 +111,7 @@ export async function GET(request: NextRequest) {
   if (
     error?.code === "42703" &&
     (error.message?.includes("memoria_modo") ||
+      error.message?.includes("memoria_logos") ||
       error.message?.includes("sopa_palabras") ||
       error.message?.includes("puzzle_imagenes"))
   ) {
@@ -132,7 +138,7 @@ export async function GET(request: NextRequest) {
 
   const editionsResult = await supabase
     .from("desafio_ediciones")
-    .select("slug, titulo, activo, juegos_activos, sopa_palabras, memoria_modo, puzzle_imagenes, created_at, updated_at")
+    .select("slug, titulo, activo, juegos_activos, sopa_palabras, memoria_modo, memoria_logos, puzzle_imagenes, created_at, updated_at")
     .order("created_at", { ascending: false })
     .limit(80)
   let editionRows = editionsResult.data as ChallengeConfigRow[] | null
@@ -141,6 +147,7 @@ export async function GET(request: NextRequest) {
   if (
     editionsError?.code === "42703" &&
     (editionsError.message?.includes("memoria_modo") ||
+      editionsError.message?.includes("memoria_logos") ||
       editionsError.message?.includes("sopa_palabras") ||
       editionsError.message?.includes("puzzle_imagenes"))
   ) {
@@ -180,6 +187,7 @@ export async function GET(request: NextRequest) {
                 juegosActivos: currentConfig.juegosActivos,
                 sopaPalabras: currentConfig.sopaPalabras,
                 memoriaModo: currentConfig.memoriaModo,
+                memoriaLogos: currentConfig.memoriaLogos,
                 puzzleImagenes: currentConfig.puzzleImagenes,
                 createdAt: null,
                 updatedAt: (data as ChallengeConfigRow | null)?.updated_at || null,
@@ -202,6 +210,7 @@ export async function POST(request: NextRequest) {
     juegosActivos?: unknown
     sopaPalabras?: unknown
     memoriaModo?: unknown
+    memoriaLogos?: unknown
     puzzleImagenes?: unknown
     slug?: unknown
     titulo?: unknown
@@ -209,6 +218,7 @@ export async function POST(request: NextRequest) {
   const juegosActivos = normalizeChallengeKeys(body.juegosActivos)
   const sopaPalabras = normalizeWordSearchWords(body.sopaPalabras)
   const memoriaModo = normalizeMemoryMode(body.memoriaModo)
+  const memoriaLogos = normalizeMemoryLogoProfiles(body.memoriaLogos)
   const puzzleImagenes = normalizePuzzleImages(body.puzzleImagenes)
   const activo = body.activo === true
   const creatingChallenge = body.action === "create"
@@ -229,6 +239,7 @@ export async function POST(request: NextRequest) {
   let nextGames = juegosActivos
   let nextSoupWords = sopaPalabras
   let nextMemoryMode = memoriaModo
+  let nextMemoryLogos = memoriaLogos
   let nextPuzzleImages = puzzleImagenes
   let nextActive = activo
 
@@ -240,7 +251,7 @@ export async function POST(request: NextRequest) {
 
     const { data: editionRow, error: editionError } = await supabase
       .from("desafio_ediciones")
-      .select("slug, titulo, activo, juegos_activos, sopa_palabras, memoria_modo, puzzle_imagenes")
+      .select("slug, titulo, activo, juegos_activos, sopa_palabras, memoria_modo, memoria_logos, puzzle_imagenes")
       .eq("slug", slugToActivate)
       .maybeSingle()
 
@@ -257,6 +268,7 @@ export async function POST(request: NextRequest) {
     nextGames = normalizeChallengeKeys(editionRow.juegos_activos)
     nextSoupWords = normalizeWordSearchWords(editionRow.sopa_palabras)
     nextMemoryMode = normalizeMemoryMode(editionRow.memoria_modo)
+    nextMemoryLogos = normalizeMemoryLogoProfiles(editionRow.memoria_logos)
     nextPuzzleImages = normalizePuzzleImages(editionRow.puzzle_imagenes)
     nextActive = editionRow.activo !== false
   }
@@ -277,6 +289,7 @@ export async function POST(request: NextRequest) {
         juegos_activos: nextGames,
         sopa_palabras: nextSoupWords,
         memoria_modo: nextMemoryMode,
+        memoria_logos: nextMemoryLogos,
         puzzle_imagenes: nextPuzzleImages,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -301,6 +314,7 @@ export async function POST(request: NextRequest) {
     juegos_activos: nextGames,
     sopa_palabras: nextSoupWords,
     memoria_modo: nextMemoryMode,
+    memoria_logos: nextMemoryLogos,
     puzzle_imagenes: nextPuzzleImages,
     ...(nextSlug ? { slug: nextSlug } : {}),
     ...(nextTitle ? { titulo: nextTitle } : {}),
@@ -310,7 +324,7 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabase
     .from("desafio_config")
     .upsert(currentPayload, { onConflict: "id" })
-    .select("activo, juegos_activos, sopa_palabras, memoria_modo, puzzle_imagenes, slug, titulo")
+    .select("activo, juegos_activos, sopa_palabras, memoria_modo, memoria_logos, puzzle_imagenes, slug, titulo")
     .single()
 
   if (error) {
@@ -337,6 +351,7 @@ export async function POST(request: NextRequest) {
           juegos_activos: savedConfig.juegosActivos,
           sopa_palabras: savedConfig.sopaPalabras,
           memoria_modo: savedConfig.memoriaModo,
+          memoria_logos: savedConfig.memoriaLogos,
           puzzle_imagenes: savedConfig.puzzleImagenes,
           updated_at: new Date().toISOString(),
         },

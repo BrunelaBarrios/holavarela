@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
     formats: ["image/avif", "image/webp"],
+    deviceSizes: [360, 414, 640, 768, 1024, 1280, 1536],
+    imageSizes: [64, 96, 128, 256, 384],
+    minimumCacheTTL: 86400,
     remotePatterns: [
       {
         protocol: "https",
@@ -71,6 +74,15 @@ const nextConfig: NextConfig = {
           {
             key: "Cache-Control",
             value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        source: "/_next/image",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=604800",
           },
         ],
       },

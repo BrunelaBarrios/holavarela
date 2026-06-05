@@ -27,6 +27,7 @@ type SubscriptionItem = {
   plan_suscripcion: SubscriptionPlanKey | null
   estado_suscripcion: SubscriptionStatusKey | null
   entityType: EntityType
+  supportsSubscriptionColumns: boolean
 }
 
 const subscriptionPlanOptions: { key: SubscriptionPlanKey; label: string }[] = [
@@ -59,6 +60,61 @@ const siteFieldSelection = `
   plan_destacado_plus_features
 `
 
+function isMissingSubscriptionColumnError(message?: string) {
+  return Boolean(
+    message?.includes("plan_suscripcion") ||
+      message?.includes("estado_suscripcion") ||
+      message?.includes("suscripcion_actualizada_at")
+  )
+}
+
+async function loadSubscriptionTable(
+  table: "comercios" | "servicios" | "instituciones",
+  entityType: EntityType
+) {
+  const response = await supabase
+    .from(table)
+    .select("id, nombre, plan_suscripcion, estado_suscripcion")
+    .order("nombre", { ascending: true })
+
+  if (!response.error) {
+    return {
+      items: (response.data || []).map((item) => ({
+        ...item,
+        entityType,
+        supportsSubscriptionColumns: true,
+      })),
+      error: null,
+      missingColumns: false,
+    }
+  }
+
+  if (!isMissingSubscriptionColumnError(response.error.message)) {
+    return {
+      items: [],
+      error: response.error,
+      missingColumns: false,
+    }
+  }
+
+  const fallbackResponse = await supabase
+    .from(table)
+    .select("id, nombre")
+    .order("nombre", { ascending: true })
+
+  return {
+    items: (fallbackResponse.data || []).map((item) => ({
+      ...item,
+      plan_suscripcion: null,
+      estado_suscripcion: null,
+      entityType,
+      supportsSubscriptionColumns: false,
+    })),
+    error: fallbackResponse.error,
+    missingColumns: !fallbackResponse.error,
+  }
+}
+
 export default function AdminSuscripcionesPage() {
   const [formData, setFormData] = useState<SubscriptionAdminForm>(
     buildSubscriptionAdminForm()
@@ -68,49 +124,61 @@ export default function AdminSuscripcionesPage() {
   const [savingCopy, setSavingCopy] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [schemaWarning, setSchemaWarning] = useState("")
 
   const loadPage = async () => {
     setLoading(true)
     setError("")
+    setSchemaWarning("")
 
     const [
       { data: siteData, error: siteError },
-      { data: comercios, error: comerciosError },
-      { data: servicios, error: serviciosError },
-      { data: instituciones, error: institucionesError },
+      comerciosResponse,
+      serviciosResponse,
+      institucionesResponse,
     ] = await Promise.all([
       supabase.from("sitio").select(siteFieldSelection).eq("id", 1).maybeSingle(),
-      supabase
-        .from("comercios")
-        .select("id, nombre, plan_suscripcion, estado_suscripcion")
-        .order("nombre", { ascending: true }),
-      supabase
-        .from("servicios")
-        .select("id, nombre, plan_suscripcion, estado_suscripcion")
-        .order("nombre", { ascending: true }),
-      supabase
-        .from("instituciones")
-        .select("id, nombre, plan_suscripcion, estado_suscripcion")
-        .order("nombre", { ascending: true }),
+      loadSubscriptionTable("comercios", "comercio"),
+      loadSubscriptionTable("servicios", "servicio"),
+      loadSubscriptionTable("instituciones", "institucion"),
     ])
 
-    if (siteError || comerciosError || serviciosError || institucionesError) {
+    if (
+      siteError ||
+      comerciosResponse.error ||
+      serviciosResponse.error ||
+      institucionesResponse.error
+    ) {
       setError(
         siteError?.message ||
-          comerciosError?.message ||
-          serviciosError?.message ||
-          institucionesError?.message ||
+          comerciosResponse.error?.message ||
+          serviciosResponse.error?.message ||
+          institucionesResponse.error?.message ||
           "No pudimos cargar las suscripciones."
       )
       setLoading(false)
       return
     }
 
+    const missingSchemaTables = [
+      comerciosResponse.missingColumns ? "comercios" : null,
+      serviciosResponse.missingColumns ? "servicios" : null,
+      institucionesResponse.missingColumns ? "instituciones" : null,
+    ].filter(Boolean)
+
+    if (missingSchemaTables.length > 0) {
+      setSchemaWarning(
+        `Faltan columnas de suscripcion en ${missingSchemaTables.join(
+          ", "
+        )}. La pantalla carga igual, pero esas fichas no se pueden editar hasta aplicar la migracion.`
+      )
+    }
+
     setFormData(buildSubscriptionAdminForm(siteData as SubscriptionSiteContent))
     setItems([
-      ...((comercios || []).map((item) => ({ ...item, entityType: "comercio" as const }))),
-      ...((servicios || []).map((item) => ({ ...item, entityType: "servicio" as const }))),
-      ...((instituciones || []).map((item) => ({ ...item, entityType: "institucion" as const }))),
+      ...comerciosResponse.items,
+      ...serviciosResponse.items,
+      ...institucionesResponse.items,
     ])
     setLoading(false)
   }
@@ -173,6 +241,13 @@ export default function AdminSuscripcionesPage() {
           ? "servicios"
           : "instituciones"
 
+    if (!item.supportsSubscriptionColumns) {
+      setError(
+        `No se puede actualizar ${item.nombre}: faltan columnas de suscripcion en ${table}.`
+      )
+      return
+    }
+
     const payload = {
       ...changes,
       suscripcion_actualizada_at: new Date().toISOString(),
@@ -221,6 +296,9 @@ export default function AdminSuscripcionesPage() {
 
       {error ? <AuthFormStatus tone="error" message={error} /> : null}
       {success ? <AuthFormStatus tone="success" message={success} /> : null}
+      {schemaWarning ? (
+        <AuthFormStatus tone="notice" message={schemaWarning} />
+      ) : null}
 
       {loading ? (
         <div className="rounded-3xl border border-slate-200 bg-white p-8 text-slate-500 shadow-sm">
@@ -387,12 +465,13 @@ export default function AdminSuscripcionesPage() {
                               </label>
                               <select
                                 value={item.plan_suscripcion || "presencia"}
+                                disabled={!item.supportsSubscriptionColumns}
                                 onChange={(e) =>
                                   void updateItemSubscription(item, {
                                     plan_suscripcion: e.target.value as SubscriptionPlanKey,
                                   })
                                 }
-                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-500"
+                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
                               >
                                 {subscriptionPlanOptions.map((option) => (
                                   <option key={option.key} value={option.key}>
@@ -408,13 +487,14 @@ export default function AdminSuscripcionesPage() {
                               </label>
                               <select
                                 value={item.estado_suscripcion || "pendiente"}
+                                disabled={!item.supportsSubscriptionColumns}
                                 onChange={(e) =>
                                   void updateItemSubscription(item, {
                                     estado_suscripcion:
                                       e.target.value as SubscriptionStatusKey,
                                   })
                                 }
-                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-500"
+                                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-500 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
                               >
                                 {subscriptionStatusOptions.map((option) => (
                                   <option key={option.value} value={option.value}>

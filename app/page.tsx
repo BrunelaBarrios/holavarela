@@ -20,6 +20,8 @@ const defaultSobreVarela = {
   texto_3:
     "Cartelera online de José Pedro Varela: encontrá acá eventos, cursos, clases, servicios y más.",
   imagen_url: null,
+  mostrar_juegos_home: true,
+  mostrar_ranking_juego_home: false,
 }
 
 const RECENT_COMMERCIAL_EVENT_DAYS = 1
@@ -88,6 +90,23 @@ const getHomePageData = unstable_cache(
       })
       .catch(() => null)
 
+    const sitioPromise = supabaseServer
+      .from("sitio")
+      .select("titulo, texto_1, texto_2, texto_3, imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home")
+      .eq("id", 1)
+      .maybeSingle()
+      .then(async (result) => {
+        if (result.error?.code === "42703") {
+          return supabaseServer
+            .from("sitio")
+            .select("titulo, texto_1, texto_2, texto_3, imagen_url")
+            .eq("id", 1)
+            .maybeSingle()
+        }
+
+        return result
+      })
+
     const [
       { data: featuredBusinesses },
       { data: eventosData },
@@ -95,11 +114,12 @@ const getHomePageData = unstable_cache(
       { data: servicios },
       { data: instituciones },
       { data: sobreVarelaData },
+      challengeRanking,
       weather,
     ] = await Promise.all([
       supabaseServer
         .from("comercios")
-        .select("id, nombre, descripcion, premium_detalle, premium_galeria, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, imagen, imagen_url, destacado, plan_suscripcion, usa_whatsapp")
+        .select("id, nombre, descripcion, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, imagen, imagen_url, destacado, plan_suscripcion, usa_whatsapp")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
         .limit(48),
@@ -117,21 +137,44 @@ const getHomePageData = unstable_cache(
         .limit(24),
       supabaseServer
         .from("servicios")
-        .select("id, nombre, categoria, descripcion, premium_detalle, premium_galeria, premium_activo, responsable, contacto, direccion, web_url, instagram_url, facebook_url, imagen, destacado, plan_suscripcion, usa_whatsapp")
+        .select("id, nombre, categoria, descripcion, premium_activo, responsable, contacto, direccion, web_url, instagram_url, facebook_url, imagen, destacado, plan_suscripcion, usa_whatsapp")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
         .limit(72),
       supabaseServer
         .from("instituciones")
-        .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, premium_activo")
+        .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, destacado, premium_activo")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
         .limit(48),
+      sitioPromise,
       supabaseServer
-        .from("sitio")
-        .select("titulo, texto_1, texto_2, texto_3, imagen_url")
+        .from("desafio_config")
+        .select("slug")
         .eq("id", 1)
-        .maybeSingle(),
+        .maybeSingle()
+        .then(async ({ data: activeChallenge }) => {
+          let rankingQuery = supabaseServer
+            .from("desafio_participaciones")
+            .select("id, nombre, puntaje_total, created_at")
+            .order("puntaje_total", { ascending: false })
+            .order("created_at", { ascending: true })
+            .limit(3)
+
+          if (activeChallenge?.slug) {
+            rankingQuery = rankingQuery.eq("desafio_slug", activeChallenge.slug)
+          }
+
+          const { data, error } = await rankingQuery
+          if (error) return []
+
+          return (data || []).map((entry) => ({
+            id: Number(entry.id),
+            nombre: entry.nombre || "Participante",
+            puntajeTotal: Number(entry.puntaje_total || 0),
+          }))
+        })
+        .catch(() => []),
       weatherPromise,
     ])
 
@@ -179,21 +222,16 @@ const getHomePageData = unstable_cache(
       sobreVarela: sobreVarelaData
         ? { ...defaultSobreVarela, ...sobreVarelaData }
         : defaultSobreVarela,
+      challengeRanking,
       weather,
     }
   },
-  ["home-page-data-v4"],
+  ["home-page-data-v6"],
   { revalidate: 3600 }
 )
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ sumate?: string | string[] }>
-}) {
-  const params = await searchParams
-  const initialSumateType = Array.isArray(params.sumate) ? params.sumate[0] : params.sumate || null
+export default async function Page() {
   const initialData = await getHomePageData(getTodayInMontevideo())
 
-  return <HomePage initialData={initialData} initialSumateType={initialSumateType} />
+  return <HomePage initialData={initialData} />
 }

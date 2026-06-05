@@ -1,12 +1,8 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { getEventLikesBrowserKey } from "./eventLikes"
-import {
-  createSweepstakesEntry,
-  fetchSweepstakesConfig,
-  type SweepstakesConfig,
-} from "./sweepstakes"
+import type { SweepstakesConfig } from "./sweepstakes"
 
 const SWEEPSTAKES_THRESHOLD = 3
 
@@ -23,15 +19,6 @@ export function useSweepstakesPopup() {
   const [submitError, setSubmitError] = useState("")
   const [currentTotalLikes, setCurrentTotalLikes] = useState(0)
 
-  useEffect(() => {
-    const loadConfig = async () => {
-      const result = await fetchSweepstakesConfig()
-      setConfig(result.config)
-    }
-
-    void loadConfig()
-  }, [])
-
   const closePopup = () => {
     setOpen(false)
     setSubmitError("")
@@ -46,6 +33,12 @@ export function useSweepstakesPopup() {
     if (totalLikes < SWEEPSTAKES_THRESHOLD) return
     if (totalLikes % SWEEPSTAKES_THRESHOLD !== 0) return
 
+    const { fetchSweepstakesConfig } = await import("./sweepstakes")
+    const resultConfig = await fetchSweepstakesConfig()
+    setConfig(resultConfig.config)
+
+    if (!resultConfig.config) return
+
     setCurrentTotalLikes(totalLikes)
     setSubmitError("")
     setOpen(true)
@@ -53,6 +46,7 @@ export function useSweepstakesPopup() {
 
   const submitEntry = async (nombre: string, telefono: string) => {
     const browserKey = getEventLikesBrowserKey()
+    const { createSweepstakesEntry } = await import("./sweepstakes")
 
     setSubmitting(true)
     setSubmitError("")

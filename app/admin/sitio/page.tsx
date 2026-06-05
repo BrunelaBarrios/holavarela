@@ -13,6 +13,8 @@ type SitioForm = {
   texto_2: string
   texto_3: string
   imagen_url: string
+  mostrar_juegos_home: boolean
+  mostrar_ranking_juego_home: boolean
 }
 
 const initialForm: SitioForm = {
@@ -24,6 +26,8 @@ const initialForm: SitioForm = {
   texto_3:
     "Cartelera online de José Pedro Varela: encontrá acá eventos, cursos, clases, servicios y más.",
   imagen_url: "",
+  mostrar_juegos_home: true,
+  mostrar_ranking_juego_home: false,
 }
 
 export default function AdminSitioPage() {
@@ -35,11 +39,19 @@ export default function AdminSitioPage() {
 
   useEffect(() => {
     const cargarConfiguracion = async () => {
-      const { data, error } = await supabase
+      const result = await supabase
         .from("sitio")
-        .select("titulo, texto_1, texto_2, texto_3, imagen_url")
+        .select("titulo, texto_1, texto_2, texto_3, imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home")
         .eq("id", 1)
         .maybeSingle()
+      const { data, error } =
+        result.error?.code === "42703"
+          ? await supabase
+              .from("sitio")
+              .select("titulo, texto_1, texto_2, texto_3, imagen_url")
+              .eq("id", 1)
+              .maybeSingle()
+          : result
 
       if (!error && data) {
         setFormData({
@@ -48,6 +60,12 @@ export default function AdminSitioPage() {
           texto_2: data.texto_2 || initialForm.texto_2,
           texto_3: data.texto_3 || initialForm.texto_3,
           imagen_url: data.imagen_url || "",
+          mostrar_juegos_home:
+            "mostrar_juegos_home" in data ? data.mostrar_juegos_home !== false : true,
+          mostrar_ranking_juego_home:
+            "mostrar_ranking_juego_home" in data
+              ? data.mostrar_ranking_juego_home === true
+              : false,
         })
       }
 
@@ -78,14 +96,32 @@ export default function AdminSitioPage() {
     setSaveMessage("")
     setSaveError("")
 
-    const { error } = await supabase.from("sitio").upsert({
+    const sitioPayload = {
       id: 1,
       titulo: formData.titulo,
       texto_1: formData.texto_1,
       texto_2: formData.texto_2,
       texto_3: formData.texto_3,
       imagen_url: formData.imagen_url || null,
-    })
+      mostrar_juegos_home: formData.mostrar_juegos_home,
+      mostrar_ranking_juego_home: formData.mostrar_ranking_juego_home,
+    }
+    let { error } = await supabase.from("sitio").upsert(sitioPayload)
+    let savedHomeGamesVisibility = true
+
+    if (error?.code === "42703") {
+      const legacyPayload = {
+        id: sitioPayload.id,
+        titulo: sitioPayload.titulo,
+        texto_1: sitioPayload.texto_1,
+        texto_2: sitioPayload.texto_2,
+        texto_3: sitioPayload.texto_3,
+        imagen_url: sitioPayload.imagen_url,
+      }
+      const legacyResult = await supabase.from("sitio").upsert(legacyPayload)
+      error = legacyResult.error
+      savedHomeGamesVisibility = false
+    }
 
     if (error) {
       setSaveError(`No se pudo guardar la configuracion: ${error.message}`)
@@ -97,10 +133,14 @@ export default function AdminSitioPage() {
       action: "Editar",
       section: "Sitio",
       target: "Contenido principal",
-      details: "Actualizo textos o imagen del bloque institucional.",
+      details: "Actualizo textos, imagen o bloques visibles de la home.",
     })
 
-    setSaveMessage("Cambios guardados correctamente.")
+    setSaveMessage(
+      savedHomeGamesVisibility
+        ? "Cambios guardados correctamente."
+        : "Cambios guardados. Para mostrar u ocultar juegos y ranking falta aplicar las columnas nuevas en Supabase."
+    )
     setLoading(false)
   }
 
@@ -238,6 +278,50 @@ export default function AdminSitioPage() {
                   </button>
                 ) : null}
               </div>
+
+              <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <span>
+                  <span className="block text-sm font-medium text-slate-900">
+                    Mostrar juegos en la Home
+                  </span>
+                  <span className="mt-1 block text-sm text-slate-500">
+                    Apagalo para sacar el bloque de Desafio Hola Varela de la pagina inicial.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={formData.mostrar_juegos_home}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      mostrar_juegos_home: e.target.checked,
+                    }))
+                  }
+                  className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+              </label>
+
+              <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <span>
+                  <span className="block text-sm font-medium text-slate-900">
+                    Mostrar top 3 del juego en la Home
+                  </span>
+                  <span className="mt-1 block text-sm text-slate-500">
+                    Prendelo para destacar los tres mejores puntajes del desafio activo.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={formData.mostrar_ranking_juego_home}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      mostrar_ranking_juego_home: e.target.checked,
+                    }))
+                  }
+                  className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+              </label>
             </div>
 
             <div className="mt-6">
@@ -287,6 +371,12 @@ export default function AdminSitioPage() {
               <p>{formData.texto_1}</p>
               <p>{formData.texto_2}</p>
               <p>{formData.texto_3}</p>
+            </div>
+            <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+              Juegos en Home: {formData.mostrar_juegos_home ? "visible" : "oculto"}
+            </div>
+            <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+              Top 3 del juego: {formData.mostrar_ranking_juego_home ? "visible" : "oculto"}
             </div>
           </div>
         </div>

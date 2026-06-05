@@ -11,13 +11,13 @@ export function AnalyticsScripts() {
         <>
           <Script
             id="ga4-loader"
-            strategy="afterInteractive"
+            strategy="lazyOnload"
             async
             src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
           />
           <Script
             id="ga4-init"
-            strategy="afterInteractive"
+            strategy="lazyOnload"
             dangerouslySetInnerHTML={{
               __html: `
               window.dataLayer = window.dataLayer || [];
@@ -36,7 +36,7 @@ export function AnalyticsScripts() {
       {CLARITY_PROJECT_ID ? (
         <Script
           id="clarity-init"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
             (function(c,l,a,r,i,t,y){

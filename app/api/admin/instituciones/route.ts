@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache"
 import { NextResponse, type NextRequest } from "next/server"
 import { readAdminSessionFromRequest } from "../../../lib/adminSession"
 import { logAdminActivityServer } from "../../../lib/adminActivityServer"
@@ -17,6 +18,7 @@ type SaveInstitucionPayload = {
     foto?: string | null
     estado?: string | null
     usa_whatsapp?: boolean
+    destacado?: boolean
     premium_activo?: boolean
     premium_cursos_activo?: boolean
     premium_cursos_titulo?: string | null
@@ -33,10 +35,16 @@ type ToggleInstitucionVisibilityPayload = {
   id?: number
 }
 
+type ToggleInstitucionFeaturedPayload = {
+  action: "toggle_featured"
+  id?: number
+}
+
 type InstitucionActionPayload =
   | SaveInstitucionPayload
   | DeleteInstitucionPayload
   | ToggleInstitucionVisibilityPayload
+  | ToggleInstitucionFeaturedPayload
 
 function normalizeText(value?: string | null) {
   const normalized = value?.trim()
@@ -52,6 +60,14 @@ function normalizeUrl(value?: string | null) {
     return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null
   } catch {
     return null
+  }
+}
+
+function revalidateInstitucionPages(id?: number) {
+  revalidatePath("/")
+  revalidatePath("/instituciones")
+  if (id) {
+    revalidatePath(`/instituciones/${id}`)
   }
 }
 
@@ -89,6 +105,8 @@ export async function POST(request: NextRequest) {
         section: "Instituciones",
         target: existing.nombre,
       })
+
+      revalidateInstitucionPages(body.id)
 
       return NextResponse.json({ ok: true })
     }
@@ -132,6 +150,44 @@ export async function POST(request: NextRequest) {
         target: existing.nombre,
       })
 
+      revalidateInstitucionPages(body.id)
+
+      return NextResponse.json({ ok: true, record: data })
+    }
+
+    if (body.action === "toggle_featured") {
+      if (!body.id) {
+        return NextResponse.json({ error: "Falta la institución." }, { status: 400 })
+      }
+
+      const { data: existing, error: loadError } = await supabaseAdmin
+        .from("instituciones")
+        .select("id, nombre, destacado")
+        .eq("id", body.id)
+        .maybeSingle()
+
+      if (loadError) throw loadError
+      if (!existing) {
+        return NextResponse.json({ error: "No encontramos la institución." }, { status: 404 })
+      }
+
+      const { data, error } = await supabaseAdmin
+        .from("instituciones")
+        .update({ destacado: !existing.destacado })
+        .eq("id", body.id)
+        .select("*")
+        .single()
+
+      if (error) throw error
+
+      await logAdminActivityServer(session, {
+        action: !existing.destacado ? "Destacar" : "Quitar destacado",
+        section: "Instituciones",
+        target: existing.nombre,
+      })
+
+      revalidateInstitucionPages(body.id)
+
       return NextResponse.json({ ok: true, record: data })
     }
 
@@ -150,6 +206,7 @@ export async function POST(request: NextRequest) {
       foto: normalizeText(body.payload.foto),
       estado: body.payload.estado || "activo",
       usa_whatsapp: Boolean(body.payload.usa_whatsapp),
+      destacado: Boolean(body.payload.destacado),
       premium_activo: Boolean(body.payload.premium_activo),
       premium_cursos_activo: Boolean(body.payload.premium_cursos_activo),
       premium_cursos_titulo: normalizeText(body.payload.premium_cursos_titulo),
@@ -175,6 +232,8 @@ export async function POST(request: NextRequest) {
         target: payload.nombre,
       })
 
+      revalidateInstitucionPages(body.id)
+
       return NextResponse.json({ ok: true, record: data })
     }
 
@@ -191,6 +250,8 @@ export async function POST(request: NextRequest) {
       section: "Instituciones",
       target: payload.nombre,
     })
+
+    revalidateInstitucionPages(data.id)
 
     return NextResponse.json({ ok: true, record: data })
   } catch (error) {

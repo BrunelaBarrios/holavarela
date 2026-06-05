@@ -3,6 +3,8 @@ import { unstable_cache } from "next/cache"
 import { supabaseServer } from "./supabaseServer"
 
 const DATA_URL_PATTERN = /^data:([^;]+);base64,([\s\S]+)$/
+const IMAGE_CACHE_CONTROL =
+  "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=604800"
 
 const getCachedDataUrlImage = unstable_cache(
   async (table: string, field: string, id: string) => {
@@ -45,7 +47,8 @@ export async function dataUrlImageResponse(
   return new NextResponse(body, {
     headers: {
       "Content-Type": contentType,
-      "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=2592000",
+      "Cache-Control": IMAGE_CACHE_CONTROL,
+      "Content-Length": String(body.byteLength),
     },
   })
 }

@@ -17,7 +17,6 @@ import { EventLikeButton } from "./EventLikeButton"
 import { OptimizedImage } from "./OptimizedImage"
 import { PublicHeader } from "./PublicHeader"
 import { ShareButton } from "./ShareButton"
-import { SweepstakesPopup } from "./SweepstakesPopup"
 import { formatEventDateRange } from "../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
 import { parseEventDescription, shouldHideEventDate } from "../lib/eventSubmissionMeta"
@@ -39,6 +38,7 @@ import {
   MapPin,
   Phone,
   Plus,
+  Trophy,
   UserRound,
   X,
 } from "lucide-react"
@@ -55,6 +55,13 @@ const MyTunerWidget = dynamic(
 
 const PublicDetailModal = dynamic(
   () => import("./PublicDetailModal").then((module) => module.PublicDetailModal),
+  {
+    ssr: false,
+  }
+)
+
+const SweepstakesPopup = dynamic(
+  () => import("./SweepstakesPopup").then((module) => module.SweepstakesPopup),
   {
     ssr: false,
   }
@@ -192,6 +199,7 @@ type Institucion = {
   facebook_url?: string | null
   foto: string | null
   usa_whatsapp?: boolean | null
+  destacado?: boolean | null
   premium_activo?: boolean | null
   plan_suscripcion?: string | null
 }
@@ -202,6 +210,14 @@ type SobreVarelaConfig = {
   texto_2: string
   texto_3: string
   imagen_url: string | null
+  mostrar_juegos_home?: boolean | null
+  mostrar_ranking_juego_home?: boolean | null
+}
+
+type ChallengeRankingEntry = {
+  id: number
+  nombre: string
+  puntajeTotal: number
 }
 
 type RadioConfig = {
@@ -234,6 +250,7 @@ export type HomePageData = {
   allCursos: Curso[]
   allServicios: Servicio[]
   sobreVarela: SobreVarelaConfig
+  challengeRanking: ChallengeRankingEntry[]
   weather: WeatherData | null
 }
 
@@ -355,6 +372,8 @@ const defaultSobreVarela: SobreVarelaConfig = {
   texto_3:
     "Cartelera online de José Pedro Varela: encontrá acá eventos, cursos, clases, servicios y más.",
   imagen_url: null,
+  mostrar_juegos_home: true,
+  mostrar_ranking_juego_home: false,
 }
 
 const defaultRadioConfig: RadioConfig = {
@@ -386,6 +405,23 @@ const initialContactLeadForm: ContactLeadForm = {
   nombre: "",
   telefono: "",
   mensaje: "",
+}
+
+function scheduleIdleTask(callback: () => void) {
+  if (typeof window === "undefined") return () => {}
+
+  if ("requestIdleCallback" in window) {
+    const idleId = window.requestIdleCallback(callback, { timeout: 2500 })
+    return () => window.cancelIdleCallback(idleId)
+  }
+
+  const timeoutId = globalThis.setTimeout(callback, 600)
+  return () => globalThis.clearTimeout(timeoutId)
+}
+
+function getSumateTypeFromUrl() {
+  if (typeof window === "undefined") return null
+  return new URLSearchParams(window.location.search).get("sumate")
 }
 
 function getSumateLeadMessage(value: string | null) {
@@ -487,10 +523,8 @@ function getInitialDelayedPromo(
 
 export function HomePage({
   initialData,
-  initialSumateType = null,
 }: {
   initialData: HomePageData
-  initialSumateType?: string | null
 }) {
   const router = useRouter()
   const featuredBusinesses = initialData.featuredBusinesses
@@ -501,6 +535,10 @@ export function HomePage({
   const allServicios = initialData.allServicios
   const instituciones = initialData.instituciones
   const sobreVarela = initialData.sobreVarela || defaultSobreVarela
+  const challengeRanking = initialData.challengeRanking || []
+  const shouldShowHomeGames = sobreVarela.mostrar_juegos_home !== false
+  const shouldShowGameRanking =
+    sobreVarela.mostrar_ranking_juego_home === true && challengeRanking.length > 0
   const [radio, setRadio] = useState<RadioConfig>(defaultRadioConfig)
   const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null)
   const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
@@ -511,21 +549,18 @@ export function HomePage({
   const [likedEvents, setLikedEvents] = useState<Record<string, boolean>>({})
   const [likingEventId, setLikingEventId] = useState<string | null>(null)
   const [contactLeadForm, setContactLeadForm] = useState<ContactLeadForm>(
-    () => ({
-      ...initialContactLeadForm,
-      mensaje: getSumateLeadMessage(initialSumateType),
-    })
+    initialContactLeadForm
   )
   const [contactLeadStatus, setContactLeadStatus] = useState("")
 
   useEffect(() => {
-    void recordSiteVisit("home", "Inicio")
+    return scheduleIdleTask(() => {
+      void recordSiteVisit("home", "Inicio")
+    })
   }, [])
 
   const [contactLeadLoading, setContactLeadLoading] = useState(false)
-  const [isContactLeadOpen, setIsContactLeadOpen] = useState(() =>
-    Boolean(getSumateLeadMessage(initialSumateType))
-  )
+  const [isContactLeadOpen, setIsContactLeadOpen] = useState(false)
   const [isDelayedPromoOpen, setIsDelayedPromoOpen] = useState(false)
   const [delayedPromoConfig, setDelayedPromoConfig] = useState<DelayedPromoConfig>(
     defaultDelayedPromoConfig
@@ -646,7 +681,7 @@ export function HomePage({
     }))
 
     const institucionOptions = instituciones
-      .filter((item) => isFeaturedListing(item))
+      .filter((item) => item.destacado === true)
       .map((item) => ({
       key: `institucion:${item.id}`,
       kind: "institucion" as const,
@@ -666,16 +701,26 @@ export function HomePage({
   const weatherLabel = weather ? WEATHER_LABELS[weather.weatherCode] || "Clima actual" : null
 
   useEffect(() => {
+    const message = getSumateLeadMessage(getSumateTypeFromUrl())
+    if (!message) return
+
+    setContactLeadForm((prev) => ({
+      ...prev,
+      mensaje: message,
+    }))
+    setIsContactLeadOpen(true)
+  }, [])
+
+  useEffect(() => {
     if (eventos.length === 0) return
 
-    const loadEventLikes = async () => {
+    return scheduleIdleTask(() => {
       const eventIds = eventos.map((evento) => String(evento.id))
-      const { countMap, likedMap } = await fetchEventLikes(eventIds)
-      setEventLikeCounts(countMap)
-      setLikedEvents(likedMap)
-    }
-
-    void loadEventLikes()
+      void fetchEventLikes(eventIds).then(({ countMap, likedMap }) => {
+        setEventLikeCounts(countMap)
+        setLikedEvents(likedMap)
+      })
+    })
   }, [eventos])
 
   useEffect(() => {
@@ -990,6 +1035,71 @@ export function HomePage({
     closeWelcomeHighlight()
   }
 
+  const openDelayedPromoDetail = () => {
+    if (!delayedPromo) return
+
+    const [, rawId] = delayedPromo.key.split(":")
+    if (!rawId) return
+
+    setIsDelayedPromoOpen(false)
+
+    if (delayedPromo.kind === "comercio") {
+      const comercio = featuredBusinesses.find((item) => String(item.id) === rawId)
+      if (!comercio) return
+
+      handleViewMoreClick("comercios", rawId, comercio.nombre, () => {
+        if (comercio.premium_activo) {
+          router.push(`/comercios/${comercio.id}`)
+          return
+        }
+
+        setSelectedComercio(comercio)
+      })
+      return
+    }
+
+    if (delayedPromo.kind === "servicio") {
+      const servicio =
+        allServicios.find((item) => String(item.id) === rawId) ||
+        servicios.find((item) => String(item.id) === rawId)
+      if (!servicio) return
+
+      handleViewMoreClick("servicios", rawId, servicio.nombre, () => {
+        if (servicio.premium_activo) {
+          router.push(`/servicios/${servicio.id}`)
+          return
+        }
+
+        setSelectedServicio(servicio)
+      })
+      return
+    }
+
+    if (delayedPromo.kind === "curso") {
+      const curso =
+        allCursos.find((item) => String(item.id) === rawId) ||
+        cursos.find((item) => String(item.id) === rawId)
+      if (!curso) return
+
+      handleViewMoreClick("cursos", rawId, curso.nombre, () => {
+        setSelectedCurso(curso)
+      })
+      return
+    }
+
+    const institucion = instituciones.find((item) => String(item.id) === rawId)
+    if (!institucion) return
+
+    handleViewMoreClick("instituciones", rawId, institucion.nombre, () => {
+      if (hasInstitutionPremium(institucion)) {
+        router.push(`/instituciones/${institucion.id}`)
+        return
+      }
+
+      setSelectedInstitucion(institucion)
+    })
+  }
+
   const contactLeadIntro =
     "Déjanos tu nombre, teléfono y mensaje para responderte."
   const contactLeadSubmitHint =
@@ -1065,14 +1175,14 @@ export function HomePage({
                       Esta tarjeta es una promocion destacada. Puedes entrar a ver la ficha o cerrarla y seguir navegando.
                     </div>
                     <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:flex-wrap">
-                      <Link
-                        href={delayedPromo.href}
-                        onClick={() => setIsDelayedPromoOpen(false)}
+                      <button
+                        type="button"
+                        onClick={openDelayedPromoDetail}
                         className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600 sm:w-auto"
                       >
                         Ver ficha
                         <ArrowRight className="h-4 w-4" />
-                      </Link>
+                      </button>
                       <button
                         type="button"
                         onClick={() => setIsDelayedPromoOpen(false)}
@@ -1977,9 +2087,10 @@ export function HomePage({
         </div>
       </section>
 
-      <section className="py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-6 rounded-[28px] border border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#f8fafc_52%,#eff6ff_100%)] p-6 shadow-[0_22px_55px_-36px_rgba(15,118,110,0.42)] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:p-8">
+      {shouldShowHomeGames ? (
+        <section className="py-8">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-6 rounded-[28px] border border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#f8fafc_52%,#eff6ff_100%)] p-6 shadow-[0_22px_55px_-36px_rgba(15,118,110,0.42)] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:p-8">
             <div>
               <div className="inline-flex rounded-full bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 ring-1 ring-emerald-100">
                 Desafío Hola Varela
@@ -1987,14 +2098,16 @@ export function HomePage({
               <h2 className="mt-4 text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">
                 Jugá, descubrí comercios locales y sumá puntos
               </h2>
-              <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
+              <p className="hidden">
                 Participá en desafíos cortos: sopa de letras, memoria con logos, puzzle de imágenes y más. Completá el juego y quedá participando por premios.
               </p>
+              <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
+                Participa en desafios cortos, elegi el nivel y suma puntos para quedar participando por premios.
+              </p>
               <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                <span className="rounded-full bg-white/85 px-3 py-1 ring-1 ring-slate-200">Sopa</span>
-                <span className="rounded-full bg-white/85 px-3 py-1 ring-1 ring-slate-200">Memoria</span>
-                <span className="rounded-full bg-white/85 px-3 py-1 ring-1 ring-slate-200">Puzzle</span>
-                <span className="rounded-full bg-white/85 px-3 py-1 ring-1 ring-slate-200">Premios</span>
+                <span className="rounded-full bg-white/85 px-3 py-1 ring-1 ring-slate-200">Facil</span>
+                <span className="rounded-full bg-white/85 px-3 py-1 ring-1 ring-slate-200">Intermedio</span>
+                <span className="rounded-full bg-white/85 px-3 py-1 ring-1 ring-slate-200">Dificil</span>
               </div>
             </div>
             <Link
@@ -2005,8 +2118,60 @@ export function HomePage({
               <ArrowRight className="h-5 w-5" />
             </Link>
           </div>
-        </div>
-      </section>
+            </div>
+        </section>
+      ) : null}
+
+      {shouldShowGameRanking ? (
+        <section className="py-8">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="rounded-[28px] border border-amber-100 bg-[linear-gradient(135deg,#fff7ed_0%,#f8fafc_54%,#eef2ff_100%)] p-6 shadow-[0_22px_55px_-38px_rgba(217,119,6,0.38)] md:p-8">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700 ring-1 ring-amber-100">
+                    <Trophy className="h-4 w-4" />
+                    Top del juego
+                  </div>
+                  <h2 className="mt-4 text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">
+                    Los 3 mejores lugares
+                  </h2>
+                </div>
+                <Link
+                  href="/juga-y-gana"
+                  className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_-24px_rgba(15,23,42,0.9)] transition hover:-translate-y-0.5 hover:bg-amber-700 sm:w-auto"
+                >
+                  Jugar ahora
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="mt-6 grid gap-3 md:grid-cols-3">
+                {challengeRanking.slice(0, 3).map((entry, index) => (
+                  <div
+                    key={entry.id}
+                    className="rounded-2xl border border-white/80 bg-white/90 p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.45)]"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-lg font-black text-amber-700 ring-1 ring-amber-100">
+                        {index + 1}
+                      </span>
+                      <span className="rounded-full bg-slate-950 px-3 py-1 text-sm font-bold text-white">
+                        {entry.puntajeTotal} pts
+                      </span>
+                    </div>
+                    <div className="mt-4 text-lg font-black text-slate-950">
+                      {entry.nombre}
+                    </div>
+                    <div className="mt-1 text-sm font-medium text-slate-500">
+                      Puesto {index + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       {weather && (
         <section className="py-6">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
