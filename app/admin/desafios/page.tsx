@@ -256,20 +256,35 @@ export default function AdminDesafiosPage() {
   }
 
   const loadMemoryLogoProfiles = async () => {
-    const [{ data: comercios }, { data: servicios }] = await Promise.all([
-      supabase
-        .from("comercios")
-        .select("id, nombre, imagen, imagen_url")
-        .or("estado.is.null,estado.eq.activo")
-        .order("nombre", { ascending: true }),
-      supabase
-        .from("servicios")
-        .select("id, nombre, imagen")
-        .or("estado.is.null,estado.eq.activo")
-        .order("nombre", { ascending: true }),
-    ])
+    const comerciosResult = await supabase
+      .from("comercios")
+      .select("id, nombre, imagen, imagen_url")
+      .or("estado.is.null,estado.eq.activo")
+      .order("nombre", { ascending: true })
+    const comerciosFallback =
+      comerciosResult.error?.code === "42703" ||
+      comerciosResult.error?.message?.includes("imagen_url")
+        ? await supabase
+            .from("comercios")
+            .select("id, nombre, imagen")
+            .or("estado.is.null,estado.eq.activo")
+            .order("nombre", { ascending: true })
+        : comerciosResult
+    const serviciosResult = await supabase
+      .from("servicios")
+      .select("id, nombre, imagen")
+      .or("estado.is.null,estado.eq.activo")
+      .order("nombre", { ascending: true })
 
-    const comercioOptions = ((comercios || []) as Array<Record<string, unknown>>)
+    if (comerciosFallback.error || serviciosResult.error) {
+      setConfigMessage(
+        comerciosFallback.error?.message ||
+          serviciosResult.error?.message ||
+          "No se pudieron cargar comercios y servicios para la memoria."
+      )
+    }
+
+    const comercioOptions = ((comerciosFallback.data || []) as Array<Record<string, unknown>>)
       .map((item) => ({
         key: `comercio:${Number(item.id)}` as const,
         label: String(item.nombre || "Comercio"),
@@ -278,7 +293,7 @@ export default function AdminDesafiosPage() {
       }))
       .filter((item) => item.imageUrl && Number.isFinite(Number(item.key.split(":")[1])))
 
-    const servicioOptions = ((servicios || []) as Array<Record<string, unknown>>)
+    const servicioOptions = ((serviciosResult.data || []) as Array<Record<string, unknown>>)
       .map((item) => ({
         key: `servicio:${Number(item.id)}` as const,
         label: String(item.nombre || "Servicio"),
@@ -1219,47 +1234,54 @@ export default function AdminDesafiosPage() {
               </div>
             ) : null}
 
-            {activeGames.includes("memoria") ? (
-              <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-sm font-semibold text-slate-950">Contenido de la memoria</div>
-                <p className="mt-1 text-sm leading-6 text-slate-500">
-                  El modo logos usa imagenes de comercios y servicios activos. Si no hay suficientes, el juego usa palabras automaticamente.
-                </p>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  {[
-                    { value: "palabras" as const, label: "Palabras", description: "Rondas clasicas con textos cortos." },
-                    { value: "logos" as const, label: "Logos de comercios y servicios", description: "Cartas con imagenes de perfiles activos." },
-                  ].map((option) => {
-                    const selected = memoryMode === option.value
-
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => setMemoryMode(option.value)}
-                        disabled={configLoading || savingConfig || !isViewingCurrentEdition}
-                        className={`rounded-xl border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                          selected
-                            ? "border-emerald-300 bg-white"
-                            : "border-slate-200 bg-white hover:border-slate-300"
-                        }`}
-                      >
-                        <div className="text-sm font-semibold text-slate-950">{option.label}</div>
-                        <div className="mt-1 text-sm leading-6 text-slate-500">{option.description}</div>
-                      </button>
-                    )
-                  })}
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold text-slate-950">Contenido de la memoria</div>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                    Elegi si la memoria usa palabras o imagenes de comercios y servicios. Esta configuracion queda guardada aunque actives o desactives el juego.
+                  </p>
                 </div>
-                {memoryMode === "logos" ? (
-                  <MemoryLogoProfileSelector
-                    profiles={availableMemoryLogoProfiles}
-                    selectedProfiles={memoryLogoProfiles}
-                    disabled={configLoading || savingConfig || !isViewingCurrentEdition}
-                    onToggle={toggleMemoryLogoProfile}
-                  />
+                {!activeGames.includes("memoria") ? (
+                  <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-100">
+                    Memoria desactivada
+                  </span>
                 ) : null}
               </div>
-            ) : null}
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {[
+                  { value: "palabras" as const, label: "Palabras", description: "Rondas clasicas con textos cortos." },
+                  { value: "logos" as const, label: "Logos de comercios y servicios", description: "Cartas con imagenes de perfiles activos." },
+                ].map((option) => {
+                  const selected = memoryMode === option.value
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setMemoryMode(option.value)}
+                      disabled={configLoading || savingConfig || !isViewingCurrentEdition}
+                      className={`rounded-xl border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                        selected
+                          ? "border-emerald-300 bg-white"
+                          : "border-slate-200 bg-white hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="text-sm font-semibold text-slate-950">{option.label}</div>
+                      <div className="mt-1 text-sm leading-6 text-slate-500">{option.description}</div>
+                    </button>
+                  )
+                })}
+              </div>
+              {memoryMode === "logos" ? (
+                <MemoryLogoProfileSelector
+                  profiles={availableMemoryLogoProfiles}
+                  selectedProfiles={memoryLogoProfiles}
+                  disabled={configLoading || savingConfig || !isViewingCurrentEdition}
+                  onToggle={toggleMemoryLogoProfile}
+                />
+              ) : null}
+            </div>
 
             {activeGames.includes("puzzle") ? (
               <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">

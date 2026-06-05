@@ -1286,12 +1286,23 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
         .filter((item) => item.startsWith("servicio:"))
         .map((item) => Number(item.split(":")[1]))
       const hasSelectedProfiles = selectedLogoProfiles.length > 0
-      let commerceQuery = supabase
-        .from("comercios")
-        .select("id, nombre, imagen, imagen_url")
-        .or("estado.is.null,estado.eq.activo")
-        .order("id", { ascending: false })
-        .limit(24)
+      const buildCommerceQuery = (withImageUrl: boolean) => {
+        let query = supabase
+          .from("comercios")
+          .select(withImageUrl ? "id, nombre, imagen, imagen_url" : "id, nombre, imagen")
+          .or("estado.is.null,estado.eq.activo")
+          .order("id", { ascending: false })
+          .limit(24)
+
+        if (hasSelectedProfiles) {
+          query =
+            selectedCommerceIds.length > 0
+              ? query.in("id", selectedCommerceIds)
+              : query.eq("id", -1)
+        }
+
+        return query
+      }
       let serviceQuery = supabase
         .from("servicios")
         .select("id, nombre, imagen")
@@ -1300,24 +1311,25 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
         .limit(24)
 
       if (hasSelectedProfiles) {
-        commerceQuery =
-          selectedCommerceIds.length > 0
-            ? commerceQuery.in("id", selectedCommerceIds)
-            : commerceQuery.eq("id", -1)
         serviceQuery =
           selectedServiceIds.length > 0
             ? serviceQuery.in("id", selectedServiceIds)
             : serviceQuery.eq("id", -1)
       }
 
-      const [{ data: comercios }, { data: servicios }] = await Promise.all([
-        commerceQuery,
+      const [commerceResult, { data: servicios }] = await Promise.all([
+        buildCommerceQuery(true),
         serviceQuery,
       ])
+      const commerceFallback =
+        commerceResult.error?.code === "42703" ||
+        commerceResult.error?.message?.includes("imagen_url")
+          ? await buildCommerceQuery(false)
+          : commerceResult
 
       if (!mounted) return
 
-      const comercioItems = ((comercios || []) as Array<Record<string, unknown>>)
+      const comercioItems = ((commerceFallback.data || []) as Array<Record<string, unknown>>)
         .map((item) => ({
           id: `comercio-${item.id}`,
           label: String(item.nombre || "Comercio"),
@@ -1831,10 +1843,6 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
             <ArrowLeft className="h-4 w-4" />
             Volver a Hola Varela
           </Link>
-          <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 shadow-sm">
-            <Gift className="h-4 w-4" />
-            Propuesta interna - aun no publicada
-          </div>
         </div>
 
         <section className="overflow-hidden rounded-[34px] border border-white/80 bg-white/85 shadow-[0_28px_90px_-42px_rgba(15,23,42,0.32)] backdrop-blur">
