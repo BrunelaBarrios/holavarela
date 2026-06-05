@@ -7,7 +7,6 @@ import {
   ArrowDown,
   ArrowRight,
   ArrowUp,
-  CheckCircle2,
   Clock3,
   Gift,
   RefreshCcw,
@@ -53,29 +52,7 @@ type MemoryItem = {
 }
 
 type PuzzleDifficulty = "facil" | "dificil"
-type ChallengeLevel = "facil" | "intermedio" | "dificil"
 
-const CHALLENGE_LEVEL_OPTIONS: Array<{
-  key: ChallengeLevel
-  title: string
-  description: string
-}> = [
-  {
-    key: "facil",
-    title: "Facil",
-    description: "Jugá solo y registrá tus puntos.",
-  },
-  {
-    key: "intermedio",
-    title: "Intermedio",
-    description: "Jugá acompañado y participá en familia.",
-  },
-  {
-    key: "dificil",
-    title: "Dificil",
-    description: "Mas exigente, pensado para quienes quieren competir fuerte.",
-  },
-]
 
 type WordSearchVariant = {
   name: string
@@ -945,7 +922,6 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
   })
 
   const [stage, setStage] = useState<"intro" | "play" | "form" | "done">("intro")
-  const [challengeLevel, setChallengeLevel] = useState<ChallengeLevel | null>(null)
   const [configLoading, setConfigLoading] = useState(true)
   const [challengeConfig, setChallengeConfig] = useState(DEFAULT_CHALLENGE_CONFIG)
   const [activeChallengeIndex, setActiveChallengeIndex] = useState(0)
@@ -1089,6 +1065,9 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
       movieChallengesCount: MOVIE_CHALLENGES.length,
     })
 
+    setActiveChallengeIndex(0)
+    setCompletedChallenges({ sopa: false, memoria: false, pelicula: false, puzzle: false, laberinto: false })
+    setEarnedPoints({ sopa: 0, memoria: 0, pelicula: 0, puzzle: 0, laberinto: 0 })
     setWordSearchVariantIndex(nextAssignment.wordSearchVariantIndex)
     setWordSelection([])
     setFoundWords([])
@@ -1831,9 +1810,10 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     )
   }
 
-  const selectedChallengeLevel = CHALLENGE_LEVEL_OPTIONS.find(
-    (option) => option.key === challengeLevel
-  )
+  const handleStartGame = () => {
+    assignNextChallengeSet()
+    setStage("play")
+  }
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff2d9_0%,#fffdf8_28%,#e9f7ff_64%,#f9fcff_100%)] text-slate-950">
@@ -1857,50 +1837,17 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
               <p className="mt-5 max-w-xl text-base leading-8 text-sky-50/90 sm:text-lg">
                 Acumula puntos y participa de ganar premios.
               </p>
-              {selectedChallengeLevel && stage !== "intro" ? (
-                <div className="mt-5 inline-flex rounded-full border border-white/20 bg-white/12 px-4 py-2 text-sm font-semibold text-sky-50">
-                  Nivel {selectedChallengeLevel.title}
-                </div>
-              ) : null}
-              {stage !== "intro" ? (
-              <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                {activeChallenges.map((challenge, index) => (
-                  <div key={challenge.key} className={`min-w-0 rounded-[24px] border px-4 py-4 ${completedChallenges[challenge.key] ? "border-emerald-300/40 bg-emerald-400/15" : activeChallengeIndex === index && stage === "play" ? "border-white/30 bg-white/10" : "border-white/10 bg-black/10"}`}>
-                    <div className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-100/80">
-                      Desafío {index + 1}
-                    </div>
-                    <div className="mt-2 flex min-w-0 items-start gap-2 text-lg font-semibold leading-7">
-                      {completedChallenges[challenge.key] ? <CheckCircle2 className="h-5 w-5 text-emerald-300" /> : null}
-                      <span className="min-w-0 break-words">{challenge.title}</span>
-                    </div>
-                    <div className="mt-2 text-sm text-sky-50/80">{challenge.points} pts base</div>
-                  </div>
-                ))}
-              </div>
-              ) : null}
 
               {stage === "intro" ? (
                 <div className="mt-8">
-                  <div className="text-sm font-semibold uppercase tracking-[0.16em] text-sky-100">
-                    Seleccionar nivel
-                  </div>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                    {CHALLENGE_LEVEL_OPTIONS.map((option) => (
-                      <button
-                        key={option.key}
-                        type="button"
-                        onClick={() => {
-                          setChallengeLevel(option.key)
-                          setStage("play")
-                        }}
-                        className="rounded-2xl border border-white/25 bg-white/12 p-5 text-left transition hover:-translate-y-0.5 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/70"
-                      >
-                        <span className="block text-lg font-semibold text-white">
-                          {option.title}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleStartGame}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-white px-7 py-4 text-base font-semibold text-slate-950 shadow-sm transition hover:bg-sky-50 focus:outline-none focus:ring-2 focus:ring-white/70"
+                  >
+                    Jugar
+                    <ArrowRight className="h-5 w-5" />
+                  </button>
                 </div>
               ) : null}
             </div>

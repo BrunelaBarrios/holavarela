@@ -80,6 +80,55 @@ function getRandomIndex(length: number) {
   return Math.floor(Math.random() * Math.max(length, 1))
 }
 
+function createRandomChallengeAssignment(params: {
+  wordSearchVariantsCount: number
+  memoryVariantsCount: number
+  movieChallengesCount: number
+}) {
+  return {
+    wordSearchVariantIndex: getRandomIndex(params.wordSearchVariantsCount),
+    memoryVariantIndex: getRandomIndex(params.memoryVariantsCount),
+    movieChallengeIndex: getRandomIndex(params.movieChallengesCount),
+  } satisfies ChallengeAssignment
+}
+
+function isSameChallengeAssignment(
+  first: ChallengeAssignment,
+  second: ChallengeAssignment
+) {
+  return (
+    first.wordSearchVariantIndex === second.wordSearchVariantIndex &&
+    first.memoryVariantIndex === second.memoryVariantIndex &&
+    first.movieChallengeIndex === second.movieChallengeIndex
+  )
+}
+
+function readStoredChallengeAssignment() {
+  if (typeof window === "undefined") return null
+
+  const storedValue = window.localStorage.getItem(CHALLENGE_ASSIGNMENT_KEY)
+  if (!storedValue) return null
+
+  try {
+    const parsed = JSON.parse(storedValue) as Partial<ChallengeAssignment>
+    if (
+      Number.isInteger(parsed.wordSearchVariantIndex) &&
+      Number.isInteger(parsed.memoryVariantIndex) &&
+      Number.isInteger(parsed.movieChallengeIndex)
+    ) {
+      return {
+        wordSearchVariantIndex: Number(parsed.wordSearchVariantIndex),
+        memoryVariantIndex: Number(parsed.memoryVariantIndex),
+        movieChallengeIndex: Number(parsed.movieChallengeIndex),
+      } satisfies ChallengeAssignment
+    }
+  } catch {
+    window.localStorage.removeItem(CHALLENGE_ASSIGNMENT_KEY)
+  }
+
+  return null
+}
+
 export function isMissingChallengesSchemaError(error: SupabaseErrorLike | null | undefined) {
   const normalizedMessage = error?.message?.toLowerCase() || ""
 
@@ -191,31 +240,16 @@ export function getChallengeAssignment(params: {
     } satisfies ChallengeAssignment
   }
 
-  const storedValue = window.localStorage.getItem(CHALLENGE_ASSIGNMENT_KEY)
-  if (storedValue) {
-    try {
-      const parsed = JSON.parse(storedValue) as Partial<ChallengeAssignment>
-      if (
-        Number.isInteger(parsed.wordSearchVariantIndex) &&
-        Number.isInteger(parsed.memoryVariantIndex) &&
-        Number.isInteger(parsed.movieChallengeIndex)
-      ) {
-        return {
-          wordSearchVariantIndex: Number(parsed.wordSearchVariantIndex) % params.wordSearchVariantsCount,
-          memoryVariantIndex: Number(parsed.memoryVariantIndex) % params.memoryVariantsCount,
-          movieChallengeIndex: Number(parsed.movieChallengeIndex) % params.movieChallengesCount,
-        } satisfies ChallengeAssignment
-      }
-    } catch {
-      window.localStorage.removeItem(CHALLENGE_ASSIGNMENT_KEY)
-    }
+  const storedAssignment = readStoredChallengeAssignment()
+  if (storedAssignment) {
+    return {
+      wordSearchVariantIndex: storedAssignment.wordSearchVariantIndex % params.wordSearchVariantsCount,
+      memoryVariantIndex: storedAssignment.memoryVariantIndex % params.memoryVariantsCount,
+      movieChallengeIndex: storedAssignment.movieChallengeIndex % params.movieChallengesCount,
+    } satisfies ChallengeAssignment
   }
 
-  const nextAssignment = {
-    wordSearchVariantIndex: getRandomIndex(params.wordSearchVariantsCount),
-    memoryVariantIndex: getRandomIndex(params.memoryVariantsCount),
-    movieChallengeIndex: getRandomIndex(params.movieChallengesCount),
-  } satisfies ChallengeAssignment
+  const nextAssignment = createRandomChallengeAssignment(params)
 
   window.localStorage.setItem(CHALLENGE_ASSIGNMENT_KEY, JSON.stringify(nextAssignment))
   return nextAssignment
@@ -228,11 +262,18 @@ export function resetChallengeAssignment(params: {
 }) {
   if (typeof window === "undefined") return
 
-  const nextAssignment = {
-    wordSearchVariantIndex: getRandomIndex(params.wordSearchVariantsCount),
-    memoryVariantIndex: getRandomIndex(params.memoryVariantsCount),
-    movieChallengeIndex: getRandomIndex(params.movieChallengesCount),
-  } satisfies ChallengeAssignment
+  const previousAssignment = readStoredChallengeAssignment()
+  const canChangeAssignment =
+    params.wordSearchVariantsCount > 1 ||
+    params.memoryVariantsCount > 1 ||
+    params.movieChallengesCount > 1
+  let nextAssignment = createRandomChallengeAssignment(params)
+
+  if (previousAssignment && canChangeAssignment) {
+    for (let attempt = 0; attempt < 8 && isSameChallengeAssignment(nextAssignment, previousAssignment); attempt += 1) {
+      nextAssignment = createRandomChallengeAssignment(params)
+    }
+  }
 
   window.localStorage.setItem(CHALLENGE_ASSIGNMENT_KEY, JSON.stringify(nextAssignment))
 }
