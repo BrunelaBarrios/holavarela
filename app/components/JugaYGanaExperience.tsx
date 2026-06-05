@@ -52,6 +52,24 @@ type MemoryItem = {
 }
 
 type PuzzleDifficulty = "facil" | "dificil"
+type MatchType = "individual" | "familiar"
+
+const MATCH_TYPE_OPTIONS: Array<{
+  key: MatchType
+  title: string
+  description: string
+}> = [
+  {
+    key: "individual",
+    title: "Partida individual",
+    description: "Jugá solo y registrá tus puntos.",
+  },
+  {
+    key: "familiar",
+    title: "Partida familiar",
+    description: "Jugá acompañado y participá en familia.",
+  },
+]
 
 type WordSearchVariant = {
   name: string
@@ -921,6 +939,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
   })
 
   const [stage, setStage] = useState<"intro" | "play" | "form" | "done">("intro")
+  const [matchType, setMatchType] = useState<MatchType | null>(null)
   const [configLoading, setConfigLoading] = useState(true)
   const [challengeConfig, setChallengeConfig] = useState(DEFAULT_CHALLENGE_CONFIG)
   const [activeChallengeIndex, setActiveChallengeIndex] = useState(0)
@@ -1730,6 +1749,8 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     )
   }
 
+  const selectedMatchType = MATCH_TYPE_OPTIONS.find((option) => option.key === matchType)
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff2d9_0%,#fffdf8_28%,#e9f7ff_64%,#f9fcff_100%)] text-slate-950">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
@@ -1745,7 +1766,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
         </div>
 
         <section className="overflow-hidden rounded-[34px] border border-white/80 bg-white/85 shadow-[0_28px_90px_-42px_rgba(15,23,42,0.32)] backdrop-blur">
-          <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
+          <div className={stage === "intro" ? "grid gap-0" : "grid gap-0 lg:grid-cols-[0.95fr_1.05fr]"}>
             <div className="bg-[linear-gradient(160deg,#0f172a_0%,#0b4ea2_45%,#0ea5e9_100%)] p-6 text-white sm:p-8 lg:p-10">
               <div className="inline-flex rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-sky-100">
                 Hola Varela en eventos
@@ -1756,6 +1777,11 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
               <p className="mt-5 max-w-xl text-base leading-8 text-sky-50/90 sm:text-lg">
                 Acumula puntos y participa de ganar premios.
               </p>
+              {selectedMatchType && stage !== "intro" ? (
+                <div className="mt-5 inline-flex rounded-full border border-white/20 bg-white/12 px-4 py-2 text-sm font-semibold text-sky-50">
+                  {selectedMatchType.title}
+                </div>
+              ) : null}
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
                 {activeChallenges.map((challenge, index) => (
                   <div key={challenge.key} className={`min-w-0 rounded-[24px] border px-4 py-4 ${completedChallenges[challenge.key] ? "border-emerald-300/40 bg-emerald-400/15" : activeChallengeIndex === index && stage === "play" ? "border-white/30 bg-white/10" : "border-white/10 bg-black/10"}`}>
@@ -1770,15 +1796,38 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
                   </div>
                 ))}
               </div>
+
+              {stage === "intro" ? (
+                <div className="mt-8">
+                  <div className="text-sm font-semibold uppercase tracking-[0.16em] text-sky-100">
+                    Elegir tipo de partida
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {MATCH_TYPE_OPTIONS.map((option) => (
+                      <button
+                        key={option.key}
+                        type="button"
+                        onClick={() => {
+                          setMatchType(option.key)
+                          setStage("play")
+                        }}
+                        className="rounded-2xl border border-white/25 bg-white/12 p-5 text-left transition hover:-translate-y-0.5 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/70"
+                      >
+                        <span className="block text-lg font-semibold text-white">
+                          {option.title}
+                        </span>
+                        <span className="mt-2 block text-sm leading-6 text-sky-50/90">
+                          {option.description}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
 
+            {stage !== "intro" ? (
             <div className="p-6 sm:p-8 lg:p-10">
-              {stage === "intro" ? (
-                <IntroPanel
-                  challengeCount={activeChallenges.length}
-                  onStart={() => setStage("play")}
-                />
-              ) : null}
               {stage === "play" && activeChallenge?.key === "sopa" ? (
                 <WordSearchPanel
                   challengeNumber={activeChallengeIndex + 1}
@@ -1911,6 +1960,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
                 </div>
               ) : null}
             </div>
+            ) : null}
           </div>
         </section>
       </div>

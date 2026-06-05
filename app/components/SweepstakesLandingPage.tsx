@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { ArrowRight, Gift, Phone, UserRound } from "lucide-react"
+import { OptimizedImage } from "./OptimizedImage"
 import { PublicHeader } from "./PublicHeader"
 import {
   createSweepstakesEntry,
@@ -12,25 +13,6 @@ import {
   type SweepstakesEntrySource,
 } from "../lib/sweepstakes"
 import { getEventLikesBrowserKey } from "../lib/eventLikes"
-
-type MatchType = "individual" | "familiar"
-
-const MATCH_TYPES: Array<{
-  key: MatchType
-  title: string
-  description: string
-}> = [
-  {
-    key: "individual",
-    title: "Partida individual",
-    description: "Una persona participa con sus datos.",
-  },
-  {
-    key: "familiar",
-    title: "Partida familiar",
-    description: "Ideal para jugar y participar en familia.",
-  },
-]
 
 function getLandingEntrySource(): SweepstakesEntrySource {
   if (typeof window === "undefined") return "web"
@@ -47,7 +29,6 @@ export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
   const [submitting, setSubmitting] = useState(false)
   const [nombre, setNombre] = useState("")
   const [telefono, setTelefono] = useState("")
-  const [matchType, setMatchType] = useState<MatchType | null>(null)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
 
@@ -72,8 +53,6 @@ export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
     }
   }, [sorteoId])
 
-  const selectedMatchType = MATCH_TYPES.find((option) => option.key === matchType)
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!config) return
@@ -94,7 +73,7 @@ export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
 
     if (result.status === "error") {
       setSubmitting(false)
-      setError("No pudimos registrar tu participacion. Intenta nuevamente.")
+      setError("No pudimos registrar tu participación. Intenta nuevamente.")
       return
     }
 
@@ -109,7 +88,7 @@ export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
       <PublicHeader items={[]} />
 
       <section className="px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-6xl">
           {loading ? (
             <div className="rounded-[32px] border border-slate-200 bg-white p-10 text-center text-slate-500 shadow-sm">
               Cargando sorteo...
@@ -134,143 +113,134 @@ export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
               </div>
             </div>
           ) : (
-            <div className="space-y-6">
-              <section className="rounded-[32px] border border-blue-200/50 bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_58%,#38bdf8_100%)] p-6 text-white shadow-[0_24px_70px_rgba(29,78,216,0.24)] sm:p-8">
-                <div className="inline-flex rounded-full bg-white/15 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-blue-50 ring-1 ring-white/20">
-                  Sorteo Hola Varela
+            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+              <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+                <div className="inline-flex rounded-full bg-emerald-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                  Hola Varela
                 </div>
-                <h1 className="mt-5 text-4xl font-semibold tracking-normal sm:text-5xl">
+                <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
                   {config.title}
                 </h1>
-                <p className="mt-5 max-w-3xl whitespace-pre-line text-lg leading-8 text-blue-50">
+                <p className="mt-5 whitespace-pre-line text-lg leading-8 text-slate-600">
                   {config.description}
                 </p>
 
-                {!matchType ? (
+                {config.participants.length ? (
                   <div className="mt-8">
-                    <div className="text-sm font-semibold uppercase tracking-[0.16em] text-blue-100">
-                      Elegir tipo de partida
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      Premios de
                     </div>
-                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                      {MATCH_TYPES.map((option) => (
-                        <button
-                          key={option.key}
-                          type="button"
-                          onClick={() => {
-                            setMatchType(option.key)
-                            setError("")
-                            setMessage("")
-                          }}
-                          className="rounded-2xl border border-white/25 bg-white/12 p-5 text-left transition hover:-translate-y-0.5 hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/70"
+                    <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                      {config.participants.map((participant) => (
+                        <Link
+                          key={`${participant.type}-${participant.id}`}
+                          href={participant.href}
+                          className="overflow-hidden rounded-[24px] border border-slate-200 bg-slate-50 transition hover:-translate-y-0.5 hover:shadow-md"
                         >
-                          <span className="block text-lg font-semibold text-white">
-                            {option.title}
-                          </span>
-                          <span className="mt-2 block text-sm leading-6 text-blue-50">
-                            {option.description}
-                          </span>
-                        </button>
+                          <div className="relative h-40 w-full bg-slate-100">
+                            {participant.imageSrc ? (
+                              <OptimizedImage
+                                src={participant.imageSrc}
+                                alt={participant.nombre}
+                                sizes="(max-width: 768px) 100vw, 33vw"
+                                className="object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-sm text-slate-400">
+                                Sin imagen
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-4">
+                            <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                              {participant.type}
+                            </div>
+                            <div className="mt-2 text-lg font-semibold text-slate-900">
+                              {participant.nombre}
+                            </div>
+                            <div className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-blue-700">
+                              Ver ficha
+                              <ArrowRight className="h-4 w-4" />
+                            </div>
+                          </div>
+                        </Link>
                       ))}
                     </div>
                   </div>
-                ) : (
-                  <div className="mt-8 flex flex-col gap-3 rounded-2xl border border-white/20 bg-white/12 p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <div className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-100">
-                        Tipo de partida
-                      </div>
-                      <div className="mt-1 text-lg font-semibold text-white">
-                        {selectedMatchType?.title}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMatchType(null)
-                        setError("")
-                        setMessage("")
-                      }}
-                      className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
-                    >
-                      Cambiar
-                    </button>
-                  </div>
-                )}
+                ) : null}
               </section>
 
-              {matchType ? (
-                <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-                  <div className="inline-flex rounded-full bg-sky-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-                    Participa
-                  </div>
-                  <h2 className="mt-5 text-3xl font-semibold text-slate-950">
-                    Deja tus datos
-                  </h2>
-                  <p className="mt-3 text-base leading-7 text-slate-600">
-                    Completa nombre y telefono para participar del sorteo.
-                  </p>
+              <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+                <div className="inline-flex rounded-full bg-sky-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
+                  Participa
+                </div>
+                <h2 className="mt-5 text-3xl font-semibold text-slate-950">
+                  Deja tus datos
+                </h2>
+                <p className="mt-3 text-base leading-7 text-slate-600">
+                  Completa nombre y teléfono para participar del sorteo.
+                </p>
 
-                  <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700">Nombre</label>
-                      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
-                        <UserRound className="h-4 w-4 text-slate-400" />
-                        <input
-                          type="text"
-                          value={nombre}
-                          onChange={(event) => setNombre(event.target.value)}
-                          required
-                          className="w-full outline-none"
-                        />
-                      </div>
+                <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Nombre</label>
+                    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
+                      <UserRound className="h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={nombre}
+                        onChange={(event) => setNombre(event.target.value)}
+                        required
+                        className="w-full outline-none"
+                      />
                     </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700">Telefono</label>
-                      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
-                        <Phone className="h-4 w-4 text-slate-400" />
-                        <input
-                          type="text"
-                          value={telefono}
-                          onChange={(event) => setTelefono(event.target.value)}
-                          required
-                          className="w-full outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    {error ? (
-                      <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                        {error}
-                      </div>
-                    ) : null}
-
-                    {message ? (
-                      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                        {message}
-                      </div>
-                    ) : null}
-
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-70"
-                    >
-                      {submitting ? "Guardando..." : "Participar"}
-                    </button>
-                  </form>
-
-                  <div className="mt-6">
-                    <Link
-                      href="/"
-                      className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 transition hover:text-blue-800"
-                    >
-                      Ver Hola Varela
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
                   </div>
-                </section>
-              ) : null}
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-slate-700">Teléfono</label>
+                    <div className="flex items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3">
+                      <Phone className="h-4 w-4 text-slate-400" />
+                      <input
+                        type="text"
+                        value={telefono}
+                        onChange={(event) => setTelefono(event.target.value)}
+                        required
+                        className="w-full outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {error ? (
+                    <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                      {error}
+                    </div>
+                  ) : null}
+
+                  {message ? (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                      {message}
+                    </div>
+                  ) : null}
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-70"
+                  >
+                    {submitting ? "Guardando..." : "Participar"}
+                  </button>
+                </form>
+
+                <div className="mt-6">
+                  <Link
+                    href="/"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 transition hover:text-blue-800"
+                  >
+                    Ver Hola Varela
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </section>
             </div>
           )}
         </div>
