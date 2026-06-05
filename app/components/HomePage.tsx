@@ -552,12 +552,20 @@ export function HomePage({
     initialContactLeadForm
   )
   const [contactLeadStatus, setContactLeadStatus] = useState("")
+  const sweepstakesPopup = useSweepstakesPopup()
+  const { openHomePopup } = sweepstakesPopup
 
   useEffect(() => {
     return scheduleIdleTask(() => {
       void recordSiteVisit("home", "Inicio")
     })
   }, [])
+
+  useEffect(() => {
+    return scheduleIdleTask(() => {
+      void openHomePopup()
+    })
+  }, [openHomePopup])
 
   const [contactLeadLoading, setContactLeadLoading] = useState(false)
   const [isContactLeadOpen, setIsContactLeadOpen] = useState(false)
@@ -568,7 +576,6 @@ export function HomePage({
   const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(null)
   const [zoomedImage, setZoomedImage] = useState<{ src: string; alt: string } | null>(null)
   const [shouldLoadRadioWidget, setShouldLoadRadioWidget] = useState(false)
-  const sweepstakesPopup = useSweepstakesPopup()
   const eventsSectionRef = useRef<HTMLElement | null>(null)
   const radioSectionRef = useRef<HTMLElement | null>(null)
 

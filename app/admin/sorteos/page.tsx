@@ -657,7 +657,7 @@ export default function AdminSorteosPage() {
                   {selectedCampaign ? "Editar sorteo" : "Nuevo sorteo"}
                 </h2>
                 <p className="text-sm text-slate-500">
-                  Este popup se muestra cuando una persona suma 3 corazones en eventos.
+                  Este popup se muestra en la Home y tambien cuando una persona suma 3 corazones en eventos.
                 </p>
               </div>
             </div>

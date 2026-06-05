@@ -1,11 +1,16 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { FileText, ImageIcon, Save } from "lucide-react"
+import { FileText, ImageIcon, QrCode, Save } from "lucide-react"
 import { OptimizedImage } from "../../components/OptimizedImage"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
+
+const PUBLIC_SITE_URL = "https://www.holavarela.uy"
+const PUBLIC_SITE_QR_URL = `https://api.qrserver.com/v1/create-qr-code/?size=1200x1200&data=${encodeURIComponent(
+  PUBLIC_SITE_URL
+)}`
 
 type SitioForm = {
   titulo: string
@@ -88,6 +93,19 @@ export default function AdminSitioPage() {
         error instanceof Error ? error.message : "No se pudo cargar la imagen."
       )
     }
+  }
+
+  const handleDownloadSiteQr = () => {
+    if (typeof window === "undefined") return
+
+    const link = window.document.createElement("a")
+    link.href = PUBLIC_SITE_QR_URL
+    link.download = "qr-hola-varela-web.png"
+    link.target = "_blank"
+    link.rel = "noopener noreferrer"
+    link.click()
+    setSaveError("")
+    setSaveMessage("Se abrio el QR de www.holavarela.uy para descargar.")
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -338,6 +356,33 @@ export default function AdminSitioPage() {
         </div>
 
         <div>
+          <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-5 flex items-center gap-3">
+              <div className="rounded-xl bg-slate-900 p-3 text-white">
+                <QrCode className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">QR del sitio</h2>
+                <p className="text-sm text-slate-500">
+                  Codigo para abrir la web publica.
+                </p>
+              </div>
+            </div>
+
+            <div className="break-all rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              {PUBLIC_SITE_URL}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleDownloadSiteQr}
+              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+            >
+              <QrCode className="h-4 w-4" />
+              Descargar QR
+            </button>
+          </div>
+
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center gap-3">
               <div className="rounded-xl bg-slate-900 p-3 text-white">

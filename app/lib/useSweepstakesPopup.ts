@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import { getEventLikesBrowserKey } from "./eventLikes"
-import type { SweepstakesConfig } from "./sweepstakes"
+import { HOME_SWEEPSTAKES_POPUP_SESSION_KEY } from "./localStorageKeys"
+import type { SweepstakesConfig, SweepstakesEntrySource } from "./sweepstakes"
 
 const SWEEPSTAKES_THRESHOLD = 3
 
@@ -18,15 +19,33 @@ export function useSweepstakesPopup() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
   const [currentTotalLikes, setCurrentTotalLikes] = useState(0)
+  const [entrySource, setEntrySource] = useState<SweepstakesEntrySource>("corazones")
 
-  const closePopup = () => {
+  const closePopup = useCallback(() => {
     setOpen(false)
     setSubmitError("")
-  }
+  }, [])
 
-  const handleLikeResult = async (result: EventLikeResult) => {
+  const openHomePopup = useCallback(async () => {
+    if (typeof window === "undefined") return
+    if (window.sessionStorage.getItem(HOME_SWEEPSTAKES_POPUP_SESSION_KEY) === "true") {
+      return
+    }
+
+    const { fetchSweepstakesConfig } = await import("./sweepstakes")
+    const resultConfig = await fetchSweepstakesConfig()
+    if (!resultConfig.config) return
+
+    window.sessionStorage.setItem(HOME_SWEEPSTAKES_POPUP_SESSION_KEY, "true")
+    setConfig(resultConfig.config)
+    setCurrentTotalLikes(3)
+    setEntrySource("web")
+    setSubmitError("")
+    setOpen(true)
+  }, [])
+
+  const handleLikeResult = useCallback(async (result: EventLikeResult) => {
     if (result.status !== "liked") return
-    if (!config) return
 
     const totalLikes = result.totalLikes || 0
 
@@ -35,16 +54,16 @@ export function useSweepstakesPopup() {
 
     const { fetchSweepstakesConfig } = await import("./sweepstakes")
     const resultConfig = await fetchSweepstakesConfig()
-    setConfig(resultConfig.config)
-
     if (!resultConfig.config) return
 
+    setConfig(resultConfig.config)
     setCurrentTotalLikes(totalLikes)
+    setEntrySource("corazones")
     setSubmitError("")
     setOpen(true)
-  }
+  }, [])
 
-  const submitEntry = async (nombre: string, telefono: string) => {
+  const submitEntry = useCallback(async (nombre: string, telefono: string) => {
     const browserKey = getEventLikesBrowserKey()
     const { createSweepstakesEntry } = await import("./sweepstakes")
 
@@ -56,8 +75,8 @@ export function useSweepstakesPopup() {
       browserKey,
       nombre,
       telefono,
-      totalLikes: currentTotalLikes,
-      source: "corazones",
+      totalLikes: Math.max(currentTotalLikes, 3),
+      source: entrySource,
     })
 
     if (entryResult.status === "error") {
@@ -68,13 +87,14 @@ export function useSweepstakesPopup() {
 
     setSubmitting(false)
     return { ok: true }
-  }
+  }, [config?.id, currentTotalLikes, entrySource])
 
   return {
     config,
     open,
     submitting,
     submitError,
+    openHomePopup,
     closePopup,
     handleLikeResult,
     submitEntry,
