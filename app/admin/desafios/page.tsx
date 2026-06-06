@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { Archive, CheckCircle2, Copy, Download, ExternalLink, Plus, Power, QrCode, RotateCcw, Save, Search, Shuffle, Trash2, Trophy, X } from "lucide-react"
+import { Archive, CheckCircle2, Copy, Download, ExternalLink, ImagePlus, Plus, Power, QrCode, RotateCcw, Save, Search, Shuffle, Trash2, Trophy, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
@@ -18,6 +18,47 @@ import {
   normalizeWordSearchWords,
 } from "../../lib/challengeGame"
 import { printCouponsPdf } from "../../lib/couponPrint"
+
+const PUZZLE_CROP_SIZE = 900
+
+function loadImageFromUrl(sourceUrl: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image()
+
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error("No se pudo preparar la imagen seleccionada."))
+    image.src = sourceUrl
+  })
+}
+
+function cropImageToSquareDataUrl(
+  image: HTMLImageElement,
+  options: { zoom: number; offsetX: number; offsetY: number }
+) {
+  const canvas = document.createElement("canvas")
+  canvas.width = PUZZLE_CROP_SIZE
+  canvas.height = PUZZLE_CROP_SIZE
+
+  const context = canvas.getContext("2d")
+  if (!context) {
+    throw new Error("No se pudo recortar la imagen seleccionada.")
+  }
+
+  const coverScale =
+    Math.max(PUZZLE_CROP_SIZE / image.width, PUZZLE_CROP_SIZE / image.height) * options.zoom
+  const drawWidth = image.width * coverScale
+  const drawHeight = image.height * coverScale
+  const extraX = Math.max(0, drawWidth - PUZZLE_CROP_SIZE)
+  const extraY = Math.max(0, drawHeight - PUZZLE_CROP_SIZE)
+  const drawX = (PUZZLE_CROP_SIZE - drawWidth) / 2 - (extraX * options.offsetX) / 100
+  const drawY = (PUZZLE_CROP_SIZE - drawHeight) / 2 - (extraY * options.offsetY) / 100
+
+  context.fillStyle = "#ffffff"
+  context.fillRect(0, 0, PUZZLE_CROP_SIZE, PUZZLE_CROP_SIZE)
+  context.drawImage(image, drawX, drawY, drawWidth, drawHeight)
+
+  return canvas.toDataURL("image/webp", 0.78)
+}
 
 type ChallengeEntry = {
   id: number
@@ -161,6 +202,15 @@ export default function AdminDesafiosPage() {
   const [deletingEntry, setDeletingEntry] = useState(false)
   const [showResetDrawsConfirm, setShowResetDrawsConfirm] = useState(false)
   const [showCreateChallengeConfirm, setShowCreateChallengeConfirm] = useState(false)
+  const [puzzleCropDraft, setPuzzleCropDraft] = useState<{
+    sourceUrl: string
+    fileName: string
+    currentValue: string
+    onChange: (value: string) => void
+    zoom: number
+    offsetX: number
+    offsetY: number
+  } | null>(null)
 
   const challengePublicUrl = buildChallengePublicUrl(challengeSlug)
   const challengeQrUrl = buildChallengeQrUrl(challengeSlug)
@@ -183,6 +233,95 @@ export default function AdminDesafiosPage() {
     setMessage("")
     setShareMessage("")
     setShowCreateChallengeConfirm(true)
+  }
+
+  const appendPuzzleImage = (
+    imageDataUrl: string,
+    currentValue: string,
+    onChange: (value: string) => void
+  ) => {
+    const currentImages = currentValue
+      .split(/\r?\n/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+
+    onChange([...currentImages, imageDataUrl].join("\n"))
+    setConfigMessage("Imagen recortada agregada al puzzle.")
+    setErrorMessage("")
+  }
+
+  const startPuzzleImageCrop = (
+    files: File[],
+    currentValue: string,
+    onChange: (value: string) => void
+  ) => {
+    const file = files[0]
+    if (!file) return
+
+    if (!file.type.startsWith("image/")) {
+      setErrorMessage("Usa una imagen JPG, PNG, WEBP o AVIF.")
+      return
+    }
+
+    if (file.size > 6 * 1024 * 1024) {
+      setErrorMessage("La imagen es demasiado pesada. Usa una menor a 6 MB.")
+      return
+    }
+
+    setPuzzleCropDraft((current) => {
+      if (current) URL.revokeObjectURL(current.sourceUrl)
+
+      return {
+        sourceUrl: URL.createObjectURL(file),
+        fileName: file.name,
+        currentValue,
+        onChange,
+        zoom: 1,
+        offsetX: 0,
+        offsetY: 0,
+      }
+    })
+  }
+
+  const handlePuzzleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || [])
+    startPuzzleImageCrop(files, puzzleImagesInput, setPuzzleImagesInput)
+    event.target.value = ""
+  }
+
+  const handleNewChallengePuzzleImageUpload = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = Array.from(event.target.files || [])
+    startPuzzleImageCrop(files, newChallengePuzzleImages, setNewChallengePuzzleImages)
+    event.target.value = ""
+  }
+
+  const closePuzzleCrop = () => {
+    setPuzzleCropDraft((current) => {
+      if (current) URL.revokeObjectURL(current.sourceUrl)
+      return null
+    })
+  }
+
+  const confirmPuzzleCrop = async () => {
+    if (!puzzleCropDraft) return
+
+    try {
+      const image = await loadImageFromUrl(puzzleCropDraft.sourceUrl)
+      const croppedImage = cropImageToSquareDataUrl(image, {
+        zoom: puzzleCropDraft.zoom,
+        offsetX: puzzleCropDraft.offsetX,
+        offsetY: puzzleCropDraft.offsetY,
+      })
+
+      appendPuzzleImage(croppedImage, puzzleCropDraft.currentValue, puzzleCropDraft.onChange)
+      closePuzzleCrop()
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "No se pudo recortar la imagen del puzzle."
+      )
+    }
   }
 
   const loadConfig = async () => {
@@ -1023,11 +1162,138 @@ export default function AdminDesafiosPage() {
         onMemoryModeChange={setNewChallengeMemoryMode}
         onToggleMemoryLogoProfile={toggleNewChallengeMemoryLogoProfile}
         onPuzzleImagesChange={setNewChallengePuzzleImages}
+        onPuzzleImageUpload={handleNewChallengePuzzleImageUpload}
         onCancel={() => setShowCreateChallengeConfirm(false)}
         onConfirm={() => {
           void handleCreateChallenge()
         }}
       />
+
+      {puzzleCropDraft ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 py-8">
+          <div className="w-full max-w-2xl rounded-3xl bg-white p-5 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-600">
+                  Recortar imagen del puzzle
+                </div>
+                <h2 className="mt-2 text-xl font-semibold text-slate-950">
+                  Ajustala al formato cuadrado
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  El puzzle usa imagen cuadrada. Movela y acercala hasta que quede como queres.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closePuzzleCrop}
+                className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                aria-label="Cerrar recorte"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-5 md:grid-cols-[1fr_220px]">
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                <div className="relative aspect-square overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={puzzleCropDraft.sourceUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                    style={{
+                      transform: `scale(${puzzleCropDraft.zoom}) translate(${-puzzleCropDraft.offsetX / 8}%, ${-puzzleCropDraft.offsetY / 8}%)`,
+                      transformOrigin: "center",
+                    }}
+                  />
+                  <div className="pointer-events-none absolute inset-0 border-4 border-white/80" />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Zoom
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="2.5"
+                    step="0.05"
+                    value={puzzleCropDraft.zoom}
+                    onChange={(event) =>
+                      setPuzzleCropDraft((current) =>
+                        current ? { ...current, zoom: Number(event.target.value) } : current
+                      )
+                    }
+                    className="mt-2 w-full"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Horizontal
+                  </label>
+                  <input
+                    type="range"
+                    min="-100"
+                    max="100"
+                    step="1"
+                    value={puzzleCropDraft.offsetX}
+                    onChange={(event) =>
+                      setPuzzleCropDraft((current) =>
+                        current ? { ...current, offsetX: Number(event.target.value) } : current
+                      )
+                    }
+                    className="mt-2 w-full"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                    Vertical
+                  </label>
+                  <input
+                    type="range"
+                    min="-100"
+                    max="100"
+                    step="1"
+                    value={puzzleCropDraft.offsetY}
+                    onChange={(event) =>
+                      setPuzzleCropDraft((current) =>
+                        current ? { ...current, offsetY: Number(event.target.value) } : current
+                      )
+                    }
+                    className="mt-2 w-full"
+                  />
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-500">
+                  Archivo: <span className="font-semibold text-slate-700">{puzzleCropDraft.fileName}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <button
+                type="button"
+                onClick={closePuzzleCrop}
+                className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  void confirmPuzzleCrop()
+                }}
+                className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500"
+              >
+                Usar imagen recortada
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mb-8">
         <h1 className="text-3xl font-semibold text-slate-900">Desafíos</h1>
@@ -1297,6 +1563,22 @@ export default function AdminDesafiosPage() {
                   placeholder="/logo-varela-grande.png&#10;https://ejemplo.com/imagen.jpg"
                   className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
                 />
+                <label className={`mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700 ${
+                  configLoading || savingConfig || !isViewingCurrentEdition
+                    ? "pointer-events-none opacity-60"
+                    : ""
+                }`}>
+                  <ImagePlus className="h-4 w-4" />
+                  Subir imagen del puzzle
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    disabled={configLoading || savingConfig || !isViewingCurrentEdition}
+                    onChange={handlePuzzleImageUpload}
+                  />
+                </label>
                 <div className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                   {normalizedPuzzleImages.length} imagen(es) validas
                 </div>
@@ -1782,6 +2064,7 @@ function CreateChallengePanel({
   onMemoryModeChange,
   onToggleMemoryLogoProfile,
   onPuzzleImagesChange,
+  onPuzzleImageUpload,
   onCancel,
   onConfirm,
 }: {
@@ -1802,6 +2085,7 @@ function CreateChallengePanel({
   onMemoryModeChange: (value: ChallengeMemoryMode) => void
   onToggleMemoryLogoProfile: (profileKey: MemoryLogoProfileOption["key"]) => void
   onPuzzleImagesChange: (value: string) => void
+  onPuzzleImageUpload: (event: React.ChangeEvent<HTMLInputElement>) => void
   onCancel: () => void
   onConfirm: () => void
 }) {
@@ -1985,6 +2269,17 @@ function CreateChallengePanel({
                   placeholder="/logo-varela-grande.png&#10;https://ejemplo.com/imagen.jpg"
                   className="mt-4 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-emerald-500"
                 />
+                <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-emerald-300 hover:text-emerald-700">
+                  <ImagePlus className="h-4 w-4" />
+                  Subir imagen del puzzle
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={onPuzzleImageUpload}
+                  />
+                </label>
                 <div className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                   {normalizedPuzzleImages.length} imagen(es) validas
                 </div>
