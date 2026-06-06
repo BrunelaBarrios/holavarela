@@ -61,6 +61,9 @@ function withInstitutionImage<T extends { id: number | string; foto?: string | n
   }
 }
 
+const isMissingColumnError = (error: { code?: string; message?: string } | null | undefined, column: string) =>
+  error?.code === "42703" && Boolean(error.message?.includes(column))
+
 const getHomePageData = unstable_cache(
   async (today: string): Promise<HomePageData> => {
     const weatherPromise = fetch(
@@ -146,7 +149,27 @@ const getHomePageData = unstable_cache(
         .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, destacado, premium_activo")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
-        .limit(48),
+        .limit(48)
+        .then(async (result) => {
+          if (!isMissingColumnError(result.error, "instituciones.destacado")) {
+            return result
+          }
+
+          const fallbackResult = await supabaseServer
+            .from("instituciones")
+            .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, premium_activo")
+            .or("estado.is.null,estado.eq.activo")
+            .order("id", { ascending: false })
+            .limit(48)
+
+          return {
+            ...fallbackResult,
+            data: (fallbackResult.data || []).map((institucion) => ({
+              ...institucion,
+              destacado: false,
+            })),
+          }
+        }),
       sitioPromise,
       (async () => {
         try {
@@ -230,7 +253,7 @@ const getHomePageData = unstable_cache(
       weather,
     }
   },
-  ["home-page-data-v6"],
+  ["home-page-data-v7"],
   { revalidate: 3600 }
 )
 
