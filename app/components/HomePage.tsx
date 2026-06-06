@@ -2111,11 +2111,6 @@ export function HomePage({
               <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
                 Participa en desafios cortos, elegi el nivel y suma puntos para quedar participando por premios.
               </p>
-              <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                <span className="rounded-full bg-white/85 px-3 py-1 ring-1 ring-slate-200">Facil</span>
-                <span className="rounded-full bg-white/85 px-3 py-1 ring-1 ring-slate-200">Intermedio</span>
-                <span className="rounded-full bg-white/85 px-3 py-1 ring-1 ring-slate-200">Dificil</span>
-              </div>
             </div>
             <Link
               href="/juga-y-gana"

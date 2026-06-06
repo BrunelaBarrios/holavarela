@@ -15,6 +15,10 @@ type OptimizedImageProps = {
 
 const DEFAULT_QUALITY = 72
 
+function shouldBypassNextImageOptimizer(src: string) {
+  return src.startsWith("data:") || src.startsWith("blob:") || src.startsWith("/api/")
+}
+
 function isSupabaseStorageUrl(src: string) {
   return src.includes("/storage/v1/object/public/")
 }
@@ -71,7 +75,7 @@ export function OptimizedImage({
       quality={quality}
       loading={priority ? "eager" : "lazy"}
       loader={isSupabaseStorageUrl(src) ? supabaseLoader : undefined}
-      unoptimized={src.startsWith("data:")}
+      unoptimized={shouldBypassNextImageOptimizer(src)}
       className={className}
     />
   )
