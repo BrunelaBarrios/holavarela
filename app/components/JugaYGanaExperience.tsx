@@ -620,16 +620,10 @@ const PUZZLE_DIFFICULTY_SIZE: Record<PuzzleDifficulty, number> = {
   facil: 3,
   dificil: 4,
 }
-const MAZE_TIME = 70
-const MAZE_LAYOUT = [
-  "S..#...",
-  "##.#.#.",
-  "...#.#.",
-  ".###.#.",
-  "...#...",
-  ".#.###.",
-  "..G#...",
-]
+const MAZE_TIME = 100
+const MAZE_LAYOUTS = Array.from({ length: 10 }, (_, index) =>
+  createGeneratedMazeLayout(`hola-varela-maze-${index + 1}`)
+)
 const MAZE_START = { row: 0, col: 0 }
 
 function shuffleArray<T>(items: T[]) {
@@ -642,6 +636,10 @@ function shuffleArray<T>(items: T[]) {
 }
 
 function getNextDifferentMovieIndex(currentIndex: number, total: number) {
+  return getNextDifferentIndex(currentIndex, total)
+}
+
+function getNextDifferentIndex(currentIndex: number, total: number) {
   if (total <= 1) return currentIndex
 
   let nextIndex = Math.floor(Math.random() * total)
@@ -650,6 +648,64 @@ function getNextDifferentMovieIndex(currentIndex: number, total: number) {
   }
 
   return nextIndex
+}
+
+function createGeneratedMazeLayout(seed: string) {
+  const size = 11
+  const random = createSeededRandom(seed)
+  const grid = Array.from({ length: size }, () => Array.from({ length: size }, () => "#"))
+  const start = { row: 1, col: 1 }
+  const directions = [
+    { row: -2, col: 0 },
+    { row: 2, col: 0 },
+    { row: 0, col: -2 },
+    { row: 0, col: 2 },
+  ]
+
+  const carve = (row: number, col: number) => {
+    grid[row][col] = "."
+
+    const shuffledDirections = [...directions].sort(() => random() - 0.5)
+
+    shuffledDirections.forEach((direction) => {
+      const nextRow = row + direction.row
+      const nextCol = col + direction.col
+
+      if (
+        nextRow <= 0 ||
+        nextRow >= size - 1 ||
+        nextCol <= 0 ||
+        nextCol >= size - 1 ||
+        grid[nextRow][nextCol] === "."
+      ) {
+        return
+      }
+
+      grid[row + direction.row / 2][col + direction.col / 2] = "."
+      carve(nextRow, nextCol)
+    })
+  }
+
+  carve(start.row, start.col)
+
+  for (let row = 1; row < size - 1; row += 1) {
+    for (let col = 1; col < size - 1; col += 1) {
+      if (grid[row][col] === "#" && random() > 0.72) {
+        grid[row][col] = "."
+      }
+    }
+  }
+
+  grid[0][0] = "S"
+  grid[0][1] = "."
+  grid[1][0] = "."
+  grid[1][1] = "."
+  grid[size - 1][size - 1] = "G"
+  grid[size - 1][size - 2] = "."
+  grid[size - 2][size - 1] = "."
+  grid[size - 2][size - 2] = "."
+
+  return grid.map((row) => row.join(""))
 }
 
 function createPuzzleOrder(size: number) {
@@ -668,12 +724,12 @@ function isPuzzleSolved(tiles: number[]) {
   return tiles.every((tile, index) => tile === index)
 }
 
-function getMazeCell(row: number, col: number) {
-  return MAZE_LAYOUT[row]?.[col] || "#"
+function getMazeCell(layout: string[], row: number, col: number) {
+  return layout[row]?.[col] || "#"
 }
 
-function isMazeWalkable(row: number, col: number) {
-  const cell = getMazeCell(row, col)
+function isMazeWalkable(layout: string[], row: number, col: number) {
+  const cell = getMazeCell(layout, row, col)
   return cell !== "#"
 }
 
@@ -834,11 +890,11 @@ function buildConfiguredWordSearchVariants(words: string[]) {
   })
 }
 
-function buildWordSearchGrid(variant: WordSearchVariant) {
+function buildWordSearchGrid(variant: WordSearchVariant, seed = "") {
   const size = 10
   const filler = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
   const grid = Array.from({ length: size }, () => Array.from({ length: size }, () => ""))
-  const random = createSeededRandom(variant.name)
+  const random = createSeededRandom(`${variant.name}-${seed}`)
   const placedWords = new Set<string>()
 
   const directions = [
@@ -943,6 +999,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
   const [wordSearchVariantIndex, setWordSearchVariantIndex] = useState(() =>
     initialAssignment.wordSearchVariantIndex
   )
+  const [wordSearchRoundSeed, setWordSearchRoundSeed] = useState(() => Date.now())
   const [wordSelection, setWordSelection] = useState<number[]>([])
   const [foundWords, setFoundWords] = useState<string[]>([])
   const [scoredWords, setScoredWords] = useState<string[]>([])
@@ -976,6 +1033,9 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
   const [puzzleMoves, setPuzzleMoves] = useState(0)
   const [puzzleTimeLeft, setPuzzleTimeLeft] = useState(PUZZLE_TIME)
   const [mazePosition, setMazePosition] = useState(MAZE_START)
+  const [mazeVariantIndex, setMazeVariantIndex] = useState(() =>
+    Math.floor(Math.random() * MAZE_LAYOUTS.length)
+  )
   const [mazeMoves, setMazeMoves] = useState(0)
   const [mazeTimeLeft, setMazeTimeLeft] = useState(MAZE_TIME)
 
@@ -992,6 +1052,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     setFoundWords([])
     setScoredWords([])
     setWordTimeLeft(WORD_SEARCH_TIME)
+    setWordSearchRoundSeed(Date.now())
     setMemoryCards(createMemoryDeck(activeMemoryItems))
     setFlippedCards([])
     setMemoryLocked(false)
@@ -1008,6 +1069,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     setPuzzleMoves(0)
     setPuzzleTimeLeft(PUZZLE_TIME)
     setMazePosition(MAZE_START)
+    setMazeVariantIndex((current) => getNextDifferentIndex(current, MAZE_LAYOUTS.length))
     setMazeMoves(0)
     setMazeTimeLeft(MAZE_TIME)
   }
@@ -1023,8 +1085,8 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
   )
   const activeWordSearch = activeWordSearchVariants[wordSearchVariantIndex % activeWordSearchVariants.length]
   const activeWordSearchGrid = useMemo(
-    () => buildWordSearchGrid(activeWordSearch),
-    [activeWordSearch]
+    () => buildWordSearchGrid(activeWordSearch, String(wordSearchRoundSeed)),
+    [activeWordSearch, wordSearchRoundSeed]
   )
   const fallbackMemoryItems = useMemo(
     () => wordsToMemoryItems(MEMORY_VARIANTS[memoryVariantIndex]),
@@ -1051,6 +1113,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
   const activePuzzleSize = puzzleDifficulty
     ? PUZZLE_DIFFICULTY_SIZE[puzzleDifficulty]
     : PUZZLE_DIFFICULTY_SIZE.facil
+  const activeMazeLayout = MAZE_LAYOUTS[mazeVariantIndex % MAZE_LAYOUTS.length]
 
   const assignNextChallengeSet = () => {
     resetChallengeAssignment({
@@ -1069,6 +1132,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     setCompletedChallenges({ sopa: false, memoria: false, pelicula: false, puzzle: false, laberinto: false })
     setEarnedPoints({ sopa: 0, memoria: 0, pelicula: 0, puzzle: 0, laberinto: 0 })
     setWordSearchVariantIndex(nextAssignment.wordSearchVariantIndex)
+    setWordSearchRoundSeed(Date.now())
     setWordSelection([])
     setFoundWords([])
     setScoredWords([])
@@ -1092,6 +1156,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     setPuzzleMoves(0)
     setPuzzleTimeLeft(PUZZLE_TIME)
     setMazePosition(MAZE_START)
+    setMazeVariantIndex((current) => getNextDifferentIndex(current, MAZE_LAYOUTS.length))
     setMazeMoves(0)
     setMazeTimeLeft(MAZE_TIME)
   }
@@ -1509,6 +1574,10 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
   }
 
   const resetWordSearch = () => {
+    setWordSearchVariantIndex((current) =>
+      getNextDifferentIndex(current, activeWordSearchVariants.length)
+    )
+    setWordSearchRoundSeed(Date.now())
     setWordSelection([])
     setFoundWords([])
     setScoredWords([])
@@ -1695,13 +1764,13 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
       col: mazePosition.col + colStep,
     }
 
-    if (!isMazeWalkable(nextPosition.row, nextPosition.col)) return
+    if (!isMazeWalkable(activeMazeLayout, nextPosition.row, nextPosition.col)) return
 
     const nextMoves = mazeMoves + 1
     setMazePosition(nextPosition)
     setMazeMoves(nextMoves)
 
-    if (getMazeCell(nextPosition.row, nextPosition.col) === "G") {
+    if (getMazeCell(activeMazeLayout, nextPosition.row, nextPosition.col) === "G") {
       const mazePoints =
         (CHALLENGES.find((challenge) => challenge.key === "laberinto")?.points || 0) +
         mazeTimeLeft +
@@ -1713,6 +1782,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
   }
 
   const resetMazeGame = () => {
+    setMazeVariantIndex((current) => getNextDifferentIndex(current, MAZE_LAYOUTS.length))
     setMazePosition(MAZE_START)
     setMazeMoves(0)
     setMazeTimeLeft(MAZE_TIME)
@@ -1935,7 +2005,8 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
               {stage === "play" && activeChallenge?.key === "laberinto" ? (
                 <MazePanel
                   challengeNumber={activeChallengeIndex + 1}
-                  layout={MAZE_LAYOUT}
+                  layout={activeMazeLayout}
+                  variantNumber={(mazeVariantIndex % MAZE_LAYOUTS.length) + 1}
                   position={mazePosition}
                   moves={mazeMoves}
                   timeLeft={mazeTimeLeft}
@@ -2573,6 +2644,7 @@ function PuzzlePanel(props: {
 function MazePanel(props: {
   challengeNumber: number
   layout: string[]
+  variantNumber: number
   position: { row: number; col: number }
   moves: number
   timeLeft: number
@@ -2622,11 +2694,11 @@ function MazePanel(props: {
       </div>
 
       <p className="mt-4 text-sm leading-7 text-slate-600">
-        Ayuda al caballo a llegar desde Inicio hasta Meta. Desliza el dedo sobre el tablero o usa las flechas.
+        Ayuda al caballo a llegar desde Inicio hasta Meta. Laberinto {props.variantNumber} de {MAZE_LAYOUTS.length}. Desliza el dedo sobre el tablero o usa las flechas.
       </p>
 
       <div
-        className="mt-6 grid w-full max-w-[420px] touch-none gap-2"
+        className="mt-6 grid w-full max-w-[560px] touch-none gap-1.5"
         onPointerDown={(event) => {
           if (props.finished) return
           swipeStartRef.current = { x: event.clientX, y: event.clientY }
@@ -2647,9 +2719,9 @@ function MazePanel(props: {
             return (
               <div
                 key={`${rowIndex}-${colIndex}`}
-                className={`aspect-square rounded-xl border text-[10px] font-semibold uppercase tracking-[0.12em] ${
+                className={`aspect-square rounded-lg border text-[8px] font-semibold uppercase tracking-[0.08em] sm:text-[10px] ${
                   isPlayer
-                    ? "border-amber-400 bg-amber-100 text-2xl shadow-sm"
+                    ? "border-amber-400 bg-amber-100 text-lg shadow-sm sm:text-xl"
                     : isWall
                       ? "border-slate-800 bg-slate-950 text-slate-950"
                       : isGoal
