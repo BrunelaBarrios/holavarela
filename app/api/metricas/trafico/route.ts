@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
 import { readSiteTrafficSnapshotFromEnv } from "../../../lib/siteTrafficSummary"
 
-export const revalidate = 600
+export const dynamic = "force-dynamic"
 
 const INTERNAL_PERIOD_DAYS = 30
 const CACHE_HEADERS = {
