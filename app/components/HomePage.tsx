@@ -2109,11 +2109,11 @@ export function HomePage({
                 Participá en desafíos cortos: sopa de letras, memoria con logos, puzzle de imágenes y más. Completá el juego y quedá participando por premios.
               </p>
               <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-                Participa en desafios cortos, elegi el nivel y suma puntos para quedar participando por premios.
+                Participa en desafios cortos
               </p>
             </div>
             <Link
-              href="/juga-y-gana"
+              href="https://www.holavarela.uy/juga-y-gana/desafio-20260526-df9dde74"
               className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-950 px-6 py-4 text-base font-semibold text-white shadow-[0_18px_40px_-22px_rgba(15,23,42,0.9)] transition hover:-translate-y-0.5 hover:bg-emerald-700 md:w-auto"
             >
               Entrar al juego
@@ -2139,7 +2139,7 @@ export function HomePage({
                   </h2>
                 </div>
                 <Link
-                  href="/juga-y-gana"
+                  href="https://www.holavarela.uy/juga-y-gana/desafio-20260526-df9dde74"
                   className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_-24px_rgba(15,23,42,0.9)] transition hover:-translate-y-0.5 hover:bg-amber-700 sm:w-auto"
                 >
                   Jugar ahora
