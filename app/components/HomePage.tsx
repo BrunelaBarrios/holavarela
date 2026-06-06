@@ -2113,7 +2113,7 @@ export function HomePage({
               </p>
             </div>
             <Link
-              href="https://www.holavarela.uy/juga-y-gana/desafio-20260526-df9dde74"
+              href="/juga-y-gana"
               className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-950 px-6 py-4 text-base font-semibold text-white shadow-[0_18px_40px_-22px_rgba(15,23,42,0.9)] transition hover:-translate-y-0.5 hover:bg-emerald-700 md:w-auto"
             >
               Entrar al juego
@@ -2139,7 +2139,7 @@ export function HomePage({
                   </h2>
                 </div>
                 <Link
-                  href="https://www.holavarela.uy/juga-y-gana/desafio-20260526-df9dde74"
+                  href="/juga-y-gana"
                   className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_-24px_rgba(15,23,42,0.9)] transition hover:-translate-y-0.5 hover:bg-amber-700 sm:w-auto"
                 >
                   Jugar ahora
