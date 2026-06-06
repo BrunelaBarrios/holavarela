@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from "react"
-import Link from "next/link"
 import {
   ArrowLeft,
   ArrowDown,
@@ -230,9 +229,10 @@ const WORD_SEARCH_VARIANTS: WordSearchVariant[] = [
   },
 ]
 
-const WORD_SEARCH_TIME = 75
-const MEMORY_TIME = 55
+const WORD_SEARCH_TIME = 95
+const MEMORY_TIME = 75
 const WORD_SEARCH_WORDS_PER_ROUND = 4
+const MAX_SKIPPED_CHALLENGES = 2
 
 const MEMORY_VARIANTS = [
   ["MATE", "RADIO", "FERIA", "CINE", "TAZA", "QR"],
@@ -614,17 +614,37 @@ const MOVIE_CHALLENGES = [
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 const MAX_MOVIE_ERRORS = 6
 const MAX_MOVIE_ROUNDS = 4
-const PUZZLE_TIME = 80
+const PUZZLE_TIME = 100
 const DEFAULT_PUZZLE_IMAGES = ["/logo-varela-grande.png"]
 const PUZZLE_DIFFICULTY_SIZE: Record<PuzzleDifficulty, number> = {
   facil: 3,
   dificil: 4,
 }
-const MAZE_TIME = 100
+const MAZE_TIME = 120
 const MAZE_LAYOUTS = Array.from({ length: 10 }, (_, index) =>
   createGeneratedMazeLayout(`hola-varela-maze-${index + 1}`)
 )
 const MAZE_START = { row: 0, col: 0 }
+
+function createChallengeStatus(value = false): Record<ChallengeKey, boolean> {
+  return {
+    sopa: value,
+    memoria: value,
+    pelicula: value,
+    puzzle: value,
+    laberinto: value,
+  }
+}
+
+function createChallengePoints(): Record<ChallengeKey, number> {
+  return {
+    sopa: 0,
+    memoria: 0,
+    pelicula: 0,
+    puzzle: 0,
+    laberinto: 0,
+  }
+}
 
 function shuffleArray<T>(items: T[]) {
   const copy = [...items]
@@ -981,25 +1001,20 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
   const [configLoading, setConfigLoading] = useState(true)
   const [challengeConfig, setChallengeConfig] = useState(DEFAULT_CHALLENGE_CONFIG)
   const [activeChallengeIndex, setActiveChallengeIndex] = useState(0)
-  const [completedChallenges, setCompletedChallenges] = useState<Record<ChallengeKey, boolean>>({
-    sopa: false,
-    memoria: false,
-    pelicula: false,
-    puzzle: false,
-    laberinto: false,
-  })
-  const [earnedPoints, setEarnedPoints] = useState<Record<ChallengeKey, number>>({
-    sopa: 0,
-    memoria: 0,
-    pelicula: 0,
-    puzzle: 0,
-    laberinto: 0,
-  })
+  const [completedChallenges, setCompletedChallenges] = useState<Record<ChallengeKey, boolean>>(() =>
+    createChallengeStatus()
+  )
+  const [skippedChallenges, setSkippedChallenges] = useState<Record<ChallengeKey, boolean>>(() =>
+    createChallengeStatus()
+  )
+  const [earnedPoints, setEarnedPoints] = useState<Record<ChallengeKey, number>>(() =>
+    createChallengePoints()
+  )
 
   const [wordSearchVariantIndex, setWordSearchVariantIndex] = useState(() =>
     initialAssignment.wordSearchVariantIndex
   )
-  const [wordSearchRoundSeed, setWordSearchRoundSeed] = useState(() => Date.now())
+  const [wordSearchRoundSeed, setWordSearchRoundSeed] = useState(0)
   const [wordSelection, setWordSelection] = useState<number[]>([])
   const [foundWords, setFoundWords] = useState<string[]>([])
   const [scoredWords, setScoredWords] = useState<string[]>([])
@@ -1046,13 +1061,14 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
 
   const resetChallengeProgress = () => {
     setActiveChallengeIndex(0)
-    setCompletedChallenges({ sopa: false, memoria: false, pelicula: false, puzzle: false, laberinto: false })
-    setEarnedPoints({ sopa: 0, memoria: 0, pelicula: 0, puzzle: 0, laberinto: 0 })
+    setCompletedChallenges(createChallengeStatus())
+    setSkippedChallenges(createChallengeStatus())
+    setEarnedPoints(createChallengePoints())
     setWordSelection([])
     setFoundWords([])
     setScoredWords([])
     setWordTimeLeft(WORD_SEARCH_TIME)
-    setWordSearchRoundSeed(Date.now())
+    setWordSearchRoundSeed((seed) => seed + 1)
     setMemoryCards(createMemoryDeck(activeMemoryItems))
     setFlippedCards([])
     setMemoryLocked(false)
@@ -1129,10 +1145,11 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     })
 
     setActiveChallengeIndex(0)
-    setCompletedChallenges({ sopa: false, memoria: false, pelicula: false, puzzle: false, laberinto: false })
-    setEarnedPoints({ sopa: 0, memoria: 0, pelicula: 0, puzzle: 0, laberinto: 0 })
+    setCompletedChallenges(createChallengeStatus())
+    setSkippedChallenges(createChallengeStatus())
+    setEarnedPoints(createChallengePoints())
     setWordSearchVariantIndex(nextAssignment.wordSearchVariantIndex)
-    setWordSearchRoundSeed(Date.now())
+    setWordSearchRoundSeed((seed) => seed + 1)
     setWordSelection([])
     setFoundWords([])
     setScoredWords([])
@@ -1187,9 +1204,18 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
   )
 
   const allChallengesCompleted = useMemo(
-    () => activeChallenges.every((challenge) => completedChallenges[challenge.key]),
-    [activeChallenges, completedChallenges]
+    () => activeChallenges.every((challenge) => completedChallenges[challenge.key] || skippedChallenges[challenge.key]),
+    [activeChallenges, completedChallenges, skippedChallenges]
   )
+  const skippedChallengeCount = useMemo(
+    () => activeChallenges.filter((challenge) => skippedChallenges[challenge.key]).length,
+    [activeChallenges, skippedChallenges]
+  )
+  const remainingSkips = Math.max(0, MAX_SKIPPED_CHALLENGES - skippedChallengeCount)
+  const activeChallengeDone = activeChallenge
+    ? completedChallenges[activeChallenge.key] || skippedChallenges[activeChallenge.key]
+    : false
+  const canSkipActiveChallenge = Boolean(activeChallenge && !activeChallengeDone && remainingSkips > 0)
 
   const matchedCardsCount = memoryCards.filter((card) => card.matched).length
   const matchedPairs = matchedCardsCount / 2
@@ -1577,7 +1603,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     setWordSearchVariantIndex((current) =>
       getNextDifferentIndex(current, activeWordSearchVariants.length)
     )
-    setWordSearchRoundSeed(Date.now())
+    setWordSearchRoundSeed((seed) => seed + 1)
     setWordSelection([])
     setFoundWords([])
     setScoredWords([])
@@ -1790,12 +1816,24 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     setEarnedPoints((prev) => ({ ...prev, laberinto: 0 }))
   }
 
-  const handleContinue = () => {
+  const goToNextChallenge = () => {
     if (activeChallengeIndex < activeChallenges.length - 1) {
       setActiveChallengeIndex((current) => current + 1)
       return
     }
     setStage("form")
+  }
+
+  const handleContinue = () => {
+    goToNextChallenge()
+  }
+
+  const handleSkipChallenge = () => {
+    if (!activeChallenge || !canSkipActiveChallenge) return
+
+    setSkippedChallenges((prev) => ({ ...prev, [activeChallenge.key]: true }))
+    setEarnedPoints((prev) => ({ ...prev, [activeChallenge.key]: 0 }))
+    goToNextChallenge()
   }
 
   const handleSubmitEntry = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -1841,6 +1879,10 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     setStage("done")
   }
 
+  const handleReturnHome = () => {
+    window.location.assign("/")
+  }
+
   if (configLoading) {
     return (
       <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff2d9_0%,#fffdf8_28%,#e9f7ff_64%,#f9fcff_100%)] text-slate-950">
@@ -1867,13 +1909,14 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
             <p className="mt-3 text-base leading-7 text-slate-600">
               Pronto vamos a publicar una nueva actividad para jugar y participar por premios.
             </p>
-            <Link
-              href="/"
+            <button
+              type="button"
+              onClick={handleReturnHome}
               className="mt-6 inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600"
             >
               <ArrowLeft className="h-4 w-4" />
               Volver a Hola Varela
-            </Link>
+            </button>
           </div>
         </div>
       </main>
@@ -1889,10 +1932,14 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff2d9_0%,#fffdf8_28%,#e9f7ff_64%,#f9fcff_100%)] text-slate-950">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <Link href="/" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-300 hover:text-sky-700">
+          <button
+            type="button"
+            onClick={handleReturnHome}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-300 hover:text-sky-700"
+          >
             <ArrowLeft className="h-4 w-4" />
             Volver a Hola Varela
-          </Link>
+          </button>
         </div>
 
         <section className="overflow-hidden rounded-[34px] border border-white/80 bg-white/85 shadow-[0_28px_90px_-42px_rgba(15,23,42,0.32)] backdrop-blur">
@@ -2042,18 +2089,31 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
                 <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-6">
                   <div className="text-sm text-slate-500">
                     Puntaje acumulado: <span className="font-semibold text-slate-900">{totalPoints}</span>
+                    <span className="ml-3 text-slate-400">Omitidos: {skippedChallengeCount}/{MAX_SKIPPED_CHALLENGES}</span>
                   </div>
-                  {activeChallenge?.key !== "pelicula" || !movieRoundCompleted ? (
-                    <button
-                      type="button"
-                      onClick={handleContinue}
-                      disabled={!activeChallenge || !completedChallenges[activeChallenge.key]}
-                      className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {activeChallengeIndex === activeChallenges.length - 1 ? "Terminar" : "Continuar"}
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  ) : null}
+                  <div className="flex flex-wrap items-center gap-3">
+                    {canSkipActiveChallenge ? (
+                      <button
+                        type="button"
+                        onClick={handleSkipChallenge}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-sky-300 hover:text-sky-700"
+                      >
+                        Omitir juego
+                        <span className="text-xs font-semibold text-slate-400">({remainingSkips})</span>
+                      </button>
+                    ) : null}
+                    {activeChallenge?.key !== "pelicula" || !movieRoundCompleted ? (
+                      <button
+                        type="button"
+                        onClick={handleContinue}
+                        disabled={!activeChallenge || !activeChallengeDone}
+                        className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Siguiente
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -2476,8 +2536,8 @@ function MoviePanel(props: {
             onClick={props.onFinish}
             className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600"
           >
-            {props.movieRoundsCompleted >= props.maxMovieRounds ? "Terminar puntaje" : "Terminar"}
-            <Trophy className="h-4 w-4" />
+            Siguiente
+            <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       ) : null}
@@ -2854,13 +2914,14 @@ function DonePanel(props: { participantName: string; participantPhone: string; t
           Descubre comercios, servicios, cursos, eventos y propuestas cerca tuyo en un solo lugar.
         </p>
         <div className="mt-5">
-          <Link
-            href="/"
+          <button
+            type="button"
+            onClick={() => window.location.assign("/")}
             className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-6 py-4 text-sm font-semibold text-white transition hover:bg-sky-600"
           >
             Ir a conocer Hola Varela
             <ArrowRight className="h-4 w-4" />
-          </Link>
+          </button>
         </div>
       </div>
     </div>
