@@ -1308,7 +1308,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
 
       if (!mounted) return
 
-      const comercioItems = ((commerceFallback.data || []) as Array<Record<string, unknown>>)
+      const comercioItems = ((commerceFallback.data || []) as unknown as Array<Record<string, unknown>>)
         .map((item) => ({
           id: `comercio-${item.id}`,
           label: String(item.nombre || "Comercio"),
@@ -1317,7 +1317,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
         }))
         .filter((item) => item.imageUrl)
 
-      const servicioItems = ((servicios || []) as Array<Record<string, unknown>>)
+      const servicioItems = ((servicios || []) as unknown as Array<Record<string, unknown>>)
         .map((item) => ({
           id: `servicio-${item.id}`,
           label: String(item.nombre || "Servicio"),

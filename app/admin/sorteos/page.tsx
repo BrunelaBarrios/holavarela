@@ -46,6 +46,18 @@ type ParticipantOption = {
   label: string
 }
 
+type SweepstakesEntryRow = {
+  id: number
+  sorteo_id: number | null
+  nombre: string
+  telefono: string
+  total_likes: number
+  origen?: string | null
+  created_at: string | null
+}
+
+const ENTRIES_PAGE_SIZE = 1000
+
 const createEmptyForm = (): SorteoForm => ({
   titulo: "",
   activo: false,
@@ -133,6 +145,58 @@ function getEntrySourceLabel(source?: string | null) {
   return "Sin dato"
 }
 
+async function fetchSweepstakesEntries(includeSource = true): Promise<{
+  data: SweepstakesEntryRow[] | null
+  count: number | null
+  error: { code?: string; message: string } | null
+}> {
+  const rows: SweepstakesEntryRow[] = []
+  let totalCount: number | null = null
+
+  for (let from = 0; ; from += ENTRIES_PAGE_SIZE) {
+    const to = from + ENTRIES_PAGE_SIZE - 1
+    const columns = includeSource
+      ? "id, sorteo_id, nombre, telefono, total_likes, origen, created_at"
+      : "id, sorteo_id, nombre, telefono, total_likes, created_at"
+
+    const result = await supabase
+      .from("sorteo_participaciones")
+      .select(columns, { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(from, to)
+
+    if (result.error) {
+      if (includeSource && result.error.code === "42703") {
+        return fetchSweepstakesEntries(false)
+      }
+
+      return {
+        data: null,
+        count: totalCount,
+        error: {
+          code: result.error.code,
+          message: result.error.message,
+        },
+      }
+    }
+
+    totalCount = result.count ?? totalCount
+
+    const batch = ((result.data || []) as unknown as SweepstakesEntryRow[]).map((entry) => ({
+      ...entry,
+      origen: includeSource ? entry.origen || null : null,
+    }))
+
+    rows.push(...batch)
+
+    if (batch.length < ENTRIES_PAGE_SIZE || (totalCount !== null && rows.length >= totalCount)) {
+      break
+    }
+  }
+
+  return { data: rows, count: totalCount ?? rows.length, error: null }
+}
+
 export default function AdminSorteosPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -145,7 +209,7 @@ export default function AdminSorteosPage() {
   const [entriesCount, setEntriesCount] = useState<number>(0)
   const [entries, setEntries] = useState<SweepstakesEntry[]>([])
   const [entrySearch, setEntrySearch] = useState("")
-  const [entryScope, setEntryScope] = useState<"selected" | "all">("selected")
+  const [entryScope, setEntryScope] = useState<"selected" | "all">("all")
   const [saveMessage, setSaveMessage] = useState("")
   const [saveError, setSaveError] = useState("")
   const [shareMessage, setShareMessage] = useState("")
@@ -235,23 +299,7 @@ export default function AdminSorteosPage() {
         .select("id, nombre")
         .or("estado.is.null,estado.eq.activo")
         .order("nombre", { ascending: true }),
-      (async () => {
-        const result = await supabase
-          .from("sorteo_participaciones")
-          .select("id, sorteo_id, nombre, telefono, total_likes, origen, created_at", {
-            count: "exact",
-          })
-          .order("created_at", { ascending: false })
-
-        if (result.error?.code !== "42703") return result
-
-        return supabase
-          .from("sorteo_participaciones")
-          .select("id, sorteo_id, nombre, telefono, total_likes, created_at", {
-            count: "exact",
-          })
-          .order("created_at", { ascending: false })
-      })(),
+      fetchSweepstakesEntries(),
     ])
 
     if (configError) {
@@ -302,15 +350,7 @@ export default function AdminSorteosPage() {
     if (!entriesError) {
       setEntriesCount(count || 0)
       setEntries(
-        ((entriesRows || []) as Array<{
-          id: number
-          sorteo_id: number | null
-          nombre: string
-          telefono: string
-          total_likes: number
-          origen?: string | null
-          created_at: string | null
-        }>).map((entry) => ({
+        ((entriesRows || []) as SweepstakesEntryRow[]).map((entry) => ({
           id: entry.id,
           sorteoId: entry.sorteo_id,
           nombre: entry.nombre,

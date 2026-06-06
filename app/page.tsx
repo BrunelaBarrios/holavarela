@@ -148,12 +148,14 @@ const getHomePageData = unstable_cache(
         .order("id", { ascending: false })
         .limit(48),
       sitioPromise,
-      supabaseServer
-        .from("desafio_config")
-        .select("slug")
-        .eq("id", 1)
-        .maybeSingle()
-        .then(async ({ data: activeChallenge }) => {
+      (async () => {
+        try {
+          const { data: activeChallenge } = await supabaseServer
+            .from("desafio_config")
+            .select("slug")
+            .eq("id", 1)
+            .maybeSingle()
+
           let rankingQuery = supabaseServer
             .from("desafio_participaciones")
             .select("id, nombre, puntaje_total, created_at")
@@ -173,8 +175,10 @@ const getHomePageData = unstable_cache(
             nombre: entry.nombre || "Participante",
             puntajeTotal: Number(entry.puntaje_total || 0),
           }))
-        })
-        .catch(() => []),
+        } catch {
+          return []
+        }
+      })(),
       weatherPromise,
     ])
 

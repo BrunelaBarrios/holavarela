@@ -284,7 +284,7 @@ export default function AdminDesafiosPage() {
       )
     }
 
-    const comercioOptions = ((comerciosFallback.data || []) as Array<Record<string, unknown>>)
+    const comercioOptions = ((comerciosFallback.data || []) as unknown as Array<Record<string, unknown>>)
       .map((item) => ({
         key: `comercio:${Number(item.id)}` as const,
         label: String(item.nombre || "Comercio"),
@@ -293,7 +293,7 @@ export default function AdminDesafiosPage() {
       }))
       .filter((item) => item.imageUrl && Number.isFinite(Number(item.key.split(":")[1])))
 
-    const servicioOptions = ((serviciosResult.data || []) as Array<Record<string, unknown>>)
+    const servicioOptions = ((serviciosResult.data || []) as unknown as Array<Record<string, unknown>>)
       .map((item) => ({
         key: `servicio:${Number(item.id)}` as const,
         label: String(item.nombre || "Servicio"),
@@ -330,7 +330,7 @@ export default function AdminDesafiosPage() {
       drawsQuery,
     ])
 
-    const drawIds = ((drawsRows || []) as Array<Record<string, unknown>>).map((draw) =>
+    const drawIds = ((drawsRows || []) as unknown as Array<Record<string, unknown>>).map((draw) =>
       Number(draw.id)
     )
     const { data: winnersRows, error: winnersError } =
@@ -357,7 +357,7 @@ export default function AdminDesafiosPage() {
     setSchemaReady(true)
     setSchemaMessage("")
     setEntries(
-      ((entriesRows || []) as Array<Record<string, unknown>>).map((entry) => ({
+      ((entriesRows || []) as unknown as Array<Record<string, unknown>>).map((entry) => ({
         id: Number(entry.id),
         nombre: String(entry.nombre || ""),
         telefono: String(entry.telefono || ""),
@@ -376,14 +376,14 @@ export default function AdminDesafiosPage() {
       }))
     )
     setDraws(
-      ((drawsRows || []) as Array<Record<string, unknown>>).map((draw) => ({
+      ((drawsRows || []) as unknown as Array<Record<string, unknown>>).map((draw) => ({
         id: Number(draw.id),
         cantidadGanadores: Number(draw.cantidad_ganadores || 0),
         createdAt: draw.created_at ? String(draw.created_at) : null,
       }))
     )
     setWinners(
-      ((winnersRows || []) as Array<Record<string, unknown>>).map((winner) => ({
+      ((winnersRows || []) as unknown as Array<Record<string, unknown>>).map((winner) => ({
         id: Number(winner.id),
         sorteoId: Number(winner.sorteo_id),
         participacionId: Number(winner.participacion_id),
