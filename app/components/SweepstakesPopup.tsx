@@ -10,6 +10,7 @@ type SweepstakesPopupProps = {
   open: boolean
   title?: string
   description: string
+  buttonText?: string
   participants: SweepstakesParticipant[]
   loading?: boolean
   error?: string
@@ -21,6 +22,7 @@ export function SweepstakesPopup({
   open,
   title = "Participá con tus corazones",
   description,
+  buttonText = "Participar",
   participants,
   loading = false,
   error = "",
@@ -167,7 +169,7 @@ export function SweepstakesPopup({
                     disabled={loading}
                     className="inline-flex flex-1 items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:opacity-70"
                   >
-                    {loading ? "Guardando..." : "Participar"}
+                    {loading ? "Guardando..." : buttonText}
                   </button>
                   <button
                     type="button"

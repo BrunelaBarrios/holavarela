@@ -10,6 +10,9 @@ type SweepstakesConfigRow = {
   titulo: string | null
   activo: boolean | null
   descripcion: string | null
+  boton_texto?: string | null
+  visible_desde?: string | null
+  visible_hasta?: string | null
   participante_tipo_1?: SweepstakesParticipantType | null
   participante_id_1?: number | null
   participante_tipo_2?: SweepstakesParticipantType | null
@@ -39,6 +42,7 @@ export type SweepstakesConfig = {
   id: number
   title: string
   description: string
+  buttonText: string
   participants: SweepstakesParticipant[]
 }
 
@@ -80,6 +84,17 @@ async function buildSweepstakesConfigFromRow(row: SweepstakesConfigRow | null) {
     return { config: null as SweepstakesConfig | null, error: null }
   }
 
+  const now = Date.now()
+  const visibleFrom = row.visible_desde ? Date.parse(row.visible_desde) : null
+  const visibleUntil = row.visible_hasta ? Date.parse(row.visible_hasta) : null
+
+  if (
+    (visibleFrom !== null && !Number.isNaN(visibleFrom) && visibleFrom > now) ||
+    (visibleUntil !== null && !Number.isNaN(visibleUntil) && visibleUntil < now)
+  ) {
+    return { config: null as SweepstakesConfig | null, error: null }
+  }
+
   const participantRefs = normalizeParticipantRefs(row)
 
   if (participantRefs.length === 0) {
@@ -88,6 +103,7 @@ async function buildSweepstakesConfigFromRow(row: SweepstakesConfigRow | null) {
         id: row.id,
         title: row.titulo?.trim() || "Participa con tus corazones",
         description: row.descripcion.trim(),
+        buttonText: row.boton_texto?.trim() || "Participar",
         participants: [],
       },
       error: null,
@@ -180,6 +196,7 @@ async function buildSweepstakesConfigFromRow(row: SweepstakesConfigRow | null) {
       id: row.id,
       title: row.titulo?.trim() || "Participa con tus corazones",
       description: row.descripcion.trim(),
+      buttonText: row.boton_texto?.trim() || "Participar",
       participants: participantRefs
         .map((item) => participantMap.get(`${item.type}:${item.id}`))
         .filter(Boolean) as SweepstakesParticipant[],
@@ -189,14 +206,27 @@ async function buildSweepstakesConfigFromRow(row: SweepstakesConfigRow | null) {
 }
 
 export async function fetchSweepstakesConfig() {
-  const { data, error } = await supabase
+  const fullSelect =
+    "id, titulo, activo, descripcion, boton_texto, visible_desde, visible_hasta, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
+  const legacySelect =
+    "id, titulo, activo, descripcion, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
+  let result: any = await supabase
     .from(SWEEPSTAKES_CONFIG_TABLE)
-    .select(
-      "id, titulo, activo, descripcion, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
-    )
+    .select(fullSelect)
     .eq("activo", true)
     .order("updated_at", { ascending: false })
     .limit(1)
+
+  if (result.error?.code === "42703") {
+    result = await supabase
+      .from(SWEEPSTAKES_CONFIG_TABLE)
+      .select(legacySelect)
+      .eq("activo", true)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+  }
+
+  const { data, error } = result
 
   if (error) {
     if (!isMissingSweepstakesSchemaError(error)) {
@@ -211,13 +241,25 @@ export async function fetchSweepstakesConfig() {
 }
 
 export async function fetchSweepstakesConfigById(sorteoId: number) {
-  const { data, error } = await supabase
+  const fullSelect =
+    "id, titulo, activo, descripcion, boton_texto, visible_desde, visible_hasta, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
+  const legacySelect =
+    "id, titulo, activo, descripcion, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
+  let result: any = await supabase
     .from(SWEEPSTAKES_CONFIG_TABLE)
-    .select(
-      "id, titulo, activo, descripcion, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
-    )
+    .select(fullSelect)
     .eq("id", sorteoId)
     .maybeSingle()
+
+  if (result.error?.code === "42703") {
+    result = await supabase
+      .from(SWEEPSTAKES_CONFIG_TABLE)
+      .select(legacySelect)
+      .eq("id", sorteoId)
+      .maybeSingle()
+  }
+
+  const { data, error } = result
 
   if (error) {
     if (!isMissingSweepstakesSchemaError(error)) {

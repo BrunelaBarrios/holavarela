@@ -514,6 +514,9 @@ create table if not exists public.sorteo_popup_config (
   titulo text not null default '',
   activo boolean not null default false,
   descripcion text not null default '',
+  boton_texto text not null default 'Participar',
+  visible_desde timestamp with time zone,
+  visible_hasta timestamp with time zone,
   participante_tipo_1 text,
   participante_id_1 bigint,
   participante_tipo_2 text,
@@ -539,6 +542,15 @@ add column if not exists titulo text not null default '';
 
 alter table public.sorteo_popup_config
 add column if not exists created_at timestamp with time zone default now();
+
+alter table public.sorteo_popup_config
+add column if not exists boton_texto text not null default 'Participar';
+
+alter table public.sorteo_popup_config
+add column if not exists visible_desde timestamp with time zone;
+
+alter table public.sorteo_popup_config
+add column if not exists visible_hasta timestamp with time zone;
 
 alter table public.sorteo_popup_config
 add column if not exists participante_tipo_1 text;

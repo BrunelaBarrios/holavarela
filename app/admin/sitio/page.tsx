@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { FileText, ImageIcon, QrCode, Save } from "lucide-react"
+import { CalendarClock, FileText, ImageIcon, QrCode, Save } from "lucide-react"
 import { OptimizedImage } from "../../components/OptimizedImage"
 import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
@@ -22,6 +22,16 @@ type SitioForm = {
   mostrar_ranking_juego_home: boolean
 }
 
+type PopupInicioForm = {
+  id: number | null
+  activo: boolean
+  titulo: string
+  descripcion: string
+  boton_texto: string
+  visible_desde: string
+  visible_hasta: string
+}
+
 const initialForm: SitioForm = {
   titulo: "José Pedro Varela",
   texto_1:
@@ -35,20 +45,54 @@ const initialForm: SitioForm = {
   mostrar_ranking_juego_home: false,
 }
 
+const initialPopupForm: PopupInicioForm = {
+  id: null,
+  activo: false,
+  titulo: "Participa del sorteo",
+  descripcion: "Deja tus datos y participa por premios de Hola Varela.",
+  boton_texto: "Participar",
+  visible_desde: "",
+  visible_hasta: "",
+}
+
+function toDateTimeLocal(value?: string | null) {
+  if (!value) return ""
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ""
+
+  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+  return offsetDate.toISOString().slice(0, 16)
+}
+
+function fromDateTimeLocal(value: string) {
+  if (!value) return null
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date.toISOString()
+}
+
 export default function AdminSitioPage() {
   const [formData, setFormData] = useState<SitioForm>(initialForm)
+  const [popupData, setPopupData] = useState<PopupInicioForm>(initialPopupForm)
   const [loading, setLoading] = useState(false)
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [saveMessage, setSaveMessage] = useState("")
   const [saveError, setSaveError] = useState("")
+  const [popupSchemaReady, setPopupSchemaReady] = useState(true)
 
   useEffect(() => {
     const cargarConfiguracion = async () => {
-      const result = await supabase
-        .from("sitio")
-        .select("titulo, texto_1, texto_2, texto_3, imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home")
-        .eq("id", 1)
-        .maybeSingle()
+      const [result, popupResult] = await Promise.all([
+        supabase
+          .from("sitio")
+          .select("titulo, texto_1, texto_2, texto_3, imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home")
+          .eq("id", 1)
+          .maybeSingle(),
+        supabase
+          .from("sorteo_popup_config")
+          .select("id, titulo, activo, descripcion, boton_texto, visible_desde, visible_hasta, updated_at")
+          .order("updated_at", { ascending: false })
+          .limit(1),
+      ])
       const { data, error } =
         result.error?.code === "42703"
           ? await supabase
@@ -72,6 +116,58 @@ export default function AdminSitioPage() {
               ? data.mostrar_ranking_juego_home === true
               : false,
         })
+      }
+
+      if (popupResult.error?.code === "42P01") {
+        setPopupSchemaReady(false)
+      } else if (popupResult.error?.code === "42703") {
+        setPopupSchemaReady(false)
+        const legacyPopupResult = await supabase
+          .from("sorteo_popup_config")
+          .select("id, titulo, activo, descripcion, updated_at")
+          .order("updated_at", { ascending: false })
+          .limit(1)
+
+        const legacyPopup = ((legacyPopupResult.data || []) as Array<{
+          id: number
+          titulo?: string | null
+          activo?: boolean | null
+          descripcion?: string | null
+        }>)[0]
+
+        if (legacyPopup) {
+          setPopupData({
+            id: legacyPopup.id,
+            activo: legacyPopup.activo === true,
+            titulo: legacyPopup.titulo || initialPopupForm.titulo,
+            descripcion: legacyPopup.descripcion || initialPopupForm.descripcion,
+            boton_texto: initialPopupForm.boton_texto,
+            visible_desde: "",
+            visible_hasta: "",
+          })
+        }
+      } else if (!popupResult.error) {
+        const popup = ((popupResult.data || []) as Array<{
+          id: number
+          titulo?: string | null
+          activo?: boolean | null
+          descripcion?: string | null
+          boton_texto?: string | null
+          visible_desde?: string | null
+          visible_hasta?: string | null
+        }>)[0]
+
+        if (popup) {
+          setPopupData({
+            id: popup.id,
+            activo: popup.activo === true,
+            titulo: popup.titulo || initialPopupForm.titulo,
+            descripcion: popup.descripcion || initialPopupForm.descripcion,
+            boton_texto: popup.boton_texto || initialPopupForm.boton_texto,
+            visible_desde: toDateTimeLocal(popup.visible_desde),
+            visible_hasta: toDateTimeLocal(popup.visible_hasta),
+          })
+        }
       }
 
       setIsInitialLoading(false)
@@ -126,6 +222,7 @@ export default function AdminSitioPage() {
     }
     let { error } = await supabase.from("sitio").upsert(sitioPayload)
     let savedHomeGamesVisibility = true
+    let savedPopupSettings = true
 
     if (error?.code === "42703") {
       const legacyPayload = {
@@ -147,6 +244,36 @@ export default function AdminSitioPage() {
       return
     }
 
+    const popupPayload = {
+      titulo: popupData.titulo.trim() || initialPopupForm.titulo,
+      activo: popupData.activo,
+      descripcion: popupData.descripcion.trim(),
+      boton_texto: popupData.boton_texto.trim() || initialPopupForm.boton_texto,
+      visible_desde: fromDateTimeLocal(popupData.visible_desde),
+      visible_hasta: fromDateTimeLocal(popupData.visible_hasta),
+      updated_at: new Date().toISOString(),
+    }
+
+    if (popupSchemaReady) {
+      const popupQuery = popupData.id
+        ? supabase.from("sorteo_popup_config").update(popupPayload).eq("id", popupData.id).select("id").single()
+        : supabase.from("sorteo_popup_config").insert(popupPayload).select("id").single()
+      const { data: savedPopup, error: popupError } = await popupQuery
+
+      if (popupError?.code === "42703" || popupError?.code === "42P01") {
+        savedPopupSettings = false
+        setPopupSchemaReady(false)
+      } else if (popupError) {
+        setSaveError(`No se pudo guardar el popup: ${popupError.message}`)
+        setLoading(false)
+        return
+      } else if (savedPopup?.id) {
+        setPopupData((prev) => ({ ...prev, id: Number(savedPopup.id) }))
+      }
+    } else {
+      savedPopupSettings = false
+    }
+
     await logAdminActivity({
       action: "Editar",
       section: "Sitio",
@@ -154,10 +281,19 @@ export default function AdminSitioPage() {
       details: "Actualizo textos, imagen o bloques visibles de la home.",
     })
 
+    const pendingMessages = [
+      !savedHomeGamesVisibility
+        ? "Para mostrar u ocultar juegos y ranking falta aplicar las columnas nuevas de sitio en Supabase."
+        : "",
+      !savedPopupSettings
+        ? "Para programar el popup falta aplicar las columnas nuevas de sorteo_popup_config en Supabase."
+        : "",
+    ].filter(Boolean)
+
     setSaveMessage(
-      savedHomeGamesVisibility
-        ? "Cambios guardados correctamente."
-        : "Cambios guardados. Para mostrar u ocultar juegos y ranking falta aplicar las columnas nuevas en Supabase."
+      pendingMessages.length
+        ? `Cambios guardados parcialmente. ${pendingMessages.join(" ")}`
+        : "Cambios guardados correctamente."
     )
     setLoading(false)
   }
@@ -340,6 +476,134 @@ export default function AdminSitioPage() {
                   className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                 />
               </label>
+
+              <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4">
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="rounded-xl bg-amber-500 p-3 text-white">
+                    <CalendarClock className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-slate-950">
+                      Popup de inicio
+                    </h3>
+                    <p className="text-sm text-slate-600">
+                      Programa cuándo aparece en la Home y qué texto muestra.
+                    </p>
+                  </div>
+                </div>
+
+                {!popupSchemaReady ? (
+                  <div className="mb-4 rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm text-amber-800">
+                    Falta aplicar las columnas nuevas en Supabase para guardar programación, botón y fechas.
+                  </div>
+                ) : null}
+
+                <div className="space-y-4">
+                  <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-amber-100 bg-white px-4 py-3">
+                    <span>
+                      <span className="block text-sm font-medium text-slate-900">
+                        Activar popup en la Home
+                      </span>
+                      <span className="mt-1 block text-sm text-slate-500">
+                        Si está apagado, no aparece aunque tenga fechas cargadas.
+                      </span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={popupData.activo}
+                      onChange={(e) =>
+                        setPopupData((prev) => ({
+                          ...prev,
+                          activo: e.target.checked,
+                        }))
+                      }
+                      className="h-5 w-5 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                    />
+                  </label>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Título del popup
+                    </label>
+                    <input
+                      type="text"
+                      value={popupData.titulo}
+                      onChange={(e) =>
+                        setPopupData((prev) => ({ ...prev, titulo: e.target.value }))
+                      }
+                      className="w-full rounded-xl border border-amber-100 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Texto del popup
+                    </label>
+                    <textarea
+                      value={popupData.descripcion}
+                      onChange={(e) =>
+                        setPopupData((prev) => ({
+                          ...prev,
+                          descripcion: e.target.value,
+                        }))
+                      }
+                      className="h-28 w-full resize-none rounded-xl border border-amber-100 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Texto del botón
+                    </label>
+                    <input
+                      type="text"
+                      value={popupData.boton_texto}
+                      onChange={(e) =>
+                        setPopupData((prev) => ({
+                          ...prev,
+                          boton_texto: e.target.value,
+                        }))
+                      }
+                      className="w-full rounded-xl border border-amber-100 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-900">
+                        Mostrar desde
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={popupData.visible_desde}
+                        onChange={(e) =>
+                          setPopupData((prev) => ({
+                            ...prev,
+                            visible_desde: e.target.value,
+                          }))
+                        }
+                        className="w-full rounded-xl border border-amber-100 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-900">
+                        Mostrar hasta
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={popupData.visible_hasta}
+                        onChange={(e) =>
+                          setPopupData((prev) => ({
+                            ...prev,
+                            visible_hasta: e.target.value,
+                          }))
+                        }
+                        className="w-full rounded-xl border border-amber-100 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="mt-6">
@@ -422,6 +686,19 @@ export default function AdminSitioPage() {
             </div>
             <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
               Top 3 del juego: {formData.mostrar_ranking_juego_home ? "visible" : "oculto"}
+            </div>
+            <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-slate-700">
+              <div className="font-semibold text-slate-900">
+                Popup de inicio: {popupData.activo ? "activo" : "apagado"}
+              </div>
+              <div className="mt-2 font-semibold">{popupData.titulo}</div>
+              <p className="mt-2 whitespace-pre-line leading-6">{popupData.descripcion}</p>
+              <div className="mt-3 inline-flex rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white">
+                {popupData.boton_texto || "Participar"}
+              </div>
+              <div className="mt-3 text-xs text-slate-500">
+                Desde: {popupData.visible_desde || "sin fecha"} | Hasta: {popupData.visible_hasta || "sin fecha"}
+              </div>
             </div>
           </div>
         </div>

@@ -1118,6 +1118,7 @@ export function HomePage({
             open={sweepstakesPopup.open}
             title={sweepstakesPopup.config.title}
             description={sweepstakesPopup.config.description}
+            buttonText={sweepstakesPopup.config.buttonText}
             participants={sweepstakesPopup.config.participants}
             loading={sweepstakesPopup.submitting}
             error={sweepstakesPopup.submitError}
