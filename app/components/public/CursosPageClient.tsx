@@ -37,9 +37,17 @@ const courseAgeOptions = [
 const courseAgeLabel = (value?: string | null) =>
   courseAgeOptions.find((option) => option.value === value)?.label || "Todas las edades"
 
+const ageFilterOptions = [
+  { value: "todos", label: "Todos" },
+  { value: "ninos", label: "Niños" },
+  { value: "adultos", label: "Adultos" },
+  { value: "todas_las_edades", label: "Todas las edades" },
+]
+
 export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) {
   const [cursos] = useState<Curso[]>(initialCursos)
   const [search, setSearch] = useState("")
+  const [ageFilter, setAgeFilter] = useState("todos")
   const [selectedCursoId, setSelectedCursoId] = useState<string | null>(() =>
     typeof window === "undefined"
       ? null
@@ -83,14 +91,19 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
 
   const cursosFiltrados = useMemo(() => {
     const term = search.trim().toLowerCase()
-    if (!term) return cursos
+    const filteredByAge =
+      ageFilter === "todos"
+        ? cursos
+        : cursos.filter((curso) => curso.edad_destino === ageFilter)
 
-    return cursos.filter((curso) =>
+    if (!term) return filteredByAge
+
+    return filteredByAge.filter((curso) =>
       `${curso.nombre} ${curso.descripcion || ""} ${curso.responsable || ""} ${curso.contacto || ""} ${courseAgeLabel(curso.edad_destino)}`
         .toLowerCase()
         .includes(term)
     )
-  }, [cursos, search])
+  }, [ageFilter, cursos, search])
 
   const handleOpenCurso = (curso: Curso) => {
     void recordViewMore("cursos", String(curso.id), curso.nombre)
@@ -119,9 +132,6 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
         description={selectedCurso?.descripcion || null}
         extraContent={null}
         meta={[
-          ...(selectedCurso?.edad_destino
-            ? [{ icon: GraduationCap, text: courseAgeLabel(selectedCurso.edad_destino) }]
-            : []),
           ...(selectedCurso?.responsable
             ? [{ icon: GraduationCap, text: selectedCurso.responsable }]
             : []),
@@ -184,7 +194,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
 
           <PublicAddButton href="/sumate/curso" label="Sumar mi curso" />
         </div>
-        <div className="mt-6 max-w-xl">
+        <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,36rem)_auto] lg:items-center">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">
             <Search className="h-4 w-4 text-gray-400" />
             <input
@@ -194,6 +204,23 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
               placeholder="Buscar por curso, responsable o descripcion"
               className="w-full text-sm outline-none"
             />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {ageFilterOptions.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setAgeFilter(option.value)}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                  ageFilter === option.value
+                    ? "border-blue-600 bg-blue-600 text-white"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:text-blue-700"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -217,10 +244,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                 className="cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
                 <div className="border-b border-blue-100 bg-[linear-gradient(135deg,#eff6ff_0%,#eefdf7_100%)] p-5">
-                  <span className="inline-flex rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-blue-700 shadow-sm">
-                    {courseAgeLabel(curso.edad_destino)}
-                  </span>
-                  <h2 className="mt-4 text-3xl font-bold leading-tight text-gray-950">
+                  <h2 className="text-3xl font-bold leading-tight text-gray-950">
                     {curso.nombre}
                   </h2>
                 </div>
