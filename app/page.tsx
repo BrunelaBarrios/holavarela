@@ -25,6 +25,11 @@ const defaultSobreVarela = {
 }
 
 const RECENT_COMMERCIAL_EVENT_DAYS = 1
+const HOME_BUSINESS_LIMIT = 16
+const HOME_EVENTS_LIMIT = 24
+const HOME_COURSES_LIMIT = 12
+const HOME_SERVICES_LIMIT = 24
+const HOME_INSTITUTIONS_LIMIT = 12
 
 const isCommercialEventCategory = (categoria?: string | null) => {
   const normalized = categoria?.trim().toLowerCase()
@@ -116,31 +121,32 @@ const getHomePageData = unstable_cache(
         .select("id, nombre, descripcion, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, imagen_url, destacado, plan_suscripcion, usa_whatsapp")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
-        .limit(48),
+        .limit(HOME_BUSINESS_LIMIT),
       supabaseServer
         .from("eventos")
         .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, estado, usa_whatsapp, created_at")
         .or("estado.is.null,estado.eq.activo")
         .or(buildActiveEventsFilter(today))
-        .order("fecha", { ascending: true }),
+        .order("fecha", { ascending: true })
+        .limit(HOME_EVENTS_LIMIT),
       supabaseServer
         .from("cursos")
         .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, edad_destino, destacado, usa_whatsapp")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
-        .limit(24),
+        .limit(HOME_COURSES_LIMIT),
       supabaseServer
         .from("servicios")
         .select("id, nombre, categoria, descripcion, premium_activo, responsable, contacto, direccion, web_url, instagram_url, facebook_url, destacado, plan_suscripcion, usa_whatsapp")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
-        .limit(72),
+        .limit(HOME_SERVICES_LIMIT),
       supabaseServer
         .from("instituciones")
         .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, usa_whatsapp, destacado, premium_activo")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
-        .limit(48)
+        .limit(HOME_INSTITUTIONS_LIMIT)
         .then(async (result) => {
           if (!isMissingColumnError(result.error, "instituciones.destacado")) {
             return result
@@ -151,7 +157,7 @@ const getHomePageData = unstable_cache(
             .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, usa_whatsapp, premium_activo")
             .or("estado.is.null,estado.eq.activo")
             .order("id", { ascending: false })
-            .limit(48)
+            .limit(HOME_INSTITUTIONS_LIMIT)
 
           return {
             ...fallbackResult,
@@ -229,7 +235,7 @@ const getHomePageData = unstable_cache(
           .map((item) => withApiImage(item, "eventos"))
       })(),
       cursos: (cursos || []).slice(0, 8).map((item) => ({ ...item, imagen: null, premium_galeria: [] })),
-      servicios: (servicios || []).slice(0, 48).map((item) => withApiImage(item, "servicios")),
+      servicios: (servicios || []).slice(0, 16).map((item) => withApiImage(item, "servicios")),
       instituciones: (instituciones || []).map((item) => ({ ...item, foto: null })),
       allCursos: (highlightedCursos.length ? highlightedCursos : cursos || []).map((item) =>
         ({ ...item, imagen: null, premium_galeria: [] })
@@ -244,7 +250,7 @@ const getHomePageData = unstable_cache(
       weather,
     }
   },
-  ["home-page-data-v7"],
+  ["home-page-data-v8"],
   { revalidate: 3600 }
 )
 
