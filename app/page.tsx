@@ -42,22 +42,13 @@ const isCommercialEventCategory = (categoria?: string | null) => {
   )
 }
 
-function withDataUrlImage<T extends { id: number | string; imagen?: string | null }>(
+function withApiImage<T extends { id: number | string; imagen?: string | null }>(
   item: T,
   routeBase: string
 ) {
   return {
     ...item,
-    imagen: item.imagen ? `/api/${routeBase}/${item.id}/image` : null,
-  }
-}
-
-function withInstitutionImage<T extends { id: number | string; foto?: string | null }>(
-  item: T
-) {
-  return {
-    ...item,
-    foto: item.foto ? `/api/instituciones/${item.id}/image` : null,
+    imagen: `/api/${routeBase}/${item.id}/image`,
   }
 }
 
@@ -122,31 +113,31 @@ const getHomePageData = unstable_cache(
     ] = await Promise.all([
       supabaseServer
         .from("comercios")
-        .select("id, nombre, descripcion, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, imagen, imagen_url, destacado, plan_suscripcion, usa_whatsapp")
+        .select("id, nombre, descripcion, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, imagen_url, destacado, plan_suscripcion, usa_whatsapp")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
         .limit(48),
       supabaseServer
         .from("eventos")
-        .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, created_at")
+        .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, estado, usa_whatsapp, created_at")
         .or("estado.is.null,estado.eq.activo")
         .or(buildActiveEventsFilter(today))
         .order("fecha", { ascending: true }),
       supabaseServer
         .from("cursos")
-        .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, premium_galeria, destacado, usa_whatsapp")
+        .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, edad_destino, destacado, usa_whatsapp")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
         .limit(24),
       supabaseServer
         .from("servicios")
-        .select("id, nombre, categoria, descripcion, premium_activo, responsable, contacto, direccion, web_url, instagram_url, facebook_url, imagen, destacado, plan_suscripcion, usa_whatsapp")
+        .select("id, nombre, categoria, descripcion, premium_activo, responsable, contacto, direccion, web_url, instagram_url, facebook_url, destacado, plan_suscripcion, usa_whatsapp")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
         .limit(72),
       supabaseServer
         .from("instituciones")
-        .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, destacado, premium_activo")
+        .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, usa_whatsapp, destacado, premium_activo")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
         .limit(48)
@@ -157,7 +148,7 @@ const getHomePageData = unstable_cache(
 
           const fallbackResult = await supabaseServer
             .from("instituciones")
-            .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, foto, usa_whatsapp, premium_activo")
+            .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, usa_whatsapp, premium_activo")
             .or("estado.is.null,estado.eq.activo")
             .order("id", { ascending: false })
             .limit(48)
@@ -217,7 +208,7 @@ const getHomePageData = unstable_cache(
 
     return {
       featuredBusinesses: (featuredBusinesses || []).map((item) =>
-        item.imagen_url ? item : withDataUrlImage(item, "comercios")
+        item.imagen_url ? item : withApiImage(item, "comercios")
       ),
       eventos: (() => {
         const activeEvents = eventosData || []
@@ -235,16 +226,16 @@ const getHomePageData = unstable_cache(
         return (eventsForHome.length ? eventsForHome : activeEvents)
           .sort((first, second) => compareUpcomingEvents(first, second, today))
           .slice(0, 30)
-          .map((item) => withDataUrlImage(item, "eventos"))
+          .map((item) => withApiImage(item, "eventos"))
       })(),
-      cursos: (cursos || []).slice(0, 8).map((item) => withDataUrlImage(item, "cursos")),
-      servicios: (servicios || []).slice(0, 48).map((item) => withDataUrlImage(item, "servicios")),
-      instituciones: (instituciones || []).map((item) => withInstitutionImage(item)),
+      cursos: (cursos || []).slice(0, 8).map((item) => ({ ...item, imagen: null, premium_galeria: [] })),
+      servicios: (servicios || []).slice(0, 48).map((item) => withApiImage(item, "servicios")),
+      instituciones: (instituciones || []).map((item) => ({ ...item, foto: null })),
       allCursos: (highlightedCursos.length ? highlightedCursos : cursos || []).map((item) =>
-        withDataUrlImage(item, "cursos")
+        ({ ...item, imagen: null, premium_galeria: [] })
       ),
       allServicios: (highlightedServicios.length ? highlightedServicios : servicios || []).map((item) =>
-        withDataUrlImage(item, "servicios")
+        withApiImage(item, "servicios")
       ),
       sobreVarela: sobreVarelaData
         ? { ...defaultSobreVarela, ...sobreVarelaData }
