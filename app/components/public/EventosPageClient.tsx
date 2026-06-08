@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
-import { ArrowRight, CalendarDays, Heart, MapPin, Phone, Search, X } from "lucide-react"
+import { ArrowRight, CalendarDays, MapPin, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { EventLikeButton } from "../EventLikeButton"
@@ -52,8 +52,6 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
   const [eventos] = useState<Evento[]>(initialEventos)
   const [search, setSearch] = useState("")
   const [categoria, setCategoria] = useState("Todos")
-  const [showSweepstakesBubble, setShowSweepstakesBubble] = useState(true)
-  const [sweepstakesBubbleOpen, setSweepstakesBubbleOpen] = useState(false)
   const [eventLikeCounts, setEventLikeCounts] = useState<Record<string, number>>({})
   const [likedEvents, setLikedEvents] = useState<Record<string, boolean>>({})
   const [likingEventId, setLikingEventId] = useState<string | null>(null)
@@ -177,24 +175,6 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
       return matchesCategoria && matchesSearch
     })
   }, [categoria, eventos, search])
-
-  const eventosParaSorteo = useMemo(
-    () =>
-      eventos
-        .map((evento) => ({
-          evento,
-          count: eventLikeCounts[String(evento.id)] || 0,
-        }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 3),
-    [eventLikeCounts, eventos]
-  )
-
-  const showSorteoBubble =
-    showSweepstakesBubble &&
-    categoria === "Todos" &&
-    search.trim().length === 0 &&
-    eventosParaSorteo.length > 0
 
   return (
     <main className="min-h-screen bg-white">
@@ -476,90 +456,6 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
           </div>
         )}
       </div>
-      {showSorteoBubble ? (
-        <div className="fixed bottom-4 right-4 z-40 w-[min(92vw,340px)] sm:bottom-6 sm:right-6">
-          {sweepstakesBubbleOpen ? (
-            <div className="rounded-3xl border border-emerald-100 bg-white p-4 shadow-[0_22px_70px_-28px_rgba(15,23,42,0.45)]">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-bold text-slate-950">
-                    Participá del sorteo
-                  </p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
-                    Tocá hasta 3 corazones. Cada corazón cuenta como apoyo.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowSweepstakesBubble(false)}
-                  aria-label="Cerrar participación del sorteo"
-                  className="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="mt-3 space-y-2">
-                {eventosParaSorteo.map(({ evento, count }) => {
-                  const eventId = String(evento.id)
-                  const isLiked = Boolean(likedEvents[eventId])
-
-                  return (
-                    <button
-                      key={eventId}
-                      type="button"
-                      onClick={() => void handleEventLike(eventId, evento.titulo)}
-                      disabled={isLiked || likingEventId === eventId}
-                      className="flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2.5 text-left transition hover:border-emerald-200 hover:bg-emerald-50 disabled:cursor-default disabled:opacity-75"
-                    >
-                      <span className="min-w-0">
-                        <span className="line-clamp-1 block text-sm font-semibold text-slate-900">
-                          {evento.titulo}
-                        </span>
-                        <span className="mt-0.5 block text-xs text-slate-500">
-                          {count} {count === 1 ? "corazón" : "corazones"}
-                        </span>
-                      </span>
-                      <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                        isLiked ? "bg-emerald-600 text-white" : "bg-white text-emerald-600"
-                      }`}>
-                        <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <Link
-                  href="/sorteo"
-                  className="text-xs font-semibold text-emerald-700 transition hover:text-emerald-600"
-                >
-                  Ver sorteo
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => setSweepstakesBubbleOpen(false)}
-                  className="text-xs font-semibold text-slate-500 transition hover:text-slate-800"
-                >
-                  Minimizar
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={() => setSweepstakesBubbleOpen(true)}
-                className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white px-4 py-3 text-sm font-bold text-emerald-700 shadow-[0_18px_55px_-28px_rgba(15,23,42,0.55)] transition hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50"
-              >
-                <Heart className="h-4 w-4" />
-                Sorteo
-              </button>
-            </div>
-          )}
-        </div>
-      ) : null}
     </main>
   )
 }
