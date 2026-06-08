@@ -118,7 +118,7 @@ const getHomePageData = unstable_cache(
     ] = await Promise.all([
       supabaseServer
         .from("comercios")
-        .select("id, nombre, descripcion, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, imagen_url, destacado, plan_suscripcion, usa_whatsapp")
+        .select("id, nombre, descripcion, premium_activo, direccion, telefono, web_url, instagram_url, facebook_url, destacado, plan_suscripcion, usa_whatsapp")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
         .limit(HOME_BUSINESS_LIMIT),
@@ -213,9 +213,7 @@ const getHomePageData = unstable_cache(
       .slice(0, 24)
 
     return {
-      featuredBusinesses: (featuredBusinesses || []).map((item) =>
-        item.imagen_url ? item : withApiImage(item, "comercios")
-      ),
+      featuredBusinesses: (featuredBusinesses || []).map((item) => withApiImage(item, "comercios")),
       eventos: (() => {
         const activeEvents = eventosData || []
         const recentCommercialCutoff = getDateKeyDaysAgo(RECENT_COMMERCIAL_EVENT_DAYS)

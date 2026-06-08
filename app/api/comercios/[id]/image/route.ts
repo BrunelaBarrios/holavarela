@@ -9,5 +9,5 @@ type RouteContext = {
 
 export async function GET(_request: NextRequest, context: RouteContext) {
   const { id } = await context.params
-  return dataUrlImageResponse("comercios", "imagen", id)
+  return dataUrlImageResponse("comercios", ["imagen", "imagen_url"], id)
 }

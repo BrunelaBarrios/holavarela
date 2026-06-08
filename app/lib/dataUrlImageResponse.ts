@@ -7,17 +7,20 @@ const IMAGE_CACHE_CONTROL =
   "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=604800"
 
 const getCachedDataUrlImage = unstable_cache(
-  async (table: string, field: string, id: string) => {
+  async (table: string, fieldsKey: string, id: string) => {
+    const fields = fieldsKey.split(",")
     const { data, error } = await supabaseServer
       .from(table)
-      .select(field)
+      .select(fields.join(", "))
       .eq("id", id)
       .maybeSingle()
 
     if (error) return null
 
     const row = data as Record<string, unknown> | null
-    const imageValue = row?.[field]
+    const imageValue = fields
+      .map((field) => row?.[field])
+      .find((value) => typeof value === "string" && value.length > 0)
 
     return typeof imageValue === "string" ? imageValue : null
   },
@@ -27,10 +30,11 @@ const getCachedDataUrlImage = unstable_cache(
 
 export async function dataUrlImageResponse(
   table: string,
-  field: string,
+  field: string | string[],
   id: string
 ) {
-  const imageValue = await getCachedDataUrlImage(table, field, id)
+  const fields = Array.isArray(field) ? field : [field]
+  const imageValue = await getCachedDataUrlImage(table, fields.join(","), id)
 
   if (!imageValue) {
     return new NextResponse(null, { status: 404 })
