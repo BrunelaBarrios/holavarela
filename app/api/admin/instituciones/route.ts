@@ -203,13 +203,13 @@ export async function POST(request: NextRequest) {
       web_url: normalizeUrl(body.payload.web_url),
       instagram_url: normalizeUrl(body.payload.instagram_url),
       facebook_url: normalizeUrl(body.payload.facebook_url),
-      foto: normalizeText(body.payload.foto),
       estado: body.payload.estado || "activo",
       usa_whatsapp: Boolean(body.payload.usa_whatsapp),
       destacado: Boolean(body.payload.destacado),
       premium_activo: Boolean(body.payload.premium_activo),
       premium_cursos_activo: Boolean(body.payload.premium_cursos_activo),
       premium_cursos_titulo: normalizeText(body.payload.premium_cursos_titulo),
+      ...("foto" in body.payload ? { foto: normalizeText(body.payload.foto) } : {}),
     }
 
     if (!payload.nombre) {

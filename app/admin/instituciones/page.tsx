@@ -15,7 +15,7 @@ type Institucion = {
   web_url?: string | null
   instagram_url?: string | null
   facebook_url?: string | null
-  foto: string | null
+  foto?: string | null
   estado?: string | null
   usa_whatsapp?: boolean | null
   destacado?: boolean | null
@@ -47,6 +47,7 @@ export default function AdminInstitucionesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingInstitucion, setEditingInstitucion] = useState<Institucion | null>(null)
   const [formData, setFormData] = useState<InstitucionForm>(initialForm)
+  const [fotoTouched, setFotoTouched] = useState(false)
   const [loading, setLoading] = useState(false)
   const [saveError, setSaveError] = useState("")
   const [deletingInstitucion, setDeletingInstitucion] = useState<Institucion | null>(null)
@@ -54,7 +55,7 @@ export default function AdminInstitucionesPage() {
   const cargarInstituciones = async () => {
     const { data, error } = await supabase
       .from("instituciones")
-      .select("*")
+      .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, estado, usa_whatsapp, destacado, premium_activo, premium_cursos_activo, premium_cursos_titulo")
       .order("id", { ascending: false })
 
     if (error) {
@@ -75,12 +76,23 @@ export default function AdminInstitucionesPage() {
 
   const resetForm = () => {
     setFormData(initialForm)
+    setFotoTouched(false)
     setEditingInstitucion(null)
     setIsFormOpen(false)
     setSaveError("")
   }
 
-  const handleEdit = (institucion: Institucion) => {
+  const handleEdit = async (institucion: Institucion) => {
+    const { data, error } = await supabase
+      .from("instituciones")
+      .select("foto")
+      .eq("id", institucion.id)
+      .maybeSingle()
+
+    if (error) {
+      setSaveError(`No se pudo cargar la imagen de la institución: ${error.message}`)
+    }
+
     setEditingInstitucion(institucion)
     setFormData({
       nombre: institucion.nombre || "",
@@ -90,13 +102,14 @@ export default function AdminInstitucionesPage() {
       web_url: institucion.web_url || "",
       instagram_url: institucion.instagram_url || "",
       facebook_url: institucion.facebook_url || "",
-      foto: institucion.foto || "",
+      foto: data?.foto || "",
       usa_whatsapp: institucion.usa_whatsapp ?? true,
       destacado: institucion.destacado ?? false,
       premium_activo: institucion.premium_activo ?? false,
       premium_cursos_activo: institucion.premium_cursos_activo ?? false,
       premium_cursos_titulo: institucion.premium_cursos_titulo || "",
     })
+    setFotoTouched(false)
     setIsFormOpen(true)
   }
 
@@ -179,6 +192,7 @@ export default function AdminInstitucionesPage() {
         maxHeight: 1440,
         targetFileSizeBytes: 160 * 1024,
       })
+      setFotoTouched(true)
       setFormData((prev) => ({ ...prev, foto: imageDataUrl }))
     } catch (error) {
       setSaveError(
@@ -202,13 +216,13 @@ export default function AdminInstitucionesPage() {
       web_url: formData.web_url?.trim() || null,
       instagram_url: formData.instagram_url?.trim() || null,
       facebook_url: formData.facebook_url?.trim() || null,
-      foto: formData.foto || null,
       estado: editingInstitucion?.estado ?? "activo",
       usa_whatsapp: formData.usa_whatsapp,
       destacado: formData.destacado ?? false,
       premium_activo: formData.premium_activo ?? false,
       premium_cursos_activo: formData.premium_cursos_activo ?? false,
       premium_cursos_titulo: formData.premium_cursos_titulo?.trim() || null,
+      ...(fotoTouched ? { foto: formData.foto || null } : {}),
     }
 
     const response = await fetch("/api/admin/instituciones", {
@@ -222,7 +236,7 @@ export default function AdminInstitucionesPage() {
         payload,
       }),
     })
-    const result = (await response.json()) as { error?: string; record?: Institucion }
+    const result = (await response.json().catch(() => ({}))) as { error?: string; record?: Institucion }
 
     if (!response.ok || !result.record) {
       setSaveError(
@@ -493,7 +507,10 @@ export default function AdminInstitucionesPage() {
                     />
                     <button
                       type="button"
-                      onClick={() => setFormData((prev) => ({ ...prev, foto: "" }))}
+                      onClick={() => {
+                        setFotoTouched(true)
+                        setFormData((prev) => ({ ...prev, foto: "" }))
+                      }}
                       className="text-sm font-medium text-red-600 transition hover:text-red-500"
                     >
                       Quitar imagen
@@ -623,7 +640,7 @@ export default function AdminInstitucionesPage() {
                 </button>
 
                 <button
-                  onClick={() => handleEdit(institucion)}
+                  onClick={() => void handleEdit(institucion)}
                   className="rounded-lg p-2 text-cyan-600 transition hover:bg-cyan-50"
                   title="Editar"
                 >

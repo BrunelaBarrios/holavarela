@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
 import { ArrowRight, GraduationCap, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
-import { OptimizedImage } from "../OptimizedImage"
 import { PrimaryExternalLinkButton } from "../PrimaryExternalLinkButton"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
@@ -20,14 +19,23 @@ export type Curso = {
   descripcion: string
   responsable: string
   contacto: string
+  edad_destino?: string | null
   web_url?: string | null
   instagram_url?: string | null
   facebook_url?: string | null
-  imagen: string | null
-  premium_galeria?: string[] | null
   estado?: string | null
   usa_whatsapp?: boolean | null
 }
+
+const courseAgeOptions = [
+  { value: "todas_las_edades", label: "Todas las edades" },
+  { value: "adultos", label: "Adultos" },
+  { value: "ninos", label: "Niños" },
+  { value: "adolescentes", label: "Adolescentes" },
+]
+
+const courseAgeLabel = (value?: string | null) =>
+  courseAgeOptions.find((option) => option.value === value)?.label || "Todas las edades"
 
 export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) {
   const [cursos] = useState<Curso[]>(initialCursos)
@@ -78,7 +86,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
     if (!term) return cursos
 
     return cursos.filter((curso) =>
-      `${curso.nombre} ${curso.descripcion || ""} ${curso.responsable || ""} ${curso.contacto || ""}`
+      `${curso.nombre} ${curso.descripcion || ""} ${curso.responsable || ""} ${curso.contacto || ""} ${courseAgeLabel(curso.edad_destino)}`
         .toLowerCase()
         .includes(term)
     )
@@ -106,34 +114,14 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
         open={Boolean(selectedCurso)}
         onClose={() => setSelectedCursoId(null)}
         title={selectedCurso?.nombre || ""}
-        imageSrc={selectedCurso?.imagen || null}
+        imageSrc={null}
         imageAlt={selectedCurso?.nombre || "Curso"}
         description={selectedCurso?.descripcion || null}
-        extraContent={
-          selectedCurso?.premium_galeria?.length ? (
-            <div>
-              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                Galeria
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {selectedCurso.premium_galeria.map((image, index) => (
-                  <div
-                    key={`${image}-${index}`}
-                    className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
-                  >
-                    <OptimizedImage
-                      src={image}
-                      alt={`${selectedCurso.nombre} ${index + 1}`}
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                      className="object-contain p-2"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null
-        }
+        extraContent={null}
         meta={[
+          ...(selectedCurso?.edad_destino
+            ? [{ icon: GraduationCap, text: courseAgeLabel(selectedCurso.edad_destino) }]
+            : []),
           ...(selectedCurso?.responsable
             ? [{ icon: GraduationCap, text: selectedCurso.responsable }]
             : []),
@@ -226,30 +214,18 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                 tabIndex={0}
                 onClick={() => handleOpenCurso(curso)}
                 onKeyDown={(event) => handleCardKeyDown(event, () => handleOpenCurso(curso))}
-                className="cursor-pointer overflow-hidden rounded-xl border border-gray-200 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                className="cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
               >
-                {curso.imagen ? (
-                  <div className="relative h-56 w-full border-b border-slate-100 bg-slate-50">
-                    <OptimizedImage
-                      src={curso.imagen}
-                      alt={curso.nombre}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                      className="object-contain p-3"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3 border-b border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#dcfce7_52%,#f0fdf4_100%)] px-5 py-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-emerald-100 bg-white text-emerald-700 shadow-sm">
-                      <GraduationCap className="h-6 w-6" />
-                    </div>
-                  </div>
-                )}
-
-                <div className="p-5">
-                  <h2 className="text-xl font-semibold text-gray-900">
+                <div className="border-b border-blue-100 bg-[linear-gradient(135deg,#eff6ff_0%,#eefdf7_100%)] p-5">
+                  <span className="inline-flex rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-blue-700 shadow-sm">
+                    {courseAgeLabel(curso.edad_destino)}
+                  </span>
+                  <h2 className="mt-4 text-3xl font-bold leading-tight text-gray-950">
                     {curso.nombre}
                   </h2>
+                </div>
 
+                <div className="p-5">
                   <p className="line-clamp-3 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
                     {curso.descripcion}
                   </p>

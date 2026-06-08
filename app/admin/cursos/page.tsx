@@ -16,12 +16,13 @@ type Curso = {
   descripcion: string
   institucion_id?: number | null
   servicio_id?: number | null
+  edad_destino?: string | null
   responsable: string
   contacto: string
   web_url?: string | null
   instagram_url?: string | null
   facebook_url?: string | null
-  imagen: string | null
+  imagen?: string | null
   premium_galeria?: string[] | null
   destacado?: boolean | null
   estado?: string | null
@@ -50,6 +51,7 @@ type ServicioOption = {
 const initialForm: CursoForm = {
   nombre: "",
   descripcion: "",
+  edad_destino: "todas_las_edades",
   responsable: "",
   contacto: "",
   web_url: "",
@@ -61,6 +63,16 @@ const initialForm: CursoForm = {
   institucion_id: null,
   servicio_id: null,
 }
+
+const courseAgeOptions = [
+  { value: "todas_las_edades", label: "Todas las edades" },
+  { value: "adultos", label: "Adultos" },
+  { value: "ninos", label: "Niños" },
+  { value: "adolescentes", label: "Adolescentes" },
+]
+
+const courseAgeLabel = (value?: string | null) =>
+  courseAgeOptions.find((option) => option.value === value)?.label || "Todas las edades"
 
 export default function AdminCursosPage() {
   const [cursos, setCursos] = useState<Curso[]>([])
@@ -89,7 +101,7 @@ export default function AdminCursosPage() {
     ] = await Promise.all([
       supabase
         .from("cursos")
-        .select("*")
+        .select("id, nombre, descripcion, institucion_id, servicio_id, edad_destino, responsable, contacto, web_url, instagram_url, facebook_url, premium_galeria, destacado, estado, usa_whatsapp")
         .order("id", { ascending: false }),
       supabase.from("share_events").select("item_id").eq("section", "cursos"),
       supabase.from("whatsapp_clicks").select("item_id").eq("section", "cursos"),
@@ -226,15 +238,10 @@ export default function AdminCursosPage() {
     const isDraft = submitMode === "draft"
     const hasContact = formData.contacto.trim().length > 0
 
-    if (!isDraft && !editingCurso && !formData.imagen) {
-      setSaveError("Tenes que cargar una foto para crear un curso o clase.")
-      setLoading(false)
-      return
-    }
-
     const payload = {
       nombre: formData.nombre,
       descripcion: formData.descripcion,
+      edad_destino: formData.edad_destino,
       responsable: formData.responsable,
       contacto: formData.contacto,
       institucion_id: formData.institucion_id || null,
@@ -302,11 +309,22 @@ export default function AdminCursosPage() {
     [servicios]
   )
 
-  const handleEdit = (curso: Curso) => {
+  const handleEdit = async (curso: Curso) => {
+    const { data, error } = await supabase
+      .from("cursos")
+      .select("imagen")
+      .eq("id", curso.id)
+      .maybeSingle()
+
+    if (error) {
+      setSaveError(`No se pudo cargar la imagen del curso: ${error.message}`)
+    }
+
     setEditingCurso(curso)
     setFormData({
       nombre: curso.nombre,
       descripcion: curso.descripcion,
+      edad_destino: curso.edad_destino || "todas_las_edades",
       responsable: curso.responsable,
       contacto: curso.contacto,
       institucion_id: curso.institucion_id ?? null,
@@ -314,7 +332,7 @@ export default function AdminCursosPage() {
       web_url: curso.web_url || "",
       instagram_url: curso.instagram_url || "",
       facebook_url: curso.facebook_url || "",
-      imagen: curso.imagen,
+      imagen: data?.imagen || null,
       premium_galeria: (curso.premium_galeria || []).join("\n"),
       usa_whatsapp: curso.usa_whatsapp ?? true,
     })
@@ -483,6 +501,28 @@ export default function AdminCursosPage() {
                 />
               </div>
 
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-900">
+                  Público del curso
+                </label>
+                <select
+                  value={formData.edad_destino || "todas_las_edades"}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      edad_destino: e.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500"
+                >
+                  {courseAgeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-900">
@@ -647,10 +687,9 @@ export default function AdminCursosPage() {
                   accept="image/*"
                   onChange={handleImageChange}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-violet-50 file:px-4 file:py-2 file:font-medium file:text-violet-700 hover:file:bg-violet-100"
-                  required={!editingCurso && !formData.imagen}
                 />
                 <p className="mt-2 text-sm text-slate-500">
-                  Selecciona una foto para el curso o clase.
+                  Opcional. En la pagina de cursos se mostrara el nombre del curso en grande, sin imagen.
                 </p>
                 {formData.imagen && (
                   <div className="mt-4 space-y-3">
@@ -813,6 +852,10 @@ export default function AdminCursosPage() {
               <div className="mt-4 space-y-2 text-sm text-slate-600">
                 <div className="flex items-center gap-2">
                   <UserRound className="h-4 w-4" />
+                  <span>{courseAgeLabel(curso.edad_destino)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <UserRound className="h-4 w-4" />
                   <span>{curso.responsable}</span>
                 </div>
                 {curso.institucion_id ? (
@@ -890,7 +933,7 @@ export default function AdminCursosPage() {
                 </button>
 
                 <button
-                  onClick={() => handleEdit(curso)}
+                  onClick={() => void handleEdit(curso)}
                   className="rounded-lg p-2 text-violet-600 transition hover:bg-violet-50"
                   title="Editar"
                 >

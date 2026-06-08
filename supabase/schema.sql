@@ -109,6 +109,9 @@ add column if not exists institucion_id bigint;
 alter table public.cursos
 add column if not exists servicio_id bigint;
 
+alter table public.cursos
+add column if not exists edad_destino text default 'todas_las_edades';
+
 alter table public.eventos
 add column if not exists fecha_solo_mes boolean default false;
 
@@ -253,6 +256,7 @@ create table if not exists public.cursos (
   descripcion text not null,
   responsable text not null,
   contacto text not null,
+  edad_destino text default 'todas_las_edades',
   institucion_id bigint,
   plan_suscripcion text,
   estado_suscripcion text default 'pendiente',

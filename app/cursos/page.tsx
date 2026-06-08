@@ -18,7 +18,7 @@ export const metadata: Metadata = buildPageMetadata({
 export default async function CursosPage() {
   const { data } = await supabaseServer
     .from("cursos")
-    .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, imagen, premium_galeria, estado, usa_whatsapp")
+    .select("id, nombre, descripcion, responsable, contacto, edad_destino, web_url, instagram_url, facebook_url, estado, usa_whatsapp")
     .eq("estado", "activo")
     .order("id", { ascending: false })
 

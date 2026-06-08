@@ -11,6 +11,7 @@ type SaveCursoPayload = {
     descripcion?: string
     institucion_id?: number | null
     servicio_id?: number | null
+    edad_destino?: string | null
     responsable?: string
     contacto?: string
     web_url?: string | null
@@ -23,6 +24,13 @@ type SaveCursoPayload = {
     usa_whatsapp?: boolean
   }
 }
+
+const COURSE_AGE_GROUPS = new Set([
+  "adultos",
+  "ninos",
+  "adolescentes",
+  "todas_las_edades",
+])
 
 type DeleteCursoPayload = {
   action: "delete"
@@ -66,6 +74,13 @@ function normalizeTextList(value?: string[] | null) {
   return Array.isArray(value)
     ? value.map((item) => item.trim()).filter(Boolean)
     : []
+}
+
+function normalizeCourseAgeGroup(value?: string | null) {
+  const normalized = value?.trim()
+  return normalized && COURSE_AGE_GROUPS.has(normalized)
+    ? normalized
+    : "todas_las_edades"
 }
 
 export async function POST(request: NextRequest) {
@@ -191,6 +206,7 @@ export async function POST(request: NextRequest) {
       descripcion: body.payload.descripcion?.trim() || "",
       institucion_id: body.payload.institucion_id || null,
       servicio_id: body.payload.servicio_id || null,
+      edad_destino: normalizeCourseAgeGroup(body.payload.edad_destino),
       responsable: body.payload.responsable?.trim() || "",
       contacto: body.payload.contacto?.trim() || "",
       web_url: normalizeUrl(body.payload.web_url),
@@ -213,13 +229,6 @@ export async function POST(request: NextRequest) {
     if (payload.institucion_id && payload.servicio_id) {
       return NextResponse.json(
         { error: "El curso puede estar asociado a una institución o a un servicio, no a ambos al mismo tiempo." },
-        { status: 400 }
-      )
-    }
-
-    if (!body.id && !payload.imagen) {
-      return NextResponse.json(
-        { error: "Tenes que cargar una foto para crear un curso o clase." },
         { status: 400 }
       )
     }
