@@ -8,7 +8,6 @@ type SweepstakesPopupProps = {
   open: boolean
   title?: string
   description: string
-  buttonText?: string
   participants: SweepstakesParticipant[]
   loading?: boolean
   error?: string
@@ -19,14 +18,10 @@ export function SweepstakesPopup({
   open,
   title = "Como participar",
   description,
-  buttonText = "Entendido",
   participants,
   onClose,
 }: SweepstakesPopupProps) {
   if (!open) return null
-
-  const closeButtonText =
-    buttonText.trim().toLowerCase() === "participar" ? "Entendido" : buttonText
 
   return (
     <div className="fixed inset-0 z-[95] overflow-y-auto bg-slate-950/45 p-4">
@@ -90,13 +85,6 @@ export function SweepstakesPopup({
               </div>
             ) : null}
 
-            <button
-              type="button"
-              onClick={onClose}
-              className="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 sm:w-auto"
-            >
-              {closeButtonText}
-            </button>
           </div>
         </div>
       </div>

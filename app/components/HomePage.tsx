@@ -33,6 +33,7 @@ import {
   CloudDrizzle,
   CloudRain,
   CloudSun,
+  Gift,
   GraduationCap,
   Mail,
   MapPin,
@@ -553,7 +554,7 @@ export function HomePage({
   )
   const [contactLeadStatus, setContactLeadStatus] = useState("")
   const sweepstakesPopup = useSweepstakesPopup()
-  const { openHomePopup } = sweepstakesPopup
+  const { loadHomePopupBubble, openHomePopup } = sweepstakesPopup
 
   useEffect(() => {
     return scheduleIdleTask(() => {
@@ -563,9 +564,9 @@ export function HomePage({
 
   useEffect(() => {
     return scheduleIdleTask(() => {
-      void openHomePopup()
+      void loadHomePopupBubble()
     })
-  }, [openHomePopup])
+  }, [loadHomePopupBubble])
 
   const [contactLeadLoading, setContactLeadLoading] = useState(false)
   const [isContactLeadOpen, setIsContactLeadOpen] = useState(false)
@@ -1118,10 +1119,30 @@ export function HomePage({
             open={sweepstakesPopup.open}
             title={sweepstakesPopup.config.title}
             description={sweepstakesPopup.config.description}
-            buttonText={sweepstakesPopup.config.buttonText}
             participants={sweepstakesPopup.config.participants}
             onClose={sweepstakesPopup.closePopup}
           />
+        ) : null}
+
+        {sweepstakesPopup.config && !sweepstakesPopup.open ? (
+          <button
+            type="button"
+            onClick={openHomePopup}
+            className="fixed bottom-5 right-4 z-[80] flex max-w-[calc(100vw-2rem)] items-center gap-3 rounded-full border border-emerald-100 bg-white px-4 py-3 text-left text-slate-900 shadow-[0_18px_45px_-22px_rgba(15,23,42,0.45)] transition hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-[0_22px_52px_-24px_rgba(16,185,129,0.45)] sm:bottom-6 sm:right-6"
+            aria-label="Ver como participar del sorteo"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+              <Gift className="h-5 w-5" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-black text-slate-950">
+                Sorteo Hola Varela
+              </span>
+              <span className="block text-xs font-medium text-slate-600">
+                Tocá para ver cómo participar
+              </span>
+            </span>
+          </button>
         ) : null}
 
         {isDelayedPromoOpen && delayedPromo ? (

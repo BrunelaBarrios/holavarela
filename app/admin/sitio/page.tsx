@@ -546,23 +546,6 @@ export default function AdminSitioPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-900">
-                      Texto del botón de cierre
-                    </label>
-                    <input
-                      type="text"
-                      value={popupData.boton_texto}
-                      onChange={(e) =>
-                        setPopupData((prev) => ({
-                          ...prev,
-                          boton_texto: e.target.value,
-                        }))
-                      }
-                      className="w-full rounded-xl border border-amber-100 bg-white px-4 py-3 outline-none transition focus:border-amber-500"
-                    />
-                  </div>
-
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className="mb-2 block text-sm font-medium text-slate-900">
@@ -688,9 +671,6 @@ export default function AdminSitioPage() {
               </div>
               <div className="mt-2 font-semibold">{popupData.titulo}</div>
               <p className="mt-2 whitespace-pre-line leading-6">{popupData.descripcion}</p>
-              <div className="mt-3 inline-flex rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white">
-                {popupData.boton_texto || "Entendido"}
-              </div>
               <div className="mt-3 text-xs text-slate-500">
                 Desde: {popupData.visible_desde || "sin fecha"} | Hasta: {popupData.visible_hasta || "sin fecha"}
               </div>
@@ -701,3 +681,4 @@ export default function AdminSitioPage() {
     </div>
   )
 }
+

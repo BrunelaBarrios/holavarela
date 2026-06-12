@@ -26,21 +26,24 @@ export function useSweepstakesPopup() {
     setSubmitError("")
   }, [])
 
-  const openHomePopup = useCallback(async () => {
+  const loadHomePopupBubble = useCallback(async () => {
     if (typeof window === "undefined") return
-    if (window.sessionStorage.getItem(HOME_SWEEPSTAKES_POPUP_SESSION_KEY) === "true") {
-      return
-    }
 
     const { fetchHomeSweepstakesPopupConfig } = await import("./sweepstakes")
     const resultConfig = await fetchHomeSweepstakesPopupConfig()
     if (!resultConfig.config) return
 
-    window.sessionStorage.setItem(HOME_SWEEPSTAKES_POPUP_SESSION_KEY, "true")
     setConfig(resultConfig.config)
     setCurrentTotalLikes(3)
     setEntrySource("web")
     setSubmitError("")
+  }, [])
+
+  const openHomePopup = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(HOME_SWEEPSTAKES_POPUP_SESSION_KEY, "true")
+    }
+
     setOpen(true)
   }, [])
 
@@ -94,6 +97,7 @@ export function useSweepstakesPopup() {
     open,
     submitting,
     submitError,
+    loadHomePopupBubble,
     openHomePopup,
     closePopup,
     handleLikeResult,
