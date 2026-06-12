@@ -250,9 +250,9 @@ export async function fetchSweepstakesConfig() {
 
 export async function fetchHomeSweepstakesPopupConfig() {
   const fullSelect =
-    "id, titulo, activo, mostrar_popup_home, descripcion, boton_texto, visible_desde, visible_hasta, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
+    "id, titulo, activo, mostrar_popup_home, descripcion, visible_desde, visible_hasta, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
   const legacySelect =
-    "id, titulo, activo, descripcion, boton_texto, visible_desde, visible_hasta, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
+    "id, titulo, activo, descripcion, visible_desde, visible_hasta, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
   let result: any = await supabase
     .from(SWEEPSTAKES_CONFIG_TABLE)
     .select(fullSelect)

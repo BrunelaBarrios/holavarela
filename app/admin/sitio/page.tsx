@@ -26,7 +26,6 @@ type PopupInicioForm = {
   activo: boolean
   titulo: string
   descripcion: string
-  boton_texto: string
   visible_desde: string
   visible_hasta: string
 }
@@ -49,7 +48,6 @@ const initialPopupForm: PopupInicioForm = {
   activo: false,
   titulo: "Como participar",
   descripcion: "Te contamos como participar del sorteo de Hola Varela.",
-  boton_texto: "Entendido",
   visible_desde: "",
   visible_hasta: "",
 }
@@ -88,7 +86,7 @@ export default function AdminSitioPage() {
           .maybeSingle(),
         supabase
           .from("sorteo_popup_config")
-          .select("id, titulo, activo, mostrar_popup_home, descripcion, boton_texto, visible_desde, visible_hasta, updated_at")
+          .select("id, titulo, activo, mostrar_popup_home, descripcion, visible_desde, visible_hasta, updated_at")
           .order("activo", { ascending: false })
           .order("updated_at", { ascending: false })
           .limit(1),
@@ -142,7 +140,6 @@ export default function AdminSitioPage() {
             activo: true,
             titulo: legacyPopup.titulo || initialPopupForm.titulo,
             descripcion: legacyPopup.descripcion || initialPopupForm.descripcion,
-            boton_texto: initialPopupForm.boton_texto,
             visible_desde: "",
             visible_hasta: "",
           })
@@ -154,7 +151,6 @@ export default function AdminSitioPage() {
           activo?: boolean | null
           mostrar_popup_home?: boolean | null
           descripcion?: string | null
-          boton_texto?: string | null
           visible_desde?: string | null
           visible_hasta?: string | null
         }>)[0]
@@ -165,7 +161,6 @@ export default function AdminSitioPage() {
             activo: popup.mostrar_popup_home !== false,
             titulo: popup.titulo || initialPopupForm.titulo,
             descripcion: popup.descripcion || initialPopupForm.descripcion,
-            boton_texto: popup.boton_texto || initialPopupForm.boton_texto,
             visible_desde: toDateTimeLocal(popup.visible_desde),
             visible_hasta: toDateTimeLocal(popup.visible_hasta),
           })
@@ -250,7 +245,6 @@ export default function AdminSitioPage() {
       titulo: popupData.titulo.trim() || initialPopupForm.titulo,
       mostrar_popup_home: popupData.activo,
       descripcion: popupData.descripcion.trim(),
-      boton_texto: popupData.boton_texto.trim() || initialPopupForm.boton_texto,
       visible_desde: fromDateTimeLocal(popupData.visible_desde),
       visible_hasta: fromDateTimeLocal(popupData.visible_hasta),
       updated_at: new Date().toISOString(),
