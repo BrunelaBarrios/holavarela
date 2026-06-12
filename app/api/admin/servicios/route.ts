@@ -13,6 +13,9 @@ type SaveServicioPayload = {
     descripcion?: string | null
     premium_detalle?: string | null
     premium_galeria?: string[]
+    premium_extra_titulo?: string | null
+    premium_extra_detalle?: string | null
+    premium_extra_galeria?: string[]
     premium_activo?: boolean
     responsable?: string | null
     contacto?: string | null
@@ -207,6 +210,9 @@ export async function POST(request: NextRequest) {
       descripcion: normalizeText(body.payload.descripcion),
       premium_detalle: normalizeText(body.payload.premium_detalle),
       premium_galeria: normalizeGallery(body.payload.premium_galeria),
+      premium_extra_titulo: normalizeText(body.payload.premium_extra_titulo),
+      premium_extra_detalle: normalizeText(body.payload.premium_extra_detalle),
+      premium_extra_galeria: normalizeGallery(body.payload.premium_extra_galeria),
       premium_activo: Boolean(body.payload.premium_activo),
       responsable: normalizeText(body.payload.responsable),
       contacto: normalizeText(body.payload.contacto),

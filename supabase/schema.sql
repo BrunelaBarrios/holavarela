@@ -56,6 +56,15 @@ alter table public.servicios
 add column if not exists premium_galeria text[];
 
 alter table public.servicios
+add column if not exists premium_extra_titulo text;
+
+alter table public.servicios
+add column if not exists premium_extra_detalle text;
+
+alter table public.servicios
+add column if not exists premium_extra_galeria text[];
+
+alter table public.servicios
 add column if not exists premium_activo boolean default false;
 
 alter table public.servicios
@@ -277,6 +286,9 @@ create table if not exists public.servicios (
   estado_suscripcion text default 'pendiente',
   premium_detalle text,
   premium_galeria text[],
+  premium_extra_titulo text,
+  premium_extra_detalle text,
+  premium_extra_galeria text[],
   premium_activo boolean default false,
   responsable text,
   contacto text,

@@ -19,6 +19,9 @@ type Servicio = {
   descripcion: string | null
   premium_detalle?: string | null
   premium_galeria?: string[] | null
+  premium_extra_titulo?: string | null
+  premium_extra_detalle?: string | null
+  premium_extra_galeria?: string[] | null
   premium_activo?: boolean | null
   plan_suscripcion?: SubscriptionPlanKey | null
   estado_suscripcion?: SubscriptionStatusKey | null
@@ -42,6 +45,9 @@ type ServicioForm = {
   descripcion: string
   premium_detalle: string
   premium_galeria: string
+  premium_extra_titulo: string
+  premium_extra_detalle: string
+  premium_extra_galeria: string
   premium_activo: boolean
   responsable: string
   contacto: string
@@ -59,6 +65,9 @@ const initialForm: ServicioForm = {
   descripcion: "",
   premium_detalle: "",
   premium_galeria: "",
+  premium_extra_titulo: "",
+  premium_extra_detalle: "",
+  premium_extra_galeria: "",
   premium_activo: false,
   responsable: "",
   contacto: "",
@@ -158,6 +167,9 @@ export default function AdminServiciosPage() {
       descripcion: servicio.descripcion || "",
       premium_detalle: servicio.premium_detalle || "",
       premium_galeria: (servicio.premium_galeria || []).join("\n"),
+      premium_extra_titulo: servicio.premium_extra_titulo || "",
+      premium_extra_detalle: servicio.premium_extra_detalle || "",
+      premium_extra_galeria: (servicio.premium_extra_galeria || []).join("\n"),
       premium_activo: servicio.premium_activo ?? false,
       responsable: servicio.responsable || "",
       contacto: servicio.contacto || "",
@@ -260,7 +272,8 @@ export default function AdminServiciosPage() {
   }
 
   const handlePremiumGalleryChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: "premium_galeria" | "premium_extra_galeria" = "premium_galeria"
   ) => {
     const files = Array.from(e.target.files || [])
     if (files.length === 0) return
@@ -276,14 +289,14 @@ export default function AdminServiciosPage() {
         )
       )
       setFormData((prev) => {
-        const currentImages = prev.premium_galeria
+        const currentImages = prev[field]
           .split(/\r?\n/)
           .map((item) => item.trim())
           .filter(Boolean)
 
         return {
           ...prev,
-          premium_galeria: [...currentImages, ...nextImages].join("\n"),
+          [field]: [...currentImages, ...nextImages].join("\n"),
         }
       })
     } catch (error) {
@@ -314,6 +327,12 @@ export default function AdminServiciosPage() {
       descripcion: formData.descripcion || null,
       premium_detalle: formData.premium_detalle.trim() || null,
       premium_galeria: formData.premium_galeria
+        .split(/\r?\n/)
+        .map((item) => item.trim())
+        .filter(Boolean),
+      premium_extra_titulo: formData.premium_extra_titulo.trim() || null,
+      premium_extra_detalle: formData.premium_extra_detalle.trim() || null,
+      premium_extra_galeria: formData.premium_extra_galeria
         .split(/\r?\n/)
         .map((item) => item.trim())
         .filter(Boolean),
@@ -595,6 +614,115 @@ export default function AdminServiciosPage() {
                         </button>
                       </div>
                     ) : null}
+                  </div>
+
+                  <div className="rounded-2xl border border-white/80 bg-white/70 p-4">
+                    <div className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
+                      Bloque extra
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-900">
+                          Titulo del bloque extra
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.premium_extra_titulo}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              premium_extra_titulo: e.target.value,
+                            }))
+                          }
+                          disabled={!formData.premium_activo}
+                          className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-900">
+                          Descripcion del bloque extra
+                        </label>
+                        <textarea
+                          value={formData.premium_extra_detalle}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              premium_extra_detalle: e.target.value,
+                            }))
+                          }
+                          disabled={!formData.premium_activo}
+                          className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-900">
+                          Galeria del bloque extra
+                        </label>
+                        <textarea
+                          value={formData.premium_extra_galeria}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              premium_extra_galeria: e.target.value,
+                            }))
+                          }
+                          disabled={!formData.premium_activo}
+                          placeholder={"Una URL por linea\nhttps://..."}
+                          className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                        />
+                        <p className="mt-2 text-xs text-slate-500">
+                          Puedes sumar otra galeria para destacar trabajos, promos o contenido adicional.
+                        </p>
+
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          disabled={!formData.premium_activo}
+                          onChange={(e) => void handlePremiumGalleryChange(e, "premium_extra_galeria")}
+                          className="mt-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-violet-100 file:px-4 file:py-2 file:font-medium file:text-violet-700 hover:file:bg-violet-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+                        />
+
+                        {formData.premium_extra_galeria.trim() ? (
+                          <div className="mt-4 space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              {formData.premium_extra_galeria
+                                .split(/\r?\n/)
+                                .map((item) => item.trim())
+                                .filter(Boolean)
+                                .map((image, index) => (
+                                  <div
+                                    key={`${image}-${index}`}
+                                    className="relative h-28 w-full overflow-hidden rounded-2xl"
+                                  >
+                                    <OptimizedImage
+                                      src={image}
+                                      alt={`Galeria extra ${index + 1}`}
+                                      sizes="(max-width: 768px) 100vw, 50vw"
+                                      className="object-cover"
+                                    />
+                                  </div>
+                                ))}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  premium_extra_galeria: "",
+                                }))
+                              }
+                              className="text-sm font-medium text-red-600 transition hover:text-red-500"
+                            >
+                              Limpiar galeria extra
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
