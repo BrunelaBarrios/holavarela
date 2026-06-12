@@ -948,7 +948,6 @@ export function HomePage({
       }))
     }
 
-    await sweepstakesPopup.handleLikeResult(result)
     setLikingEventId(null)
   }
 
