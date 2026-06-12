@@ -275,7 +275,7 @@ export default function AdminSitioPage() {
         ? "Para mostrar u ocultar juegos y ranking falta aplicar las columnas nuevas de sitio en Supabase."
         : "",
       !savedPopupSettings
-        ? "Para programar el popup falta aplicar las columnas nuevas de sorteo_popup_config en Supabase."
+        ? "Para programar la burbuja falta aplicar la columna nueva mostrar_popup_home en Supabase."
         : "",
     ].filter(Boolean)
 
@@ -483,7 +483,7 @@ export default function AdminSitioPage() {
 
                 {!popupSchemaReady ? (
                   <div className="mb-4 rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm text-amber-800">
-                    Falta aplicar las columnas nuevas en Supabase para guardar programación, botón y fechas.
+                    Falta aplicar la columna nueva mostrar_popup_home en Supabase para guardar si la burbuja aparece en la Home.
                   </div>
                 ) : null}
 
