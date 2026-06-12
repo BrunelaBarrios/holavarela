@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import { CalendarClock, FileText, ImageIcon, QrCode, Save } from "lucide-react"
 import { OptimizedImage } from "../../components/OptimizedImage"
 import { supabase } from "../../supabase"
-import { logAdminActivity } from "../../lib/adminActivity"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 
 const PUBLIC_SITE_URL = "https://www.holavarela.uy"
@@ -48,9 +47,9 @@ const initialForm: SitioForm = {
 const initialPopupForm: PopupInicioForm = {
   id: null,
   activo: false,
-  titulo: "Participa del sorteo",
-  descripcion: "Deja tus datos y participa por premios de Hola Varela.",
-  boton_texto: "Participar",
+  titulo: "Como participar",
+  descripcion: "Te contamos como participar del sorteo de Hola Varela.",
+  boton_texto: "Entendido",
   visible_desde: "",
   visible_hasta: "",
 }
@@ -89,7 +88,8 @@ export default function AdminSitioPage() {
           .maybeSingle(),
         supabase
           .from("sorteo_popup_config")
-          .select("id, titulo, activo, descripcion, boton_texto, visible_desde, visible_hasta, updated_at")
+          .select("id, titulo, activo, mostrar_popup_home, descripcion, boton_texto, visible_desde, visible_hasta, updated_at")
+          .order("activo", { ascending: false })
           .order("updated_at", { ascending: false })
           .limit(1),
       ])
@@ -125,6 +125,7 @@ export default function AdminSitioPage() {
         const legacyPopupResult = await supabase
           .from("sorteo_popup_config")
           .select("id, titulo, activo, descripcion, updated_at")
+          .order("activo", { ascending: false })
           .order("updated_at", { ascending: false })
           .limit(1)
 
@@ -138,7 +139,7 @@ export default function AdminSitioPage() {
         if (legacyPopup) {
           setPopupData({
             id: legacyPopup.id,
-            activo: legacyPopup.activo === true,
+            activo: true,
             titulo: legacyPopup.titulo || initialPopupForm.titulo,
             descripcion: legacyPopup.descripcion || initialPopupForm.descripcion,
             boton_texto: initialPopupForm.boton_texto,
@@ -151,6 +152,7 @@ export default function AdminSitioPage() {
           id: number
           titulo?: string | null
           activo?: boolean | null
+          mostrar_popup_home?: boolean | null
           descripcion?: string | null
           boton_texto?: string | null
           visible_desde?: string | null
@@ -160,7 +162,7 @@ export default function AdminSitioPage() {
         if (popup) {
           setPopupData({
             id: popup.id,
-            activo: popup.activo === true,
+            activo: popup.mostrar_popup_home !== false,
             titulo: popup.titulo || initialPopupForm.titulo,
             descripcion: popup.descripcion || initialPopupForm.descripcion,
             boton_texto: popup.boton_texto || initialPopupForm.boton_texto,
@@ -211,7 +213,6 @@ export default function AdminSitioPage() {
     setSaveError("")
 
     const sitioPayload = {
-      id: 1,
       titulo: formData.titulo,
       texto_1: formData.texto_1,
       texto_2: formData.texto_2,
@@ -220,33 +221,34 @@ export default function AdminSitioPage() {
       mostrar_juegos_home: formData.mostrar_juegos_home,
       mostrar_ranking_juego_home: formData.mostrar_ranking_juego_home,
     }
-    let { error } = await supabase.from("sitio").upsert(sitioPayload)
     let savedHomeGamesVisibility = true
     let savedPopupSettings = true
 
-    if (error?.code === "42703") {
-      const legacyPayload = {
-        id: sitioPayload.id,
-        titulo: sitioPayload.titulo,
-        texto_1: sitioPayload.texto_1,
-        texto_2: sitioPayload.texto_2,
-        texto_3: sitioPayload.texto_3,
-        imagen_url: sitioPayload.imagen_url,
-      }
-      const legacyResult = await supabase.from("sitio").upsert(legacyPayload)
-      error = legacyResult.error
-      savedHomeGamesVisibility = false
-    }
+    const siteResponse = await fetch("/api/admin/sitio", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "save", payload: sitioPayload }),
+    })
+    const siteResult = (await siteResponse.json().catch(() => null)) as {
+      error?: string
+      savedHomeGamesVisibility?: boolean
+    } | null
 
-    if (error) {
-      setSaveError(`No se pudo guardar la configuracion: ${error.message}`)
+    if (!siteResponse.ok || siteResult?.error) {
+      setSaveError(
+        `No se pudo guardar la configuracion: ${
+          siteResult?.error || "intentalo nuevamente."
+        }`
+      )
       setLoading(false)
       return
     }
 
+    savedHomeGamesVisibility = siteResult?.savedHomeGamesVisibility !== false
+
     const popupPayload = {
       titulo: popupData.titulo.trim() || initialPopupForm.titulo,
-      activo: popupData.activo,
+      mostrar_popup_home: popupData.activo,
       descripcion: popupData.descripcion.trim(),
       boton_texto: popupData.boton_texto.trim() || initialPopupForm.boton_texto,
       visible_desde: fromDateTimeLocal(popupData.visible_desde),
@@ -273,13 +275,6 @@ export default function AdminSitioPage() {
     } else {
       savedPopupSettings = false
     }
-
-    await logAdminActivity({
-      action: "Editar",
-      section: "Sitio",
-      target: "Contenido principal",
-      details: "Actualizo textos, imagen o bloques visibles de la home.",
-    })
 
     const pendingMessages = [
       !savedHomeGamesVisibility
@@ -484,7 +479,7 @@ export default function AdminSitioPage() {
                   </div>
                   <div>
                     <h3 className="text-base font-semibold text-slate-950">
-                      Popup de inicio
+                      Burbuja de inicio
                     </h3>
                     <p className="text-sm text-slate-600">
                       Programa cuándo aparece en la Home y qué texto muestra.
@@ -502,10 +497,10 @@ export default function AdminSitioPage() {
                   <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-amber-100 bg-white px-4 py-3">
                     <span>
                       <span className="block text-sm font-medium text-slate-900">
-                        Activar popup en la Home
+                        Activar burbuja informativa en la Home
                       </span>
                       <span className="mt-1 block text-sm text-slate-500">
-                        Si está apagado, no aparece aunque tenga fechas cargadas.
+                        Si está apagada, no aparece aunque tenga fechas cargadas.
                       </span>
                     </span>
                     <input
@@ -553,7 +548,7 @@ export default function AdminSitioPage() {
 
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-900">
-                      Texto del botón
+                      Texto del botón de cierre
                     </label>
                     <input
                       type="text"
@@ -689,12 +684,12 @@ export default function AdminSitioPage() {
             </div>
             <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-slate-700">
               <div className="font-semibold text-slate-900">
-                Popup de inicio: {popupData.activo ? "activo" : "apagado"}
+                Burbuja de inicio: {popupData.activo ? "activa" : "apagada"}
               </div>
               <div className="mt-2 font-semibold">{popupData.titulo}</div>
               <p className="mt-2 whitespace-pre-line leading-6">{popupData.descripcion}</p>
               <div className="mt-3 inline-flex rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white">
-                {popupData.boton_texto || "Participar"}
+                {popupData.boton_texto || "Entendido"}
               </div>
               <div className="mt-3 text-xs text-slate-500">
                 Desde: {popupData.visible_desde || "sin fecha"} | Hasta: {popupData.visible_hasta || "sin fecha"}

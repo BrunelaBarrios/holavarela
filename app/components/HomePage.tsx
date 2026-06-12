@@ -1120,10 +1120,7 @@ export function HomePage({
             description={sweepstakesPopup.config.description}
             buttonText={sweepstakesPopup.config.buttonText}
             participants={sweepstakesPopup.config.participants}
-            loading={sweepstakesPopup.submitting}
-            error={sweepstakesPopup.submitError}
             onClose={sweepstakesPopup.closePopup}
-            onSubmit={sweepstakesPopup.submitEntry}
           />
         ) : null}
 

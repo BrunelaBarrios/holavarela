@@ -170,6 +170,14 @@ const getHomePageData = unstable_cache(
       sitioPromise,
       (async () => {
         try {
+          const { data: siteConfig } = await sitioPromise
+          const shouldLoadRanking =
+            siteConfig && "mostrar_ranking_juego_home" in siteConfig
+              ? siteConfig.mostrar_ranking_juego_home === true
+              : defaultSobreVarela.mostrar_ranking_juego_home === true
+
+          if (!shouldLoadRanking) return []
+
           const { data: activeChallenge } = await supabaseServer
             .from("desafio_config")
             .select("slug")

@@ -32,8 +32,8 @@ export function useSweepstakesPopup() {
       return
     }
 
-    const { fetchSweepstakesConfig } = await import("./sweepstakes")
-    const resultConfig = await fetchSweepstakesConfig()
+    const { fetchHomeSweepstakesPopupConfig } = await import("./sweepstakes")
+    const resultConfig = await fetchHomeSweepstakesPopupConfig()
     if (!resultConfig.config) return
 
     window.sessionStorage.setItem(HOME_SWEEPSTAKES_POPUP_SESSION_KEY, "true")
