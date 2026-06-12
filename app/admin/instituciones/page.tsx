@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Building2, Eye, EyeOff, Pencil, Plus, Star, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
+import { OptimizedImage } from "../../components/OptimizedImage"
 import { supabase } from "../../supabase"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 
@@ -19,12 +20,23 @@ type Institucion = {
   estado?: string | null
   usa_whatsapp?: boolean | null
   destacado?: boolean | null
+  premium_detalle?: string | null
+  premium_galeria?: string[] | null
+  premium_extra_titulo?: string | null
+  premium_extra_detalle?: string | null
+  premium_extra_galeria?: string[] | null
   premium_activo?: boolean | null
   premium_cursos_activo?: boolean | null
   premium_cursos_titulo?: string | null
 }
 
-type InstitucionForm = Omit<Institucion, "id">
+type InstitucionForm = Omit<
+  Institucion,
+  "id" | "premium_galeria" | "premium_extra_galeria"
+> & {
+  premium_galeria: string
+  premium_extra_galeria: string
+}
 
 const initialForm: InstitucionForm = {
   nombre: "",
@@ -37,6 +49,11 @@ const initialForm: InstitucionForm = {
   foto: "",
   usa_whatsapp: true,
   destacado: false,
+  premium_detalle: "",
+  premium_galeria: "",
+  premium_extra_titulo: "",
+  premium_extra_detalle: "",
+  premium_extra_galeria: "",
   premium_activo: false,
   premium_cursos_activo: false,
   premium_cursos_titulo: "",
@@ -55,7 +72,7 @@ export default function AdminInstitucionesPage() {
   const cargarInstituciones = async () => {
     const { data, error } = await supabase
       .from("instituciones")
-      .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, estado, usa_whatsapp, destacado, premium_activo, premium_cursos_activo, premium_cursos_titulo")
+      .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, estado, usa_whatsapp, destacado, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, premium_cursos_activo, premium_cursos_titulo")
       .order("id", { ascending: false })
 
     if (error) {
@@ -105,6 +122,11 @@ export default function AdminInstitucionesPage() {
       foto: data?.foto || "",
       usa_whatsapp: institucion.usa_whatsapp ?? true,
       destacado: institucion.destacado ?? false,
+      premium_detalle: institucion.premium_detalle || "",
+      premium_galeria: (institucion.premium_galeria || []).join("\n"),
+      premium_extra_titulo: institucion.premium_extra_titulo || "",
+      premium_extra_detalle: institucion.premium_extra_detalle || "",
+      premium_extra_galeria: (institucion.premium_extra_galeria || []).join("\n"),
       premium_activo: institucion.premium_activo ?? false,
       premium_cursos_activo: institucion.premium_cursos_activo ?? false,
       premium_cursos_titulo: institucion.premium_cursos_titulo || "",
@@ -203,6 +225,43 @@ export default function AdminInstitucionesPage() {
     }
   }
 
+  const handlePremiumGalleryChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: "premium_galeria" | "premium_extra_galeria" = "premium_galeria"
+  ) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    try {
+      const nextImages = await Promise.all(
+        files.map((file) =>
+          fileToDataUrl(file, {
+            maxWidth: 560,
+            maxHeight: 1120,
+            targetFileSizeBytes: 120 * 1024,
+          })
+        )
+      )
+      setFormData((prev) => {
+        const currentImages = prev[field]
+          .split(/\r?\n/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+
+        return {
+          ...prev,
+          [field]: [...currentImages, ...nextImages].join("\n"),
+        }
+      })
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudieron cargar las fotos premium."
+      )
+    } finally {
+      e.target.value = ""
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -219,6 +278,17 @@ export default function AdminInstitucionesPage() {
       estado: editingInstitucion?.estado ?? "activo",
       usa_whatsapp: formData.usa_whatsapp,
       destacado: formData.destacado ?? false,
+      premium_detalle: formData.premium_detalle?.trim() || null,
+      premium_galeria: formData.premium_galeria
+        .split(/\r?\n/)
+        .map((item) => item.trim())
+        .filter(Boolean),
+      premium_extra_titulo: formData.premium_extra_titulo?.trim() || null,
+      premium_extra_detalle: formData.premium_extra_detalle?.trim() || null,
+      premium_extra_galeria: formData.premium_extra_galeria
+        .split(/\r?\n/)
+        .map((item) => item.trim())
+        .filter(Boolean),
       premium_activo: formData.premium_activo ?? false,
       premium_cursos_activo: formData.premium_cursos_activo ?? false,
       premium_cursos_titulo: formData.premium_cursos_titulo?.trim() || null,
@@ -385,6 +455,189 @@ export default function AdminInstitucionesPage() {
                 />
                 <span>Perfil premium activo para esta institución</span>
               </label>
+
+              <div className="rounded-2xl border border-violet-200 bg-violet-50/70 p-4">
+                <div className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
+                  Bloques premium
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Descripcion ampliada
+                    </label>
+                    <textarea
+                      value={formData.premium_detalle || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          premium_detalle: e.target.value,
+                        }))
+                      }
+                      disabled={!formData.premium_activo}
+                      className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Fotos del bloque premium
+                    </label>
+                    <textarea
+                      value={formData.premium_galeria}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          premium_galeria: e.target.value,
+                        }))
+                      }
+                      disabled={!formData.premium_activo}
+                      placeholder={"Una URL por linea\nhttps://..."}
+                      className="h-24 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                    />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      disabled={!formData.premium_activo}
+                      onChange={handlePremiumGalleryChange}
+                      className="mt-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-violet-100 file:px-4 file:py-2 file:font-medium file:text-violet-700 hover:file:bg-violet-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+                    />
+
+                    {formData.premium_galeria.trim() ? (
+                      <div className="mt-4 space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          {formData.premium_galeria
+                            .split(/\r?\n/)
+                            .map((item) => item.trim())
+                            .filter(Boolean)
+                            .map((image, index) => (
+                              <div key={`${image}-${index}`} className="relative h-28 w-full overflow-hidden rounded-2xl">
+                                <OptimizedImage
+                                  src={image}
+                                  alt={`Foto premium ${index + 1}`}
+                                  sizes="(max-width: 768px) 100vw, 50vw"
+                                  className="object-cover"
+                                />
+                              </div>
+                            ))}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData((prev) => ({ ...prev, premium_galeria: "" }))
+                          }
+                          className="text-sm font-medium text-red-600 transition hover:text-red-500"
+                        >
+                          Limpiar fotos premium
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="rounded-2xl border border-white/80 bg-white/70 p-4">
+                    <div className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-violet-700">
+                      Bloque extra
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-900">
+                          Titulo del bloque extra
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.premium_extra_titulo || ""}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              premium_extra_titulo: e.target.value,
+                            }))
+                          }
+                          disabled={!formData.premium_activo}
+                          className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-900">
+                          Descripcion del bloque extra
+                        </label>
+                        <textarea
+                          value={formData.premium_extra_detalle || ""}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              premium_extra_detalle: e.target.value,
+                            }))
+                          }
+                          disabled={!formData.premium_activo}
+                          className="h-24 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-slate-900">
+                          Fotos del bloque extra
+                        </label>
+                        <textarea
+                          value={formData.premium_extra_galeria}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              premium_extra_galeria: e.target.value,
+                            }))
+                          }
+                          disabled={!formData.premium_activo}
+                          placeholder={"Una URL por linea\nhttps://..."}
+                          className="h-24 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                        />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          disabled={!formData.premium_activo}
+                          onChange={(e) => void handlePremiumGalleryChange(e, "premium_extra_galeria")}
+                          className="mt-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-violet-100 file:px-4 file:py-2 file:font-medium file:text-violet-700 hover:file:bg-violet-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+                        />
+
+                        {formData.premium_extra_galeria.trim() ? (
+                          <div className="mt-4 space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                              {formData.premium_extra_galeria
+                                .split(/\r?\n/)
+                                .map((item) => item.trim())
+                                .filter(Boolean)
+                                .map((image, index) => (
+                                  <div key={`${image}-${index}`} className="relative h-28 w-full overflow-hidden rounded-2xl">
+                                    <OptimizedImage
+                                      src={image}
+                                      alt={`Foto extra ${index + 1}`}
+                                      sizes="(max-width: 768px) 100vw, 50vw"
+                                      className="object-cover"
+                                    />
+                                  </div>
+                                ))}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  premium_extra_galeria: "",
+                                }))
+                              }
+                              className="text-sm font-medium text-red-600 transition hover:text-red-500"
+                            >
+                              Limpiar fotos extra
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
                 <label className="flex items-center gap-3 text-sm text-emerald-800">
