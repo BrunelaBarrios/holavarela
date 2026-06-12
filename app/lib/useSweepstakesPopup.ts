@@ -6,6 +6,7 @@ import { HOME_SWEEPSTAKES_POPUP_SESSION_KEY } from "./localStorageKeys"
 import type { SweepstakesConfig, SweepstakesEntrySource } from "./sweepstakes"
 
 const SWEEPSTAKES_THRESHOLD = 3
+type SweepstakesPopupMode = "info" | "entry"
 
 type EventLikeResult = {
   status: "liked" | "exists" | "error"
@@ -18,6 +19,7 @@ export function useSweepstakesPopup() {
   const [open, setOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
+  const [mode, setMode] = useState<SweepstakesPopupMode>("info")
   const [currentTotalLikes, setCurrentTotalLikes] = useState(0)
   const [entrySource, setEntrySource] = useState<SweepstakesEntrySource>("corazones")
 
@@ -36,6 +38,7 @@ export function useSweepstakesPopup() {
     setConfig(resultConfig.config)
     setCurrentTotalLikes(3)
     setEntrySource("web")
+    setMode("info")
     setSubmitError("")
   }, [])
 
@@ -44,6 +47,7 @@ export function useSweepstakesPopup() {
       window.sessionStorage.setItem(HOME_SWEEPSTAKES_POPUP_SESSION_KEY, "true")
     }
 
+    setMode("info")
     setOpen(true)
   }, [])
 
@@ -62,6 +66,7 @@ export function useSweepstakesPopup() {
     setConfig(resultConfig.config)
     setCurrentTotalLikes(totalLikes)
     setEntrySource("corazones")
+    setMode("entry")
     setSubmitError("")
     setOpen(true)
   }, [])
@@ -95,6 +100,7 @@ export function useSweepstakesPopup() {
   return {
     config,
     open,
+    mode,
     submitting,
     submitError,
     loadHomePopupBubble,

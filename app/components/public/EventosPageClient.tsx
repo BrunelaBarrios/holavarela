@@ -184,7 +184,11 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
           title={sweepstakesPopup.config.title}
           description={sweepstakesPopup.config.description}
           participants={sweepstakesPopup.config.participants}
+          mode={sweepstakesPopup.mode}
+          loading={sweepstakesPopup.submitting}
+          error={sweepstakesPopup.submitError}
           onClose={sweepstakesPopup.closePopup}
+          onSubmit={sweepstakesPopup.submitEntry}
         />
       ) : null}
 
