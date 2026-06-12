@@ -137,13 +137,13 @@ export function SweepstakesLandingPage({ sorteoId }: { sorteoId?: number }) {
                           href={participant.href}
                           className="overflow-hidden rounded-[24px] border border-slate-200 bg-slate-50 transition hover:-translate-y-0.5 hover:shadow-md"
                         >
-                          <div className="relative h-40 w-full bg-slate-100">
+                          <div className="relative h-40 w-full bg-white p-4">
                             {participant.imageSrc ? (
                               <OptimizedImage
                                 src={participant.imageSrc}
                                 alt={participant.nombre}
                                 sizes="(max-width: 768px) 100vw, 33vw"
-                                className="object-cover"
+                                className="object-contain"
                               />
                             ) : (
                               <div className="flex h-full items-center justify-center text-sm text-slate-400">

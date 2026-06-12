@@ -93,13 +93,13 @@ export function SweepstakesPopup({
                         key={`${participant.type}-${participant.id}`}
                         className="overflow-hidden rounded-[20px] border border-slate-100 bg-white"
                       >
-                        <div className="relative h-24 w-full bg-slate-100">
+                        <div className="relative h-24 w-full bg-white p-3">
                           {participant.imageSrc ? (
                             <OptimizedImage
                               src={participant.imageSrc}
                               alt={participant.nombre}
                               sizes="(max-width: 768px) 100vw, 25vw"
-                              className="object-cover"
+                              className="object-contain"
                             />
                           ) : (
                             <div className="flex h-full items-center justify-center text-sm text-slate-400">
