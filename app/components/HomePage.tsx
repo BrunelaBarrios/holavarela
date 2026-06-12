@@ -844,17 +844,8 @@ export function HomePage({
   }, [initialData.allCursos, initialData.allServicios, initialData.featuredBusinesses])
 
   useEffect(() => {
-    if (!delayedPromoConfig.enabled || !delayedPromo) return
-    if (typeof window === "undefined") return
-    if (window.sessionStorage.getItem(DELAYED_PROMO_SESSION_KEY) === "true") return
-
-    const timeoutId = window.setTimeout(() => {
-      window.sessionStorage.setItem(DELAYED_PROMO_SESSION_KEY, "true")
-      setIsDelayedPromoOpen(true)
-    }, delayedPromoConfig.delaySeconds * 1000)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [delayedPromo, delayedPromoConfig.delaySeconds, delayedPromoConfig.enabled])
+    setIsDelayedPromoOpen(false)
+  }, [])
 
   const WeatherIcon = useMemo(() => {
     if (!weather) return CloudSun
