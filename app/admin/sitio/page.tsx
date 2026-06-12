@@ -86,7 +86,7 @@ export default function AdminSitioPage() {
           .maybeSingle(),
         supabase
           .from("sorteo_popup_config")
-          .select("id, titulo, activo, mostrar_popup_home, descripcion, visible_desde, visible_hasta, updated_at")
+          .select("id, titulo, titulo_popup_home, activo, mostrar_popup_home, descripcion, descripcion_popup_home, visible_desde, visible_hasta, updated_at")
           .order("activo", { ascending: false })
           .order("updated_at", { ascending: false })
           .limit(1),
@@ -148,9 +148,11 @@ export default function AdminSitioPage() {
         const popup = ((popupResult.data || []) as Array<{
           id: number
           titulo?: string | null
+          titulo_popup_home?: string | null
           activo?: boolean | null
           mostrar_popup_home?: boolean | null
           descripcion?: string | null
+          descripcion_popup_home?: string | null
           visible_desde?: string | null
           visible_hasta?: string | null
         }>)[0]
@@ -159,8 +161,11 @@ export default function AdminSitioPage() {
           setPopupData({
             id: popup.id,
             activo: popup.mostrar_popup_home !== false,
-            titulo: popup.titulo || initialPopupForm.titulo,
-            descripcion: popup.descripcion || initialPopupForm.descripcion,
+            titulo: popup.titulo_popup_home || popup.titulo || initialPopupForm.titulo,
+            descripcion:
+              popup.descripcion_popup_home ||
+              popup.descripcion ||
+              initialPopupForm.descripcion,
             visible_desde: toDateTimeLocal(popup.visible_desde),
             visible_hasta: toDateTimeLocal(popup.visible_hasta),
           })
@@ -242,9 +247,9 @@ export default function AdminSitioPage() {
     savedHomeGamesVisibility = siteResult?.savedHomeGamesVisibility !== false
 
     const popupPayload = {
-      titulo: popupData.titulo.trim() || initialPopupForm.titulo,
+      titulo_popup_home: popupData.titulo.trim() || initialPopupForm.titulo,
       mostrar_popup_home: popupData.activo,
-      descripcion: popupData.descripcion.trim(),
+      descripcion_popup_home: popupData.descripcion.trim(),
       visible_desde: fromDateTimeLocal(popupData.visible_desde),
       visible_hasta: fromDateTimeLocal(popupData.visible_hasta),
       updated_at: new Date().toISOString(),
@@ -275,7 +280,7 @@ export default function AdminSitioPage() {
         ? "Para mostrar u ocultar juegos y ranking falta aplicar las columnas nuevas de sitio en Supabase."
         : "",
       !savedPopupSettings
-        ? "Para programar la burbuja falta aplicar la columna nueva mostrar_popup_home en Supabase."
+        ? "Para programar la burbuja falta aplicar las columnas nuevas mostrar_popup_home, titulo_popup_home y descripcion_popup_home en Supabase."
         : "",
     ].filter(Boolean)
 
@@ -483,7 +488,7 @@ export default function AdminSitioPage() {
 
                 {!popupSchemaReady ? (
                   <div className="mb-4 rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm text-amber-800">
-                    Falta aplicar la columna nueva mostrar_popup_home en Supabase para guardar si la burbuja aparece en la Home.
+                    Falta aplicar las columnas nuevas en Supabase para guardar la burbuja de la Home sin cambiar el texto del sorteo.
                   </div>
                 ) : null}
 
@@ -512,7 +517,7 @@ export default function AdminSitioPage() {
 
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-900">
-                      Título del popup
+                      Título de la burbuja
                     </label>
                     <input
                       type="text"
@@ -526,7 +531,7 @@ export default function AdminSitioPage() {
 
                   <div>
                     <label className="mb-2 block text-sm font-medium text-slate-900">
-                      Texto del popup
+                      Texto de la burbuja
                     </label>
                     <textarea
                       value={popupData.descripcion}

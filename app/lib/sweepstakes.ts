@@ -8,9 +8,11 @@ export type SweepstakesParticipantType = "comercio" | "servicio" | "institucion"
 type SweepstakesConfigRow = {
   id: number
   titulo: string | null
+  titulo_popup_home?: string | null
   activo: boolean | null
   mostrar_popup_home?: boolean | null
   descripcion: string | null
+  descripcion_popup_home?: string | null
   boton_texto?: string | null
   visible_desde?: string | null
   visible_hasta?: string | null
@@ -84,7 +86,18 @@ async function buildSweepstakesConfigFromRow(
   row: SweepstakesConfigRow | null,
   options: { requireHomePopup?: boolean } = {}
 ) {
-  if (!row?.activo || !row.descripcion?.trim()) {
+  if (!row?.activo) {
+    return { config: null as SweepstakesConfig | null, error: null }
+  }
+
+  const baseTitle = row.titulo?.trim() || "Como participar"
+  const baseDescription = row.descripcion?.trim() || ""
+  const homeTitle = row.titulo_popup_home?.trim() || baseTitle
+  const homeDescription = row.descripcion_popup_home?.trim() || baseDescription
+  const title = options.requireHomePopup ? homeTitle : baseTitle
+  const description = options.requireHomePopup ? homeDescription : baseDescription
+
+  if (!description) {
     return { config: null as SweepstakesConfig | null, error: null }
   }
 
@@ -109,8 +122,8 @@ async function buildSweepstakesConfigFromRow(
     return {
       config: {
         id: row.id,
-        title: row.titulo?.trim() || "Como participar",
-        description: row.descripcion.trim(),
+        title,
+        description,
         buttonText: row.boton_texto?.trim() || "Entendido",
         participants: [],
       },
@@ -202,8 +215,8 @@ async function buildSweepstakesConfigFromRow(
   return {
     config: {
       id: row.id,
-      title: row.titulo?.trim() || "Como participar",
-      description: row.descripcion.trim(),
+      title,
+      description,
       buttonText: row.boton_texto?.trim() || "Entendido",
       participants: participantRefs
         .map((item) => participantMap.get(`${item.type}:${item.id}`))
@@ -250,7 +263,7 @@ export async function fetchSweepstakesConfig() {
 
 export async function fetchHomeSweepstakesPopupConfig() {
   const fullSelect =
-    "id, titulo, activo, mostrar_popup_home, descripcion, visible_desde, visible_hasta, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
+    "id, titulo, titulo_popup_home, activo, mostrar_popup_home, descripcion, descripcion_popup_home, visible_desde, visible_hasta, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
   const legacySelect =
     "id, titulo, activo, descripcion, visible_desde, visible_hasta, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
   let result: any = await supabase
