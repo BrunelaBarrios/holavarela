@@ -32,6 +32,17 @@ export function ShareButton({
   }, [feedback])
 
   const handleShare = async () => {
+    const fallbackToClipboard = async () => {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url)
+        setFeedback("copied")
+        return
+      }
+
+      setFeedback("copied")
+      window.prompt("Copia este enlace:", url)
+    }
+
     trackAnalyticsEvent("share_click", {
       content_section: section,
       item_id: itemId,
@@ -45,22 +56,32 @@ export function ShareButton({
     }
 
     try {
-      if (navigator.share) {
-        await navigator.share({ title, text, url })
+      const cleanTitle = title.trim()
+      const cleanText = text?.trim()
+      const shareData: ShareData = {
+        title: cleanTitle,
+        ...(cleanText ? { text: cleanText } : {}),
+        url,
+      }
+
+      if (
+        navigator.share &&
+        (!navigator.canShare || navigator.canShare(shareData))
+      ) {
+        await navigator.share(shareData)
         return
       }
 
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url)
-        setFeedback("copied")
-        return
-      }
-
-      setFeedback("copied")
-      window.prompt("Copiá este enlace:", url)
+      await fallbackToClipboard()
     } catch (error) {
       if (error instanceof Error && error.name === "AbortError") return
-      window.alert("No se pudo compartir este contenido.")
+
+      try {
+        await fallbackToClipboard()
+      } catch (clipboardError) {
+        console.error("No se pudo copiar el enlace:", clipboardError)
+        window.prompt("Copia este enlace:", url)
+      }
     }
   }
 

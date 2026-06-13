@@ -39,9 +39,7 @@ const courseAgeLabel = (value?: string | null) =>
 
 const ageFilterOptions = [
   { value: "todos", label: "Todos" },
-  { value: "ninos", label: "Niños" },
-  { value: "adultos", label: "Adultos" },
-  { value: "todas_las_edades", label: "Todas las edades" },
+  ...courseAgeOptions,
 ]
 
 export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) {
