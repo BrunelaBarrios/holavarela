@@ -218,7 +218,9 @@ export async function POST(request: NextRequest) {
       facebook_url: normalizeUrl(body.payload.facebook_url),
       estado: body.payload.estado || "activo",
       usa_whatsapp: Boolean(body.payload.usa_whatsapp),
-      destacado: Boolean(body.payload.destacado),
+      ...(body.payload.destacado !== undefined
+        ? { destacado: Boolean(body.payload.destacado) }
+        : {}),
       premium_detalle: normalizeText(body.payload.premium_detalle),
       premium_galeria: normalizeGallery(body.payload.premium_galeria),
       premium_extra_titulo: normalizeText(body.payload.premium_extra_titulo),

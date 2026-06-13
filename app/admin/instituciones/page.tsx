@@ -68,12 +68,25 @@ export default function AdminInstitucionesPage() {
   const [loading, setLoading] = useState(false)
   const [saveError, setSaveError] = useState("")
   const [deletingInstitucion, setDeletingInstitucion] = useState<Institucion | null>(null)
+  const [featuredSchemaReady, setFeaturedSchemaReady] = useState(true)
 
   const cargarInstituciones = async () => {
-    const { data, error } = await supabase
+    let result: any = await supabase
       .from("instituciones")
       .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, estado, usa_whatsapp, destacado, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, premium_cursos_activo, premium_cursos_titulo")
       .order("id", { ascending: false })
+
+    if (result.error?.code === "42703" && result.error.message.includes("destacado")) {
+      setFeaturedSchemaReady(false)
+      result = await supabase
+        .from("instituciones")
+        .select("id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, estado, usa_whatsapp, premium_detalle, premium_galeria, premium_extra_titulo, premium_extra_detalle, premium_extra_galeria, premium_activo, premium_cursos_activo, premium_cursos_titulo")
+        .order("id", { ascending: false })
+    } else {
+      setFeaturedSchemaReady(true)
+    }
+
+    const { data, error } = result
 
     if (error) {
       setSaveError(`Error al cargar instituciones: ${error.message}`)
@@ -277,7 +290,7 @@ export default function AdminInstitucionesPage() {
       facebook_url: formData.facebook_url?.trim() || null,
       estado: editingInstitucion?.estado ?? "activo",
       usa_whatsapp: formData.usa_whatsapp,
-      destacado: formData.destacado ?? false,
+      ...(featuredSchemaReady ? { destacado: formData.destacado ?? false } : {}),
       premium_detalle: formData.premium_detalle?.trim() || null,
       premium_galeria: formData.premium_galeria
         .split(/\r?\n/)
@@ -880,17 +893,19 @@ export default function AdminInstitucionesPage() {
                   )}
                 </button>
 
-                <button
-                  onClick={() => toggleFeatured(institucion)}
-                  className={`rounded-lg p-2 transition ${
-                    institucion.destacado
-                      ? "bg-amber-50 text-amber-700"
-                      : "text-slate-500 hover:bg-slate-100"
-                  }`}
-                  title="Destacar"
-                >
-                  <Star className={`h-4 w-4 ${institucion.destacado ? "fill-current" : ""}`} />
-                </button>
+                {featuredSchemaReady ? (
+                  <button
+                    onClick={() => toggleFeatured(institucion)}
+                    className={`rounded-lg p-2 transition ${
+                      institucion.destacado
+                        ? "bg-amber-50 text-amber-700"
+                        : "text-slate-500 hover:bg-slate-100"
+                    }`}
+                    title="Destacar"
+                  >
+                    <Star className={`h-4 w-4 ${institucion.destacado ? "fill-current" : ""}`} />
+                  </button>
+                ) : null}
 
                 <button
                   onClick={() => void handleEdit(institucion)}
