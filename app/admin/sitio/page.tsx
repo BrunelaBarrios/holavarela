@@ -22,12 +22,26 @@ type SitioForm = {
 }
 
 type PopupInicioForm = {
-  id: number | null
   activo: boolean
   titulo: string
   descripcion: string
   visible_desde: string
   visible_hasta: string
+}
+
+type SitioConfigRow = {
+  titulo?: string | null
+  texto_1?: string | null
+  texto_2?: string | null
+  texto_3?: string | null
+  imagen_url?: string | null
+  mostrar_juegos_home?: boolean | null
+  mostrar_ranking_juego_home?: boolean | null
+  burbuja_home_activa?: boolean | null
+  burbuja_home_titulo?: string | null
+  burbuja_home_texto?: string | null
+  burbuja_home_visible_desde?: string | null
+  burbuja_home_visible_hasta?: string | null
 }
 
 const initialForm: SitioForm = {
@@ -44,10 +58,9 @@ const initialForm: SitioForm = {
 }
 
 const initialPopupForm: PopupInicioForm = {
-  id: null,
   activo: false,
   titulo: "Como participar",
-  descripcion: "Te contamos como participar del sorteo de Hola Varela.",
+  descripcion: "Te contamos como participar en las propuestas de Hola Varela.",
   visible_desde: "",
   visible_hasta: "",
 }
@@ -78,19 +91,11 @@ export default function AdminSitioPage() {
 
   useEffect(() => {
     const cargarConfiguracion = async () => {
-      const [result, popupResult] = await Promise.all([
-        supabase
-          .from("sitio")
-          .select("titulo, texto_1, texto_2, texto_3, imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home")
-          .eq("id", 1)
-          .maybeSingle(),
-        supabase
-          .from("sorteo_popup_config")
-          .select("id, titulo, titulo_popup_home, activo, mostrar_popup_home, descripcion, descripcion_popup_home, visible_desde, visible_hasta, updated_at")
-          .order("activo", { ascending: false })
-          .order("updated_at", { ascending: false })
-          .limit(1),
-      ])
+      const result = await supabase
+        .from("sitio")
+        .select("titulo, texto_1, texto_2, texto_3, imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home, burbuja_home_activa, burbuja_home_titulo, burbuja_home_texto, burbuja_home_visible_desde, burbuja_home_visible_hasta")
+        .eq("id", 1)
+        .maybeSingle()
       const { data, error } =
         result.error?.code === "42703"
           ? await supabase
@@ -101,74 +106,34 @@ export default function AdminSitioPage() {
           : result
 
       if (!error && data) {
+        const siteData = data as SitioConfigRow
+
         setFormData({
-          titulo: data.titulo || initialForm.titulo,
-          texto_1: data.texto_1 || initialForm.texto_1,
-          texto_2: data.texto_2 || initialForm.texto_2,
-          texto_3: data.texto_3 || initialForm.texto_3,
-          imagen_url: data.imagen_url || "",
+          titulo: siteData.titulo || initialForm.titulo,
+          texto_1: siteData.texto_1 || initialForm.texto_1,
+          texto_2: siteData.texto_2 || initialForm.texto_2,
+          texto_3: siteData.texto_3 || initialForm.texto_3,
+          imagen_url: siteData.imagen_url || "",
           mostrar_juegos_home:
-            "mostrar_juegos_home" in data ? data.mostrar_juegos_home !== false : true,
+            "mostrar_juegos_home" in siteData
+              ? siteData.mostrar_juegos_home !== false
+              : true,
           mostrar_ranking_juego_home:
-            "mostrar_ranking_juego_home" in data
-              ? data.mostrar_ranking_juego_home === true
+            "mostrar_ranking_juego_home" in siteData
+              ? siteData.mostrar_ranking_juego_home === true
               : false,
         })
-      }
 
-      if (popupResult.error?.code === "42P01") {
-        setPopupSchemaReady(false)
-      } else if (popupResult.error?.code === "42703") {
-        setPopupSchemaReady(false)
-        const legacyPopupResult = await supabase
-          .from("sorteo_popup_config")
-          .select("id, titulo, activo, descripcion, updated_at")
-          .order("activo", { ascending: false })
-          .order("updated_at", { ascending: false })
-          .limit(1)
-
-        const legacyPopup = ((legacyPopupResult.data || []) as Array<{
-          id: number
-          titulo?: string | null
-          activo?: boolean | null
-          descripcion?: string | null
-        }>)[0]
-
-        if (legacyPopup) {
+        if ("burbuja_home_activa" in siteData) {
           setPopupData({
-            id: legacyPopup.id,
-            activo: true,
-            titulo: legacyPopup.titulo || initialPopupForm.titulo,
-            descripcion: legacyPopup.descripcion || initialPopupForm.descripcion,
-            visible_desde: "",
-            visible_hasta: "",
+            activo: siteData.burbuja_home_activa === true,
+            titulo: siteData.burbuja_home_titulo || initialPopupForm.titulo,
+            descripcion: siteData.burbuja_home_texto || initialPopupForm.descripcion,
+            visible_desde: toDateTimeLocal(siteData.burbuja_home_visible_desde),
+            visible_hasta: toDateTimeLocal(siteData.burbuja_home_visible_hasta),
           })
-        }
-      } else if (!popupResult.error) {
-        const popup = ((popupResult.data || []) as Array<{
-          id: number
-          titulo?: string | null
-          titulo_popup_home?: string | null
-          activo?: boolean | null
-          mostrar_popup_home?: boolean | null
-          descripcion?: string | null
-          descripcion_popup_home?: string | null
-          visible_desde?: string | null
-          visible_hasta?: string | null
-        }>)[0]
-
-        if (popup) {
-          setPopupData({
-            id: popup.id,
-            activo: popup.mostrar_popup_home !== false,
-            titulo: popup.titulo_popup_home || popup.titulo || initialPopupForm.titulo,
-            descripcion:
-              popup.descripcion_popup_home ||
-              popup.descripcion ||
-              initialPopupForm.descripcion,
-            visible_desde: toDateTimeLocal(popup.visible_desde),
-            visible_hasta: toDateTimeLocal(popup.visible_hasta),
-          })
+        } else {
+          setPopupSchemaReady(false)
         }
       }
 
@@ -220,6 +185,11 @@ export default function AdminSitioPage() {
       imagen_url: formData.imagen_url || null,
       mostrar_juegos_home: formData.mostrar_juegos_home,
       mostrar_ranking_juego_home: formData.mostrar_ranking_juego_home,
+      burbuja_home_activa: popupData.activo,
+      burbuja_home_titulo: popupData.titulo.trim() || initialPopupForm.titulo,
+      burbuja_home_texto: popupData.descripcion.trim(),
+      burbuja_home_visible_desde: fromDateTimeLocal(popupData.visible_desde),
+      burbuja_home_visible_hasta: fromDateTimeLocal(popupData.visible_hasta),
     }
     let savedHomeGamesVisibility = true
     let savedPopupSettings = true
@@ -232,6 +202,7 @@ export default function AdminSitioPage() {
     const siteResult = (await siteResponse.json().catch(() => null)) as {
       error?: string
       savedHomeGamesVisibility?: boolean
+      savedHomeBubbleSettings?: boolean
     } | null
 
     if (!siteResponse.ok || siteResult?.error) {
@@ -245,42 +216,15 @@ export default function AdminSitioPage() {
     }
 
     savedHomeGamesVisibility = siteResult?.savedHomeGamesVisibility !== false
-
-    const popupPayload = {
-      titulo_popup_home: popupData.titulo.trim() || initialPopupForm.titulo,
-      mostrar_popup_home: popupData.activo,
-      descripcion_popup_home: popupData.descripcion.trim(),
-      visible_desde: fromDateTimeLocal(popupData.visible_desde),
-      visible_hasta: fromDateTimeLocal(popupData.visible_hasta),
-      updated_at: new Date().toISOString(),
-    }
-
-    if (popupSchemaReady) {
-      const popupQuery = popupData.id
-        ? supabase.from("sorteo_popup_config").update(popupPayload).eq("id", popupData.id).select("id").single()
-        : supabase.from("sorteo_popup_config").insert(popupPayload).select("id").single()
-      const { data: savedPopup, error: popupError } = await popupQuery
-
-      if (popupError?.code === "42703" || popupError?.code === "42P01") {
-        savedPopupSettings = false
-        setPopupSchemaReady(false)
-      } else if (popupError) {
-        setSaveError(`No se pudo guardar el popup: ${popupError.message}`)
-        setLoading(false)
-        return
-      } else if (savedPopup?.id) {
-        setPopupData((prev) => ({ ...prev, id: Number(savedPopup.id) }))
-      }
-    } else {
-      savedPopupSettings = false
-    }
+    savedPopupSettings = siteResult?.savedHomeBubbleSettings !== false
+    setPopupSchemaReady(savedPopupSettings)
 
     const pendingMessages = [
       !savedHomeGamesVisibility
         ? "Para mostrar u ocultar juegos y ranking falta aplicar las columnas nuevas de sitio en Supabase."
         : "",
       !savedPopupSettings
-        ? "Para programar la burbuja falta aplicar las columnas nuevas mostrar_popup_home, titulo_popup_home y descripcion_popup_home en Supabase."
+        ? "Para programar la burbuja falta aplicar las columnas nuevas burbuja_home_* en Supabase."
         : "",
     ].filter(Boolean)
 
@@ -488,7 +432,7 @@ export default function AdminSitioPage() {
 
                 {!popupSchemaReady ? (
                   <div className="mb-4 rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm text-amber-800">
-                    Falta aplicar las columnas nuevas en Supabase para guardar la burbuja de la Home sin cambiar el texto del sorteo.
+                    Falta aplicar las columnas nuevas en Supabase para guardar la burbuja informativa de la Home.
                   </div>
                 ) : null}
 

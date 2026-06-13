@@ -63,7 +63,7 @@ export function SweepstakesPopup({
             type="button"
             onClick={onClose}
             className="absolute right-4 top-4 z-10 rounded-full border border-slate-200 bg-white/95 p-2 text-slate-600 shadow-sm transition hover:text-slate-900"
-            aria-label="Cerrar aviso del sorteo"
+            aria-label={isEntryMode ? "Cerrar aviso del sorteo" : "Cerrar aviso informativo"}
           >
             <X className="h-5 w-5" />
           </button>
@@ -72,7 +72,7 @@ export function SweepstakesPopup({
             <div className="bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#eef8f2_42%,#f8fbff_100%)] p-6 sm:p-8">
               <div className="inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
                 {isEntryMode ? <Gift className="h-4 w-4" /> : <Info className="h-4 w-4" />}
-                Sorteo Hola Varela
+                {isEntryMode ? "Sorteo Hola Varela" : "Como participar"}
               </div>
 
               <h2 className="mt-5 pr-8 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
@@ -82,7 +82,7 @@ export function SweepstakesPopup({
                 {description}
               </p>
 
-              {participants.length ? (
+              {isEntryMode && participants.length ? (
                 <div className="mt-6 rounded-[24px] border border-white/80 bg-white/85 p-4 shadow-sm">
                   <div className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Premios de

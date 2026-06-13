@@ -259,6 +259,21 @@ add column if not exists mostrar_juegos_home boolean not null default true;
 alter table public.sitio
 add column if not exists mostrar_ranking_juego_home boolean not null default false;
 
+alter table public.sitio
+add column if not exists burbuja_home_activa boolean not null default false;
+
+alter table public.sitio
+add column if not exists burbuja_home_titulo text;
+
+alter table public.sitio
+add column if not exists burbuja_home_texto text;
+
+alter table public.sitio
+add column if not exists burbuja_home_visible_desde timestamp with time zone;
+
+alter table public.sitio
+add column if not exists burbuja_home_visible_hasta timestamp with time zone;
+
 create table if not exists public.cursos (
   id bigint generated always as identity primary key,
   nombre text not null,
@@ -325,6 +340,11 @@ create table if not exists public.sitio (
   plan_destacado_plus_features text,
   mostrar_juegos_home boolean not null default true,
   mostrar_ranking_juego_home boolean not null default false,
+  burbuja_home_activa boolean not null default false,
+  burbuja_home_titulo text,
+  burbuja_home_texto text,
+  burbuja_home_visible_desde timestamp with time zone,
+  burbuja_home_visible_hasta timestamp with time zone,
   updated_at timestamp with time zone default now()
 );
 

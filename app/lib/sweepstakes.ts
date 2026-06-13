@@ -8,11 +8,9 @@ export type SweepstakesParticipantType = "comercio" | "servicio" | "institucion"
 type SweepstakesConfigRow = {
   id: number
   titulo: string | null
-  titulo_popup_home?: string | null
   activo: boolean | null
   mostrar_popup_home?: boolean | null
   descripcion: string | null
-  descripcion_popup_home?: string | null
   boton_texto?: string | null
   visible_desde?: string | null
   visible_hasta?: string | null
@@ -31,6 +29,15 @@ type SweepstakesEntityRow = {
   imagen?: string | null
   imagen_url?: string | null
   foto?: string | null
+}
+
+type HomeBubbleRow = {
+  id: number
+  burbuja_home_activa?: boolean | null
+  burbuja_home_titulo?: string | null
+  burbuja_home_texto?: string | null
+  burbuja_home_visible_desde?: string | null
+  burbuja_home_visible_hasta?: string | null
 }
 
 export type SweepstakesParticipant = {
@@ -83,8 +90,7 @@ function normalizeParticipantRefs(row: SweepstakesConfigRow) {
 }
 
 async function buildSweepstakesConfigFromRow(
-  row: SweepstakesConfigRow | null,
-  options: { requireHomePopup?: boolean } = {}
+  row: SweepstakesConfigRow | null
 ) {
   if (!row?.activo) {
     return { config: null as SweepstakesConfig | null, error: null }
@@ -92,16 +98,10 @@ async function buildSweepstakesConfigFromRow(
 
   const baseTitle = row.titulo?.trim() || "Como participar"
   const baseDescription = row.descripcion?.trim() || ""
-  const homeTitle = row.titulo_popup_home?.trim() || baseTitle
-  const homeDescription = row.descripcion_popup_home?.trim() || baseDescription
-  const title = options.requireHomePopup ? homeTitle : baseTitle
-  const description = options.requireHomePopup ? homeDescription : baseDescription
+  const title = baseTitle
+  const description = baseDescription
 
   if (!description) {
-    return { config: null as SweepstakesConfig | null, error: null }
-  }
-
-  if (options.requireHomePopup && row.mostrar_popup_home === false) {
     return { config: null as SweepstakesConfig | null, error: null }
   }
 
@@ -263,38 +263,61 @@ export async function fetchSweepstakesConfig() {
 
 export async function fetchHomeSweepstakesPopupConfig() {
   const fullSelect =
-    "id, titulo, titulo_popup_home, activo, mostrar_popup_home, descripcion, descripcion_popup_home, visible_desde, visible_hasta, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
-  const legacySelect =
-    "id, titulo, activo, descripcion, visible_desde, visible_hasta, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at"
-  let result: any = await supabase
-    .from(SWEEPSTAKES_CONFIG_TABLE)
+    "id, burbuja_home_activa, burbuja_home_titulo, burbuja_home_texto, burbuja_home_visible_desde, burbuja_home_visible_hasta"
+  const result = await supabase
+    .from("sitio")
     .select(fullSelect)
-    .eq("activo", true)
-    .eq("mostrar_popup_home", true)
-    .order("updated_at", { ascending: false })
-    .limit(1)
-
-  if (result.error?.code === "42703") {
-    result = await supabase
-      .from(SWEEPSTAKES_CONFIG_TABLE)
-      .select(legacySelect)
-      .eq("activo", true)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-  }
+    .eq("id", 1)
+    .maybeSingle()
 
   const { data, error } = result
 
   if (error) {
     if (!isMissingSweepstakesSchemaError(error)) {
-      console.error("No se pudo cargar la burbuja del sorteo:", error)
+      console.error("No se pudo cargar la burbuja informativa de la Home:", error)
     }
 
     return { config: null as SweepstakesConfig | null, error }
   }
 
-  const row = ((data || []) as SweepstakesConfigRow[])[0] || null
-  return buildSweepstakesConfigFromRow(row, { requireHomePopup: true })
+  const row = (data as HomeBubbleRow | null) || null
+
+  if (!row?.burbuja_home_activa) {
+    return { config: null as SweepstakesConfig | null, error: null }
+  }
+
+  const title = row.burbuja_home_titulo?.trim() || "Como participar"
+  const description = row.burbuja_home_texto?.trim() || ""
+
+  if (!description) {
+    return { config: null as SweepstakesConfig | null, error: null }
+  }
+
+  const now = Date.now()
+  const visibleFrom = row.burbuja_home_visible_desde
+    ? Date.parse(row.burbuja_home_visible_desde)
+    : null
+  const visibleUntil = row.burbuja_home_visible_hasta
+    ? Date.parse(row.burbuja_home_visible_hasta)
+    : null
+
+  if (
+    (visibleFrom !== null && !Number.isNaN(visibleFrom) && visibleFrom > now) ||
+    (visibleUntil !== null && !Number.isNaN(visibleUntil) && visibleUntil < now)
+  ) {
+    return { config: null as SweepstakesConfig | null, error: null }
+  }
+
+  return {
+    config: {
+      id: row.id,
+      title,
+      description,
+      buttonText: "Entendido",
+      participants: [],
+    },
+    error: null,
+  }
 }
 
 export async function fetchSweepstakesConfigById(sorteoId: number) {
