@@ -76,6 +76,78 @@ function normalizeGallery(value?: string[] | null) {
   return normalized.length ? normalized : null
 }
 
+const optionalInstitutionColumns = [
+  "destacado",
+  "web_url",
+  "instagram_url",
+  "facebook_url",
+  "usa_whatsapp",
+  "premium_detalle",
+  "premium_galeria",
+  "premium_extra_titulo",
+  "premium_extra_detalle",
+  "premium_extra_galeria",
+  "premium_activo",
+  "premium_cursos_activo",
+  "premium_cursos_titulo",
+  "foto",
+] as const
+
+type InstitucionPayload = Record<string, unknown>
+
+function getMissingOptionalColumn(error: { code?: string; message?: string }) {
+  if (error.code !== "42703") return null
+
+  const message = (error.message || "").toLowerCase()
+  return optionalInstitutionColumns.find((column) =>
+    message.includes(column.toLowerCase())
+  ) || null
+}
+
+async function saveInstitucionWithSchemaFallback(params: {
+  supabaseAdmin: ReturnType<typeof getSupabaseAdmin>
+  id?: number
+  payload: InstitucionPayload
+}) {
+  const payload = { ...params.payload }
+  const skippedColumns: string[] = []
+
+  for (let attempt = 0; attempt <= optionalInstitutionColumns.length; attempt += 1) {
+    const query = params.id
+      ? params.supabaseAdmin
+          .from("instituciones")
+          .update(payload)
+          .eq("id", params.id)
+          .select("*")
+          .single()
+      : params.supabaseAdmin
+          .from("instituciones")
+          .insert([payload])
+          .select("*")
+          .single()
+
+    const { data, error } = await query
+
+    if (!error) {
+      return { data, skippedColumns, error: null }
+    }
+
+    const missingColumn = getMissingOptionalColumn(error)
+    if (!missingColumn || !(missingColumn in payload)) {
+      return { data: null, skippedColumns, error }
+    }
+
+    delete payload[missingColumn]
+    skippedColumns.push(missingColumn)
+  }
+
+  return {
+    data: null,
+    skippedColumns,
+    error: new Error("No se pudo guardar la institucion con las columnas disponibles."),
+  }
+}
+
 function revalidateInstitucionPages(id?: number) {
   revalidatePath("/")
   revalidatePath("/instituciones")
@@ -237,12 +309,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (body.id) {
-      const { data, error } = await supabaseAdmin
-        .from("instituciones")
-        .update(payload)
-        .eq("id", body.id)
-        .select("*")
-        .single()
+      const { data, error, skippedColumns } = await saveInstitucionWithSchemaFallback({
+        supabaseAdmin,
+        id: body.id,
+        payload,
+      })
 
       if (error) throw error
 
@@ -254,14 +325,13 @@ export async function POST(request: NextRequest) {
 
       revalidateInstitucionPages(body.id)
 
-      return NextResponse.json({ ok: true, record: data })
+      return NextResponse.json({ ok: true, record: data, skippedColumns })
     }
 
-    const { data, error } = await supabaseAdmin
-      .from("instituciones")
-      .insert([payload])
-      .select("*")
-      .single()
+    const { data, error, skippedColumns } = await saveInstitucionWithSchemaFallback({
+      supabaseAdmin,
+      payload,
+    })
 
     if (error) throw error
 
@@ -273,7 +343,7 @@ export async function POST(request: NextRequest) {
 
     revalidateInstitucionPages(data.id)
 
-    return NextResponse.json({ ok: true, record: data })
+    return NextResponse.json({ ok: true, record: data, skippedColumns })
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "No pudimos guardar la institución."
