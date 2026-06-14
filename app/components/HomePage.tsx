@@ -27,6 +27,7 @@ import { useSweepstakesPopup } from "../lib/useSweepstakesPopup"
 import { recordViewMore, type ViewMoreSection } from "../lib/viewMoreTracking"
 import {
   ArrowRight,
+  BriefcaseBusiness,
   Building2,
   CalendarDays,
   Cloud,
@@ -39,6 +40,7 @@ import {
   MapPin,
   Phone,
   Plus,
+  Store,
   Trophy,
   UserRound,
   X,
@@ -451,6 +453,7 @@ const SOCIAL_LINKS = [
 ]
 
 const ITEMS_PER_ROTATION = 8
+const MOBILE_ITEMS_PER_ROTATION = 9
 const FEATURED_ROTATION_DAYS = 2
 const DELAYED_PROMO_ROTATION_ITEMS = 4
 
@@ -607,14 +610,14 @@ export function HomePage({
     [servicePageCount]
   )
   const visibleFeaturedBusinesses = useMemo(
-    () => sliceRotatingItems(featuredBusinesses, scheduledFeaturedBusinessPage),
+    () => sliceRotatingItems(featuredBusinesses, scheduledFeaturedBusinessPage, MOBILE_ITEMS_PER_ROTATION),
     [featuredBusinesses, scheduledFeaturedBusinessPage]
   )
   const visibleServicios = useMemo(
     () =>
       shouldRotateServicios
-        ? sliceRotatingItems(featuredServiciosForHome, scheduledServicePage)
-        : featuredServiciosForHome.slice(0, ITEMS_PER_ROTATION),
+        ? sliceRotatingItems(featuredServiciosForHome, scheduledServicePage, MOBILE_ITEMS_PER_ROTATION)
+        : featuredServiciosForHome.slice(0, MOBILE_ITEMS_PER_ROTATION),
     [featuredServiciosForHome, scheduledServicePage, shouldRotateServicios]
   )
   const visiblePrimaryEventos = useMemo(
@@ -2255,8 +2258,8 @@ export function HomePage({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-            {visibleFeaturedBusinesses.map((business) => {
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 xl:grid-cols-4">
+            {visibleFeaturedBusinesses.map((business, index) => {
               const imageSrc = business.imagen_url || business.imagen
 
               return (
@@ -2294,21 +2297,26 @@ export function HomePage({
                       )
                     })
                   }
-                  className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.5)] transition hover:-translate-y-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${business.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(59,130,246,0.35)]"}`}
+                  aria-label={`Ver mas de ${business.nombre}`}
+                  className={`cursor-pointer overflow-hidden rounded-2xl border bg-white shadow-[0_14px_32px_-24px_rgba(15,23,42,0.5)] transition hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:rounded-[28px] ${index >= ITEMS_PER_ROTATION ? "xl:hidden" : ""} ${business.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(59,130,246,0.35)]"}`}
                 >
-                  {imageSrc && (
-                    <div className="relative h-36 w-full bg-white sm:h-52">
+                  {imageSrc ? (
+                    <div className="relative aspect-square w-full bg-white">
                       <OptimizedImage
                         src={imageSrc}
                         alt={business.nombre}
-                        sizes="(max-width: 640px) 50vw, (max-width: 1280px) 25vw, 25vw"
+                        sizes="(max-width: 640px) 33vw, (max-width: 1280px) 25vw, 25vw"
                         quality={60}
-                        className="object-contain p-3"
+                        className="object-contain p-2 sm:p-3"
                       />
+                    </div>
+                  ) : (
+                    <div className="flex aspect-square w-full items-center justify-center bg-slate-50 text-slate-300">
+                      <Store className="h-8 w-8 sm:h-10 sm:w-10" />
                     </div>
                   )}
 
-                  <div className="p-4 sm:p-5">
+                  <div className="hidden">
                     <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-[22px]">
                       {business.nombre}
                     </h3>
@@ -2381,8 +2389,8 @@ export function HomePage({
             </div>
           ) : (
             <>
-            <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-              {visibleServicios.map((servicio) => (
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 xl:grid-cols-4">
+              {visibleServicios.map((servicio, index) => (
                 <div
                         key={servicio.id}
                         role="button"
@@ -2417,21 +2425,26 @@ export function HomePage({
                             )
                           })
                         }
-                        className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${servicio.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"}`}
+                        aria-label={`Ver mas de ${servicio.nombre}`}
+                        className={`cursor-pointer overflow-hidden rounded-2xl border bg-white shadow-[0_14px_32px_-24px_rgba(15,23,42,0.45)] transition hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:rounded-[28px] ${index >= ITEMS_PER_ROTATION ? "xl:hidden" : ""} ${servicio.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"}`}
                       >
-                        {servicio.imagen && (
-                          <div className="relative h-36 w-full bg-white sm:h-48">
+                        {servicio.imagen ? (
+                          <div className="relative aspect-square w-full bg-white">
                             <OptimizedImage
                               src={servicio.imagen}
                               alt={servicio.nombre}
-                              sizes="(max-width: 768px) 50vw, (max-width: 1280px) 25vw, 25vw"
+                              sizes="(max-width: 768px) 33vw, (max-width: 1280px) 25vw, 25vw"
                               quality={60}
-                              className="object-contain p-3"
+                              className="object-contain p-2 sm:p-3"
                             />
+                          </div>
+                        ) : (
+                          <div className="flex aspect-square w-full items-center justify-center bg-slate-50 text-slate-300">
+                            <BriefcaseBusiness className="h-8 w-8 sm:h-10 sm:w-10" />
                           </div>
                         )}
 
-                        <div className="p-4 sm:p-5">
+                        <div className="hidden">
                           <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-xl">
                             {servicio.nombre}
                           </h3>
@@ -2546,7 +2559,7 @@ export function HomePage({
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                  <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-6">
                     {visiblePrimaryEventos.map((event) => (
                       <HomeEventCard
                         key={event.id}
@@ -2587,11 +2600,12 @@ export function HomePage({
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                    {visibleAvisoEventos.map((event) => (
+                  <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-6">
+                    {visibleAvisoEventos.map((event, index) => (
                       <HomeEventCard
                         key={event.id}
                         event={event}
+                        className={index >= 2 ? "hidden lg:block" : ""}
                         count={eventLikeCounts[String(event.id)]}
                         liked={Boolean(likedEvents[String(event.id)])}
                         disabled={likingEventId === String(event.id)}
@@ -2631,11 +2645,12 @@ export function HomePage({
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                    {visiblePromoEventos.map((event) => (
+                  <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-6">
+                    {visiblePromoEventos.map((event, index) => (
                       <HomeEventCard
                         key={event.id}
                         event={event}
+                        className={index >= 2 ? "hidden lg:block" : ""}
                         count={eventLikeCounts[String(event.id)]}
                         liked={Boolean(likedEvents[String(event.id)])}
                         disabled={likingEventId === String(event.id)}
@@ -2684,8 +2699,8 @@ export function HomePage({
               Todavía no hay cursos o clases cargados.
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-              {visibleCursos.map((curso) => (
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 xl:grid-cols-4">
+              {visibleCursos.map((curso, index) => (
                 <div
                   key={curso.id}
                   role="button"
@@ -2708,21 +2723,21 @@ export function HomePage({
                       )
                     )
                   }
-                  className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(34,197,94,0.3)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                  className={`cursor-pointer overflow-hidden rounded-2xl border border-white/80 bg-white/90 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-30px_rgba(34,197,94,0.3)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 sm:rounded-[28px] ${index >= 6 ? "hidden sm:block" : ""}`}
                 >
-                  <div className="flex items-center gap-3 border-b border-emerald-950/20 bg-emerald-800 px-4 py-4 sm:px-5">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/95 text-emerald-700 shadow-sm">
-                      <GraduationCap className="h-6 w-6" />
+                  <div className="flex items-center gap-3 border-b border-emerald-950/20 bg-emerald-800 px-3 py-3 sm:px-5 sm:py-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/95 text-emerald-700 shadow-sm sm:h-12 sm:w-12 sm:rounded-2xl">
+                      <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                   </div>
-                  <div className="p-4 sm:p-5">
-                    <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-[22px]">
+                  <div className="p-3 sm:p-5">
+                    <h3 className="line-clamp-3 text-sm font-semibold leading-tight text-slate-900 sm:text-[22px]">
                       {curso.nombre}
                     </h3>
-                    <p className="mt-2 line-clamp-2 whitespace-pre-line text-sm leading-6 text-slate-500 sm:mt-3 sm:line-clamp-3 sm:text-base sm:leading-7">
+                    <p className="mt-2 hidden whitespace-pre-line text-sm leading-6 text-slate-500 sm:mt-3 sm:line-clamp-3 sm:block sm:text-base sm:leading-7">
                       {curso.descripcion}
                     </p>
-                    <div className="mt-3 flex items-center gap-2 text-xs text-slate-600 sm:mt-4 sm:text-sm">
+                    <div className="mt-3 hidden items-center gap-2 text-xs text-slate-600 sm:mt-4 sm:flex sm:text-sm">
                       <GraduationCap className="h-4 w-4" />
                       <span>{curso.responsable}</span>
                     </div>
@@ -2737,7 +2752,7 @@ export function HomePage({
                           () => setSelectedCurso(curso)
                         )
                       }}
-                      className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-blue-500 transition hover:text-blue-600 sm:mt-5 sm:text-sm"
+                      className="mt-4 hidden items-center gap-2 text-xs font-semibold text-blue-500 transition hover:text-blue-600 sm:mt-5 sm:inline-flex sm:text-sm"
                     >
                       Ver más
                       <ArrowRight className="h-4 w-4" />
@@ -2775,8 +2790,8 @@ export function HomePage({
                 Todavía no hay instituciones cargadas.
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5">
-              {visibleInstituciones.map((institucion) => (
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-5">
+              {visibleInstituciones.map((institucion, index) => (
                 <div
                   key={institucion.id}
                   role="button"
@@ -2785,15 +2800,15 @@ export function HomePage({
                   onKeyDown={(event) =>
                     handleCardKeyDown(event, () => handleInstitutionClick(institucion))
                   }
-                  className="cursor-pointer overflow-hidden rounded-[28px] border border-white/80 bg-white/90 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(6,182,212,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                  className={`cursor-pointer overflow-hidden rounded-2xl border border-white/80 bg-white/90 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-30px_rgba(6,182,212,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 sm:rounded-[28px] ${index >= 9 ? "hidden sm:block" : ""}`}
                 >
-                  <div className="flex items-center gap-3 border-b border-blue-950/20 bg-blue-900 px-4 py-4 sm:px-5">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/95 text-blue-700 shadow-sm">
-                      <Building2 className="h-6 w-6" />
+                  <div className="flex items-center gap-3 border-b border-blue-950/20 bg-blue-900 px-3 py-3 sm:px-5 sm:py-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/95 text-blue-700 shadow-sm sm:h-12 sm:w-12 sm:rounded-2xl">
+                      <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                   </div>
-                  <div className="p-4 sm:p-5">
-                    <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-[22px]">
+                  <div className="p-3 sm:p-5">
+                    <h3 className="line-clamp-3 text-sm font-semibold leading-tight text-slate-900 sm:text-[22px]">
                       {institucion.nombre}
                     </h3>
 
@@ -2805,7 +2820,7 @@ export function HomePage({
                           void recordViewMore("instituciones", String(institucion.id), institucion.nombre)
                           void recordContentVisit("instituciones", String(institucion.id), institucion.nombre)
                         }}
-                        className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-violet-600 transition hover:text-violet-700 sm:mt-5 sm:text-sm"
+                        className="mt-4 hidden items-center gap-2 text-xs font-semibold text-violet-600 transition hover:text-violet-700 sm:mt-5 sm:inline-flex sm:text-sm"
                       >
                         Ver perfil completo
                         <ArrowRight className="h-4 w-4" />
@@ -2817,7 +2832,7 @@ export function HomePage({
                           event.stopPropagation()
                           handleInstitutionClick(institucion)
                         }}
-                        className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-cyan-600 transition hover:text-cyan-700 sm:mt-5 sm:text-sm"
+                        className="mt-4 hidden items-center gap-2 text-xs font-semibold text-cyan-600 transition hover:text-cyan-700 sm:mt-5 sm:inline-flex sm:text-sm"
                       >
                         Ver más
                         <ArrowRight className="h-4 w-4" />
@@ -2964,6 +2979,7 @@ function HomeEventCard({
   onLike,
   onOpen,
   onCardKeyDown,
+  className = "",
 }: {
   event: Evento
   count?: number
@@ -2972,6 +2988,7 @@ function HomeEventCard({
   onLike: () => void
   onOpen: () => void
   onCardKeyDown: (event: KeyboardEvent<HTMLElement>, action: () => void) => void
+  className?: string
 }) {
   return (
     <div
@@ -2979,7 +2996,7 @@ function HomeEventCard({
       tabIndex={0}
       onClick={onOpen}
       onKeyDown={(eventKey) => onCardKeyDown(eventKey, onOpen)}
-      className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
+      className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${className} ${
         normalizeEventCategory(event.categoria) === "Evento"
           ? "border-emerald-200/80"
           : "border-white/80"
