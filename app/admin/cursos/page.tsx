@@ -33,8 +33,9 @@ type Curso = {
 
 type CursoForm = Omit<
   Curso,
-  "id" | "share_count" | "whatsapp_count" | "premium_galeria"
+  "id" | "share_count" | "whatsapp_count" | "premium_galeria" | "edad_destino"
 > & {
+  edad_destino: string[]
   premium_galeria: string
 }
 
@@ -51,7 +52,7 @@ type ServicioOption = {
 const initialForm: CursoForm = {
   nombre: "",
   descripcion: "",
-  edad_destino: "todas_las_edades",
+  edad_destino: ["todas_las_edades"],
   responsable: "",
   contacto: "",
   web_url: "",
@@ -73,6 +74,19 @@ const courseAgeOptions = [
 
 const courseAgeLabel = (value?: string | null) =>
   courseAgeOptions.find((option) => option.value === value)?.label || "Todas las edades"
+
+const parseCourseAgeGroups = (value?: string | null) => {
+  const groups = (value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((item) => courseAgeOptions.some((option) => option.value === item))
+
+  return groups.length ? groups : ["todas_las_edades"]
+}
+
+const courseAgeLabels = (value?: string | null) =>
+  parseCourseAgeGroups(value).map(courseAgeLabel).join(", ")
 
 export default function AdminCursosPage() {
   const [cursos, setCursos] = useState<Curso[]>([])
@@ -324,7 +338,7 @@ export default function AdminCursosPage() {
     setFormData({
       nombre: curso.nombre,
       descripcion: curso.descripcion,
-      edad_destino: curso.edad_destino || "todas_las_edades",
+      edad_destino: parseCourseAgeGroups(curso.edad_destino),
       responsable: curso.responsable,
       contacto: curso.contacto,
       institucion_id: curso.institucion_id ?? null,
@@ -337,6 +351,28 @@ export default function AdminCursosPage() {
       usa_whatsapp: curso.usa_whatsapp ?? true,
     })
     setIsFormOpen(true)
+  }
+
+  const toggleAgeGroup = (value: string) => {
+    setFormData((prev) => {
+      const current = prev.edad_destino.length
+        ? prev.edad_destino
+        : ["todas_las_edades"]
+
+      if (value === "todas_las_edades") {
+        return { ...prev, edad_destino: ["todas_las_edades"] }
+      }
+
+      const withoutAllAges = current.filter((item) => item !== "todas_las_edades")
+      const next = withoutAllAges.includes(value)
+        ? withoutAllAges.filter((item) => item !== value)
+        : [...withoutAllAges, value]
+
+      return {
+        ...prev,
+        edad_destino: next.length ? next : ["todas_las_edades"],
+      }
+    })
   }
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -505,22 +541,25 @@ export default function AdminCursosPage() {
                 <label className="mb-2 block text-sm font-medium text-slate-900">
                   Público del curso
                 </label>
-                <select
-                  value={formData.edad_destino || "todas_las_edades"}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      edad_destino: e.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-violet-500"
-                >
+                <div className="grid gap-2 sm:grid-cols-2">
                   {courseAgeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                    <label
+                      key={option.value}
+                      className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 transition hover:border-violet-200 hover:bg-violet-50"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.edad_destino.includes(option.value)}
+                        onChange={() => toggleAgeGroup(option.value)}
+                        className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                      />
+                      <span>{option.label}</span>
+                    </label>
                   ))}
-                </select>
+                </div>
+                <p className="mt-2 text-xs text-slate-500">
+                  Puedes marcar mas de un publico. "Todas las edades" reemplaza a los demas filtros.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -852,7 +891,7 @@ export default function AdminCursosPage() {
               <div className="mt-4 space-y-2 text-sm text-slate-600">
                 <div className="flex items-center gap-2">
                   <UserRound className="h-4 w-4" />
-                  <span>{courseAgeLabel(curso.edad_destino)}</span>
+                  <span>{courseAgeLabels(curso.edad_destino)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <UserRound className="h-4 w-4" />

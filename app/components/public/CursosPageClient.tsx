@@ -37,6 +37,26 @@ const courseAgeOptions = [
 const courseAgeLabel = (value?: string | null) =>
   courseAgeOptions.find((option) => option.value === value)?.label || "Todas las edades"
 
+const parseCourseAgeGroups = (value?: string | null) => {
+  const groups = (value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((item) => courseAgeOptions.some((option) => option.value === item))
+
+  return groups.length ? groups : ["todas_las_edades"]
+}
+
+const courseAgeLabels = (value?: string | null) =>
+  parseCourseAgeGroups(value).map(courseAgeLabel).join(" ")
+
+const courseMatchesAgeFilter = (curso: Curso, filter: string) => {
+  if (filter === "todos") return true
+
+  const groups = parseCourseAgeGroups(curso.edad_destino)
+  return groups.includes("todas_las_edades") || groups.includes(filter)
+}
+
 const ageFilterOptions = [
   { value: "todos", label: "Todos" },
   ...courseAgeOptions,
@@ -92,12 +112,12 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
     const filteredByAge =
       ageFilter === "todos"
         ? cursos
-        : cursos.filter((curso) => curso.edad_destino === ageFilter)
+        : cursos.filter((curso) => courseMatchesAgeFilter(curso, ageFilter))
 
     if (!term) return filteredByAge
 
     return filteredByAge.filter((curso) =>
-      `${curso.nombre} ${curso.descripcion || ""} ${curso.responsable || ""} ${curso.contacto || ""} ${courseAgeLabel(curso.edad_destino)}`
+      `${curso.nombre} ${curso.descripcion || ""} ${curso.responsable || ""} ${curso.contacto || ""} ${courseAgeLabels(curso.edad_destino)}`
         .toLowerCase()
         .includes(term)
     )

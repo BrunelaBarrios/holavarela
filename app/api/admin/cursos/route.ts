@@ -11,7 +11,7 @@ type SaveCursoPayload = {
     descripcion?: string
     institucion_id?: number | null
     servicio_id?: number | null
-    edad_destino?: string | null
+    edad_destino?: string | string[] | null
     responsable?: string
     contacto?: string
     web_url?: string | null
@@ -76,11 +76,16 @@ function normalizeTextList(value?: string[] | null) {
     : []
 }
 
-function normalizeCourseAgeGroup(value?: string | null) {
-  const normalized = value?.trim()
-  return normalized && COURSE_AGE_GROUPS.has(normalized)
-    ? normalized
-    : "todas_las_edades"
+function normalizeCourseAgeGroups(value?: string | string[] | null) {
+  const values = Array.isArray(value) ? value : (value || "").split(",")
+  const groups = values
+    .map((item) => item.trim())
+    .filter((item) => COURSE_AGE_GROUPS.has(item))
+
+  const uniqueGroups = Array.from(new Set(groups))
+  const specificGroups = uniqueGroups.filter((item) => item !== "todas_las_edades")
+
+  return (specificGroups.length ? specificGroups : ["todas_las_edades"]).join(",")
 }
 
 export async function POST(request: NextRequest) {
@@ -206,7 +211,7 @@ export async function POST(request: NextRequest) {
       descripcion: body.payload.descripcion?.trim() || "",
       institucion_id: body.payload.institucion_id || null,
       servicio_id: body.payload.servicio_id || null,
-      edad_destino: normalizeCourseAgeGroup(body.payload.edad_destino),
+      edad_destino: normalizeCourseAgeGroups(body.payload.edad_destino),
       responsable: body.payload.responsable?.trim() || "",
       contacto: body.payload.contacto?.trim() || "",
       web_url: normalizeUrl(body.payload.web_url),
