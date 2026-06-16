@@ -149,7 +149,7 @@ const getHomePageData = unstable_cache(
         .limit(HOME_BUSINESS_LIMIT),
       supabaseServer
         .from("eventos")
-        .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, estado, usa_whatsapp, created_at")
+        .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, created_at")
         .or("estado.is.null,estado.eq.activo")
         .or(buildActiveEventsFilter(today))
         .order("fecha", { ascending: true })
@@ -294,7 +294,7 @@ const getHomePageData = unstable_cache(
       weather,
     }
   },
-  ["home-page-data-v9"],
+  ["home-page-data-v10"],
   { revalidate: 3600 }
 )
 
