@@ -21,7 +21,7 @@ import { formatEventDateRange } from "../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
 import { parseEventDescription, shouldHideEventDate } from "../lib/eventSubmissionMeta"
 import { recordContentVisit, recordSiteVisit } from "../lib/contentVisits"
-import { DELAYED_PROMO_STORAGE_KEY, RADIO_STORAGE_KEY } from "../lib/localStorageKeys"
+import { RADIO_STORAGE_KEY } from "../lib/localStorageKeys"
 import { buildHomePublicNav } from "../lib/publicNav"
 import { useSweepstakesPopup } from "../lib/useSweepstakesPopup"
 import { recordViewMore, type ViewMoreSection } from "../lib/viewMoreTracking"
@@ -253,6 +253,7 @@ export type HomePageData = {
   allCursos: Curso[]
   allServicios: Servicio[]
   sobreVarela: SobreVarelaConfig
+  destacadoHome: HomeHighlightAd | null
   challengeRanking: ChallengeRankingEntry[]
   weather: WeatherData | null
 }
@@ -292,12 +293,19 @@ type WelcomeHighlight = {
 
 type DelayedPromo = {
   key: string
-  kind: "comercio" | "servicio" | "curso" | "institucion"
+  kind: "comercio" | "servicio" | "institucion"
   title: string
-  description: string
   image: string | null
-  subtitle?: string | null
   href: string
+  delaySeconds: number
+}
+
+type HomeHighlightAd = {
+  id: number
+  image: string
+  entityType: "comercio" | "servicio" | "institucion"
+  entityId: number
+  delaySeconds: number
 }
 
 const buildWelcomeItems = (
@@ -389,21 +397,7 @@ const defaultRadioConfig: RadioConfig = {
 const WELCOME_PROMOTION_ENABLED = false
 const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
-const DELAYED_PROMO_SESSION_KEY = "guia-varela-delayed-promo-shown-v1"
-const DELAYED_PROMO_LAST_KEY = "guia-varela-delayed-promo-last-key"
-const DELAYED_PROMO_UPDATE_EVENT = "delayed-promo-config-updated"
-
-type DelayedPromoConfig = {
-  enabled: boolean
-  delaySeconds: number
-  itemKey: string
-}
-
-const defaultDelayedPromoConfig: DelayedPromoConfig = {
-  enabled: true,
-  delaySeconds: 60,
-  itemKey: "",
-}
+const DELAYED_PROMO_SESSION_KEY = "guia-varela-delayed-promo-shown-v2"
 const initialContactLeadForm: ContactLeadForm = {
   nombre: "",
   telefono: "",
@@ -455,7 +449,6 @@ const SOCIAL_LINKS = [
 const ITEMS_PER_ROTATION = 8
 const MOBILE_ITEMS_PER_ROTATION = 9
 const FEATURED_ROTATION_DAYS = 2
-const DELAYED_PROMO_ROTATION_ITEMS = 4
 
 function isFeaturedListing(item: {
   destacado?: boolean | null
@@ -494,35 +487,6 @@ function getScheduledRotationPage(totalPages: number, rotationDays = FEATURED_RO
 
   const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24))
   return Math.floor(daysSinceEpoch / rotationDays) % totalPages
-}
-
-function getInitialDelayedPromo(
-  items: DelayedPromo[],
-  configuredItemKey: string
-): DelayedPromo | null {
-  if (items.length === 0 || typeof window === "undefined") return null
-
-  if (configuredItemKey) {
-    return items.find((item) => item.key === configuredItemKey) || null
-  }
-
-  const totalPages = Math.max(1, Math.ceil(items.length / DELAYED_PROMO_ROTATION_ITEMS))
-  const scheduledPage = getScheduledRotationPage(totalPages, 1)
-  const dailyPool = sliceRotatingItems(
-    items,
-    scheduledPage,
-    Math.min(DELAYED_PROMO_ROTATION_ITEMS, items.length)
-  )
-
-  if (dailyPool.length === 0) return null
-
-  const lastShownKey = window.localStorage.getItem(DELAYED_PROMO_LAST_KEY)
-  const lastIndex = dailyPool.findIndex((item) => item.key === lastShownKey)
-  const nextIndex = lastIndex >= 0 ? (lastIndex + 1) % dailyPool.length : 0
-  const nextItem = dailyPool[nextIndex] || dailyPool[0]
-
-  window.localStorage.setItem(DELAYED_PROMO_LAST_KEY, nextItem.key)
-  return nextItem
 }
 
 export function HomePage({
@@ -574,9 +538,6 @@ export function HomePage({
   const [contactLeadLoading, setContactLeadLoading] = useState(false)
   const [isContactLeadOpen, setIsContactLeadOpen] = useState(false)
   const [isDelayedPromoOpen, setIsDelayedPromoOpen] = useState(false)
-  const [delayedPromoConfig, setDelayedPromoConfig] = useState<DelayedPromoConfig>(
-    defaultDelayedPromoConfig
-  )
   const [welcomeHighlight, setWelcomeHighlight] = useState<WelcomeHighlight | null>(null)
   const [zoomedImage, setZoomedImage] = useState<{ src: string; alt: string } | null>(null)
   const [shouldLoadRadioWidget, setShouldLoadRadioWidget] = useState(false)
@@ -651,61 +612,46 @@ export function HomePage({
         .slice(0, 10),
     [instituciones]
   )
-  const delayedPromoOptions = useMemo<DelayedPromo[]>(() => {
-    const comercioOptions = featuredBusinesses
-      .filter((item) => isFeaturedListing(item))
-      .map((item) => ({
-      key: `comercio:${item.id}`,
-      kind: "comercio" as const,
-      title: item.nombre,
-      description:
-        item.descripcion || "Descubre este comercio destacado dentro de Hola Varela.",
-      image: item.imagen_url || item.imagen || null,
-      subtitle: item.direccion || null,
-      href: item.premium_activo ? `/comercios/${item.id}` : `/comercios?item=${item.id}`,
-    }))
+  const delayedPromo = useMemo<DelayedPromo | null>(() => {
+    const ad = initialData.destacadoHome
+    if (!ad?.image) return null
 
-    const servicioOptions = allServicios
-      .filter((item) => isFeaturedListing(item))
-      .map((item) => ({
-      key: `servicio:${item.id}`,
-      kind: "servicio" as const,
-      title: item.nombre,
-      description:
-        item.descripcion || "Conoce este servicio destacado recomendado dentro de la plataforma.",
-      image: item.imagen || null,
-      subtitle: item.categoria || null,
-      href: item.premium_activo ? `/servicios/${item.id}` : `/servicios?item=${item.id}`,
-    }))
+    if (ad.entityType === "comercio") {
+      const comercio = featuredBusinesses.find((item) => item.id === ad.entityId)
+      return {
+        key: `comercio:${ad.entityId}`,
+        kind: "comercio",
+        title: comercio?.nombre || "Comercio destacado",
+        image: ad.image,
+        href: `/comercios/${ad.entityId}`,
+        delaySeconds: ad.delaySeconds,
+      }
+    }
 
-    const cursoOptions = allCursos
-      .filter((item) => item.destacado)
-      .map((item) => ({
-      key: `curso:${item.id}`,
-      kind: "curso" as const,
-      title: item.nombre,
-      description:
-        item.descripcion || "Mira esta propuesta destacada para aprender o sumarte a una clase.",
-      image: item.imagen || null,
-      subtitle: item.responsable || null,
-      href: `/cursos?item=${item.id}`,
-    }))
+    if (ad.entityType === "servicio") {
+      const servicio =
+        allServicios.find((item) => item.id === ad.entityId) ||
+        servicios.find((item) => item.id === ad.entityId)
+      return {
+        key: `servicio:${ad.entityId}`,
+        kind: "servicio",
+        title: servicio?.nombre || "Servicio destacado",
+        image: ad.image,
+        href: `/servicios/${ad.entityId}`,
+        delaySeconds: ad.delaySeconds,
+      }
+    }
 
-    const institucionOptions = instituciones
-      .filter((item) => item.destacado === true)
-      .map((item) => ({
-      key: `institucion:${item.id}`,
-      kind: "institucion" as const,
-      title: item.nombre,
-      description:
-        item.descripcion || "Conoce esta institucion destacada dentro de Hola Varela.",
-      image: item.foto || null,
-      subtitle: item.direccion || null,
-      href: item.premium_activo ? `/instituciones/${item.id}` : `/instituciones?item=${item.id}`,
-    }))
-
-    return [...comercioOptions, ...servicioOptions, ...cursoOptions, ...institucionOptions]
-  }, [allCursos, allServicios, featuredBusinesses, instituciones])
+    const institucion = instituciones.find((item) => item.id === ad.entityId)
+    return {
+      key: `institucion:${ad.entityId}`,
+      kind: "institucion",
+      title: institucion?.nombre || "Institucion destacada",
+      image: ad.image,
+      href: `/instituciones/${ad.entityId}`,
+      delaySeconds: ad.delaySeconds,
+    }
+  }, [allServicios, featuredBusinesses, initialData.destacadoHome, instituciones, servicios])
 
 
   const weather = initialData.weather
@@ -790,47 +736,6 @@ export function HomePage({
   }, [])
 
   useEffect(() => {
-    const loadDelayedPromoConfig = () => {
-      if (typeof window === "undefined") return
-
-      const raw = window.localStorage.getItem(DELAYED_PROMO_STORAGE_KEY)
-      if (!raw) {
-        setDelayedPromoConfig(defaultDelayedPromoConfig)
-        return
-      }
-
-      try {
-        const parsed = JSON.parse(raw) as Partial<DelayedPromoConfig>
-        setDelayedPromoConfig({
-          enabled: parsed.enabled ?? defaultDelayedPromoConfig.enabled,
-          delaySeconds:
-            typeof parsed.delaySeconds === "number" && Number.isFinite(parsed.delaySeconds)
-              ? Math.max(5, parsed.delaySeconds)
-              : defaultDelayedPromoConfig.delaySeconds,
-          itemKey: parsed.itemKey?.trim() || "",
-        })
-      } catch {
-        window.localStorage.removeItem(DELAYED_PROMO_STORAGE_KEY)
-        setDelayedPromoConfig(defaultDelayedPromoConfig)
-      }
-    }
-
-    loadDelayedPromoConfig()
-    window.addEventListener(DELAYED_PROMO_UPDATE_EVENT, loadDelayedPromoConfig)
-    window.addEventListener("storage", loadDelayedPromoConfig)
-
-    return () => {
-      window.removeEventListener(DELAYED_PROMO_UPDATE_EVENT, loadDelayedPromoConfig)
-      window.removeEventListener("storage", loadDelayedPromoConfig)
-    }
-  }, [])
-
-  const delayedPromo = useMemo(
-    () => getInitialDelayedPromo(delayedPromoOptions, delayedPromoConfig.itemKey),
-    [delayedPromoConfig.itemKey, delayedPromoOptions]
-  )
-
-  useEffect(() => {
     if (!WELCOME_PROMOTION_ENABLED) return
 
     const timeoutId = window.setTimeout(() => {
@@ -847,8 +752,16 @@ export function HomePage({
   }, [initialData.allCursos, initialData.allServicios, initialData.featuredBusinesses])
 
   useEffect(() => {
-    setIsDelayedPromoOpen(false)
-  }, [])
+    if (!delayedPromo?.image || typeof window === "undefined") return
+    if (window.sessionStorage.getItem(DELAYED_PROMO_SESSION_KEY) === "true") return
+
+    const timeoutId = window.setTimeout(() => {
+      window.sessionStorage.setItem(DELAYED_PROMO_SESSION_KEY, "true")
+      setIsDelayedPromoOpen(true)
+    }, delayedPromo.delaySeconds * 1000)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [delayedPromo])
 
   const WeatherIcon = useMemo(() => {
     if (!weather) return CloudSun
@@ -1044,62 +957,16 @@ export function HomePage({
     if (!rawId) return
 
     setIsDelayedPromoOpen(false)
+    const section =
+      delayedPromo.kind === "comercio"
+        ? "comercios"
+        : delayedPromo.kind === "servicio"
+          ? "servicios"
+          : "instituciones"
 
-    if (delayedPromo.kind === "comercio") {
-      const comercio = featuredBusinesses.find((item) => String(item.id) === rawId)
-      if (!comercio) return
-
-      handleViewMoreClick("comercios", rawId, comercio.nombre, () => {
-        if (comercio.premium_activo) {
-          router.push(`/comercios/${comercio.id}`)
-          return
-        }
-
-        setSelectedComercio(comercio)
-      })
-      return
-    }
-
-    if (delayedPromo.kind === "servicio") {
-      const servicio =
-        allServicios.find((item) => String(item.id) === rawId) ||
-        servicios.find((item) => String(item.id) === rawId)
-      if (!servicio) return
-
-      handleViewMoreClick("servicios", rawId, servicio.nombre, () => {
-        if (servicio.premium_activo) {
-          router.push(`/servicios/${servicio.id}`)
-          return
-        }
-
-        setSelectedServicio(servicio)
-      })
-      return
-    }
-
-    if (delayedPromo.kind === "curso") {
-      const curso =
-        allCursos.find((item) => String(item.id) === rawId) ||
-        cursos.find((item) => String(item.id) === rawId)
-      if (!curso) return
-
-      handleViewMoreClick("cursos", rawId, curso.nombre, () => {
-        setSelectedCurso(curso)
-      })
-      return
-    }
-
-    const institucion = instituciones.find((item) => String(item.id) === rawId)
-    if (!institucion) return
-
-    handleViewMoreClick("instituciones", rawId, institucion.nombre, () => {
-      if (hasInstitutionPremium(institucion)) {
-        router.push(`/instituciones/${institucion.id}`)
-        return
-      }
-
-      setSelectedInstitucion(institucion)
-    })
+    void recordViewMore(section, rawId, delayedPromo.title)
+    void recordContentVisit(section, rawId, delayedPromo.title)
+    router.push(delayedPromo.href)
   }
 
   const contactLeadIntro =
@@ -1145,10 +1012,10 @@ export function HomePage({
 
         {isDelayedPromoOpen && delayedPromo ? (
           <div
-            className="fixed inset-0 z-[84] overflow-y-auto bg-slate-950/55 px-3 py-4 sm:p-4"
+            className="fixed inset-0 z-[84] overflow-y-auto bg-slate-950/70 px-3 py-4 sm:p-4"
             onClick={() => setIsDelayedPromoOpen(false)}
           >
-            <div className="mx-auto flex min-h-full max-w-3xl items-center justify-center py-2 sm:py-4">
+            <div className="mx-auto flex min-h-full max-w-4xl items-center justify-center py-2 sm:py-4">
               <div
                 className="relative w-full overflow-hidden rounded-[28px] border border-white/10 bg-white shadow-2xl sm:rounded-[34px]"
                 onClick={(event) => event.stopPropagation()}
@@ -1161,62 +1028,22 @@ export function HomePage({
                 >
                   <X className="h-4 w-4" />
                 </button>
-                <div className="grid lg:grid-cols-[0.95fr_1.05fr]">
-                  <div className="relative min-h-[180px] bg-[radial-gradient(circle_at_top_left,#e7f3ff_0%,#f6fbff_42%,#ffffff_100%)] sm:min-h-[220px] lg:min-h-[260px]">
-                    {delayedPromo.image ? (
-                      <div className="absolute inset-0 p-4 sm:p-5 lg:p-6">
-                        <div className="relative h-full w-full overflow-hidden rounded-[24px] border border-white/80 bg-white/70 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.3)]">
-                          <OptimizedImage
-                            src={delayedPromo.image}
-                            alt={delayedPromo.title}
-                            sizes="(max-width: 1024px) 100vw, 45vw"
-                            className="object-contain p-3 sm:p-4"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex h-full min-h-[180px] items-center justify-center text-slate-400 sm:min-h-[220px] lg:min-h-[260px]">
-                        Sin imagen
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-4 sm:p-6 lg:p-8">
-                    <div className="inline-flex rounded-full bg-amber-100 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-800 sm:px-4 sm:py-2 sm:text-xs">
-                      Publicidad
-                    </div>
-                    <h2 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:mt-5 sm:text-3xl">
-                      {delayedPromo.title}
-                    </h2>
-                    {delayedPromo.subtitle ? (
-                      <p className="mt-2 text-sm font-medium text-slate-500 sm:mt-3">
-                        {delayedPromo.subtitle}
-                      </p>
-                    ) : null}
-                    <p className="mt-3 text-sm leading-7 text-slate-700 sm:mt-4 sm:text-base sm:leading-8">
-                      {delayedPromo.description}
-                    </p>
-                    <div className="mt-5 rounded-[20px] border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600 sm:mt-6 sm:rounded-[24px] sm:p-4 sm:leading-7">
-                      Esta tarjeta es una promocion destacada. Puedes entrar a ver la ficha o cerrarla y seguir navegando.
-                    </div>
-                    <div className="mt-5 flex flex-col gap-3 sm:mt-6 sm:flex-row sm:flex-wrap">
-                      <button
-                        type="button"
-                        onClick={openDelayedPromoDetail}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-600 sm:w-auto"
-                      >
-                        Ver ficha
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setIsDelayedPromoOpen(false)}
-                        className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 sm:w-auto"
-                      >
-                        Cerrar
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  onClick={openDelayedPromoDetail}
+                  className="relative block h-[min(78vh,720px)] min-h-[260px] w-full bg-slate-50 sm:min-h-[420px]"
+                  aria-label={`Abrir ficha de ${delayedPromo.title}`}
+                >
+                  {delayedPromo.image ? (
+                    <OptimizedImage
+                      src={delayedPromo.image}
+                      alt={delayedPromo.title}
+                      sizes="(max-width: 768px) 96vw, 860px"
+                      priority
+                      className="object-contain"
+                    />
+                  ) : null}
+                </button>
               </div>
             </div>
           </div>

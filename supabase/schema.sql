@@ -274,6 +274,17 @@ add column if not exists burbuja_home_visible_desde timestamp with time zone;
 alter table public.sitio
 add column if not exists burbuja_home_visible_hasta timestamp with time zone;
 
+create table if not exists public.destacados_home (
+  id bigint generated always as identity primary key,
+  imagen_url text not null,
+  entidad_tipo text not null check (entidad_tipo in ('comercio', 'servicio', 'institucion')),
+  entidad_id bigint not null,
+  activo boolean not null default false,
+  delay_seconds integer not null default 12,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+
 create table if not exists public.cursos (
   id bigint generated always as identity primary key,
   nombre text not null,
@@ -347,6 +358,32 @@ create table if not exists public.sitio (
   burbuja_home_visible_hasta timestamp with time zone,
   updated_at timestamp with time zone default now()
 );
+
+create table if not exists public.destacados_home (
+  id bigint generated always as identity primary key,
+  imagen_url text not null,
+  entidad_tipo text not null check (entidad_tipo in ('comercio', 'servicio', 'institucion')),
+  entidad_id bigint not null,
+  activo boolean not null default false,
+  delay_seconds integer not null default 12,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+
+alter table public.destacados_home
+add column if not exists imagen_url text;
+
+alter table public.destacados_home
+add column if not exists entidad_tipo text;
+
+alter table public.destacados_home
+add column if not exists entidad_id bigint;
+
+alter table public.destacados_home
+add column if not exists activo boolean not null default false;
+
+alter table public.destacados_home
+add column if not exists delay_seconds integer not null default 12;
 
 create table if not exists public.administradores (
   id bigint generated always as identity primary key,
@@ -541,6 +578,17 @@ on public.content_visits;
 
 create policy "Allow public read on content_visits"
 on public.content_visits
+for select
+to anon, authenticated
+using (true);
+
+alter table public.destacados_home enable row level security;
+
+drop policy if exists "Allow public read on destacados_home"
+on public.destacados_home;
+
+create policy "Allow public read on destacados_home"
+on public.destacados_home
 for select
 to anon, authenticated
 using (true);

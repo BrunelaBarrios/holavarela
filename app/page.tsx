@@ -31,6 +31,14 @@ const HOME_COURSES_LIMIT = 12
 const HOME_SERVICES_LIMIT = 24
 const HOME_INSTITUTIONS_LIMIT = 12
 
+type HomeHighlightAdRow = {
+  id: number
+  imagen_url: string | null
+  entidad_tipo: "comercio" | "servicio" | "institucion" | null
+  entidad_id: number | null
+  delay_seconds: number | null
+}
+
 const isCommercialEventCategory = (categoria?: string | null) => {
   const normalized = categoria?.trim().toLowerCase()
 
@@ -106,6 +114,22 @@ const getHomePageData = unstable_cache(
         return result
       })
 
+    const destacadoHomePromise = (async () => {
+      try {
+        const result = await supabaseServer
+          .from("destacados_home")
+          .select("id, imagen_url, entidad_tipo, entidad_id, delay_seconds")
+          .eq("activo", true)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        return result.error ? null : (result.data as HomeHighlightAdRow | null)
+      } catch {
+        return null
+      }
+    })()
+
     const [
       { data: featuredBusinesses },
       { data: eventosData },
@@ -113,6 +137,7 @@ const getHomePageData = unstable_cache(
       { data: servicios },
       { data: instituciones },
       { data: sobreVarelaData },
+      destacadoHomeData,
       challengeRanking,
       weather,
     ] = await Promise.all([
@@ -166,8 +191,9 @@ const getHomePageData = unstable_cache(
               destacado: false,
             })),
           }
-        }),
+      }),
       sitioPromise,
+      destacadoHomePromise,
       (async () => {
         try {
           const { data: siteConfig } = await sitioPromise
@@ -252,11 +278,23 @@ const getHomePageData = unstable_cache(
       sobreVarela: sobreVarelaData
         ? { ...defaultSobreVarela, ...sobreVarelaData }
         : defaultSobreVarela,
+      destacadoHome:
+        destacadoHomeData?.imagen_url &&
+        destacadoHomeData.entidad_tipo &&
+        destacadoHomeData.entidad_id
+          ? {
+              id: Number(destacadoHomeData.id),
+              image: destacadoHomeData.imagen_url,
+              entityType: destacadoHomeData.entidad_tipo,
+              entityId: Number(destacadoHomeData.entidad_id),
+              delaySeconds: Math.max(5, Number(destacadoHomeData.delay_seconds || 12)),
+            }
+          : null,
       challengeRanking,
       weather,
     }
   },
-  ["home-page-data-v8"],
+  ["home-page-data-v9"],
   { revalidate: 3600 }
 )
 

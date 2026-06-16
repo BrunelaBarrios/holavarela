@@ -1,7 +1,17 @@
 'use client'
 
-import { useEffect, useState } from "react"
-import { CalendarClock, FileText, ImageIcon, QrCode, Save } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
+import {
+  CalendarClock,
+  FileText,
+  ImageIcon,
+  Megaphone,
+  Pencil,
+  QrCode,
+  Save,
+  Star,
+  Trash2,
+} from "lucide-react"
 import { OptimizedImage } from "../../components/OptimizedImage"
 import { supabase } from "../../supabase"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
@@ -27,6 +37,34 @@ type PopupInicioForm = {
   descripcion: string
   visible_desde: string
   visible_hasta: string
+}
+
+type HighlightEntityType = "comercio" | "servicio" | "institucion"
+
+type HomeHighlightForm = {
+  id: number | null
+  imagen_url: string
+  entityKey: string
+  activo: boolean
+  delay_seconds: number
+}
+
+type HomeHighlight = {
+  id: number
+  imagen_url: string
+  entidad_tipo: HighlightEntityType
+  entidad_id: number
+  activo: boolean
+  delay_seconds: number
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+type HomeHighlightOption = {
+  key: string
+  type: HighlightEntityType
+  id: number
+  label: string
 }
 
 type SitioConfigRow = {
@@ -65,6 +103,14 @@ const initialPopupForm: PopupInicioForm = {
   visible_hasta: "",
 }
 
+const initialHighlightForm: HomeHighlightForm = {
+  id: null,
+  imagen_url: "",
+  entityKey: "",
+  activo: true,
+  delay_seconds: 12,
+}
+
 function toDateTimeLocal(value?: string | null) {
   if (!value) return ""
   const date = new Date(value)
@@ -88,6 +134,35 @@ export default function AdminSitioPage() {
   const [saveMessage, setSaveMessage] = useState("")
   const [saveError, setSaveError] = useState("")
   const [popupSchemaReady, setPopupSchemaReady] = useState(true)
+  const [highlightForm, setHighlightForm] =
+    useState<HomeHighlightForm>(initialHighlightForm)
+  const [highlights, setHighlights] = useState<HomeHighlight[]>([])
+  const [highlightOptions, setHighlightOptions] = useState<HomeHighlightOption[]>([])
+  const [highlightLoading, setHighlightLoading] = useState(false)
+  const [highlightMessage, setHighlightMessage] = useState("")
+  const [highlightError, setHighlightError] = useState("")
+
+  const loadHighlights = useCallback(async () => {
+    const response = await fetch("/api/admin/destacados", {
+      method: "GET",
+      cache: "no-store",
+    })
+    const result = (await response.json().catch(() => null)) as
+      | {
+          error?: string
+          highlights?: HomeHighlight[]
+          options?: HomeHighlightOption[]
+        }
+      | null
+
+    if (!response.ok || result?.error) {
+      setHighlightError(result?.error || "No se pudieron cargar los destacados.")
+      return
+    }
+
+    setHighlights(result?.highlights || [])
+    setHighlightOptions(result?.options || [])
+  }, [])
 
   useEffect(() => {
     const cargarConfiguracion = async () => {
@@ -143,6 +218,10 @@ export default function AdminSitioPage() {
     void cargarConfiguracion()
   }, [])
 
+  useEffect(() => {
+    void loadHighlights()
+  }, [loadHighlights])
+
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -156,6 +235,136 @@ export default function AdminSitioPage() {
         error instanceof Error ? error.message : "No se pudo cargar la imagen."
       )
     }
+  }
+
+  const handleHighlightImageChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      const imageDataUrl = await fileToDataUrl(file)
+      setHighlightForm((prev) => ({ ...prev, imagen_url: imageDataUrl }))
+      setHighlightError("")
+    } catch (error) {
+      setHighlightError(
+        error instanceof Error ? error.message : "No se pudo cargar la imagen."
+      )
+    }
+  }
+
+  const resetHighlightForm = () => {
+    setHighlightForm(initialHighlightForm)
+    setHighlightError("")
+    setHighlightMessage("")
+  }
+
+  const handleEditHighlight = (highlight: HomeHighlight) => {
+    setHighlightForm({
+      id: highlight.id,
+      imagen_url: highlight.imagen_url,
+      entityKey: `${highlight.entidad_tipo}:${highlight.entidad_id}`,
+      activo: highlight.activo,
+      delay_seconds: highlight.delay_seconds || initialHighlightForm.delay_seconds,
+    })
+    setHighlightError("")
+    setHighlightMessage("")
+  }
+
+  const handleHighlightSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setHighlightLoading(true)
+    setHighlightMessage("")
+    setHighlightError("")
+
+    const [entityType, rawEntityId] = highlightForm.entityKey.split(":")
+    const response = await fetch("/api/admin/destacados", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "save",
+        id: highlightForm.id || undefined,
+        payload: {
+          imagen_url: highlightForm.imagen_url,
+          entidad_tipo: entityType,
+          entidad_id: Number(rawEntityId || 0),
+          activo: highlightForm.activo,
+          delay_seconds: highlightForm.delay_seconds,
+        },
+      }),
+    })
+    const result = (await response.json().catch(() => null)) as
+      | { error?: string }
+      | null
+
+    if (!response.ok || result?.error) {
+      setHighlightError(result?.error || "No se pudo guardar el destacado.")
+      setHighlightLoading(false)
+      return
+    }
+
+    await loadHighlights()
+    setHighlightForm(initialHighlightForm)
+    setHighlightMessage("Destacado guardado correctamente.")
+    setHighlightLoading(false)
+  }
+
+  const handleToggleHighlight = async (highlight: HomeHighlight) => {
+    setHighlightLoading(true)
+    setHighlightError("")
+    setHighlightMessage("")
+
+    const response = await fetch("/api/admin/destacados", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "toggle_active", id: highlight.id }),
+    })
+    const result = (await response.json().catch(() => null)) as
+      | { error?: string }
+      | null
+
+    if (!response.ok || result?.error) {
+      setHighlightError(result?.error || "No se pudo cambiar el estado.")
+      setHighlightLoading(false)
+      return
+    }
+
+    await loadHighlights()
+    setHighlightMessage(
+      highlight.activo ? "Destacado desactivado." : "Destacado activado."
+    )
+    setHighlightLoading(false)
+  }
+
+  const handleDeleteHighlight = async (highlight: HomeHighlight) => {
+    if (!window.confirm("Eliminar este destacado?")) return
+
+    setHighlightLoading(true)
+    setHighlightError("")
+    setHighlightMessage("")
+
+    const response = await fetch("/api/admin/destacados", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delete", id: highlight.id }),
+    })
+    const result = (await response.json().catch(() => null)) as
+      | { error?: string }
+      | null
+
+    if (!response.ok || result?.error) {
+      setHighlightError(result?.error || "No se pudo eliminar el destacado.")
+      setHighlightLoading(false)
+      return
+    }
+
+    await loadHighlights()
+    if (highlightForm.id === highlight.id) {
+      setHighlightForm(initialHighlightForm)
+    }
+    setHighlightMessage("Destacado eliminado.")
+    setHighlightLoading(false)
   }
 
   const handleDownloadSiteQr = () => {
@@ -235,6 +444,11 @@ export default function AdminSitioPage() {
     )
     setLoading(false)
   }
+
+  const getHighlightLabel = (highlight: HomeHighlight) =>
+    highlightOptions.find(
+      (option) => option.key === `${highlight.entidad_tipo}:${highlight.entidad_id}`
+    )?.label || `${highlight.entidad_tipo}:${highlight.entidad_id}`
 
   if (isInitialLoading) {
     return (
@@ -538,6 +752,232 @@ export default function AdminSitioPage() {
               </button>
             </div>
           </form>
+
+          <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="rounded-xl bg-amber-500 p-3 text-white">
+                <Megaphone className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">
+                  Publicidad destacada
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Carga una imagen y relacionala internamente con una ficha existente.
+                </p>
+              </div>
+            </div>
+
+            {highlightError ? (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {highlightError}
+              </div>
+            ) : null}
+
+            {highlightMessage ? (
+              <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                {highlightMessage}
+              </div>
+            ) : null}
+
+            <form onSubmit={handleHighlightSubmit} className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-900">
+                  Imagen del destacado
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleHighlightImageChange}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-amber-50 file:px-4 file:py-2 file:font-medium file:text-amber-700 hover:file:bg-amber-100"
+                />
+                {highlightForm.imagen_url ? (
+                  <div className="relative mt-3 h-56 w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                    <OptimizedImage
+                      src={highlightForm.imagen_url}
+                      alt="Vista previa del destacado"
+                      sizes="100vw"
+                      className="object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-3 flex h-40 w-full items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-500">
+                    Sin imagen para el destacado
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-900">
+                  Ficha relacionada
+                </label>
+                <select
+                  value={highlightForm.entityKey}
+                  onChange={(e) =>
+                    setHighlightForm((prev) => ({
+                      ...prev,
+                      entityKey: e.target.value,
+                    }))
+                  }
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-amber-500"
+                  required
+                >
+                  <option value="">Seleccionar institucion, servicio o comercio</option>
+                  {highlightOptions.map((option) => (
+                    <option key={option.key} value={option.key}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Espera en segundos
+                  </label>
+                  <input
+                    type="number"
+                    min={5}
+                    max={180}
+                    value={highlightForm.delay_seconds}
+                    onChange={(e) =>
+                      setHighlightForm((prev) => ({
+                        ...prev,
+                        delay_seconds: Math.max(5, Number(e.target.value) || 5),
+                      }))
+                    }
+                    className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-amber-500"
+                  />
+                </div>
+
+                <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <span>
+                    <span className="block text-sm font-medium text-slate-900">
+                      Dejar activo
+                    </span>
+                    <span className="mt-1 block text-sm text-slate-500">
+                      Si se activa, apaga los otros destacados.
+                    </span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={highlightForm.activo}
+                    onChange={(e) =>
+                      setHighlightForm((prev) => ({
+                        ...prev,
+                        activo: e.target.checked,
+                      }))
+                    }
+                    className="h-5 w-5 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                  />
+                </label>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={highlightLoading}
+                  className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-3 font-medium text-white transition hover:bg-amber-400 disabled:opacity-60"
+                >
+                  <Save className="h-5 w-5" />
+                  {highlightLoading
+                    ? "Guardando..."
+                    : highlightForm.id
+                      ? "Guardar destacado"
+                      : "Crear destacado"}
+                </button>
+                {highlightForm.id ? (
+                  <button
+                    type="button"
+                    onClick={resetHighlightForm}
+                    className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Cancelar edicion
+                  </button>
+                ) : null}
+              </div>
+            </form>
+
+            <div className="mt-6 space-y-3">
+              <h3 className="text-sm font-semibold uppercase text-slate-500">
+                Destacados cargados
+              </h3>
+              {highlights.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+                  Aun no hay publicidades destacadas cargadas.
+                </div>
+              ) : (
+                highlights.map((highlight) => (
+                  <div
+                    key={highlight.id}
+                    className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:grid-cols-[120px_1fr]"
+                  >
+                    <div className="relative h-24 overflow-hidden rounded-xl bg-white">
+                      <OptimizedImage
+                        src={highlight.imagen_url}
+                        alt={getHighlightLabel(highlight)}
+                        sizes="120px"
+                        className="object-contain"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-slate-950">
+                          {getHighlightLabel(highlight)}
+                        </span>
+                        {highlight.activo ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                            <Star className="h-3.5 w-3.5 fill-current" />
+                            Activo
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                            Inactivo
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Aparece luego de {highlight.delay_seconds || 12} segundos.
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleEditHighlight(highlight)}
+                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleHighlight(highlight)}
+                          disabled={highlightLoading}
+                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-60"
+                        >
+                          <Star
+                            className={`h-4 w-4 ${
+                              highlight.activo ? "fill-current text-emerald-600" : ""
+                            }`}
+                          />
+                          {highlight.activo ? "Desactivar" : "Activar"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteHighlight(highlight)}
+                          disabled={highlightLoading}
+                          className="inline-flex items-center gap-2 rounded-xl border border-red-100 bg-white px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Eliminar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
         </div>
 
         <div>
