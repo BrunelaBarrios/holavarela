@@ -2908,7 +2908,7 @@ function HomePromoImageCard({
         alt={event.titulo}
         sizes="(max-width: 640px) 72vw, (max-width: 1024px) 18rem, 20rem"
         quality={78}
-        className="object-cover transition duration-300 group-hover:scale-[1.03]"
+        className="object-contain p-2 transition duration-300 group-hover:scale-[1.02]"
       />
     </div>
   )
