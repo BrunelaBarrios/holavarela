@@ -1,4 +1,5 @@
 type CouponItem = {
+  number?: number | null
   title: string
   subtitle?: string | null
   meta?: string | null
@@ -30,7 +31,7 @@ export function printCouponsPdf(params: {
     .map(
       (item, index) => `
         <article class="coupon">
-          <div class="coupon__badge">Cupón ${index + 1}</div>
+          <div class="coupon__badge">Cupón ${item.number ?? index + 1}</div>
           <h2 class="coupon__title">${escapeHtml(item.title)}</h2>
           ${item.subtitle ? `<p class="coupon__subtitle">${escapeHtml(item.subtitle)}</p>` : ""}
           ${item.meta ? `<div class="coupon__meta">${escapeHtml(item.meta)}</div>` : ""}

@@ -248,6 +248,25 @@ export default function AdminSorteosPage() {
         .includes(normalizedSearch)
     })
   }, [entries, entryScope, entrySearch, selectedCampaign])
+  const entryNumberById = useMemo(() => {
+    const entriesBySweepstakes = new Map<number | null, SweepstakesEntry[]>()
+
+    entries.forEach((entry) => {
+      const group = entriesBySweepstakes.get(entry.sorteoId) || []
+      group.push(entry)
+      entriesBySweepstakes.set(entry.sorteoId, group)
+    })
+
+    const numbers = new Map<number, number>()
+    entriesBySweepstakes.forEach((group) => {
+      const total = group.length
+      group.forEach((entry, index) => {
+        numbers.set(entry.id, total - index)
+      })
+    })
+
+    return numbers
+  }, [entries])
   const selectedCampaignEntriesCount = useMemo(() => {
     if (!selectedCampaign) return 0
     return entries.filter((entry) => entry.sorteoId === selectedCampaign.id).length
@@ -460,8 +479,9 @@ export default function AdminSorteosPage() {
       `"${String(value ?? "").replace(/"/g, '""')}"`
 
     const rows = [
-      ["sorteo_id", "sorteo", "nombre", "telefono", "corazones", "origen", "fecha"],
+      ["numero", "sorteo_id", "sorteo", "nombre", "telefono", "corazones", "origen", "fecha"],
       ...visibleEntries.map((entry) => [
+        entryNumberById.get(entry.id) ?? "",
         entry.sorteoId ?? "",
         entry.sorteoId
           ? campaignTitleById.get(entry.sorteoId) || `Sorteo #${entry.sorteoId}`
@@ -505,6 +525,7 @@ export default function AdminSorteosPage() {
       subheading:
         "Listos para imprimir o guardar como PDF y recortar para el sorteo.",
       items: visibleEntries.map((entry) => ({
+        number: entryNumberById.get(entry.id),
         title: entry.nombre,
         subtitle: entry.telefono,
         meta: `Origen: ${getEntrySourceLabel(entry.source)}\nCorazones: ${entry.totalLikes}\n${
@@ -952,6 +973,7 @@ export default function AdminSorteosPage() {
                     <table className="min-w-full divide-y divide-slate-200">
                       <thead className="bg-slate-50">
                         <tr className="text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                          <th className="px-4 py-3">Nro.</th>
                           <th className="px-4 py-3">Nombre</th>
                           <th className="px-4 py-3">Teléfono</th>
                           <th className="px-4 py-3">Corazones</th>
@@ -963,6 +985,9 @@ export default function AdminSorteosPage() {
                       <tbody className="divide-y divide-slate-200 bg-white">
                         {visibleEntries.map((entry) => (
                             <tr key={entry.id} className="text-sm text-slate-700">
+                              <td className="px-4 py-3 font-semibold text-slate-500">
+                                {entryNumberById.get(entry.id) ?? "-"}
+                              </td>
                               <td className="px-4 py-3 font-medium text-slate-900">{entry.nombre}</td>
                               <td className="px-4 py-3">{entry.telefono}</td>
                               <td className="px-4 py-3">{entry.totalLikes}</td>
