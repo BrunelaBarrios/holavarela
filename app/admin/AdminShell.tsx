@@ -26,13 +26,13 @@ export default function AdminLayout({
 }>) {
   const pathname = usePathname()
   const router = useRouter()
+  const isLoginPage = pathname === "/admin/login" || pathname === "/admin/loginV"
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isCheckingSession, setIsCheckingSession] = useState(true)
-  const [session, setSession] = useState(() => getAdminSession())
+  const [session, setSession] = useState(() => (isLoginPage ? null : getAdminSession()))
   const [navSearch, setNavSearch] = useState("")
   const adminRole: AdminRole = session?.role || "admin"
   const adminName = session?.name || ""
-  const isLoginPage = pathname === "/admin/login" || pathname === "/admin/loginV"
   const isLoggedIn = Boolean(session)
   const shouldRedirectToLogin = !isCheckingSession && !isLoggedIn && !isLoginPage
   const shouldRedirectToDashboard = !isCheckingSession && isLoggedIn && isLoginPage
@@ -93,7 +93,12 @@ export default function AdminLayout({
         }
       } catch {
         if (!mounted) return
-        setSession(getAdminSession())
+        if (isLoginPage) {
+          clearAdminSession()
+          setSession(null)
+        } else {
+          setSession(getAdminSession())
+        }
       } finally {
         window.clearTimeout(timeoutId)
         if (mounted) {
@@ -107,7 +112,7 @@ export default function AdminLayout({
     return () => {
       mounted = false
     }
-  }, [])
+  }, [isLoginPage])
 
   useEffect(() => {
     const handleSessionUpdated = () => {
