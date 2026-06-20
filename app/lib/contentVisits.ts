@@ -9,6 +9,7 @@ export const CONTENT_VISIT_SECTIONS = [
   "cursos",
   "servicios",
   "instituciones",
+  "destacados_home",
   "site_pages",
 ] as const
 
@@ -70,6 +71,32 @@ export const recordContentVisit = async (
 
   if (error) {
     console.error("No se pudo registrar la visita del contenido:", error)
+  }
+}
+
+export const recordHighlightImpression = async (
+  itemId: string,
+  itemTitle?: string | null
+) => {
+  trackAnalyticsEvent("highlight_impression", {
+    item_id: itemId,
+    item_title: itemTitle,
+  })
+
+  const browserKey = getContentVisitsBrowserKey()
+  if (!browserKey) return
+
+  const { error } = await supabase.from("content_visits").insert([
+    {
+      section: "destacados_home",
+      item_id: itemId,
+      item_title: itemTitle || null,
+      browser_key: browserKey,
+    },
+  ])
+
+  if (error) {
+    console.error("No se pudo registrar la impresion del destacado:", error)
   }
 }
 

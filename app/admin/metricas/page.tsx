@@ -8,6 +8,7 @@ import {
   CalendarDays,
   FileText,
   Heart,
+  Megaphone,
   MessageCircle,
   MousePointerClick,
   Save,
@@ -51,6 +52,12 @@ type ExternalLinkMetricRow = MetricRow & {
 
 type EventLikeMetricRow = {
   created_at: string | null
+}
+
+type HighlightImpressionMetricRow = {
+  created_at: string | null
+  item_id: string | null
+  item_title: string | null
 }
 
 type InteractionRow = {
@@ -311,6 +318,7 @@ export default function AdminMetricasPage() {
     emptyExternalLinkTypeTotals()
   )
   const [eventLikeTotal, setEventLikeTotal] = useState(0)
+  const [highlightImpressionTotal, setHighlightImpressionTotal] = useState(0)
   const [dailyTrend, setDailyTrend] = useState<TrendPoint[]>([])
   const [recentMessages, setRecentMessages] = useState<RecentMessage[]>([])
   const [recentSiteActivity, setRecentSiteActivity] = useState<RecentSiteActivity>({
@@ -340,6 +348,7 @@ export default function AdminMetricasPage() {
         viewMoreRows,
         externalLinkRows,
         eventLikeRows,
+        highlightImpressionRows,
         shareRows15,
         whatsappRows15,
         viewMoreRows15,
@@ -370,6 +379,12 @@ export default function AdminMetricasPage() {
         fetchMetricRows<MetricRow>("view_more_clicks", "section, created_at"),
         fetchMetricRows<ExternalLinkMetricRow>("external_link_clicks", "section, link_type, created_at"),
         fetchMetricRows<EventLikeMetricRow>("event_likes", "created_at"),
+        fetchMetricRowsWithFallback<HighlightImpressionMetricRow>(
+          "content_visits",
+          "item_id, item_title, created_at",
+          "las impresiones de destacados",
+          { equals: { section: "destacados_home" } }
+        ),
         fetchMetricRowsWithFallback<InteractionRow>("share_events", "created_at", "los compartidos de 15 días", {
           since: getIsoDaysAgo(15),
         }),
@@ -435,6 +450,7 @@ export default function AdminMetricasPage() {
       setExternalLinkTotals(buildExternalLinkTotals(safeExternalLinkRows))
       setExternalLinkTypeTotals(buildExternalLinkTypeTotals(safeExternalLinkRows))
       setEventLikeTotal(buildEventLikeTotal(safeEventLikeRows))
+      setHighlightImpressionTotal(highlightImpressionRows.length)
       setDailyTrend(
         buildDailyTrend(
           safeShareRows,
@@ -625,7 +641,7 @@ export default function AdminMetricasPage() {
       ) : (
         activeTab === "interacciones" ? (
         <>
-          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
             <MetricCard
               title="WhatsApp"
               value={totalWhatsapp}
@@ -660,6 +676,13 @@ export default function AdminMetricasPage() {
               helper="Likes recibidos por los eventos."
               icon={<Heart className="h-5 w-5 text-rose-700" />}
               tone="bg-rose-100 text-rose-700"
+            />
+            <MetricCard
+              title="Destacados"
+              value={highlightImpressionTotal}
+              helper="Veces que se mostro la publicidad destacada."
+              icon={<Megaphone className="h-5 w-5 text-orange-700" />}
+              tone="bg-orange-100 text-orange-700"
             />
           </div>
 

@@ -20,7 +20,7 @@ import { ShareButton } from "./ShareButton"
 import { formatEventDateRange } from "../lib/eventDates"
 import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
 import { parseEventDescription, shouldHideEventDate } from "../lib/eventSubmissionMeta"
-import { recordContentVisit, recordSiteVisit } from "../lib/contentVisits"
+import { recordContentVisit, recordHighlightImpression, recordSiteVisit } from "../lib/contentVisits"
 import { RADIO_STORAGE_KEY } from "../lib/localStorageKeys"
 import { buildHomePublicNav } from "../lib/publicNav"
 import { useSweepstakesPopup } from "../lib/useSweepstakesPopup"
@@ -772,6 +772,7 @@ export function HomePage({
 
     const timeoutId = window.setTimeout(() => {
       window.localStorage.setItem(DELAYED_PROMO_LAST_KEY, `ad:${delayedPromo.id}`)
+      void recordHighlightImpression(String(delayedPromo.id), delayedPromo.title)
       setIsDelayedPromoOpen(true)
     }, delayedPromo.delaySeconds * 1000)
 

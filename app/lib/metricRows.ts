@@ -3,6 +3,7 @@ import { supabase } from "../supabase"
 const METRIC_PAGE_SIZE = 1000
 
 type MetricRowsOptions = {
+  equals?: Record<string, string | number | boolean>
   since?: string
 }
 
@@ -24,6 +25,10 @@ export const fetchMetricRows = async <T,>(
     if (options.since) {
       query = query.gte("created_at", options.since)
     }
+
+    Object.entries(options.equals || {}).forEach(([column, value]) => {
+      query = query.eq(column, value)
+    })
 
     const { data, error } = await query
 
