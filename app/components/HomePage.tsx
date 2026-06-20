@@ -595,7 +595,7 @@ export function HomePage({
     [eventos]
   )
   const visibleAvisoEventos = useMemo(
-    () => sortEventsForHome(eventos.filter((event) => isAvisoCategory(event.categoria))).slice(0, 3),
+    () => sortEventsForHome(eventos.filter((event) => isAvisoCategory(event.categoria))).slice(0, 4),
     [eventos]
   )
   const visiblePromoEventos = useMemo(
@@ -2448,7 +2448,7 @@ export function HomePage({
                       <HomeEventCard
                         key={event.id}
                         event={event}
-                        className={index >= 2 ? "hidden lg:block" : ""}
+                        className={index >= 3 ? "lg:hidden" : ""}
                         count={eventLikeCounts[String(event.id)]}
                         liked={Boolean(likedEvents[String(event.id)])}
                         disabled={likingEventId === String(event.id)}
