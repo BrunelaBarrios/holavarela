@@ -398,7 +398,6 @@ const defaultRadioConfig: RadioConfig = {
 const WELCOME_PROMOTION_ENABLED = false
 const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
-const DELAYED_PROMO_SESSION_KEY = "guia-varela-delayed-promo-shown-v2"
 const DELAYED_PROMO_LAST_KEY = "guia-varela-last-delayed-promo"
 const initialContactLeadForm: ContactLeadForm = {
   nombre: "",
@@ -770,10 +769,8 @@ export function HomePage({
 
   useEffect(() => {
     if (!delayedPromo?.image || typeof window === "undefined") return
-    if (window.sessionStorage.getItem(DELAYED_PROMO_SESSION_KEY) === "true") return
 
     const timeoutId = window.setTimeout(() => {
-      window.sessionStorage.setItem(DELAYED_PROMO_SESSION_KEY, "true")
       window.localStorage.setItem(DELAYED_PROMO_LAST_KEY, `ad:${delayedPromo.id}`)
       setIsDelayedPromoOpen(true)
     }, delayedPromo.delaySeconds * 1000)
