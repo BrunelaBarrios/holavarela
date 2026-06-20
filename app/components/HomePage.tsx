@@ -2570,7 +2570,7 @@ export function HomePage({
                     <h3 className="line-clamp-3 text-sm font-semibold leading-tight text-slate-900 sm:text-[22px]">
                       {curso.nombre}
                     </h3>
-                    <p className="mt-2 hidden whitespace-pre-line text-sm leading-6 text-slate-500 sm:mt-3 sm:line-clamp-3 sm:block sm:text-base sm:leading-7">
+                    <p className="mt-2 hidden overflow-hidden whitespace-pre-line text-sm leading-6 text-slate-500 sm:mt-3 sm:block sm:max-h-[5.25rem] sm:text-base sm:leading-7">
                       {curso.descripcion}
                     </p>
                     <div className="mt-3 hidden items-center gap-2 text-xs text-slate-600 sm:mt-4 sm:flex sm:text-sm">
