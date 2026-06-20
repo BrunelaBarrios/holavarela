@@ -98,18 +98,6 @@ async function getEntityOptions(supabaseAdmin: ReturnType<typeof getSupabaseAdmi
   ]
 }
 
-async function deactivateOtherHighlights(
-  supabaseAdmin: ReturnType<typeof getSupabaseAdmin>,
-  activeId: number
-) {
-  const { error } = await supabaseAdmin
-    .from("destacados_home")
-    .update({ activo: false, updated_at: new Date().toISOString() })
-    .neq("id", activeId)
-
-  if (error) throw error
-}
-
 export async function GET(request: NextRequest) {
   try {
     const session = await readAdminSessionFromRequest(request)
@@ -193,10 +181,6 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (error) throw error
-      if (nextActive) {
-        await deactivateOtherHighlights(supabaseAdmin, Number(body.id))
-      }
-
       await logAdminActivityServer(session, {
         action: nextActive ? "Activar" : "Desactivar",
         section: "Destacados",
@@ -251,15 +235,11 @@ export async function POST(request: NextRequest) {
     const { data, error } = await query
     if (error) throw error
 
-    if (payload.activo) {
-      await deactivateOtherHighlights(supabaseAdmin, Number(data.id))
-    }
-
     await logAdminActivityServer(session, {
       action: body.id ? "Editar" : "Crear",
       section: "Destacados",
       target: `${entityType}:${entityId}`,
-      details: payload.activo ? "Quedo como destacado activo de la Home." : undefined,
+      details: payload.activo ? "Quedo activo en la rotacion de destacados de la Home." : undefined,
     })
 
     revalidatePath("/")

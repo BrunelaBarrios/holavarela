@@ -253,7 +253,7 @@ export type HomePageData = {
   allCursos: Curso[]
   allServicios: Servicio[]
   sobreVarela: SobreVarelaConfig
-  destacadoHome: HomeHighlightAd | null
+  destacadosHome: HomeHighlightAd[]
   challengeRanking: ChallengeRankingEntry[]
   weather: WeatherData | null
 }
@@ -292,6 +292,7 @@ type WelcomeHighlight = {
 }
 
 type DelayedPromo = {
+  id: number
   key: string
   kind: "comercio" | "servicio" | "institucion"
   title: string
@@ -398,6 +399,7 @@ const WELCOME_PROMOTION_ENABLED = false
 const WELCOME_SESSION_KEY = "guia-varela-welcome-shown-v2"
 const WELCOME_LAST_KEY = "guia-varela-last-highlight"
 const DELAYED_PROMO_SESSION_KEY = "guia-varela-delayed-promo-shown-v2"
+const DELAYED_PROMO_LAST_KEY = "guia-varela-last-delayed-promo"
 const initialContactLeadForm: ContactLeadForm = {
   nombre: "",
   telefono: "",
@@ -617,13 +619,22 @@ export function HomePage({
     [instituciones]
   )
   const delayedPromo = useMemo<DelayedPromo | null>(() => {
-    const ad = initialData.destacadoHome
+    const activeAds = initialData.destacadosHome || []
+    if (activeAds.length === 0) return null
+
+    const lastShownKey =
+      typeof window === "undefined"
+        ? null
+        : window.localStorage.getItem(DELAYED_PROMO_LAST_KEY)
+    const lastIndex = activeAds.findIndex((item) => `ad:${item.id}` === lastShownKey)
+    const ad = activeAds[lastIndex >= 0 ? (lastIndex + 1) % activeAds.length : 0]
     if (!ad?.image) return null
 
     if (ad.entityType === "comercio") {
       const comercio = featuredBusinesses.find((item) => item.id === ad.entityId)
       return {
-        key: `comercio:${ad.entityId}`,
+        id: ad.id,
+        key: `ad:${ad.id}:comercio:${ad.entityId}`,
         kind: "comercio",
         title: comercio?.nombre || "Comercio destacado",
         image: ad.image,
@@ -637,7 +648,8 @@ export function HomePage({
         allServicios.find((item) => item.id === ad.entityId) ||
         servicios.find((item) => item.id === ad.entityId)
       return {
-        key: `servicio:${ad.entityId}`,
+        id: ad.id,
+        key: `ad:${ad.id}:servicio:${ad.entityId}`,
         kind: "servicio",
         title: servicio?.nombre || "Servicio destacado",
         image: ad.image,
@@ -648,14 +660,15 @@ export function HomePage({
 
     const institucion = instituciones.find((item) => item.id === ad.entityId)
     return {
-      key: `institucion:${ad.entityId}`,
+      id: ad.id,
+      key: `ad:${ad.id}:institucion:${ad.entityId}`,
       kind: "institucion",
       title: institucion?.nombre || "Institucion destacada",
       image: ad.image,
       href: `/instituciones/${ad.entityId}`,
       delaySeconds: ad.delaySeconds,
     }
-  }, [allServicios, featuredBusinesses, initialData.destacadoHome, instituciones, servicios])
+  }, [allServicios, featuredBusinesses, initialData.destacadosHome, instituciones, servicios])
 
 
   const weather = initialData.weather
@@ -761,6 +774,7 @@ export function HomePage({
 
     const timeoutId = window.setTimeout(() => {
       window.sessionStorage.setItem(DELAYED_PROMO_SESSION_KEY, "true")
+      window.localStorage.setItem(DELAYED_PROMO_LAST_KEY, `ad:${delayedPromo.id}`)
       setIsDelayedPromoOpen(true)
     }, delayedPromo.delaySeconds * 1000)
 
@@ -957,7 +971,7 @@ export function HomePage({
   const openDelayedPromoDetail = () => {
     if (!delayedPromo) return
 
-    const [, rawId] = delayedPromo.key.split(":")
+    const [, , , rawId] = delayedPromo.key.split(":")
     if (!rawId) return
 
     setIsDelayedPromoOpen(false)
@@ -2828,7 +2842,7 @@ function HomeEventCard({
       }`}
     >
       {event.imagen && (
-        <div className="relative h-64 w-full bg-white">
+        <div className="relative h-44 w-full bg-white sm:h-64">
           <OptimizedImage
             src={event.imagen}
             alt={event.titulo}
@@ -2839,25 +2853,25 @@ function HomeEventCard({
         </div>
       )}
 
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         {!shouldHideEventDate(event.descripcion, event.categoria) ? (
-          <div className="mb-4 flex items-center gap-2 text-lg text-blue-500">
-            <CalendarDays className="h-5 w-5" />
+          <div className="mb-3 flex items-center gap-1.5 text-sm leading-tight text-blue-500 sm:mb-4 sm:gap-2 sm:text-lg">
+            <CalendarDays className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
             <span>{formatEventDateRange(event.fecha, event.fecha_fin, event.fecha_solo_mes ?? false)}</span>
           </div>
         ) : null}
 
-        <div className="mb-3 inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+        <div className="mb-2 inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-semibold leading-none text-sky-700 sm:mb-3 sm:px-3 sm:text-xs">
           {normalizeEventCategory(event.categoria)}
         </div>
 
-        <h3 className="text-[22px] font-semibold text-slate-900">
+        <h3 className="text-base font-semibold leading-tight text-slate-900 sm:text-[22px]">
           {event.titulo}
         </h3>
 
-        <p className="mt-2 text-sm text-slate-500">{event.ubicacion}</p>
+        <p className="mt-1.5 text-xs leading-snug text-slate-500 sm:mt-2 sm:text-sm">{event.ubicacion}</p>
 
-        <div className="mt-4" onClick={(eventLikeWrapper) => eventLikeWrapper.stopPropagation()}>
+        <div className="mt-3 sm:mt-4" onClick={(eventLikeWrapper) => eventLikeWrapper.stopPropagation()}>
           <EventLikeButton
             count={count}
             liked={liked}
@@ -2873,7 +2887,7 @@ function HomeEventCard({
             eventClick.stopPropagation()
             onOpen()
           }}
-          className="mt-5 inline-flex items-center gap-2 text-lg font-medium text-blue-500 hover:text-blue-600"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-blue-500 hover:text-blue-600 sm:mt-5 sm:gap-2 sm:text-lg"
         >
           Ver más
           <ArrowRight className="h-4 w-4" />

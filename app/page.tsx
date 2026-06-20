@@ -114,19 +114,18 @@ const getHomePageData = unstable_cache(
         return result
       })
 
-    const destacadoHomePromise = (async () => {
+    const destacadosHomePromise = (async () => {
       try {
         const result = await supabaseServer
           .from("destacados_home")
           .select("id, imagen_url, entidad_tipo, entidad_id, delay_seconds")
           .eq("activo", true)
           .order("updated_at", { ascending: false })
-          .limit(1)
-          .maybeSingle()
+          .limit(20)
 
-        return result.error ? null : (result.data as HomeHighlightAdRow | null)
+        return result.error ? [] : ((result.data || []) as HomeHighlightAdRow[])
       } catch {
-        return null
+        return []
       }
     })()
 
@@ -137,7 +136,7 @@ const getHomePageData = unstable_cache(
       { data: servicios },
       { data: instituciones },
       { data: sobreVarelaData },
-      destacadoHomeData,
+      destacadosHomeData,
       challengeRanking,
       weather,
     ] = await Promise.all([
@@ -193,7 +192,7 @@ const getHomePageData = unstable_cache(
           }
       }),
       sitioPromise,
-      destacadoHomePromise,
+      destacadosHomePromise,
       (async () => {
         try {
           const { data: siteConfig } = await sitioPromise
@@ -278,23 +277,25 @@ const getHomePageData = unstable_cache(
       sobreVarela: sobreVarelaData
         ? { ...defaultSobreVarela, ...sobreVarelaData }
         : defaultSobreVarela,
-      destacadoHome:
-        destacadoHomeData?.imagen_url &&
-        destacadoHomeData.entidad_tipo &&
-        destacadoHomeData.entidad_id
-          ? {
-              id: Number(destacadoHomeData.id),
-              image: destacadoHomeData.imagen_url,
-              entityType: destacadoHomeData.entidad_tipo,
-              entityId: Number(destacadoHomeData.entidad_id),
-              delaySeconds: Math.max(5, Number(destacadoHomeData.delay_seconds || 12)),
-            }
-          : null,
+      destacadosHome: destacadosHomeData
+        .filter(
+          (item) =>
+            item.imagen_url &&
+            item.entidad_tipo &&
+            item.entidad_id
+        )
+        .map((item) => ({
+          id: Number(item.id),
+          image: item.imagen_url || "",
+          entityType: item.entidad_tipo as "comercio" | "servicio" | "institucion",
+          entityId: Number(item.entidad_id),
+          delaySeconds: Math.max(5, Number(item.delay_seconds || 12)),
+        })),
       challengeRanking,
       weather,
     }
   },
-  ["home-page-data-v10"],
+  ["home-page-data-v11"],
   { revalidate: 3600 }
 )
 

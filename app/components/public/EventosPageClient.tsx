@@ -366,7 +366,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 tabIndex={0}
                 onClick={() => handleOpenEvento(evento)}
                 onKeyDown={(event) => handleCardKeyDown(event, () => handleOpenEvento(evento))}
-                className="cursor-pointer rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                className="cursor-pointer rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:p-5"
               >
                 {evento.imagen && (
                   <div className="relative mb-4 h-48 w-full overflow-hidden rounded-lg border border-slate-100 bg-white">
@@ -380,25 +380,25 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                   </div>
                 )}
 
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold leading-tight text-gray-900 sm:text-xl">
                   {evento.titulo}
                 </h2>
-                <div className="mt-3 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                <div className="mt-2 inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold leading-none text-blue-700 sm:mt-3 sm:px-3 sm:text-xs">
                   {normalizeEventCategory(evento.categoria)}
                 </div>
 
                 {!shouldHideEventDate(evento.descripcion, evento.categoria) ? (
-                  <p className="mt-2 text-sm text-gray-600">
+                  <p className="mt-2 text-xs leading-snug text-gray-600 sm:text-sm">
                     Fecha: {formatEventDateRange(evento.fecha, evento.fecha_fin, evento.fecha_solo_mes ?? false)}
                   </p>
                 ) : null}
 
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="mt-1 text-xs leading-snug text-gray-600 sm:text-sm">
                   Ubicación: {evento.ubicacion}
                 </p>
 
                 {evento.ownerLabel && evento.ownerHref ? (
-                  <div className="mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-3 py-2 text-sm text-emerald-800">
+                  <div className="mt-2 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-3 py-2 text-xs leading-snug text-emerald-800 sm:mt-3 sm:text-sm">
                     <span className="font-semibold">Pertenece a:</span>{" "}
                     <Link
                       href={evento.ownerHref}
@@ -411,16 +411,16 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 ) : null}
 
                 {evento.telefono && (
-                  <p className="mt-1 text-sm text-gray-600">
+                  <p className="mt-1 text-xs leading-snug text-gray-600 sm:text-sm">
                     Teléfono: {evento.telefono}
                   </p>
                 )}
 
-                <p className="line-clamp-3 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
+                <p className="line-clamp-3 mt-2 whitespace-pre-line text-xs leading-snug text-gray-700 sm:mt-3 sm:text-sm sm:leading-relaxed">
                   {parseEventDescription(evento.descripcion).baseDescription}
                 </p>
 
-                <div className="mt-4" onClick={(event) => event.stopPropagation()}>
+                <div className="mt-3 sm:mt-4" onClick={(event) => event.stopPropagation()}>
                   <EventLikeButton
                     count={eventLikeCounts[String(evento.id)]}
                     liked={Boolean(likedEvents[String(evento.id)])}
@@ -436,7 +436,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                     event.stopPropagation()
                     handleOpenEvento(evento)
                   }}
-                  className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                  className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600 sm:mt-5 sm:px-4 sm:text-sm"
                 >
                   Ver más
                   <ArrowRight className="h-4 w-4" />
@@ -449,7 +449,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                     url={getShareUrl(String(evento.id))}
                     section="eventos"
                     itemId={String(evento.id)}
-                    className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                    className="mt-2 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600 sm:mt-3 sm:px-4 sm:text-sm"
                   />
                 </div>
               </div>

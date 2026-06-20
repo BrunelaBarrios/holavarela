@@ -854,10 +854,10 @@ export default function AdminSitioPage() {
                 <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                   <span>
                     <span className="block text-sm font-medium text-slate-900">
-                      Dejar activo
+                      Incluir en rotacion
                     </span>
                     <span className="mt-1 block text-sm text-slate-500">
-                      Si se activa, apaga los otros destacados.
+                      Puede haber varios activos; la Home va alternando entre ellos.
                     </span>
                   </span>
                   <input
@@ -903,6 +903,9 @@ export default function AdminSitioPage() {
               <h3 className="text-sm font-semibold uppercase text-slate-500">
                 Destacados cargados
               </h3>
+              <p className="text-sm text-slate-500">
+                {highlights.filter((highlight) => highlight.activo).length} activos en rotacion.
+              </p>
               {highlights.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
                   Aun no hay publicidades destacadas cargadas.
