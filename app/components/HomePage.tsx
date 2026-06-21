@@ -544,6 +544,8 @@ export function HomePage({
   const [shouldLoadRadioWidget, setShouldLoadRadioWidget] = useState(false)
   const eventsSectionRef = useRef<HTMLElement | null>(null)
   const radioSectionRef = useRef<HTMLElement | null>(null)
+  const selectedCursoImage =
+    selectedCurso?.imagen || selectedCurso?.premium_galeria?.[0] || null
 
   const featuredBusinessPageCount = Math.max(
     1,
@@ -1638,13 +1640,13 @@ export function HomePage({
 
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(280px,0.78fr)_minmax(0,1.22fr)]">
                 <div className="bg-[linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)]">
-                  {selectedCurso.imagen ? (
+                  {selectedCursoImage ? (
                     <div className="flex min-h-[260px] w-full items-center justify-center bg-slate-100 p-5 md:min-h-[340px]">
                       <button
                         type="button"
                         onClick={() =>
                           setZoomedImage({
-                            src: selectedCurso.imagen!,
+                            src: selectedCursoImage,
                             alt: selectedCurso.nombre,
                           })
                         }
@@ -1652,7 +1654,7 @@ export function HomePage({
                         aria-label="Ver imagen más grande"
                       >
                         <OptimizedImage
-                          src={selectedCurso.imagen}
+                          src={selectedCursoImage}
                           alt={selectedCurso.nombre}
                           sizes="(max-width: 1024px) 100vw, 60vw"
                           className="object-contain p-3 sm:p-4"

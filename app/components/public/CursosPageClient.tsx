@@ -83,6 +83,8 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
     () => cursos.find((curso) => String(curso.id) === selectedCursoId) || null,
     [cursos, selectedCursoId]
   )
+  const selectedCursoImage =
+    selectedCurso?.imagen || selectedCurso?.premium_galeria?.[0] || null
 
   useEffect(() => {
     void recordSiteVisit("cursos-page", "Listado de cursos y clases")
@@ -148,7 +150,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
         open={Boolean(selectedCurso)}
         onClose={() => setSelectedCursoId(null)}
         title={selectedCurso?.nombre || ""}
-        imageSrc={selectedCurso?.imagen || null}
+        imageSrc={selectedCursoImage}
         imageAlt={selectedCurso?.nombre || "Curso"}
         description={selectedCurso?.descripcion || null}
         extraContent={
