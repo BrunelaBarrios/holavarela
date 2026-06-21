@@ -138,6 +138,7 @@ const getHomePageData = unstable_cache(
       { data: sobreVarelaData },
       destacadosHomeData,
       challengeRanking,
+      eventLikesCount,
       weather,
     ] = await Promise.all([
       supabaseServer
@@ -232,6 +233,18 @@ const getHomePageData = unstable_cache(
           return []
         }
       })(),
+      (async () => {
+        try {
+          const { count, error } = await supabaseServer
+            .from("event_likes")
+            .select("id", { count: "exact", head: true })
+
+          if (error) return 0
+          return typeof count === "number" ? count : 0
+        } catch {
+          return 0
+        }
+      })(),
       weatherPromise,
     ])
 
@@ -298,10 +311,11 @@ const getHomePageData = unstable_cache(
           delaySeconds: Math.max(5, Number(item.delay_seconds || 12)),
         })),
       challengeRanking,
+      totalEventLikes: eventLikesCount,
       weather,
     }
   },
-  ["home-page-data-v11"],
+  ["home-page-data-v12"],
   { revalidate: 3600 }
 )
 

@@ -36,6 +36,7 @@ import {
   CloudSun,
   Gift,
   GraduationCap,
+  Heart,
   Mail,
   MapPin,
   Phone,
@@ -255,6 +256,7 @@ export type HomePageData = {
   sobreVarela: SobreVarelaConfig
   destacadosHome: HomeHighlightAd[]
   challengeRanking: ChallengeRankingEntry[]
+  totalEventLikes: number
   weather: WeatherData | null
 }
 
@@ -505,6 +507,7 @@ export function HomePage({
   const instituciones = initialData.instituciones
   const sobreVarela = initialData.sobreVarela || defaultSobreVarela
   const challengeRanking = initialData.challengeRanking || []
+  const totalEventLikes = initialData.totalEventLikes || 0
   const shouldShowHomeGames = sobreVarela.mostrar_juegos_home !== false
   const shouldShowGameRanking =
     sobreVarela.mostrar_ranking_juego_home === true && challengeRanking.length > 0
@@ -2726,6 +2729,26 @@ export function HomePage({
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-[28px] border border-sky-100 bg-[linear-gradient(135deg,#eff6ff_0%,#f0f9ff_55%,#ffffff_100%)] px-6 py-8 text-center shadow-[0_20px_55px_-38px_rgba(14,165,233,0.45)]">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-sky-500 shadow-sm">
+              <Heart className="h-7 w-7 fill-current" />
+            </div>
+            <h2 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+              Gracias por tu apoyo
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+              La comunidad ya regaló{" "}
+              <span className="font-semibold text-sky-600">
+                {totalEventLikes.toLocaleString("es-UY")} corazones
+              </span>{" "}
+              a eventos y propuestas de Hola Varela.
+            </p>
           </div>
         </div>
       </section>
