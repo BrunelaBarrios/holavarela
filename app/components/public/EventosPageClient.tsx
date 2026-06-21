@@ -269,7 +269,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                   void handleEventLike(String(selectedEvento.id), selectedEvento.titulo)
                 }
                 disabled={likingEventId === String(selectedEvento.id)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-default disabled:opacity-70"
+                className="inline-flex items-center gap-1.5 rounded-full border border-sky-100 bg-sky-50 px-3 py-2 text-xs font-medium text-sky-600 transition hover:bg-sky-100 disabled:cursor-default disabled:opacity-70"
               />
             ) : null}
             {selectedEvento ? (
@@ -426,7 +426,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                     liked={Boolean(likedEvents[String(evento.id)])}
                     onClick={() => void handleEventLike(String(evento.id), evento.titulo)}
                     disabled={likingEventId === String(evento.id)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-default disabled:opacity-70"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-600 transition hover:bg-sky-100 disabled:cursor-default disabled:opacity-70"
                   />
                 </div>
 

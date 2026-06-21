@@ -1613,7 +1613,7 @@ export function HomePage({
                   void handleEventLike(String(selectedEvento.id), selectedEvento.titulo)
                 }
                 disabled={likingEventId === String(selectedEvento.id)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-default disabled:opacity-70"
+                className="inline-flex items-center gap-1.5 rounded-full border border-sky-100 bg-sky-50 px-4 py-3 text-sm font-medium text-sky-600 transition hover:bg-sky-100 disabled:cursor-default disabled:opacity-70"
               />
             ) : null}
 
@@ -2900,7 +2900,7 @@ function HomeEventCard({
             liked={liked}
             onClick={onLike}
             disabled={disabled}
-            className="inline-flex items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-default disabled:opacity-70"
+            className="inline-flex items-center gap-1.5 rounded-full border border-sky-100 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-600 transition hover:bg-sky-100 disabled:cursor-default disabled:opacity-70"
           />
         </div>
 
