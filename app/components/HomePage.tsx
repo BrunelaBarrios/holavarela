@@ -609,12 +609,12 @@ export function HomePage({
     () => visiblePromoEventos.filter((event) => Boolean(event.imagen)),
     [visiblePromoEventos]
   )
-  const visibleCursos = useMemo(() => cursos.slice(0, 8), [cursos])
+  const visibleCursos = useMemo(() => cursos.slice(0, 4), [cursos])
   const visibleInstituciones = useMemo(
     () =>
       [...instituciones]
         .sort((left, right) => Number(isFeaturedListing(right)) - Number(isFeaturedListing(left)))
-        .slice(0, 10),
+        .slice(0, 5),
     [instituciones]
   )
   const delayedPromo = useMemo<DelayedPromo | null>(() => {
@@ -2560,7 +2560,7 @@ export function HomePage({
                       )
                     )
                   }
-                  className={`cursor-pointer overflow-hidden rounded-2xl border border-white/80 bg-white/90 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-30px_rgba(34,197,94,0.3)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 sm:rounded-[28px] ${index >= 6 ? "hidden sm:block" : ""}`}
+                  className={`cursor-pointer overflow-hidden rounded-2xl border border-white/80 bg-white/90 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-30px_rgba(34,197,94,0.3)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 sm:rounded-[28px] ${index >= 3 ? "hidden xl:block" : ""}`}
                 >
                   <div className="flex items-center gap-3 border-b border-emerald-950/20 bg-emerald-800 px-3 py-3 sm:px-5 sm:py-4">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/95 text-emerald-700 shadow-sm sm:h-12 sm:w-12 sm:rounded-2xl">
@@ -2637,7 +2637,7 @@ export function HomePage({
                   onKeyDown={(event) =>
                     handleCardKeyDown(event, () => handleInstitutionClick(institucion))
                   }
-                  className={`cursor-pointer overflow-hidden rounded-2xl border border-white/80 bg-white/90 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-30px_rgba(6,182,212,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 sm:rounded-[28px] ${index >= 9 ? "hidden sm:block" : ""}`}
+                  className={`cursor-pointer overflow-hidden rounded-2xl border border-white/80 bg-white/90 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.45)] transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-30px_rgba(6,182,212,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 sm:rounded-[28px] ${index >= 3 ? "hidden xl:block" : ""}`}
                 >
                   <div className="flex items-center gap-3 border-b border-blue-950/20 bg-blue-900 px-3 py-3 sm:px-5 sm:py-4">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/95 text-blue-700 shadow-sm sm:h-12 sm:w-12 sm:rounded-2xl">

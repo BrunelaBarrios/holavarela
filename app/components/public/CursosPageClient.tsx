@@ -8,6 +8,7 @@ import { PrimaryExternalLinkButton } from "../PrimaryExternalLinkButton"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
+import { OptimizedImage } from "../OptimizedImage"
 import { PublicAddButton } from "./PublicAddButton"
 import { recordContentVisit, recordSiteVisit } from "../../lib/contentVisits"
 import { buildPublicNav } from "../../lib/publicNav"
@@ -23,6 +24,8 @@ export type Curso = {
   web_url?: string | null
   instagram_url?: string | null
   facebook_url?: string | null
+  imagen?: string | null
+  premium_galeria?: string[] | null
   estado?: string | null
   usa_whatsapp?: boolean | null
 }
@@ -145,10 +148,33 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
         open={Boolean(selectedCurso)}
         onClose={() => setSelectedCursoId(null)}
         title={selectedCurso?.nombre || ""}
-        imageSrc={null}
+        imageSrc={selectedCurso?.imagen || null}
         imageAlt={selectedCurso?.nombre || "Curso"}
         description={selectedCurso?.descripcion || null}
-        extraContent={null}
+        extraContent={
+          selectedCurso?.premium_galeria?.length ? (
+            <div>
+              <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                Galeria
+              </div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {selectedCurso.premium_galeria.map((image, index) => (
+                  <div
+                    key={`${image}-${index}`}
+                    className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
+                  >
+                    <OptimizedImage
+                      src={image}
+                      alt={`${selectedCurso.nombre} ${index + 1}`}
+                      sizes="(max-width: 768px) 50vw, 18vw"
+                      className="object-contain p-2"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null
+        }
         meta={[
           ...(selectedCurso?.responsable
             ? [{ icon: GraduationCap, text: selectedCurso.responsable }]

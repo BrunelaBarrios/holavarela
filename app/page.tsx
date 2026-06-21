@@ -155,7 +155,7 @@ const getHomePageData = unstable_cache(
         .limit(HOME_EVENTS_LIMIT),
       supabaseServer
         .from("cursos")
-        .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, edad_destino, destacado, usa_whatsapp")
+        .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, edad_destino, imagen, premium_galeria, destacado, usa_whatsapp")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
         .limit(HOME_COURSES_LIMIT),
@@ -265,12 +265,18 @@ const getHomePageData = unstable_cache(
           .slice(0, 30)
           .map((item) => withApiImage(item, "eventos"))
       })(),
-      cursos: (cursos || []).slice(0, 8).map((item) => ({ ...item, imagen: null, premium_galeria: [] })),
+      cursos: (cursos || []).slice(0, 8).map((item) => ({
+        ...item,
+        imagen: item.imagen ? `/api/cursos/${item.id}/image` : null,
+        premium_galeria: item.premium_galeria || [],
+      })),
       servicios: (servicios || []).slice(0, 16).map((item) => withApiImage(item, "servicios")),
       instituciones: (instituciones || []).map((item) => ({ ...item, foto: null })),
-      allCursos: (highlightedCursos.length ? highlightedCursos : cursos || []).map((item) =>
-        ({ ...item, imagen: null, premium_galeria: [] })
-      ),
+      allCursos: (highlightedCursos.length ? highlightedCursos : cursos || []).map((item) => ({
+        ...item,
+        imagen: item.imagen ? `/api/cursos/${item.id}/image` : null,
+        premium_galeria: item.premium_galeria || [],
+      })),
       allServicios: (highlightedServicios.length ? highlightedServicios : servicios || []).map((item) =>
         withApiImage(item, "servicios")
       ),
