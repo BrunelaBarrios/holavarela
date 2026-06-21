@@ -996,6 +996,8 @@ export function HomePage({
     "Te vamos a contactar usando el teléfono que nos compartas."
   return (
       <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#f2f7f5_48%,#ffffff_100%)] text-slate-900">
+        <UruguayWelcomeBubble />
+
         {sweepstakesPopup.config ? (
           <SweepstakesPopup
             open={sweepstakesPopup.open}
@@ -1931,7 +1933,7 @@ export function HomePage({
 
           <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-slate-600 sm:text-xl">
             <span>
-              Encontrá eventos, cursos, comercios, servicios y novedades de la ciudad en un solo lugar.
+              Encontrá eventos, cursos, comercios, servicios y novedades de la ciudad
             </span>
             <span className="sr-only">
             Encontrá acá eventos, cursos, servicios y más.
@@ -2821,6 +2823,50 @@ export function HomePage({
         </div>
       </footer>
 
+    </div>
+  )
+}
+
+function UruguayWelcomeBubble() {
+  return (
+    <div
+      className="uruguay-welcome-bubble pointer-events-none fixed left-0 top-20 z-[95] w-[min(92vw,360px)] px-4 sm:top-24"
+      aria-hidden="true"
+    >
+      <div className="flex items-center gap-3 rounded-full border border-sky-100 bg-white/95 px-4 py-3 text-slate-950 shadow-[0_20px_55px_-28px_rgba(14,116,144,0.55)] backdrop-blur">
+        <div className="relative flex h-16 w-16 shrink-0 items-end justify-center rounded-full bg-[linear-gradient(180deg,#e0f2fe_0%,#f8fafc_68%,#dff7ed_100%)] shadow-inner">
+          <svg
+            viewBox="0 0 72 72"
+            className="h-14 w-14"
+            role="img"
+            aria-label="Personaje con bandera de Uruguay"
+          >
+            <path
+              d="M35 30c6.1 0 11 5 11 11.2V60H24V41.2C24 35 28.9 30 35 30Z"
+              fill="#ffffff"
+              stroke="#0f5ea8"
+              strokeWidth="2"
+            />
+            <path d="M25.5 45h19" stroke="#0f5ea8" strokeWidth="3" />
+            <path d="M25.5 52h19" stroke="#0f5ea8" strokeWidth="3" />
+            <circle cx="35" cy="20" r="9" fill="#f8cda7" />
+            <path d="M27 18c1.6-6.3 13.5-8.1 16.5-.4-3.8-1.2-9.2-1.4-16.5.4Z" fill="#1e293b" />
+            <path d="M48 37l11-16" stroke="#475569" strokeLinecap="round" strokeWidth="3" />
+            <g transform="translate(48 8)">
+              <path d="M0 0h18v18H0Z" fill="#ffffff" stroke="#dbeafe" strokeWidth="1" />
+              <path d="M0 4h18M0 8h18M0 12h18M0 16h18" stroke="#0f5ea8" strokeWidth="2" />
+              <circle cx="5" cy="5" r="3" fill="#facc15" />
+            </g>
+            <path d="M23 38l-8 7" stroke="#f8cda7" strokeLinecap="round" strokeWidth="4" />
+            <path d="M47 38l8 7" stroke="#f8cda7" strokeLinecap="round" strokeWidth="4" />
+          </svg>
+        </div>
+        <div className="min-w-0">
+          <p className="text-base font-black leading-tight text-sky-700">
+            Alentamos a la celeste!
+          </p>
+        </div>
+      </div>
     </div>
   )
 }
