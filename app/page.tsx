@@ -7,6 +7,10 @@ import {
   getTodayInMontevideo,
   isEventCurrentOrUpcoming,
 } from "./lib/eventDates"
+import {
+  DEFAULT_GOAL_GAME_CONFIG,
+  isMissingGoalGameSchemaError,
+} from "./lib/goalGame"
 import { supabaseServer } from "./lib/supabaseServer"
 
 export const revalidate = 3600
@@ -138,6 +142,8 @@ const getHomePageData = unstable_cache(
       { data: sobreVarelaData },
       destacadosHomeData,
       challengeRanking,
+      goalGameConfig,
+      goalGameRanking,
       eventLikesCount,
       weather,
     ] = await Promise.all([
@@ -235,6 +241,58 @@ const getHomePageData = unstable_cache(
       })(),
       (async () => {
         try {
+          const { data, error } = await supabaseServer
+            .from("juego_gol_config")
+            .select("activo, titulo, texto_banner, mostrar_ranking_home")
+            .eq("id", 1)
+            .maybeSingle()
+
+          if (error) {
+            if (isMissingGoalGameSchemaError(error)) return DEFAULT_GOAL_GAME_CONFIG
+            return DEFAULT_GOAL_GAME_CONFIG
+          }
+
+          return {
+            activo: data?.activo === true,
+            titulo: data?.titulo || DEFAULT_GOAL_GAME_CONFIG.titulo,
+            textoBanner: data?.texto_banner || DEFAULT_GOAL_GAME_CONFIG.textoBanner,
+            mostrarRankingHome: data?.mostrar_ranking_home === true,
+          }
+        } catch {
+          return DEFAULT_GOAL_GAME_CONFIG
+        }
+      })(),
+      (async () => {
+        try {
+          const { data: config } = await supabaseServer
+            .from("juego_gol_config")
+            .select("activo, mostrar_ranking_home")
+            .eq("id", 1)
+            .maybeSingle()
+
+          if (config?.activo !== true || config.mostrar_ranking_home !== true) return []
+
+          const { data, error } = await supabaseServer
+            .from("juego_gol_participaciones")
+            .select("id, nombre, puntaje, created_at")
+            .order("puntaje", { ascending: false })
+            .order("created_at", { ascending: true })
+            .limit(3)
+
+          if (error) return []
+
+          return (data || []).map((entry) => ({
+            id: Number(entry.id),
+            nombre: entry.nombre || "Participante",
+            puntaje: Number(entry.puntaje || 0),
+            createdAt: entry.created_at || null,
+          }))
+        } catch {
+          return []
+        }
+      })(),
+      (async () => {
+        try {
           const { count, error } = await supabaseServer
             .from("event_likes")
             .select("id", { count: "exact", head: true })
@@ -296,6 +354,8 @@ const getHomePageData = unstable_cache(
       sobreVarela: sobreVarelaData
         ? { ...defaultSobreVarela, ...sobreVarelaData }
         : defaultSobreVarela,
+      goalGameConfig,
+      goalGameRanking,
       destacadosHome: destacadosHomeData
         .filter(
           (item) =>
@@ -315,7 +375,7 @@ const getHomePageData = unstable_cache(
       weather,
     }
   },
-  ["home-page-data-v12"],
+  ["home-page-data-v13"],
   { revalidate: 3600 }
 )
 

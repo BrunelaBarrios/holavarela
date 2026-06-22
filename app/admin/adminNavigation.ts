@@ -9,6 +9,7 @@ import {
   FileText,
   Gamepad2,
   Gift,
+  Goal,
   GraduationCap,
   LayoutDashboard,
   Mail,
@@ -153,6 +154,15 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     roles: ["superadmin"],
     description: "Participantes, puntajes y ganadores.",
     keywords: ["juegos", "puntajes", "ganadores"],
+  },
+  {
+    href: "/admin/juego-gol",
+    icon: Goal,
+    label: "Juego gol",
+    group: "sistema",
+    roles: ["superadmin"],
+    description: "Activacion, banner y ranking del Desafio del Gol.",
+    keywords: ["penales", "gol", "ranking", "juego"],
   },
   {
     href: "/admin/radio",

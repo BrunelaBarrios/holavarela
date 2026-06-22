@@ -1023,3 +1023,75 @@ for update
 to anon, authenticated
 using (true)
 with check (true);
+
+create table if not exists public.juego_gol_config (
+  id bigint primary key default 1 check (id = 1),
+  activo boolean not null default false,
+  titulo text not null default 'Desafio del Gol',
+  texto_banner text not null default 'Jugá al Desafío del Gol',
+  mostrar_ranking_home boolean not null default false,
+  created_at timestamp with time zone default now(),
+  updated_at timestamp with time zone default now()
+);
+
+alter table public.juego_gol_config
+add column if not exists activo boolean not null default false;
+
+alter table public.juego_gol_config
+add column if not exists titulo text not null default 'Desafio del Gol';
+
+alter table public.juego_gol_config
+add column if not exists texto_banner text not null default 'Jugá al Desafío del Gol';
+
+alter table public.juego_gol_config
+add column if not exists mostrar_ranking_home boolean not null default false;
+
+alter table public.juego_gol_config
+add column if not exists created_at timestamp with time zone default now();
+
+alter table public.juego_gol_config
+add column if not exists updated_at timestamp with time zone default now();
+
+insert into public.juego_gol_config (id, activo, titulo, texto_banner, mostrar_ranking_home)
+values (1, false, 'Desafio del Gol', 'Jugá al Desafío del Gol', false)
+on conflict (id) do nothing;
+
+create table if not exists public.juego_gol_participaciones (
+  id bigint generated always as identity primary key,
+  nombre text not null check (char_length(trim(nombre)) > 0 and char_length(nombre) <= 30),
+  puntaje integer not null default 0 check (puntaje >= 0),
+  created_at timestamp with time zone default now()
+);
+
+create index if not exists juego_gol_participaciones_ranking_idx
+on public.juego_gol_participaciones (puntaje desc, created_at asc);
+
+alter table public.juego_gol_config enable row level security;
+alter table public.juego_gol_participaciones enable row level security;
+
+drop policy if exists "Allow public read on juego_gol_config"
+on public.juego_gol_config;
+
+create policy "Allow public read on juego_gol_config"
+on public.juego_gol_config
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Allow public read on juego_gol_participaciones"
+on public.juego_gol_participaciones;
+
+create policy "Allow public read on juego_gol_participaciones"
+on public.juego_gol_participaciones
+for select
+to anon, authenticated
+using (true);
+
+drop policy if exists "Allow public insert on juego_gol_participaciones"
+on public.juego_gol_participaciones;
+
+create policy "Allow public insert on juego_gol_participaciones"
+on public.juego_gol_participaciones
+for insert
+to anon, authenticated
+with check (char_length(trim(nombre)) > 0 and char_length(nombre) <= 30 and puntaje >= 0);

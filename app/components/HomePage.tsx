@@ -23,6 +23,7 @@ import { parseEventDescription, shouldHideEventDate } from "../lib/eventSubmissi
 import { recordContentVisit, recordHighlightImpression, recordSiteVisit } from "../lib/contentVisits"
 import { RADIO_STORAGE_KEY } from "../lib/localStorageKeys"
 import { buildHomePublicNav } from "../lib/publicNav"
+import { type GoalGameConfig, type GoalGameRankingEntry } from "../lib/goalGame"
 import { useSweepstakesPopup } from "../lib/useSweepstakesPopup"
 import { recordViewMore, type ViewMoreSection } from "../lib/viewMoreTracking"
 import {
@@ -256,6 +257,8 @@ export type HomePageData = {
   sobreVarela: SobreVarelaConfig
   destacadosHome: HomeHighlightAd[]
   challengeRanking: ChallengeRankingEntry[]
+  goalGameConfig: GoalGameConfig
+  goalGameRanking: GoalGameRankingEntry[]
   totalEventLikes: number
   weather: WeatherData | null
 }
@@ -507,7 +510,14 @@ export function HomePage({
   const instituciones = initialData.instituciones
   const sobreVarela = initialData.sobreVarela || defaultSobreVarela
   const challengeRanking = initialData.challengeRanking || []
+  const goalGameConfig = initialData.goalGameConfig
+  const goalGameRanking = initialData.goalGameRanking || []
   const totalEventLikes = initialData.totalEventLikes || 0
+  const shouldShowGoalGame = goalGameConfig?.activo === true
+  const shouldShowGoalGameRanking =
+    shouldShowGoalGame &&
+    goalGameConfig?.mostrarRankingHome === true &&
+    goalGameRanking.length > 0
   const shouldShowHomeGames = sobreVarela.mostrar_juegos_home !== false
   const shouldShowGameRanking =
     sobreVarela.mostrar_ranking_juego_home === true && challengeRanking.length > 0
@@ -682,11 +692,15 @@ export function HomePage({
     const message = getSumateLeadMessage(getSumateTypeFromUrl())
     if (!message) return
 
-    setContactLeadForm((prev) => ({
-      ...prev,
-      mensaje: message,
-    }))
-    setIsContactLeadOpen(true)
+    const timeoutId = window.setTimeout(() => {
+      setContactLeadForm((prev) => ({
+        ...prev,
+        mensaje: message,
+      }))
+      setIsContactLeadOpen(true)
+    }, 0)
+
+    return () => window.clearTimeout(timeoutId)
   }, [])
 
   useEffect(() => {
@@ -1960,6 +1974,59 @@ export function HomePage({
           </div>
         </div>
       </section>
+
+      {shouldShowGoalGame ? (
+        <section className="py-8">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-6 rounded-[28px] border border-cyan-100 bg-[linear-gradient(135deg,#ecfeff_0%,#f8fafc_52%,#ecfdf5_100%)] p-6 shadow-[0_22px_55px_-36px_rgba(8,145,178,0.42)] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:p-8">
+              <div>
+                <div className="inline-flex rounded-full bg-white/85 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700 ring-1 ring-cyan-100">
+                  {goalGameConfig.titulo}
+                </div>
+                <h2 className="mt-4 text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">
+                  {goalGameConfig.textoBanner}
+                </h2>
+                <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
+                  Patea penales, suma goles y queda en el ranking local.
+                </p>
+              </div>
+              <Link
+                href="/juego-gol"
+                className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-950 px-6 py-4 text-base font-semibold text-white shadow-[0_18px_40px_-22px_rgba(15,23,42,0.9)] transition hover:-translate-y-0.5 hover:bg-cyan-700 md:w-auto"
+              >
+                {goalGameConfig.textoBanner}
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </div>
+
+            {shouldShowGoalGameRanking ? (
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                {goalGameRanking.slice(0, 3).map((entry, index) => (
+                  <div
+                    key={entry.id}
+                    className="rounded-2xl border border-white/80 bg-white/90 p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.45)]"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-50 text-lg font-black text-cyan-700 ring-1 ring-cyan-100">
+                        {index + 1}
+                      </span>
+                      <span className="rounded-full bg-slate-950 px-3 py-1 text-sm font-bold text-white">
+                        {entry.puntaje} pts
+                      </span>
+                    </div>
+                    <div className="mt-4 text-lg font-black text-slate-950">
+                      {entry.nombre}
+                    </div>
+                    <div className="mt-1 text-sm font-medium text-slate-500">
+                      Desafio del Gol
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       {shouldShowHomeGames ? (
         <section className="py-8">
