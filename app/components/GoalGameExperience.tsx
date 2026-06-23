@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link"
-import { useMemo, useState, type MouseEvent } from "react"
+import { useMemo, useState, type CSSProperties, type MouseEvent } from "react"
 import { ArrowLeft, Goal, RotateCcw, Shield, Trophy } from "lucide-react"
 import {
   type GoalGameConfig,
@@ -9,7 +9,7 @@ import {
   normalizeGoalPlayerName,
 } from "../lib/goalGame"
 
-type KickSide = "izquierda" | "centro" | "derecha"
+type KickSide = "izquierda" | "angulo-izquierdo" | "centro" | "angulo-derecho" | "derecha"
 type KeeperMove = "vuelo" | "estirada" | "barrida" | "rebote"
 
 const KICK_OPTIONS: Array<{
@@ -18,20 +18,26 @@ const KICK_OPTIONS: Array<{
   helper: string
 }> = [
   { key: "izquierda", label: "Izquierda", helper: "Cruzar al palo" },
+  { key: "angulo-izquierdo", label: "Angulo izq.", helper: "Arriba, imposible" },
   { key: "centro", label: "Centro", helper: "Fuerte al medio" },
+  { key: "angulo-derecho", label: "Angulo der.", helper: "Arriba, con clase" },
   { key: "derecha", label: "Derecha", helper: "Abrir el pie" },
 ]
 
 const SIDE_LABELS: Record<KickSide, string> = {
-  izquierda: "izquierda",
-  centro: "centro",
-  derecha: "derecha",
+  izquierda: "la izquierda",
+  "angulo-izquierdo": "el angulo izquierdo",
+  centro: "el centro",
+  "angulo-derecho": "el angulo derecho",
+  derecha: "la derecha",
 }
 
-const SIDE_POSITIONS: Record<KickSide, number> = {
-  izquierda: 22,
-  centro: 50,
-  derecha: 78,
+const SIDE_POSITIONS: Record<KickSide, { left: number; top: number }> = {
+  izquierda: { left: 22, top: 43 },
+  "angulo-izquierdo": { left: 24, top: 25 },
+  centro: { left: 50, top: 39 },
+  "angulo-derecho": { left: 76, top: 25 },
+  derecha: { left: 78, top: 43 },
 }
 
 const KEEPER_MOVES: KeeperMove[] = ["vuelo", "estirada", "barrida", "rebote"]
@@ -68,6 +74,8 @@ export function GoalGameExperience({
   } | null>(null)
   const [ranking, setRanking] = useState(initialRanking)
   const [saving, setSaving] = useState(false)
+  const [shotAnimating, setShotAnimating] = useState(false)
+  const [shotNumber, setShotNumber] = useState(0)
   const [message, setMessage] = useState("")
 
   const normalizedName = useMemo(() => normalizeGoalPlayerName(name), [name])
@@ -120,30 +128,38 @@ export function GoalGameExperience({
   }
 
   const kick = (side: KickSide) => {
-    if (!gameStarted || gameOver || saving) return
+    if (!gameStarted || gameOver || saving || shotAnimating) return
 
     const goalkeeper = pickGoalkeeperSide()
     const keeperMove = pickKeeperMove()
     const isGoal = side !== goalkeeper
     const nextScore = isGoal ? score + 1 : score
 
+    setShotAnimating(true)
+    setShotNumber((current) => current + 1)
     setLastKick({ player: side, goalkeeper, keeperMove, goal: isGoal })
+    setMessage("La pelota va al arco...")
 
-    if (isGoal) {
-      setScore(nextScore)
-      setMessage("Gol. Segui pateando.")
-      return
-    }
+    window.setTimeout(() => {
+      setShotAnimating(false)
 
-    setGameOver(true)
-    setMessage("Atajada. Fin de la partida.")
-    void saveScore(nextScore)
+      if (isGoal) {
+        setScore(nextScore)
+        setMessage("Gol. Segui pateando.")
+        return
+      }
+
+      setGameOver(true)
+      setMessage("Atajada. Fin de la partida.")
+      void saveScore(nextScore)
+    }, 950)
   }
 
   const resetGame = () => {
     setScore(0)
     setGameStarted(false)
     setGameOver(false)
+    setShotAnimating(false)
     setLastKick(null)
     setMessage("")
   }
@@ -199,7 +215,7 @@ export function GoalGameExperience({
                 {config.titulo}
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-cyan-50 sm:text-lg">
-                Elegi izquierda, centro o derecha. Si el arquero adivina, termina la partida. Si no, es gol y sumas otro punto.
+                Elegi entre cinco zonas del arco, incluidos los dos angulos. Si el arquero adivina, termina la partida. Si no, es gol y sumas otro punto.
               </p>
 
               <div className="mt-8 rounded-3xl border border-white/20 bg-white/10 p-4 backdrop-blur sm:p-5">
@@ -247,16 +263,22 @@ export function GoalGameExperience({
                       </button>
                     </div>
 
-                    <GoalGameScene lastKick={lastKick} />
+                    <GoalGameScene
+                      lastKick={lastKick}
+                      shotAnimating={shotAnimating}
+                      shotNumber={shotNumber}
+                    />
 
-                    <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                    <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
                       {KICK_OPTIONS.map((option) => (
                         <button
                           key={option.key}
                           type="button"
                           onClick={() => kick(option.key)}
-                          disabled={gameOver || saving}
-                          className="rounded-2xl border border-white/20 bg-white px-4 py-5 text-left text-slate-950 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.8)] transition hover:-translate-y-0.5 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled={gameOver || saving || shotAnimating}
+                          className={`min-h-[92px] rounded-2xl border border-white/20 bg-white px-3 py-4 text-left text-slate-950 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.8)] transition hover:-translate-y-0.5 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60 ${
+                            option.key === "centro" ? "col-span-2 sm:col-span-1" : ""
+                          }`}
                         >
                           <span className="block text-lg font-black">{option.label}</span>
                           <span className="mt-1 block text-sm font-medium text-slate-500">
@@ -276,7 +298,7 @@ export function GoalGameExperience({
                         : "border-amber-200 bg-amber-50 text-amber-800"
                     }`}
                   >
-                    Vos pateaste a la {SIDE_LABELS[lastKick.player]} y el arquero fue a la {SIDE_LABELS[lastKick.goalkeeper]}.
+                    Vos pateaste a {SIDE_LABELS[lastKick.player]} y el arquero fue a {SIDE_LABELS[lastKick.goalkeeper]}.
                   </div>
                 ) : null}
 
@@ -318,9 +340,9 @@ export function GoalGameExperience({
                   ranking.slice(0, 10).map((entry, index) => (
                     <div
                       key={entry.id}
-                      className="flex items-center justify-between gap-3 rounded-2xl border border-white bg-white px-4 py-3 shadow-[0_14px_32px_-28px_rgba(15,23,42,0.5)]"
+                      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-2xl border border-slate-100 bg-white px-3 py-3 shadow-[0_14px_32px_-28px_rgba(15,23,42,0.5)] sm:px-4"
                     >
-                      <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-950 text-sm font-black text-white">
                           {index + 1}
                         </span>
@@ -328,8 +350,8 @@ export function GoalGameExperience({
                           {entry.nombre}
                         </span>
                       </div>
-                      <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-sm font-black text-emerald-700">
-                        {entry.puntaje}
+                      <span className="inline-flex min-w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 px-2.5 py-1.5 text-sm font-black text-emerald-800">
+                        {entry.puntaje}<span className="ml-1 hidden sm:inline">gol</span>
                       </span>
                     </div>
                   ))
@@ -355,6 +377,8 @@ export function GoalGameExperience({
 
 function GoalGameScene({
   lastKick,
+  shotAnimating,
+  shotNumber,
 }: {
   lastKick: {
     player: KickSide
@@ -362,15 +386,34 @@ function GoalGameScene({
     keeperMove: KeeperMove
     goal: boolean
   } | null
+  shotAnimating: boolean
+  shotNumber: number
 }) {
   const goalkeeperSide = lastKick?.goalkeeper || "centro"
   const playerSide = lastKick?.player || "centro"
-  const keeperLeft = SIDE_POSITIONS[goalkeeperSide]
-  const ballLeft = SIDE_POSITIONS[playerSide]
+  const keeperTarget = SIDE_POSITIONS[goalkeeperSide]
+  const ballTarget = SIDE_POSITIONS[playerSide]
+  const keeperLeft = keeperTarget.left
+  const ballLeft = ballTarget.left
+  const ballTop = ballTarget.top
   const move = lastKick?.keeperMove || "rebote"
-  const keeperDirection = goalkeeperSide === "izquierda" ? -1 : goalkeeperSide === "derecha" ? 1 : 0
+  const keeperDirection =
+    goalkeeperSide === "izquierda" || goalkeeperSide === "angulo-izquierdo"
+      ? -1
+      : goalkeeperSide === "derecha" || goalkeeperSide === "angulo-derecho"
+        ? 1
+        : 0
   const keeperRotation = keeperDirection * (move === "barrida" ? 42 : move === "estirada" ? 28 : 18)
-  const keeperTop = move === "barrida" ? 39 : move === "estirada" ? 25 : move === "vuelo" ? 28 : 31
+  const isHighSave = goalkeeperSide === "angulo-izquierdo" || goalkeeperSide === "angulo-derecho"
+  const keeperTop = isHighSave
+    ? 17
+    : move === "barrida"
+      ? 39
+      : move === "estirada"
+        ? 25
+        : move === "vuelo"
+          ? 28
+          : 31
   const keeperScale = move === "rebote" ? 1.08 : move === "barrida" ? 0.95 : 1
   const isSaved = lastKick?.goal === false
 
@@ -389,7 +432,7 @@ function GoalGameScene({
         <div className="absolute bottom-[12%] left-1/2 h-2 w-[72%] -translate-x-1/2 rounded-full bg-white/75" />
         <div className="absolute bottom-[13%] left-1/2 h-24 w-24 -translate-x-1/2 rounded-full border-4 border-white/55" />
 
-        {lastKick ? (
+        {lastKick && !shotAnimating ? (
           <div
             className={`absolute top-[29%] z-10 flex -translate-x-1/2 items-center justify-center rounded-full px-3 py-1 text-xs font-black shadow-lg ${
               lastKick.goal
@@ -407,22 +450,39 @@ function GoalGameScene({
         )}
 
         <div
-          className="absolute z-20 h-24 w-24 -translate-x-1/2 transition-all duration-500 ease-out sm:h-28 sm:w-28"
-          style={{
-            left: `${keeperLeft}%`,
-            top: `${keeperTop}%`,
-            transform: `translateX(-50%) rotate(${keeperRotation}deg) scale(${keeperScale})`,
-          }}
+          key={`keeper-${shotNumber}`}
+          className={`absolute z-20 h-24 w-24 -translate-x-1/2 sm:h-28 sm:w-28 ${
+            lastKick ? "goal-keeper-dive" : ""
+          }`}
+          style={
+            {
+              left: `${keeperLeft}%`,
+              top: `${keeperTop}%`,
+              transform: `translateX(-50%) rotate(${keeperRotation}deg) scale(${keeperScale})`,
+              "--keeper-left": `${keeperLeft}%`,
+              "--keeper-top": `${keeperTop}%`,
+              "--keeper-rotation": `${keeperRotation}deg`,
+              "--keeper-scale": keeperScale,
+            } as CSSProperties
+          }
           aria-hidden="true"
         >
-          <GoalkeeperMacaco move={move} saved={isSaved} />
+          <GoalkeeperMacaco move={move} saved={isSaved && !shotAnimating} />
         </div>
 
         <div
-          className={`absolute z-30 h-10 w-10 -translate-x-1/2 rounded-full border-[3px] border-slate-950 bg-white shadow-[0_12px_22px_-12px_rgba(15,23,42,0.8)] transition-all duration-500 ease-out ${
-            lastKick ? "top-[38%]" : "top-[78%]"
+          key={`ball-${shotNumber}`}
+          className={`absolute z-30 h-10 w-10 -translate-x-1/2 rounded-full border-[3px] border-slate-950 bg-white shadow-[0_12px_22px_-12px_rgba(15,23,42,0.8)] ${
+            lastKick ? "goal-ball-flight" : "top-[78%]"
           }`}
-          style={{ left: `${lastKick ? ballLeft : 50}%` }}
+          style={
+            {
+              left: `${lastKick ? ballLeft : 50}%`,
+              top: lastKick ? `${ballTop}%` : undefined,
+              "--ball-left": `${ballLeft}%`,
+              "--ball-top": `${ballTop}%`,
+            } as CSSProperties
+          }
           aria-hidden="true"
         >
           <div className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-slate-950" />
@@ -431,12 +491,85 @@ function GoalGameScene({
           <div className="absolute bottom-1 left-3 h-3 w-4 rounded-full border border-slate-950" />
         </div>
 
+        {lastKick ? (
+          <div
+            key={`impact-${shotNumber}`}
+            className={`goal-impact absolute z-40 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 ${
+              lastKick.goal
+                ? "border-emerald-300 bg-emerald-200/25"
+                : "border-amber-300 bg-amber-200/35"
+            }`}
+            style={{ left: `${ballLeft}%`, top: `${ballTop}%` }}
+            aria-label={`La pelota pego en ${SIDE_LABELS[playerSide]}`}
+          >
+            <span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow" />
+          </div>
+        ) : null}
+
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-4 py-2 text-xs font-black text-emerald-800 shadow-sm">
           Pateador
         </div>
 
-        {lastKick?.goal ? <GoalCelebration side={playerSide} /> : null}
+        {lastKick?.goal && !shotAnimating ? <GoalCelebration side={playerSide} /> : null}
       </div>
+      <style jsx>{`
+        .goal-ball-flight {
+          animation: ball-flight 900ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+        }
+
+        .goal-keeper-dive {
+          animation: keeper-dive 760ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+        }
+
+        .goal-impact {
+          animation: impact-pulse 420ms ease-out 690ms both;
+        }
+
+        @keyframes ball-flight {
+          0% {
+            left: 50%;
+            top: 78%;
+            transform: translateX(-50%) scale(1) rotate(0deg);
+          }
+          70% {
+            transform: translateX(-50%) scale(0.78) rotate(280deg);
+          }
+          100% {
+            left: var(--ball-left);
+            top: var(--ball-top);
+            transform: translateX(-50%) scale(0.68) rotate(420deg);
+          }
+        }
+
+        @keyframes keeper-dive {
+          0% {
+            left: 50%;
+            top: 31%;
+            transform: translateX(-50%) rotate(0deg) scale(1);
+          }
+          100% {
+            left: var(--keeper-left);
+            top: var(--keeper-top);
+            transform: translateX(-50%) rotate(var(--keeper-rotation))
+              scale(var(--keeper-scale));
+          }
+        }
+
+        @keyframes impact-pulse {
+          0% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.25);
+          }
+          55% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.3);
+          }
+          100% {
+            opacity: 0.85;
+            transform: translate(-50%, -50%) scale(1);
+          }
+        }
+      `}</style>
     </div>
   )
 }
@@ -490,7 +623,7 @@ function GoalkeeperMacaco({
 }
 
 function GoalCelebration({ side }: { side: KickSide }) {
-  const left = SIDE_POSITIONS[side]
+  const left = SIDE_POSITIONS[side].left
   const confetti = [
     { left: 12, top: 18, color: "bg-amber-300", rotate: -18 },
     { left: 26, top: 11, color: "bg-cyan-300", rotate: 22 },
