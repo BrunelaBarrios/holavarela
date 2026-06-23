@@ -579,39 +579,54 @@ function GoalkeeperMacaco({
 }) {
   const leftArmClass =
     move === "barrida"
-      ? "left-0 top-14 h-4 w-12 origin-right rotate-[8deg]"
+      ? "-left-1 top-14 rotate-[10deg]"
       : move === "estirada"
-        ? "-left-2 top-9 h-4 w-14 origin-right -rotate-[44deg]"
-        : "left-1 top-11 h-4 w-12 origin-right -rotate-[28deg]"
+        ? "-left-3 top-9 -rotate-[42deg]"
+        : "left-0 top-11 -rotate-[25deg]"
   const rightArmClass =
     move === "barrida"
-      ? "right-0 top-14 h-4 w-12 origin-left -rotate-[8deg]"
+      ? "-right-1 top-14 -rotate-[10deg]"
       : move === "estirada"
-        ? "-right-2 top-9 h-4 w-14 origin-left rotate-[44deg]"
-        : "right-1 top-11 h-4 w-12 origin-left rotate-[28deg]"
+        ? "-right-3 top-9 rotate-[42deg]"
+        : "right-0 top-11 rotate-[25deg]"
 
   return (
-    <div className="relative h-full w-full">
-      <div className="absolute left-1/2 top-7 h-12 w-14 -translate-x-1/2 rounded-[18px] border-2 border-slate-900 bg-sky-300 shadow-md sm:h-14 sm:w-16">
-        <div className="absolute left-1/2 top-2 h-6 w-10 -translate-x-1/2 rounded-xl bg-white/85" />
-        <div className="absolute left-3 top-4 h-2 w-2 rounded-full bg-slate-950" />
-        <div className="absolute right-3 top-4 h-2 w-2 rounded-full bg-slate-950" />
-        <div className="absolute left-1/2 top-8 h-1.5 w-6 -translate-x-1/2 rounded-full bg-slate-950" />
+    <div className="relative h-full w-full drop-shadow-[0_8px_5px_rgba(15,23,42,0.28)]">
+      <div className="absolute left-1/2 top-8 h-14 w-16 -translate-x-1/2 rounded-[22px_22px_16px_16px] border-[3px] border-slate-900 bg-emerald-400 sm:h-16 sm:w-[70px]">
+        <div className="absolute inset-x-2 top-2 h-2 rounded-full bg-emerald-200/75" />
+        <div className="absolute left-1/2 top-5 -translate-x-1/2 text-[18px] font-black leading-none text-white drop-shadow-sm">
+          1
+        </div>
+        <div className="absolute bottom-1.5 left-1/2 h-1.5 w-8 -translate-x-1/2 rounded-full bg-slate-900/20" />
       </div>
-      <div className="absolute left-1/2 top-1 h-10 w-10 -translate-x-1/2 rounded-full border-2 border-slate-900 bg-amber-200 shadow-md">
-        <div className="absolute left-2 top-4 h-1.5 w-1.5 rounded-full bg-slate-950" />
-        <div className="absolute right-2 top-4 h-1.5 w-1.5 rounded-full bg-slate-950" />
-        <div className="absolute left-1/2 top-6 h-1 w-4 -translate-x-1/2 rounded-full bg-slate-950" />
-        <div className="absolute -left-1 top-3 h-3 w-3 rounded-full border-2 border-slate-900 bg-amber-200" />
-        <div className="absolute -right-1 top-3 h-3 w-3 rounded-full border-2 border-slate-900 bg-amber-200" />
+
+      <div className="absolute left-1/2 top-0 z-20 h-11 w-11 -translate-x-1/2 rounded-[48%_48%_44%_44%] border-[3px] border-slate-900 bg-amber-200">
+        <div className="absolute -left-[3px] -top-[3px] h-5 w-11 rounded-t-full border-x-[3px] border-t-[3px] border-slate-900 bg-slate-800" />
+        <div className="absolute left-2.5 top-[19px] h-1.5 w-1.5 rounded-full bg-slate-950" />
+        <div className="absolute right-2.5 top-[19px] h-1.5 w-1.5 rounded-full bg-slate-950" />
+        <div className="absolute left-1/2 top-[27px] h-2 w-4 -translate-x-1/2 rounded-b-full border-b-2 border-slate-900 bg-white" />
+        <div className="absolute -left-2 top-4 h-3 w-2 rounded-l-full border-2 border-slate-900 bg-amber-200" />
+        <div className="absolute -right-2 top-4 h-3 w-2 rounded-r-full border-2 border-slate-900 bg-amber-200" />
       </div>
-      <div className={`absolute rounded-full border-2 border-slate-900 bg-sky-200 ${leftArmClass}`} />
-      <div className={`absolute rounded-full border-2 border-slate-900 bg-sky-200 ${rightArmClass}`} />
-      <div className="absolute left-7 bottom-0 h-4 w-8 -rotate-12 rounded-full border-2 border-slate-900 bg-slate-900" />
-      <div className="absolute right-7 bottom-0 h-4 w-8 rotate-12 rounded-full border-2 border-slate-900 bg-slate-900" />
+
+      <div className={`absolute z-10 h-4 w-12 origin-right rounded-full border-[3px] border-slate-900 bg-emerald-300 ${leftArmClass}`}>
+        <div className="absolute -left-3 -top-2 h-8 w-7 rounded-[45%_55%_55%_45%] border-[3px] border-slate-900 bg-amber-50">
+          <div className="absolute right-1 top-1 h-4 w-1 rounded-full bg-emerald-400" />
+        </div>
+      </div>
+      <div className={`absolute z-10 h-4 w-12 origin-left rounded-full border-[3px] border-slate-900 bg-emerald-300 ${rightArmClass}`}>
+        <div className="absolute -right-3 -top-2 h-8 w-7 rounded-[55%_45%_45%_55%] border-[3px] border-slate-900 bg-amber-50">
+          <div className="absolute left-1 top-1 h-4 w-1 rounded-full bg-emerald-400" />
+        </div>
+      </div>
+
+      <div className="absolute bottom-1 left-1/2 h-7 w-14 -translate-x-1/2 rounded-[8px_8px_15px_15px] border-[3px] border-slate-900 bg-slate-800" />
+      <div className="absolute bottom-0 left-[23px] h-5 w-8 -rotate-12 rounded-full border-[3px] border-slate-900 bg-slate-950" />
+      <div className="absolute bottom-0 right-[23px] h-5 w-8 rotate-12 rounded-full border-[3px] border-slate-900 bg-slate-950" />
+
       {saved ? (
-        <div className="absolute -right-1 top-2 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-black text-amber-800 shadow">
-          mia
+        <div className="absolute -right-2 -top-3 z-30 rounded-full border-2 border-amber-300 bg-white px-2.5 py-1 text-[10px] font-black uppercase text-amber-700 shadow-lg">
+          Atajada
         </div>
       ) : null}
     </div>

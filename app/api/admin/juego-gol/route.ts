@@ -153,31 +153,54 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Sesion admin requerida." }, { status: 401 })
   }
 
-  const id = Number(new URL(request.url).searchParams.get("id"))
-  if (!Number.isInteger(id) || id <= 0) {
-    return NextResponse.json({ error: "Participante invalido." }, { status: 400 })
+  const body = (await request.json().catch(() => ({}))) as { ids?: unknown }
+  const queryId = Number(new URL(request.url).searchParams.get("id"))
+  const requestedIds = Array.isArray(body.ids) ? body.ids : [queryId]
+  const ids = [
+    ...new Set(
+      requestedIds
+        .map((value) => Number(value))
+        .filter((value) => Number.isInteger(value) && value > 0)
+    ),
+  ]
+
+  if (ids.length === 0 || ids.length > 500) {
+    return NextResponse.json(
+      { error: "Seleccion de participantes invalida." },
+      { status: 400 }
+    )
   }
 
   const supabase = getSupabaseAdmin()
-  const { data: entry } = await supabase
+  const { data: entries, error: entriesError } = await supabase
     .from("juego_gol_participaciones")
-    .select("nombre")
-    .eq("id", id)
-    .maybeSingle()
+    .select("id, nombre")
+    .in("id", ids)
+
+  if (entriesError) {
+    return NextResponse.json({ error: entriesError.message }, { status: 500 })
+  }
+
   const { error } = await supabase
     .from("juego_gol_participaciones")
     .delete()
-    .eq("id", id)
+    .in("id", ids)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
   await logAdminActivityServer(session, {
-    action: "Eliminar participante",
+    action: ids.length === 1 ? "Eliminar participante" : "Eliminar participantes",
     section: "Desafio del Gol",
-    target: entry?.nombre || `Participante ${id}`,
-    details: "Elimino un participante del ranking del Desafio del Gol.",
+    target:
+      ids.length === 1
+        ? entries?.[0]?.nombre || `Participante ${ids[0]}`
+        : `${ids.length} participantes`,
+    details:
+      ids.length === 1
+        ? "Elimino un participante del ranking del Desafio del Gol."
+        : `Elimino ${ids.length} participantes del ranking del Desafio del Gol.`,
   })
 
   revalidatePath("/")
@@ -185,6 +208,7 @@ export async function DELETE(request: NextRequest) {
 
   return NextResponse.json({
     ok: true,
+    deletedCount: ids.length,
     ranking: await loadRanking(),
   })
 }

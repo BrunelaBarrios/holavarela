@@ -27,6 +27,8 @@ export default function AdminJuegoGolPage() {
   const [config, setConfig] = useState<AdminGoalConfig>(DEFAULT_GOAL_GAME_CONFIG)
   const [ranking, setRanking] = useState<GoalGameRankingEntry[]>([])
   const [entryToDelete, setEntryToDelete] = useState<GoalGameRankingEntry | null>(null)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
 
   const topScore = useMemo(
     () => ranking.reduce((highest, entry) => Math.max(highest, entry.puntaje), 0),
@@ -56,6 +58,7 @@ export default function AdminJuegoGolPage() {
       setSchemaReady(result.schemaReady !== false)
       setConfig(result.config || DEFAULT_GOAL_GAME_CONFIG)
       setRanking(result.ranking || [])
+      setSelectedIds([])
       if (result.warning) setMessage(result.warning)
     } catch {
       setErrorMessage("No se pudo cargar el Desafio del Gol.")
@@ -126,6 +129,7 @@ export default function AdminJuegoGolPage() {
       }
 
       setRanking(result.ranking || ranking.filter((entry) => entry.id !== entryToDelete.id))
+      setSelectedIds((current) => current.filter((id) => id !== entryToDelete.id))
       setMessage(`Eliminaste a ${entryToDelete.nombre} del ranking.`)
       setEntryToDelete(null)
     } catch {
@@ -133,6 +137,56 @@ export default function AdminJuegoGolPage() {
     } finally {
       setDeleting(false)
     }
+  }
+
+  const deleteSelectedEntries = async () => {
+    if (selectedIds.length === 0) return
+
+    setDeleting(true)
+    setMessage("")
+    setErrorMessage("")
+
+    try {
+      const response = await fetch("/api/admin/juego-gol", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: selectedIds }),
+      })
+      const result = (await response.json()) as {
+        ranking?: GoalGameRankingEntry[]
+        deletedCount?: number
+        error?: string
+      }
+
+      if (!response.ok) {
+        setErrorMessage(result.error || "No se pudieron borrar los participantes.")
+        return
+      }
+
+      const selectedSet = new Set(selectedIds)
+      setRanking(result.ranking || ranking.filter((entry) => !selectedSet.has(entry.id)))
+      setMessage(`Eliminaste ${result.deletedCount || selectedIds.length} participantes del ranking.`)
+      setSelectedIds([])
+      setBulkDeleteOpen(false)
+    } catch {
+      setErrorMessage("No se pudieron borrar los participantes.")
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const allSelected = ranking.length > 0 && selectedIds.length === ranking.length
+
+  const toggleAllEntries = () => {
+    setSelectedIds(allSelected ? [] : ranking.map((entry) => entry.id))
+  }
+
+  const toggleEntry = (id: number) => {
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((selectedId) => selectedId !== id)
+        : [...current, id]
+    )
   }
 
   if (loading) {
@@ -153,6 +207,17 @@ export default function AdminJuegoGolPage() {
         onCancel={() => setEntryToDelete(null)}
         onConfirm={() => {
           void deleteEntry()
+        }}
+        isLoading={deleting}
+      />
+      <AdminConfirmModal
+        isOpen={bulkDeleteOpen}
+        title="Eliminar participantes seleccionados"
+        description={`Vas a eliminar ${selectedIds.length} participantes del ranking del Desafio del Gol. Esta accion no se puede deshacer.`}
+        confirmLabel={`Eliminar ${selectedIds.length}`}
+        onCancel={() => setBulkDeleteOpen(false)}
+        onConfirm={() => {
+          void deleteSelectedEntries()
         }}
         isLoading={deleting}
       />
@@ -297,11 +362,23 @@ export default function AdminJuegoGolPage() {
           </aside>
 
           <section className="rounded-2xl border border-slate-200 bg-white shadow-sm lg:col-span-2">
-            <div className="border-b border-slate-200 p-6">
-              <h2 className="text-xl font-semibold text-slate-900">Ranking de participantes</h2>
-              <p className="mt-2 text-sm text-slate-500">
-                Ordenado por mayor puntaje; en empate queda primero quien llego antes.
-              </p>
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 p-6">
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">Ranking de participantes</h2>
+                <p className="mt-2 text-sm text-slate-500">
+                  Ordenado por mayor puntaje; en empate queda primero quien llego antes.
+                </p>
+              </div>
+              {selectedIds.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setBulkDeleteOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-500"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Borrar seleccionados ({selectedIds.length})
+                </button>
+              ) : null}
             </div>
 
             {ranking.length === 0 ? (
@@ -313,6 +390,15 @@ export default function AdminJuegoGolPage() {
                 <table className="min-w-full divide-y divide-slate-200 text-sm">
                   <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
                     <tr>
+                      <th className="w-12 px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={allSelected}
+                          onChange={toggleAllEntries}
+                          aria-label="Seleccionar todos los participantes"
+                          className="h-4 w-4 cursor-pointer rounded border-slate-300 accent-red-600"
+                        />
+                      </th>
                       <th className="px-6 py-3">Puesto</th>
                       <th className="px-6 py-3">Nombre</th>
                       <th className="px-6 py-3">Puntaje</th>
@@ -322,7 +408,19 @@ export default function AdminJuegoGolPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {ranking.map((entry, index) => (
-                      <tr key={entry.id}>
+                      <tr
+                        key={entry.id}
+                        className={selectedIds.includes(entry.id) ? "bg-red-50/70" : ""}
+                      >
+                        <td className="px-4 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(entry.id)}
+                            onChange={() => toggleEntry(entry.id)}
+                            aria-label={`Seleccionar a ${entry.nombre}`}
+                            className="h-4 w-4 cursor-pointer rounded border-slate-300 accent-red-600"
+                          />
+                        </td>
                         <td className="px-6 py-4 font-black text-slate-950">{index + 1}</td>
                         <td className="px-6 py-4 font-semibold text-slate-900">{entry.nombre}</td>
                         <td className="px-6 py-4 font-black text-emerald-700">{entry.puntaje}</td>
