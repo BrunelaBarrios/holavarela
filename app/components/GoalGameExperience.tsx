@@ -203,18 +203,18 @@ export function GoalGameExperience({
 
         <section className="mt-6 overflow-hidden rounded-[28px] border border-cyan-100 bg-white shadow-[0_22px_60px_-38px_rgba(8,145,178,0.55)]">
           <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="bg-[linear-gradient(135deg,#0f172a_0%,#075985_52%,#16a34a_100%)] p-5 text-white sm:p-8 lg:p-10">
+            <div className="min-w-0 overflow-hidden bg-[linear-gradient(135deg,#0f172a_0%,#075985_52%,#16a34a_100%)] p-4 text-white sm:p-8 lg:p-10">
               <div className="inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ring-1 ring-white/20">
                 Penal a penal
               </div>
-              <h1 className="mt-4 text-4xl font-black tracking-normal sm:text-5xl">
+              <h1 className="mt-4 text-3xl font-black tracking-normal sm:text-5xl">
                 {config.titulo}
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-cyan-50 sm:text-lg">
                 Elegi entre cinco zonas del arco, incluidos los dos angulos. Si el arquero adivina, termina la partida. Si no, es gol y sumas otro punto.
               </p>
 
-              <div className="mt-8 rounded-3xl border border-white/20 bg-white/10 p-4 backdrop-blur sm:p-5">
+              <div className="mt-7 min-w-0 rounded-3xl border border-white/20 bg-white/10 p-3 backdrop-blur sm:mt-8 sm:p-5">
                 {!gameStarted ? (
                   <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                     <label className="block">
@@ -242,7 +242,7 @@ export function GoalGameExperience({
                   </div>
                 ) : (
                   <div>
-                    <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-3">
                       <div>
                         <div className="text-sm font-semibold text-cyan-50">
                           Jugando como {normalizedName}
@@ -252,10 +252,11 @@ export function GoalGameExperience({
                       <button
                         type="button"
                         onClick={resetGame}
-                        className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/15"
+                        className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/20 bg-white/10 p-3 text-sm font-semibold text-white transition hover:bg-white/15 sm:rounded-2xl sm:px-4"
+                        aria-label="Reiniciar partida"
                       >
                         <RotateCcw className="h-4 w-4" />
-                        Reiniciar
+                        <span className="hidden sm:inline">Reiniciar</span>
                       </button>
                     </div>
 
@@ -265,19 +266,19 @@ export function GoalGameExperience({
                       shotNumber={shotNumber}
                     />
 
-                    <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
+                    <div className="mt-5 grid min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-2 sm:mt-6 sm:grid-cols-[repeat(5,minmax(0,1fr))] sm:gap-3">
                       {KICK_OPTIONS.map((option) => (
                         <button
                           key={option.key}
                           type="button"
                           onClick={() => kick(option.key)}
                           disabled={gameOver || saving || shotAnimating}
-                          className={`min-h-[92px] rounded-2xl border border-white/20 bg-white px-3 py-4 text-left text-slate-950 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.8)] transition hover:-translate-y-0.5 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60 ${
+                          className={`min-h-[84px] min-w-0 overflow-hidden rounded-xl border border-white/20 bg-white px-3 py-3 text-left text-slate-950 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.8)] transition hover:-translate-y-0.5 hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[92px] sm:rounded-2xl sm:py-4 ${
                             option.key === "centro" ? "col-span-2 sm:col-span-1" : ""
                           }`}
                         >
-                          <span className="block text-lg font-black">{option.label}</span>
-                          <span className="mt-1 block text-sm font-medium text-slate-500">
+                          <span className="block break-words text-base font-black leading-tight sm:text-lg">{option.label}</span>
+                          <span className="mt-1 block break-words text-xs font-medium leading-4 text-slate-500 sm:text-sm">
                             {option.helper}
                           </span>
                         </button>
@@ -414,8 +415,8 @@ function GoalGameScene({
   const isSaved = lastKick?.goal === false
 
   return (
-    <div className="mt-6 overflow-hidden rounded-3xl border border-white/20 bg-[linear-gradient(180deg,#dff7ff_0%,#f8fafc_42%,#2f9b52_43%,#18733b_100%)] p-3 shadow-inner sm:p-4">
-      <div className="relative mx-auto aspect-[16/10] max-h-[360px] min-h-[210px] w-full overflow-hidden rounded-2xl border border-white/30 bg-[linear-gradient(180deg,#dff7ff_0%,#f8fafc_45%,#2ebc67_46%,#178044_100%)]">
+    <div className="mt-5 min-w-0 overflow-hidden rounded-2xl border border-white/20 bg-[linear-gradient(180deg,#dff7ff_0%,#f8fafc_42%,#2f9b52_43%,#18733b_100%)] p-2 shadow-inner sm:mt-6 sm:rounded-3xl sm:p-4">
+      <div className="relative mx-auto aspect-[16/10] max-h-[360px] min-h-[180px] w-full min-w-0 overflow-hidden rounded-xl border border-white/30 bg-[linear-gradient(180deg,#dff7ff_0%,#f8fafc_45%,#2ebc67_46%,#178044_100%)] sm:min-h-[210px] sm:rounded-2xl">
         <div className="absolute left-1/2 top-[10%] h-[47%] w-[74%] -translate-x-1/2 rounded-t-2xl border-[6px] border-white shadow-[0_10px_24px_-18px_rgba(15,23,42,0.9)] sm:border-8">
           <div className="grid h-full grid-cols-4 grid-rows-3 opacity-35">
             {Array.from({ length: 12 }).map((_, index) => (
