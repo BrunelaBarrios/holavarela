@@ -1,7 +1,6 @@
 'use client'
 
-import Link from "next/link"
-import { useMemo, useState, type CSSProperties, type MouseEvent } from "react"
+import { useMemo, useState, type CSSProperties } from "react"
 import { ArrowLeft, Goal, RotateCcw, Shield, Trophy } from "lucide-react"
 import {
   type GoalGameConfig,
@@ -48,11 +47,6 @@ function pickGoalkeeperSide(): KickSide {
 
 function pickKeeperMove(): KeeperMove {
   return KEEPER_MOVES[Math.floor(Math.random() * KEEPER_MOVES.length)]
-}
-
-function goHome(event: MouseEvent<HTMLAnchorElement>) {
-  event.preventDefault()
-  window.location.assign("/")
 }
 
 export function GoalGameExperience({
@@ -168,14 +162,15 @@ export function GoalGameExperience({
     return (
       <main className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#ecfeff_54%,#ffffff_100%)] px-4 py-8 text-slate-950">
         <div className="mx-auto max-w-3xl">
-          <Link
+          {/* Una navegacion completa evita fallos del router en el Worker. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+          <a
             href="/"
-            onClick={goHome}
             className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-sky-200 hover:text-sky-700"
           >
             <ArrowLeft className="h-4 w-4" />
             Volver a Hola Varela
-          </Link>
+          </a>
 
           <section className="mt-10 rounded-[28px] border border-slate-200 bg-white p-8 text-center shadow-[0_22px_55px_-36px_rgba(15,23,42,0.32)]">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
@@ -196,14 +191,15 @@ export function GoalGameExperience({
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#ecfeff_0%,#f8fafc_46%,#ffffff_100%)] px-4 py-6 text-slate-950 sm:py-8">
       <div className="mx-auto max-w-6xl">
-        <Link
+        {/* Una navegacion completa evita fallos del router en el Worker. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a
           href="/"
-          onClick={goHome}
           className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/90 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-200 hover:text-sky-700"
         >
           <ArrowLeft className="h-4 w-4" />
           Volver a Hola Varela
-        </Link>
+        </a>
 
         <section className="mt-6 overflow-hidden rounded-[28px] border border-cyan-100 bg-white shadow-[0_22px_60px_-38px_rgba(8,145,178,0.55)]">
           <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
