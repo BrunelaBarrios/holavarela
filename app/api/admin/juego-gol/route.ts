@@ -53,6 +53,17 @@ async function loadRanking(limit = 100) {
   }))
 }
 
+async function countParticipants() {
+  const supabase = getSupabaseAdmin()
+  const { count, error } = await supabase
+    .from("juego_gol_participaciones")
+    .select("id", { count: "exact", head: true })
+
+  if (error) throw error
+
+  return count || 0
+}
+
 export async function GET(request: NextRequest) {
   const session = await requireAdminSession(request)
   if (!session) {
@@ -70,9 +81,15 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error
 
+    const [ranking, totalParticipants] = await Promise.all([
+      loadRanking(),
+      countParticipants(),
+    ])
+
     return NextResponse.json({
       config: configFromRow(data as GoalGameConfigRow | null),
-      ranking: await loadRanking(),
+      ranking,
+      totalParticipants,
       schemaReady: true,
     })
   } catch (error) {
@@ -80,6 +97,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         config: DEFAULT_GOAL_GAME_CONFIG,
         ranking: [],
+        totalParticipants: 0,
         schemaReady: false,
         warning: "Falta crear las tablas juego_gol_config y juego_gol_participaciones en Supabase.",
       })
@@ -206,9 +224,15 @@ export async function DELETE(request: NextRequest) {
   revalidatePath("/")
   revalidatePath("/juego-gol")
 
+  const [ranking, totalParticipants] = await Promise.all([
+    loadRanking(),
+    countParticipants(),
+  ])
+
   return NextResponse.json({
     ok: true,
-    deletedCount: ids.length,
-    ranking: await loadRanking(),
+    deletedCount: entries?.length || 0,
+    ranking,
+    totalParticipants,
   })
 }

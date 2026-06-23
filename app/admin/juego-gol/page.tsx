@@ -26,6 +26,7 @@ export default function AdminJuegoGolPage() {
   const [errorMessage, setErrorMessage] = useState("")
   const [config, setConfig] = useState<AdminGoalConfig>(DEFAULT_GOAL_GAME_CONFIG)
   const [ranking, setRanking] = useState<GoalGameRankingEntry[]>([])
+  const [totalParticipants, setTotalParticipants] = useState(0)
   const [entryToDelete, setEntryToDelete] = useState<GoalGameRankingEntry | null>(null)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
@@ -45,6 +46,7 @@ export default function AdminJuegoGolPage() {
       const result = (await response.json()) as {
         config?: AdminGoalConfig
         ranking?: GoalGameRankingEntry[]
+        totalParticipants?: number
         schemaReady?: boolean
         warning?: string
         error?: string
@@ -58,6 +60,7 @@ export default function AdminJuegoGolPage() {
       setSchemaReady(result.schemaReady !== false)
       setConfig(result.config || DEFAULT_GOAL_GAME_CONFIG)
       setRanking(result.ranking || [])
+      setTotalParticipants(result.totalParticipants || 0)
       setSelectedIds([])
       if (result.warning) setMessage(result.warning)
     } catch {
@@ -120,6 +123,7 @@ export default function AdminJuegoGolPage() {
       })
       const result = (await response.json()) as {
         ranking?: GoalGameRankingEntry[]
+        totalParticipants?: number
         error?: string
       }
 
@@ -129,6 +133,9 @@ export default function AdminJuegoGolPage() {
       }
 
       setRanking(result.ranking || ranking.filter((entry) => entry.id !== entryToDelete.id))
+      setTotalParticipants(
+        result.totalParticipants ?? Math.max(0, totalParticipants - 1)
+      )
       setSelectedIds((current) => current.filter((id) => id !== entryToDelete.id))
       setMessage(`Eliminaste a ${entryToDelete.nombre} del ranking.`)
       setEntryToDelete(null)
@@ -155,6 +162,7 @@ export default function AdminJuegoGolPage() {
       const result = (await response.json()) as {
         ranking?: GoalGameRankingEntry[]
         deletedCount?: number
+        totalParticipants?: number
         error?: string
       }
 
@@ -165,7 +173,11 @@ export default function AdminJuegoGolPage() {
 
       const selectedSet = new Set(selectedIds)
       setRanking(result.ranking || ranking.filter((entry) => !selectedSet.has(entry.id)))
-      setMessage(`Eliminaste ${result.deletedCount || selectedIds.length} participantes del ranking.`)
+      const deletedCount = result.deletedCount ?? selectedIds.length
+      setTotalParticipants(
+        result.totalParticipants ?? Math.max(0, totalParticipants - deletedCount)
+      )
+      setMessage(`Eliminaste ${deletedCount} participantes del ranking.`)
       setSelectedIds([])
       setBulkDeleteOpen(false)
     } catch {
@@ -351,7 +363,7 @@ export default function AdminJuegoGolPage() {
                 </div>
                 <div>
                   <div className="text-sm text-slate-500">Participantes</div>
-                  <div className="text-2xl font-black text-slate-950">{ranking.length}</div>
+                  <div className="text-2xl font-black text-slate-950">{totalParticipants}</div>
                 </div>
               </div>
               <div className="mt-4 rounded-2xl bg-slate-50 p-4">
@@ -366,7 +378,7 @@ export default function AdminJuegoGolPage() {
               <div>
                 <h2 className="text-xl font-semibold text-slate-900">Ranking de participantes</h2>
                 <p className="mt-2 text-sm text-slate-500">
-                  Ordenado por mayor puntaje; en empate queda primero quien llego antes.
+                  Se muestran los mejores 100 de {totalParticipants} participantes. En empate queda primero quien llego antes.
                 </p>
               </div>
               {selectedIds.length > 0 ? (
