@@ -32,6 +32,9 @@ const COURSE_AGE_GROUPS = new Set([
   "todas_las_edades",
 ])
 
+const ADMIN_COURSE_SELECT =
+  "id, nombre, descripcion, institucion_id, servicio_id, edad_destino, responsable, contacto, web_url, instagram_url, facebook_url, premium_galeria, destacado, estado, usa_whatsapp"
+
 type DeleteCursoPayload = {
   action: "delete"
   id?: number
@@ -149,7 +152,7 @@ export async function POST(request: NextRequest) {
         .from("cursos")
         .update({ estado: nextEstado })
         .eq("id", body.id)
-        .select("*")
+        .select(ADMIN_COURSE_SELECT)
         .single()
 
       if (error) throw error
@@ -188,7 +191,7 @@ export async function POST(request: NextRequest) {
         .from("cursos")
         .update({ destacado: !existing.destacado })
         .eq("id", body.id)
-        .select("*")
+        .select(ADMIN_COURSE_SELECT)
         .single()
 
       if (error) throw error
@@ -217,11 +220,13 @@ export async function POST(request: NextRequest) {
       web_url: normalizeUrl(body.payload.web_url),
       instagram_url: normalizeUrl(body.payload.instagram_url),
       facebook_url: normalizeUrl(body.payload.facebook_url),
-      imagen: normalizeText(body.payload.imagen),
       premium_galeria: normalizeTextList(body.payload.premium_galeria),
       destacado: Boolean(body.payload.destacado),
       estado: body.payload.estado || "activo",
       usa_whatsapp: Boolean(body.payload.usa_whatsapp),
+      ...(Object.prototype.hasOwnProperty.call(body.payload, "imagen")
+        ? { imagen: normalizeText(body.payload.imagen) }
+        : {}),
     }
 
     if (!payload.nombre || !payload.descripcion || !payload.responsable) {
@@ -244,7 +249,7 @@ export async function POST(request: NextRequest) {
         .from("cursos")
         .update(payload)
         .eq("id", body.id)
-        .select("*")
+        .select(ADMIN_COURSE_SELECT)
         .single()
 
       if (error) throw error
@@ -261,7 +266,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabaseAdmin
       .from("cursos")
       .insert([payload])
-      .select("*")
+      .select(ADMIN_COURSE_SELECT)
       .single()
 
     if (error) throw error

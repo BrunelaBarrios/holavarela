@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
 import { ArrowRight, GraduationCap, Phone, Search } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
-import { PrimaryExternalLinkButton } from "../PrimaryExternalLinkButton"
 import { PublicDetailModal } from "../PublicDetailModal"
 import { PublicHeader } from "../PublicHeader"
 import { ShareButton } from "../ShareButton"
@@ -285,78 +284,31 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                 key={curso.id}
                 role="button"
                 tabIndex={0}
+                aria-label={`Ver detalles de ${curso.nombre}`}
                 onClick={() => handleOpenCurso(curso)}
                 onKeyDown={(event) => handleCardKeyDown(event, () => handleOpenCurso(curso))}
-                className="cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+                className="group flex min-h-72 cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition duration-200 hover:-translate-y-1 hover:border-blue-200 hover:shadow-[0_16px_36px_rgba(15,23,42,0.10)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
               >
-                <div className="border-b border-blue-100 bg-[linear-gradient(135deg,#eff6ff_0%,#eefdf7_100%)] p-5">
-                  <h2 className="text-3xl font-bold leading-tight text-gray-950">
+                <div className="border-b border-blue-100 bg-[linear-gradient(135deg,#eff6ff_0%,#ecfdf5_100%)] px-5 py-6">
+                  <h2 className="text-2xl font-bold leading-tight tracking-tight text-slate-950">
                     {curso.nombre}
                   </h2>
                 </div>
 
-                <div className="p-5">
-                  <p className="line-clamp-3 mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
+                <div className="flex flex-1 flex-col p-5">
+                  <p className="line-clamp-4 whitespace-pre-line text-sm leading-6 text-slate-600">
                     {curso.descripcion}
                   </p>
 
-                  <div className="mt-4 flex items-center gap-2 text-sm text-gray-600">
-                    <GraduationCap className="h-4 w-4" />
-                    <span>{curso.responsable}</span>
-                  </div>
+                  <div className="mt-auto pt-6">
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <GraduationCap className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{curso.responsable}</span>
+                    </div>
 
-                  <div className="mt-5 flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        handleOpenCurso(curso)
-                      }}
-                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                    >
-                      Ver más
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-
-                      {curso.contacto?.trim() && curso.usa_whatsapp !== false ? (
-                        <ContactActionLink
-                          href={getContactHref(curso.contacto, curso.usa_whatsapp)}
-                          mode="whatsapp"
-                          section="cursos"
-                          itemId={String(curso.id)}
-                          itemTitle={curso.nombre}
-                          onClick={(event) => event.stopPropagation()}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
-                        >
-                          <Phone className="h-4 w-4" />
-                          Contactar
-                        </ContactActionLink>
-                      ) : (
-                        <PrimaryExternalLinkButton
-                          webUrl={curso.web_url}
-                          instagramUrl={curso.instagram_url}
-                          facebookUrl={curso.facebook_url}
-                          section="cursos"
-                          itemId={String(curso.id)}
-                          itemTitle={curso.nombre}
-                          onClick={(event) => event.stopPropagation()}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
-                        />
-                      )}
-
-                    <div onClick={(event) => event.stopPropagation()}>
-                      <ShareButton
-                        title={curso.nombre}
-                        text={curso.descripcion}
-                        url={getShareUrl(curso.id)}
-                        section="cursos"
-                        itemId={String(curso.id)}
-                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-                      />
+                    <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-sm font-semibold text-blue-700">
+                      <span>Ver detalles</span>
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </div>
                   </div>
                 </div>

@@ -97,6 +97,7 @@ export default function AdminCursosPage() {
   const [saveError, setSaveError] = useState("")
   const [deletingCurso, setDeletingCurso] = useState<Curso | null>(null)
   const [submitMode, setSubmitMode] = useState<"publish" | "draft">("publish")
+  const [imageChanged, setImageChanged] = useState(false)
   const [instituciones, setInstituciones] = useState<InstitucionOption[]>([])
   const [servicios, setServicios] = useState<ServicioOption[]>([])
 
@@ -189,6 +190,7 @@ export default function AdminCursosPage() {
     setIsFormOpen(false)
     setSaveError("")
     setSubmitMode("publish")
+    setImageChanged(false)
   }
 
   const toggleFeatured = async (curso: Curso) => {
@@ -263,7 +265,9 @@ export default function AdminCursosPage() {
       web_url: formData.web_url?.trim() || null,
       instagram_url: formData.instagram_url?.trim() || null,
       facebook_url: formData.facebook_url?.trim() || null,
-      imagen: formData.imagen || null,
+      ...(!editingCurso || imageChanged
+        ? { imagen: formData.imagen || null }
+        : {}),
       premium_galeria: formData.premium_galeria
         .split(/\r?\n/)
         .map((item) => item.trim())
@@ -323,18 +327,10 @@ export default function AdminCursosPage() {
     [servicios]
   )
 
-  const handleEdit = async (curso: Curso) => {
-    const { data, error } = await supabase
-      .from("cursos")
-      .select("imagen")
-      .eq("id", curso.id)
-      .maybeSingle()
-
-    if (error) {
-      setSaveError(`No se pudo cargar la imagen del curso: ${error.message}`)
-    }
-
+  const handleEdit = (curso: Curso) => {
+    setSaveError("")
     setEditingCurso(curso)
+    setImageChanged(false)
     setFormData({
       nombre: curso.nombre,
       descripcion: curso.descripcion,
@@ -346,7 +342,7 @@ export default function AdminCursosPage() {
       web_url: curso.web_url || "",
       instagram_url: curso.instagram_url || "",
       facebook_url: curso.facebook_url || "",
-      imagen: data?.imagen || null,
+      imagen: "",
       premium_galeria: (curso.premium_galeria || []).join("\n"),
       usa_whatsapp: curso.usa_whatsapp ?? true,
     })
@@ -386,6 +382,7 @@ export default function AdminCursosPage() {
         targetFileSizeBytes: 320 * 1024,
       })
       setFormData((prev) => ({ ...prev, imagen: imageDataUrl }))
+      setImageChanged(true)
     } catch (error) {
       setSaveError(
         error instanceof Error ? error.message : "No se pudo cargar la imagen."
@@ -558,7 +555,7 @@ export default function AdminCursosPage() {
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-slate-500">
-                  Puedes marcar mas de un publico. "Todas las edades" reemplaza a los demas filtros.
+                  Puedes marcar más de un público. &quot;Todas las edades&quot; reemplaza a los demás filtros.
                 </p>
               </div>
 
@@ -730,6 +727,11 @@ export default function AdminCursosPage() {
                 <p className="mt-2 text-sm text-slate-500">
                   Opcional. En la pagina de cursos se mostrara el nombre del curso en grande, sin imagen.
                 </p>
+                {editingCurso && !imageChanged && (
+                  <p className="mt-3 rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    La imagen actual se conservará. Elegí un archivo solamente si querés reemplazarla.
+                  </p>
+                )}
                 {formData.imagen && (
                   <div className="mt-4 space-y-3">
                     <div className="relative h-52 w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
@@ -742,12 +744,29 @@ export default function AdminCursosPage() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => setFormData((prev) => ({ ...prev, imagen: "" }))}
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, imagen: "" }))
+                        setImageChanged(true)
+                      }}
                       className="text-sm font-medium text-red-600 transition hover:text-red-500"
                     >
                       Quitar imagen
                     </button>
                   </div>
+                )}
+                {editingCurso && !formData.imagen && !imageChanged && (
+                  <button
+                    type="button"
+                    onClick={() => setImageChanged(true)}
+                    className="mt-3 text-sm font-medium text-red-600 transition hover:text-red-500"
+                  >
+                    Quitar imagen actual
+                  </button>
+                )}
+                {editingCurso && !formData.imagen && imageChanged && (
+                  <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                    La imagen actual se quitará cuando guardes los cambios.
+                  </p>
                 )}
               </div>
 
