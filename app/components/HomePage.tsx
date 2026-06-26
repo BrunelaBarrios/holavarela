@@ -2254,24 +2254,7 @@ export function HomePage({
                         Ver perfil completo
                         <ArrowRight className="h-4 w-4" />
                       </Link>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          handleViewMoreClick(
-                            "comercios",
-                            String(business.id),
-                            business.nombre,
-                            () => setSelectedComercio(business)
-                          )
-                        }}
-                        className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-blue-500 transition hover:text-blue-600 sm:text-sm"
-                      >
-                        Ver más
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               )
@@ -2382,24 +2365,7 @@ export function HomePage({
                               Ver perfil completo
                               <ArrowRight className="h-4 w-4" />
                             </Link>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation()
-                                handleViewMoreClick(
-                                  "servicios",
-                                  String(servicio.id),
-                                  servicio.nombre,
-                                  () => setSelectedServicio(servicio)
-                                )
-                              }}
-                              className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-blue-500 transition hover:text-blue-600 sm:text-sm"
-                            >
-                              Ver más
-                              <ArrowRight className="h-4 w-4" />
-                            </button>
-                          )}
+                          ) : null}
                         </div>
                       </div>
               ))}
@@ -2652,22 +2618,6 @@ export function HomePage({
                       <GraduationCap className="h-4 w-4" />
                       <span>{curso.responsable}</span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        handleViewMoreClick(
-                          "cursos",
-                          String(curso.id),
-                          curso.nombre,
-                          () => setSelectedCurso(curso)
-                        )
-                      }}
-                      className="mt-4 hidden items-center gap-2 text-xs font-semibold text-blue-500 transition hover:text-blue-600 sm:mt-5 sm:inline-flex sm:text-sm"
-                    >
-                      Ver más
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
                   </div>
                 </div>
               ))}
@@ -2736,19 +2686,7 @@ export function HomePage({
                         Ver perfil completo
                         <ArrowRight className="h-4 w-4" />
                       </Link>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          handleInstitutionClick(institucion)
-                        }}
-                        className="mt-4 hidden items-center gap-2 text-xs font-semibold text-cyan-600 transition hover:text-cyan-700 sm:mt-5 sm:inline-flex sm:text-sm"
-                      >
-                        Ver más
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               ))}
@@ -3017,17 +2955,6 @@ function HomeEventCard({
           />
         </div>
 
-        <button
-          type="button"
-          onClick={(eventClick) => {
-            eventClick.stopPropagation()
-            onOpen()
-          }}
-          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-blue-500 hover:text-blue-600 sm:mt-5 sm:gap-2 sm:text-lg"
-        >
-          Ver más
-          <ArrowRight className="h-4 w-4" />
-        </button>
       </div>
     </div>
   )
