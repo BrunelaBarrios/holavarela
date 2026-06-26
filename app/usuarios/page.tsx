@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import type { User } from "@supabase/supabase-js"
-import { BarChart3, CalendarDays, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, Menu, PlusCircle, Send, Trash2, XCircle } from "lucide-react"
+import { CalendarDays, CreditCard, ExternalLink, EyeOff, FilePenLine, ImageIcon, KeyRound, LogOut, Menu, PlusCircle, Send, Trash2, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AdminConfirmModal } from "../components/AdminConfirmModal"
 import { AuthFormStatus } from "../components/AuthFormStatus"
@@ -349,7 +349,6 @@ export default function UsuariosHomePage() {
                           <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description="Actualiza la ficha base: contacto, direccion, redes e imagen principal." />
                           {hasPremium ? <QuickLink href="/usuarios/perfil#premium" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-fuchsia-600" />} title="Editar versión extendida" description={isInstitution ? "Administra el contenido ampliado habilitado por admin." : "Administra el contenido ampliado incluido en tu plan."} /> : null}
                           {ownedEntity && supportsSubscription(ownedEntity.type) ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
-                          <QuickLink href="/usuarios/metricas-holavarela" icon={<BarChart3 className="h-5 w-5 text-slate-400 transition group-hover:text-indigo-600" />} title="Métricas de Hola Varela" description="Conoce visitantes, vistas y actividad general de la plataforma." />
                           <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
                           <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contraseña" description="Hazlo de forma segura validando tu clave actual." />
                           <QuickLink href="/" icon={<ExternalLink className="h-5 w-5 text-slate-400 transition group-hover:text-slate-700" />} title="Ver sitio público" description="Revisa cómo aparece Hola Varela para las visitas." />
@@ -397,7 +396,6 @@ export default function UsuariosHomePage() {
                 <div className="mt-4 space-y-3">
                   <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description="Actualiza la ficha base: contacto, direccion, redes e imagen principal." />
                         {ownedEntity && supportsSubscription(ownedEntity.type) ? <QuickLink href="/usuarios/suscripcion" icon={<CreditCard className="h-5 w-5 text-slate-400 transition group-hover:text-sky-600" />} title="Suscripción" description="Revisa tu plan, cambia la opción elegida y continúa el pago." /> : null}
-                        <QuickLink href="/usuarios/metricas-holavarela" icon={<BarChart3 className="h-5 w-5 text-slate-400 transition group-hover:text-indigo-600" />} title="Métricas de Hola Varela" description="Conoce visitantes, vistas y actividad general de la plataforma." />
                         <QuickLink href="/usuarios/eventos/nuevo" icon={<PlusCircle className="h-5 w-5 text-slate-400 transition group-hover:text-emerald-600" />} title="Subir evento" description="Carga una actividad, promo, sorteo o novedad." />
                   <QuickLink href="/usuarios/contrasena" icon={<KeyRound className="h-5 w-5 text-slate-400 transition group-hover:text-violet-600" />} title="Cambiar contraseña" description="Hazlo de forma segura validando tu clave actual." />
                   <QuickLink href="/" icon={<ExternalLink className="h-5 w-5 text-slate-400 transition group-hover:text-slate-700" />} title="Ver sitio público" description="Revisa cómo aparece Hola Varela para las visitas." />
