@@ -13,7 +13,7 @@ import {
 } from "./lib/goalGame"
 import { supabaseServer } from "./lib/supabaseServer"
 
-export const revalidate = 3600
+export const revalidate = 300
 
 const defaultSobreVarela = {
   titulo: "José Pedro Varela",
@@ -375,8 +375,8 @@ const getHomePageData = unstable_cache(
       weather,
     }
   },
-  ["home-page-data-v13"],
-  { revalidate: 3600 }
+  ["home-page-data-v14"],
+  { revalidate: 300 }
 )
 
 export default async function Page() {
