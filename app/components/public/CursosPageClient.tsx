@@ -39,6 +39,7 @@ export type Curso = {
   dias_semana?: string[] | null
   hora_inicio?: string | null
   hora_fin?: string | null
+  horarios?: CursoHorario[] | null
   costo_tipo?: string | null
   web_url?: string | null
   instagram_url?: string | null
@@ -47,6 +48,12 @@ export type Curso = {
   premium_galeria?: string[] | null
   estado?: string | null
   usa_whatsapp?: boolean | null
+}
+
+type CursoHorario = {
+  dia: string
+  hora_inicio: string
+  hora_fin?: string | null
 }
 
 type ViewMode = "lista" | "dia" | "semana"
@@ -123,37 +130,64 @@ const timeToMinutes = (value?: string | null) => {
   return hours * 60 + minutes
 }
 
-const formatCourseSchedule = (curso: Curso) => {
-  const start = normalizeTime(curso.hora_inicio)
-  const end = normalizeTime(curso.hora_fin)
+const getCourseSchedules = (curso: Curso): CursoHorario[] => {
+  if (curso.horarios?.length) return curso.horarios
+
+  return (curso.dias_semana || []).map((dia) => ({
+    dia,
+    hora_inicio: normalizeTime(curso.hora_inicio),
+    hora_fin: normalizeTime(curso.hora_fin),
+  }))
+}
+
+const getCourseScheduleForDay = (curso: Curso, day?: string) =>
+  getCourseSchedules(curso).find((schedule) => !day || schedule.dia === day)
+
+const courseHasDay = (curso: Curso, day: string) =>
+  getCourseSchedules(curso).some((schedule) => schedule.dia === day)
+
+const formatCourseSchedule = (curso: Curso, day?: string) => {
+  const schedule = getCourseScheduleForDay(curso, day)
+  const start = normalizeTime(schedule?.hora_inicio || curso.hora_inicio)
+  const end = normalizeTime(schedule?.hora_fin || curso.hora_fin)
 
   if (start && end) return `${start} a ${end}`
   if (start) return start
   return "Horario a definir"
 }
 
-const formatCourseDays = (curso: Curso) => {
-  const days = curso.dias_semana || []
-  if (!days.length) return "Dias a definir"
+const formatAllCourseSchedules = (curso: Curso) => {
+  const schedules = getCourseSchedules(curso)
+  if (!schedules.length) return "Dias y horarios a definir"
 
-  return days
-    .map((day) => weekDayOptions.find((option) => option.value === day)?.short)
-    .filter(Boolean)
-    .join(", ")
+  return schedules
+    .map((schedule) => {
+      const day = weekDayOptions.find((option) => option.value === schedule.dia)?.short
+      const end = normalizeTime(schedule.hora_fin)
+      return `${day || schedule.dia} ${normalizeTime(schedule.hora_inicio)}${end ? ` a ${end}` : ""}`
+    })
+    .join(" · ")
 }
 
-const sortBySchedule = (courses: Curso[]) =>
-  [...courses].sort((a, b) => timeToMinutes(a.hora_inicio) - timeToMinutes(b.hora_inicio))
+const sortBySchedule = (courses: Curso[], day?: string) =>
+  [...courses].sort(
+    (a, b) =>
+      timeToMinutes(getCourseScheduleForDay(a, day)?.hora_inicio || a.hora_inicio) -
+      timeToMinutes(getCourseScheduleForDay(b, day)?.hora_inicio || b.hora_inicio)
+  )
 
-const courseMatchesTimeFilter = (curso: Curso, filter: TimeFilter) => {
+const courseMatchesTimeFilter = (curso: Curso, filter: TimeFilter, day?: string) => {
   if (filter === "todos") return true
 
-  const minutes = timeToMinutes(curso.hora_inicio)
-  if (minutes >= 24 * 60) return false
-  if (filter === "manana") return minutes < 12 * 60
-  if (filter === "tarde") return minutes >= 12 * 60 && minutes < 19 * 60
-
-  return minutes >= 19 * 60
+  return getCourseSchedules(curso)
+    .filter((schedule) => !day || schedule.dia === day)
+    .some((schedule) => {
+      const minutes = timeToMinutes(schedule.hora_inicio)
+      if (minutes >= 24 * 60) return false
+      if (filter === "manana") return minutes < 12 * 60
+      if (filter === "tarde") return minutes >= 12 * 60 && minutes < 19 * 60
+      return minutes >= 19 * 60
+    })
 }
 
 const courseCostLabel = (value?: string | null) =>
@@ -166,10 +200,12 @@ const getTodayValue = () => {
 
 function CursoAgendaCard({
   curso,
+  day,
   compact = false,
   onOpen,
 }: {
   curso: Curso
+  day?: string
   compact?: boolean
   onOpen: (curso: Curso) => void
 }) {
@@ -177,7 +213,7 @@ function CursoAgendaCard({
     <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-blue-700">{formatCourseSchedule(curso)}</p>
+          <p className="text-sm font-semibold text-blue-700">{formatCourseSchedule(curso, day)}</p>
           <h3 className="mt-1 text-lg font-bold leading-tight text-slate-950">{curso.nombre}</h3>
         </div>
         <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
@@ -305,7 +341,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
             .toLowerCase()
             .includes(term)
         const matchesDay =
-          selectedDay === "todos" || (curso.dias_semana || []).includes(selectedDay)
+          selectedDay === "todos" || courseHasDay(curso, selectedDay)
         const matchesCategory =
           categoryFilter === "todos" || curso.categoria === categoryFilter
         const matchesCost = costFilter === "todos" || (curso.costo_tipo || "gratis") === costFilter
@@ -313,7 +349,11 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
         return (
           matchesSearch &&
           matchesDay &&
-          courseMatchesTimeFilter(curso, timeFilter) &&
+          courseMatchesTimeFilter(
+            curso,
+            timeFilter,
+            selectedDay === "todos" ? undefined : selectedDay
+          ) &&
           matchesCategory &&
           courseMatchesAgeFilter(curso, ageFilter) &&
           matchesCost
@@ -323,13 +363,21 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
   }, [ageFilter, categoryFilter, costFilter, cursos, search, selectedDay, timeFilter])
 
   const todayCourses = useMemo(
-    () => sortBySchedule(cursos.filter((curso) => (curso.dias_semana || []).includes(todayValue))),
+    () => sortBySchedule(cursos.filter((curso) => courseHasDay(curso, todayValue)), todayValue),
     [cursos, todayValue]
   )
 
   const coursesForDayView = useMemo(
-    () => filteredCursos.filter((curso) => (curso.dias_semana || []).includes(visibleDay)),
-    [filteredCursos, visibleDay]
+    () =>
+      sortBySchedule(
+        filteredCursos.filter(
+          (curso) =>
+            courseHasDay(curso, visibleDay) &&
+            courseMatchesTimeFilter(curso, timeFilter, visibleDay)
+        ),
+        visibleDay
+      ),
+    [filteredCursos, timeFilter, visibleDay]
   )
 
   const coursesByDay = useMemo(
@@ -337,10 +385,17 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
       new Map(
         weekDayOptions.map((day) => [
           day.value,
-          filteredCursos.filter((curso) => (curso.dias_semana || []).includes(day.value)),
+          sortBySchedule(
+            filteredCursos.filter(
+              (curso) =>
+                courseHasDay(curso, day.value) &&
+                courseMatchesTimeFilter(curso, timeFilter, day.value)
+            ),
+            day.value
+          ),
         ])
       ),
-    [filteredCursos]
+    [filteredCursos, timeFilter]
   )
 
   const emptyMessage =
@@ -385,7 +440,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
         meta={[
           ...(selectedCurso
             ? [
-                { icon: Clock, text: `${formatCourseDays(selectedCurso)} - ${formatCourseSchedule(selectedCurso)}` },
+                { icon: Clock, text: formatAllCourseSchedules(selectedCurso) },
                 { icon: MapPin, text: selectedCurso.lugar || "Lugar a confirmar" },
                 { icon: UserRound, text: courseAgeLabels(selectedCurso.edad_destino) },
                 { icon: DollarSign, text: courseCostLabel(selectedCurso.costo_tipo) },
@@ -487,6 +542,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                 <CursoAgendaCard
                   key={curso.id}
                   curso={curso}
+                  day={todayValue}
                   compact
                   onOpen={handleOpenCurso}
                 />
@@ -618,7 +674,12 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
             {coursesForDayView.length ? (
               <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {coursesForDayView.map((curso) => (
-                  <CursoAgendaCard key={curso.id} curso={curso} onOpen={handleOpenCurso} />
+                  <CursoAgendaCard
+                    key={curso.id}
+                    curso={curso}
+                    day={visibleDay}
+                    onOpen={handleOpenCurso}
+                  />
                 ))}
               </div>
             ) : (
@@ -658,6 +719,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                           <CursoAgendaCard
                             key={`${day.value}-${curso.id}`}
                             curso={curso}
+                            day={day.value}
                             compact
                             onOpen={handleOpenCurso}
                           />
@@ -693,6 +755,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                           <CursoAgendaCard
                             key={`${day.value}-${curso.id}`}
                             curso={curso}
+                            day={day.value}
                             onOpen={handleOpenCurso}
                           />
                         ))}
@@ -731,7 +794,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                   >
                     <div className="border-b border-blue-100 bg-[linear-gradient(135deg,#eff6ff_0%,#ecfdf5_100%)] px-5 py-6">
                       <p className="mb-2 text-sm font-semibold text-blue-700">
-                        {formatCourseDays(curso)} · {formatCourseSchedule(curso)}
+                        {formatAllCourseSchedules(curso)}
                       </p>
                       <h2 className="text-2xl font-bold leading-tight tracking-tight text-slate-950">
                         {curso.nombre}

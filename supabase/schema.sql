@@ -137,6 +137,9 @@ alter table public.cursos
 add column if not exists hora_fin time;
 
 alter table public.cursos
+add column if not exists horarios jsonb default '[]'::jsonb;
+
+alter table public.cursos
 add column if not exists costo_tipo text default 'gratis';
 
 alter table public.eventos
@@ -315,6 +318,7 @@ create table if not exists public.cursos (
   dias_semana text[] default '{}',
   hora_inicio time,
   hora_fin time,
+  horarios jsonb default '[]'::jsonb,
   costo_tipo text default 'gratis',
   institucion_id bigint,
   plan_suscripcion text,

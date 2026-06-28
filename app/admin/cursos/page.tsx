@@ -22,6 +22,7 @@ type Curso = {
   dias_semana?: string[] | null
   hora_inicio?: string | null
   hora_fin?: string | null
+  horarios?: CursoHorario[] | null
   costo_tipo?: string | null
   responsable: string
   contacto: string
@@ -37,11 +38,18 @@ type Curso = {
   whatsapp_count?: number
 }
 
+type CursoHorario = {
+  dia: string
+  hora_inicio: string
+  hora_fin: string
+}
+
 type CursoForm = Omit<
   Curso,
-  "id" | "share_count" | "whatsapp_count" | "premium_galeria" | "edad_destino"
+  "id" | "share_count" | "whatsapp_count" | "premium_galeria" | "edad_destino" | "horarios"
 > & {
   edad_destino: string[]
+  horarios: CursoHorario[]
   premium_galeria: string
 }
 
@@ -64,6 +72,7 @@ const initialForm: CursoForm = {
   dias_semana: [],
   hora_inicio: "",
   hora_fin: "",
+  horarios: [],
   costo_tipo: "gratis",
   responsable: "",
   contacto: "",
@@ -109,6 +118,16 @@ const courseDayLabels = (days?: string[] | null) =>
 const formatCourseTime = (value?: string | null) => (value ? value.slice(0, 5) : "")
 
 const formatCourseSchedule = (curso: Curso) => {
+  if (curso.horarios?.length) {
+    return curso.horarios
+      .map((schedule) => {
+        const day = weekDayOptions.find((option) => option.value === schedule.dia)?.label
+        const end = formatCourseTime(schedule.hora_fin)
+        return `${day || schedule.dia} ${formatCourseTime(schedule.hora_inicio)}${end ? ` a ${end}` : ""}`
+      })
+      .join(" | ")
+  }
+
   const days = courseDayLabels(curso.dias_semana)
   const start = formatCourseTime(curso.hora_inicio)
   const end = formatCourseTime(curso.hora_fin)
@@ -164,7 +183,7 @@ export default function AdminCursosPage() {
     ] = await Promise.all([
       supabase
         .from("cursos")
-        .select("id, nombre, descripcion, institucion_id, servicio_id, edad_destino, categoria, lugar, dias_semana, hora_inicio, hora_fin, costo_tipo, responsable, contacto, web_url, instagram_url, facebook_url, premium_galeria, destacado, estado, usa_whatsapp")
+        .select("id, nombre, descripcion, institucion_id, servicio_id, edad_destino, categoria, lugar, dias_semana, hora_inicio, hora_fin, horarios, costo_tipo, responsable, contacto, web_url, instagram_url, facebook_url, premium_galeria, destacado, estado, usa_whatsapp")
         .order("id", { ascending: false }),
       supabase.from("share_events").select("item_id").eq("section", "cursos"),
       supabase.from("whatsapp_clicks").select("item_id").eq("section", "cursos"),
@@ -311,6 +330,7 @@ export default function AdminCursosPage() {
       dias_semana: formData.dias_semana,
       hora_inicio: formData.hora_inicio || null,
       hora_fin: formData.hora_fin || null,
+      horarios: formData.horarios,
       costo_tipo: formData.costo_tipo || "gratis",
       responsable: formData.responsable,
       contacto: formData.contacto,
@@ -394,6 +414,17 @@ export default function AdminCursosPage() {
       dias_semana: curso.dias_semana || [],
       hora_inicio: formatCourseTime(curso.hora_inicio),
       hora_fin: formatCourseTime(curso.hora_fin),
+      horarios: curso.horarios?.length
+        ? curso.horarios.map((schedule) => ({
+            dia: schedule.dia,
+            hora_inicio: formatCourseTime(schedule.hora_inicio),
+            hora_fin: formatCourseTime(schedule.hora_fin),
+          }))
+        : (curso.dias_semana || []).map((dia) => ({
+            dia,
+            hora_inicio: formatCourseTime(curso.hora_inicio),
+            hora_fin: formatCourseTime(curso.hora_fin),
+          })),
       costo_tipo: curso.costo_tipo || "gratis",
       responsable: curso.responsable,
       contacto: curso.contacto,
@@ -431,16 +462,34 @@ export default function AdminCursosPage() {
     })
   }
 
-  const toggleCourseDay = (value: string) => {
-    setFormData((prev) => {
-      const current = prev.dias_semana || []
-      return {
-        ...prev,
-        dias_semana: current.includes(value)
-          ? current.filter((item) => item !== value)
-          : [...current, value],
-      }
-    })
+  const addCourseSchedule = () => {
+    setFormData((prev) => ({
+      ...prev,
+      horarios: [
+        ...prev.horarios,
+        { dia: "lunes", hora_inicio: "", hora_fin: "" },
+      ],
+    }))
+  }
+
+  const updateCourseSchedule = (
+    index: number,
+    field: keyof CursoHorario,
+    value: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      horarios: prev.horarios.map((schedule, scheduleIndex) =>
+        scheduleIndex === index ? { ...schedule, [field]: value } : schedule
+      ),
+    }))
+  }
+
+  const removeCourseSchedule = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      horarios: prev.horarios.filter((_, scheduleIndex) => scheduleIndex !== index),
+    }))
   }
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -670,57 +719,90 @@ export default function AdminCursosPage() {
                 </div>
 
                 <div className="mt-4">
-                  <label className="mb-2 block text-sm font-medium text-slate-900">
-                    Dias de la semana
-                  </label>
-                  <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-4">
-                    {weekDayOptions.map((option) => (
-                      <label
-                        key={option.value}
-                        className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition hover:border-violet-200 hover:bg-violet-50"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={(formData.dias_semana || []).includes(option.value)}
-                          onChange={() => toggleCourseDay(option.value)}
-                          className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
-                        />
-                        <span>{option.label}</span>
-                      </label>
-                    ))}
+                  <div className="flex items-center justify-between gap-3">
+                    <label className="block text-sm font-medium text-slate-900">
+                      Dias y horarios
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addCourseSchedule}
+                      className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-white px-3 py-2 text-sm font-semibold text-violet-700 transition hover:bg-violet-50"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Agregar horario
+                    </button>
                   </div>
+
+                  {formData.horarios.length ? (
+                    <div className="mt-3 space-y-3">
+                      {formData.horarios.map((schedule, index) => (
+                        <div
+                          key={`${index}-${schedule.dia}`}
+                          className="grid gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end"
+                        >
+                          <label className="block text-xs font-medium text-slate-600">
+                            Dia
+                            <select
+                              value={schedule.dia}
+                              onChange={(event) =>
+                                updateCourseSchedule(index, "dia", event.target.value)
+                              }
+                              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-violet-500"
+                            >
+                              {weekDayOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label className="block text-xs font-medium text-slate-600">
+                            Inicio
+                            <input
+                              type="time"
+                              value={schedule.hora_inicio}
+                              onChange={(event) =>
+                                updateCourseSchedule(index, "hora_inicio", event.target.value)
+                              }
+                              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-violet-500"
+                              required
+                            />
+                          </label>
+
+                          <label className="block text-xs font-medium text-slate-600">
+                            Fin
+                            <input
+                              type="time"
+                              value={schedule.hora_fin}
+                              onChange={(event) =>
+                                updateCourseSchedule(index, "hora_fin", event.target.value)
+                              }
+                              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-violet-500"
+                            />
+                          </label>
+
+                          <button
+                            type="button"
+                            onClick={() => removeCourseSchedule(index)}
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-red-600 transition hover:bg-red-50"
+                            title="Quitar horario"
+                            aria-label="Quitar horario"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 rounded-xl border border-dashed border-slate-300 bg-white px-4 py-3 text-sm text-slate-500">
+                      Agrega cada dia con su horario correspondiente.
+                    </p>
+                  )}
                 </div>
 
                 <div className="mt-4 grid gap-4 md:grid-cols-3">
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-900">
-                      Hora de inicio
-                    </label>
-                    <input
-                      type="time"
-                      value={formData.hora_inicio || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, hora_inicio: e.target.value }))
-                      }
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-violet-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-900">
-                      Hora de fin
-                    </label>
-                    <input
-                      type="time"
-                      value={formData.hora_fin || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, hora_fin: e.target.value }))
-                      }
-                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-violet-500"
-                    />
-                  </div>
-
-                  <div>
+                  <div className="md:col-start-3">
                     <label className="mb-2 block text-sm font-medium text-slate-900">
                       Costo
                     </label>

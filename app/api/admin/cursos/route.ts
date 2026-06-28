@@ -17,6 +17,7 @@ type SaveCursoPayload = {
     dias_semana?: string[] | null
     hora_inicio?: string | null
     hora_fin?: string | null
+    horarios?: Array<{ dia?: string; hora_inicio?: string; hora_fin?: string }> | null
     costo_tipo?: string | null
     responsable?: string
     contacto?: string
@@ -52,7 +53,7 @@ const COURSE_DAYS = new Set([
 const COURSE_COST_TYPES = new Set(["gratis", "con_costo"])
 
 const ADMIN_COURSE_SELECT =
-  "id, nombre, descripcion, institucion_id, servicio_id, edad_destino, categoria, lugar, dias_semana, hora_inicio, hora_fin, costo_tipo, responsable, contacto, web_url, instagram_url, facebook_url, premium_galeria, destacado, estado, usa_whatsapp"
+  "id, nombre, descripcion, institucion_id, servicio_id, edad_destino, categoria, lugar, dias_semana, hora_inicio, hora_fin, horarios, costo_tipo, responsable, contacto, web_url, instagram_url, facebook_url, premium_galeria, destacado, estado, usa_whatsapp"
 
 type DeleteCursoPayload = {
   action: "delete"
@@ -127,6 +128,21 @@ function normalizeTime(value?: string | null) {
 
 function normalizeCostType(value?: string | null) {
   return value && COURSE_COST_TYPES.has(value) ? value : "gratis"
+}
+
+function normalizeCourseSchedules(
+  value?: Array<{ dia?: string; hora_inicio?: string; hora_fin?: string }> | null
+) {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap((schedule) => {
+    const dia = schedule.dia?.trim()
+    const horaInicio = normalizeTime(schedule.hora_inicio)
+    const horaFin = normalizeTime(schedule.hora_fin)
+    if (!dia || !COURSE_DAYS.has(dia) || !horaInicio) return []
+
+    return [{ dia, hora_inicio: horaInicio, hora_fin: horaFin }]
+  })
 }
 
 export async function POST(request: NextRequest) {
@@ -247,6 +263,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Accion no soportada." }, { status: 400 })
     }
 
+    const horarios = normalizeCourseSchedules(body.payload.horarios)
+    const legacyDays = normalizeCourseDays(body.payload.dias_semana)
     const payload = {
       nombre: body.payload.nombre?.trim() || "",
       descripcion: body.payload.descripcion?.trim() || "",
@@ -255,9 +273,12 @@ export async function POST(request: NextRequest) {
       edad_destino: normalizeCourseAgeGroups(body.payload.edad_destino),
       categoria: normalizeText(body.payload.categoria),
       lugar: normalizeText(body.payload.lugar),
-      dias_semana: normalizeCourseDays(body.payload.dias_semana),
-      hora_inicio: normalizeTime(body.payload.hora_inicio),
-      hora_fin: normalizeTime(body.payload.hora_fin),
+      dias_semana: horarios.length
+        ? Array.from(new Set(horarios.map((schedule) => schedule.dia)))
+        : legacyDays,
+      hora_inicio: horarios[0]?.hora_inicio || normalizeTime(body.payload.hora_inicio),
+      hora_fin: horarios[0]?.hora_fin || normalizeTime(body.payload.hora_fin),
+      horarios,
       costo_tipo: normalizeCostType(body.payload.costo_tipo),
       responsable: body.payload.responsable?.trim() || "",
       contacto: body.payload.contacto?.trim() || "",
