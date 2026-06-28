@@ -17,6 +17,22 @@ type AdminGoalConfig = {
   mostrarRankingHome: boolean
 }
 
+const ADMIN_REQUEST_TIMEOUT_MS = 15_000
+
+async function fetchAdminGoalGame(
+  input: RequestInfo | URL,
+  init?: RequestInit
+) {
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), ADMIN_REQUEST_TIMEOUT_MS)
+
+  try {
+    return await fetch(input, { ...init, signal: controller.signal })
+  } finally {
+    window.clearTimeout(timeoutId)
+  }
+}
+
 export default function AdminJuegoGolPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -42,7 +58,7 @@ export default function AdminJuegoGolPage() {
     setErrorMessage("")
 
     try {
-      const response = await fetch("/api/admin/juego-gol")
+      const response = await fetchAdminGoalGame("/api/admin/juego-gol")
       const result = (await response.json()) as {
         config?: AdminGoalConfig
         ranking?: GoalGameRankingEntry[]
@@ -63,8 +79,12 @@ export default function AdminJuegoGolPage() {
       setTotalParticipants(result.totalParticipants || 0)
       setSelectedIds([])
       if (result.warning) setMessage(result.warning)
-    } catch {
-      setErrorMessage("No se pudo cargar el Desafio del Gol.")
+    } catch (error) {
+      setErrorMessage(
+        error instanceof DOMException && error.name === "AbortError"
+          ? "La carga demoro demasiado. Recarga la pagina para intentar nuevamente."
+          : "No se pudo cargar el Desafio del Gol."
+      )
     } finally {
       setLoading(false)
     }

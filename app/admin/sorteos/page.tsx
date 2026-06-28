@@ -57,6 +57,27 @@ type SweepstakesEntryRow = {
 }
 
 const ENTRIES_PAGE_SIZE = 1000
+const ADMIN_LOAD_TIMEOUT_MS = 15_000
+
+function withAdminLoadTimeout<T>(promise: Promise<T>) {
+  return new Promise<T>((resolve, reject) => {
+    const timeoutId = window.setTimeout(
+      () => reject(new Error("La carga demoro demasiado.")),
+      ADMIN_LOAD_TIMEOUT_MS
+    )
+
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeoutId)
+        resolve(value)
+      },
+      (error) => {
+        window.clearTimeout(timeoutId)
+        reject(error)
+      }
+    )
+  })
+}
 
 const createEmptyForm = (): SorteoForm => ({
   titulo: "",
@@ -292,13 +313,17 @@ export default function AdminSorteosPage() {
   }, [])
 
   const loadData = useCallback(async (preferredId?: number | null) => {
+    setLoading(true)
+    setSaveError("")
+
+    try {
     const [
       { data: configRows, error: configError },
       { data: comerciosRows, error: comerciosError },
       { data: serviciosRows, error: serviciosError },
       { data: institucionesRows, error: institucionesError },
       { data: entriesRows, count, error: entriesError },
-    ] = await Promise.all([
+    ] = await withAdminLoadTimeout(Promise.all([
       supabase
         .from("sorteo_popup_config")
         .select("id, titulo, activo, descripcion, participante_tipo_1, participante_id_1, participante_tipo_2, participante_id_2, comercio_id_1, comercio_id_2, updated_at")
@@ -319,7 +344,7 @@ export default function AdminSorteosPage() {
         .or("estado.is.null,estado.eq.activo")
         .order("nombre", { ascending: true }),
       fetchSweepstakesEntries(),
-    ])
+    ]))
 
     if (configError) {
       if (isMissingSweepstakesSchemaError(configError)) {
@@ -327,7 +352,6 @@ export default function AdminSorteosPage() {
       } else {
         setSaveError(`No se pudo cargar sorteos: ${configError.message}`)
       }
-      setLoading(false)
       return
     }
 
@@ -418,7 +442,15 @@ export default function AdminSorteosPage() {
       null
 
     applyCampaign(nextSelected)
-    setLoading(false)
+    } catch (error) {
+      setSaveError(
+        error instanceof Error
+          ? `${error.message} Recarga la pagina para intentar nuevamente.`
+          : "No se pudieron cargar los sorteos."
+      )
+    } finally {
+      setLoading(false)
+    }
   }, [applyCampaign])
 
   useEffect(() => {
