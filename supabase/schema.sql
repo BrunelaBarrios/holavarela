@@ -121,6 +121,24 @@ add column if not exists servicio_id bigint;
 alter table public.cursos
 add column if not exists edad_destino text default 'todas_las_edades';
 
+alter table public.cursos
+add column if not exists categoria text;
+
+alter table public.cursos
+add column if not exists lugar text;
+
+alter table public.cursos
+add column if not exists dias_semana text[] default '{}';
+
+alter table public.cursos
+add column if not exists hora_inicio time;
+
+alter table public.cursos
+add column if not exists hora_fin time;
+
+alter table public.cursos
+add column if not exists costo_tipo text default 'gratis';
+
 alter table public.eventos
 add column if not exists fecha_solo_mes boolean default false;
 
@@ -292,6 +310,12 @@ create table if not exists public.cursos (
   responsable text not null,
   contacto text not null,
   edad_destino text default 'todas_las_edades',
+  categoria text,
+  lugar text,
+  dias_semana text[] default '{}',
+  hora_inicio time,
+  hora_fin time,
+  costo_tipo text default 'gratis',
   institucion_id bigint,
   plan_suscripcion text,
   estado_suscripcion text default 'pendiente',

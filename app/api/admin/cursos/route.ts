@@ -12,6 +12,12 @@ type SaveCursoPayload = {
     institucion_id?: number | null
     servicio_id?: number | null
     edad_destino?: string | string[] | null
+    categoria?: string | null
+    lugar?: string | null
+    dias_semana?: string[] | null
+    hora_inicio?: string | null
+    hora_fin?: string | null
+    costo_tipo?: string | null
     responsable?: string
     contacto?: string
     web_url?: string | null
@@ -27,13 +33,26 @@ type SaveCursoPayload = {
 
 const COURSE_AGE_GROUPS = new Set([
   "adultos",
+  "adultos_mayores",
   "ninos",
   "adolescentes",
   "todas_las_edades",
 ])
 
+const COURSE_DAYS = new Set([
+  "lunes",
+  "martes",
+  "miercoles",
+  "jueves",
+  "viernes",
+  "sabado",
+  "domingo",
+])
+
+const COURSE_COST_TYPES = new Set(["gratis", "con_costo"])
+
 const ADMIN_COURSE_SELECT =
-  "id, nombre, descripcion, institucion_id, servicio_id, edad_destino, responsable, contacto, web_url, instagram_url, facebook_url, premium_galeria, destacado, estado, usa_whatsapp"
+  "id, nombre, descripcion, institucion_id, servicio_id, edad_destino, categoria, lugar, dias_semana, hora_inicio, hora_fin, costo_tipo, responsable, contacto, web_url, instagram_url, facebook_url, premium_galeria, destacado, estado, usa_whatsapp"
 
 type DeleteCursoPayload = {
   action: "delete"
@@ -89,6 +108,25 @@ function normalizeCourseAgeGroups(value?: string | string[] | null) {
   const specificGroups = uniqueGroups.filter((item) => item !== "todas_las_edades")
 
   return (specificGroups.length ? specificGroups : ["todas_las_edades"]).join(",")
+}
+
+function normalizeCourseDays(value?: string[] | null) {
+  if (!Array.isArray(value)) return []
+
+  return Array.from(
+    new Set(value.map((item) => item.trim()).filter((item) => COURSE_DAYS.has(item)))
+  )
+}
+
+function normalizeTime(value?: string | null) {
+  const normalized = value?.trim()
+  if (!normalized) return null
+
+  return /^\d{2}:\d{2}$/.test(normalized) ? normalized : null
+}
+
+function normalizeCostType(value?: string | null) {
+  return value && COURSE_COST_TYPES.has(value) ? value : "gratis"
 }
 
 export async function POST(request: NextRequest) {
@@ -215,6 +253,12 @@ export async function POST(request: NextRequest) {
       institucion_id: body.payload.institucion_id || null,
       servicio_id: body.payload.servicio_id || null,
       edad_destino: normalizeCourseAgeGroups(body.payload.edad_destino),
+      categoria: normalizeText(body.payload.categoria),
+      lugar: normalizeText(body.payload.lugar),
+      dias_semana: normalizeCourseDays(body.payload.dias_semana),
+      hora_inicio: normalizeTime(body.payload.hora_inicio),
+      hora_fin: normalizeTime(body.payload.hora_fin),
+      costo_tipo: normalizeCostType(body.payload.costo_tipo),
       responsable: body.payload.responsable?.trim() || "",
       contacto: body.payload.contacto?.trim() || "",
       web_url: normalizeUrl(body.payload.web_url),

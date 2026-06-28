@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from "react"
-import { Eye, EyeOff, GraduationCap, MessageCircle, Pencil, Phone, Plus, Share2, Star, Trash2, UserRound, X } from "lucide-react"
+import { CalendarClock, Clock, Eye, EyeOff, GraduationCap, MapPin, MessageCircle, Pencil, Phone, Plus, Share2, Star, Tags, Trash2, UserRound, X } from "lucide-react"
 import { OptimizedImage } from "../../components/OptimizedImage"
 import { supabase } from "../../supabase"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
@@ -17,6 +17,12 @@ type Curso = {
   institucion_id?: number | null
   servicio_id?: number | null
   edad_destino?: string | null
+  categoria?: string | null
+  lugar?: string | null
+  dias_semana?: string[] | null
+  hora_inicio?: string | null
+  hora_fin?: string | null
+  costo_tipo?: string | null
   responsable: string
   contacto: string
   web_url?: string | null
@@ -53,6 +59,12 @@ const initialForm: CursoForm = {
   nombre: "",
   descripcion: "",
   edad_destino: ["todas_las_edades"],
+  categoria: "",
+  lugar: "",
+  dias_semana: [],
+  hora_inicio: "",
+  hora_fin: "",
+  costo_tipo: "gratis",
   responsable: "",
   contacto: "",
   web_url: "",
@@ -68,9 +80,45 @@ const initialForm: CursoForm = {
 const courseAgeOptions = [
   { value: "todas_las_edades", label: "Todas las edades" },
   { value: "adultos", label: "Adultos" },
+  { value: "adultos_mayores", label: "Adultos mayores" },
   { value: "ninos", label: "Niños" },
   { value: "adolescentes", label: "Adolescentes" },
 ]
+
+const weekDayOptions = [
+  { value: "lunes", label: "Lunes" },
+  { value: "martes", label: "Martes" },
+  { value: "miercoles", label: "Miercoles" },
+  { value: "jueves", label: "Jueves" },
+  { value: "viernes", label: "Viernes" },
+  { value: "sabado", label: "Sabado" },
+  { value: "domingo", label: "Domingo" },
+]
+
+const courseCostOptions = [
+  { value: "gratis", label: "Gratis" },
+  { value: "con_costo", label: "Con costo" },
+]
+
+const courseDayLabels = (days?: string[] | null) =>
+  (days || [])
+    .map((day) => weekDayOptions.find((option) => option.value === day)?.label)
+    .filter(Boolean)
+    .join(", ")
+
+const formatCourseTime = (value?: string | null) => (value ? value.slice(0, 5) : "")
+
+const formatCourseSchedule = (curso: Curso) => {
+  const days = courseDayLabels(curso.dias_semana)
+  const start = formatCourseTime(curso.hora_inicio)
+  const end = formatCourseTime(curso.hora_fin)
+  const hours = start && end ? `${start} a ${end}` : start || "Horario a definir"
+
+  return days ? `${days} - ${hours}` : hours
+}
+
+const courseCostLabel = (value?: string | null) =>
+  courseCostOptions.find((option) => option.value === value)?.label || "Gratis"
 
 const courseAgeLabel = (value?: string | null) =>
   courseAgeOptions.find((option) => option.value === value)?.label || "Todas las edades"
@@ -116,7 +164,7 @@ export default function AdminCursosPage() {
     ] = await Promise.all([
       supabase
         .from("cursos")
-        .select("id, nombre, descripcion, institucion_id, servicio_id, edad_destino, responsable, contacto, web_url, instagram_url, facebook_url, premium_galeria, destacado, estado, usa_whatsapp")
+        .select("id, nombre, descripcion, institucion_id, servicio_id, edad_destino, categoria, lugar, dias_semana, hora_inicio, hora_fin, costo_tipo, responsable, contacto, web_url, instagram_url, facebook_url, premium_galeria, destacado, estado, usa_whatsapp")
         .order("id", { ascending: false }),
       supabase.from("share_events").select("item_id").eq("section", "cursos"),
       supabase.from("whatsapp_clicks").select("item_id").eq("section", "cursos"),
@@ -258,6 +306,12 @@ export default function AdminCursosPage() {
       nombre: formData.nombre,
       descripcion: formData.descripcion,
       edad_destino: formData.edad_destino,
+      categoria: formData.categoria?.trim() || null,
+      lugar: formData.lugar?.trim() || null,
+      dias_semana: formData.dias_semana,
+      hora_inicio: formData.hora_inicio || null,
+      hora_fin: formData.hora_fin || null,
+      costo_tipo: formData.costo_tipo || "gratis",
       responsable: formData.responsable,
       contacto: formData.contacto,
       institucion_id: formData.institucion_id || null,
@@ -335,6 +389,12 @@ export default function AdminCursosPage() {
       nombre: curso.nombre,
       descripcion: curso.descripcion,
       edad_destino: parseCourseAgeGroups(curso.edad_destino),
+      categoria: curso.categoria || "",
+      lugar: curso.lugar || "",
+      dias_semana: curso.dias_semana || [],
+      hora_inicio: formatCourseTime(curso.hora_inicio),
+      hora_fin: formatCourseTime(curso.hora_fin),
+      costo_tipo: curso.costo_tipo || "gratis",
       responsable: curso.responsable,
       contacto: curso.contacto,
       institucion_id: curso.institucion_id ?? null,
@@ -367,6 +427,18 @@ export default function AdminCursosPage() {
       return {
         ...prev,
         edad_destino: next.length ? next : ["todas_las_edades"],
+      }
+    })
+  }
+
+  const toggleCourseDay = (value: string) => {
+    setFormData((prev) => {
+      const current = prev.dias_semana || []
+      return {
+        ...prev,
+        dias_semana: current.includes(value)
+          ? current.filter((item) => item !== value)
+          : [...current, value],
       }
     })
   }
@@ -557,6 +629,116 @@ export default function AdminCursosPage() {
                 <p className="mt-2 text-xs text-slate-500">
                   Puedes marcar más de un público. &quot;Todas las edades&quot; reemplaza a los demás filtros.
                 </p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-900">
+                  <CalendarClock className="h-4 w-4 text-violet-600" />
+                  Agenda del curso
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Categoria
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.categoria || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, categoria: e.target.value }))
+                      }
+                      placeholder="Taller, deporte, musica..."
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-violet-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Lugar
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.lugar || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, lugar: e.target.value }))
+                      }
+                      placeholder="Club, biblioteca, centro..."
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-violet-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="mb-2 block text-sm font-medium text-slate-900">
+                    Dias de la semana
+                  </label>
+                  <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-4">
+                    {weekDayOptions.map((option) => (
+                      <label
+                        key={option.value}
+                        className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 transition hover:border-violet-200 hover:bg-violet-50"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={(formData.dias_semana || []).includes(option.value)}
+                          onChange={() => toggleCourseDay(option.value)}
+                          className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                        />
+                        <span>{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 md:grid-cols-3">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Hora de inicio
+                    </label>
+                    <input
+                      type="time"
+                      value={formData.hora_inicio || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, hora_inicio: e.target.value }))
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-violet-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Hora de fin
+                    </label>
+                    <input
+                      type="time"
+                      value={formData.hora_fin || ""}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, hora_fin: e.target.value }))
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-violet-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Costo
+                    </label>
+                    <select
+                      value={formData.costo_tipo || "gratis"}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, costo_tipo: e.target.value }))
+                      }
+                      className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-violet-500"
+                    >
+                      {courseCostOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -911,6 +1093,26 @@ export default function AdminCursosPage() {
                 <div className="flex items-center gap-2">
                   <UserRound className="h-4 w-4" />
                   <span>{courseAgeLabels(curso.edad_destino)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <span>{formatCourseSchedule(curso)}</span>
+                </div>
+                {curso.lugar ? (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    <span>{curso.lugar}</span>
+                  </div>
+                ) : null}
+                {curso.categoria ? (
+                  <div className="flex items-center gap-2">
+                    <Tags className="h-4 w-4" />
+                    <span>{curso.categoria}</span>
+                  </div>
+                ) : null}
+                <div className="flex items-center gap-2">
+                  <Tags className="h-4 w-4" />
+                  <span>{courseCostLabel(curso.costo_tipo)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <UserRound className="h-4 w-4" />
