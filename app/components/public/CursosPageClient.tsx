@@ -62,16 +62,16 @@ type TimeFilter = "todos" | "manana" | "tarde" | "noche"
 const weekDayOptions = [
   { value: "lunes", label: "Lunes", short: "Lun" },
   { value: "martes", label: "Martes", short: "Mar" },
-  { value: "miercoles", label: "Miercoles", short: "Mie" },
+  { value: "miercoles", label: "Miércoles", short: "Mié" },
   { value: "jueves", label: "Jueves", short: "Jue" },
   { value: "viernes", label: "Viernes", short: "Vie" },
-  { value: "sabado", label: "Sabado", short: "Sab" },
+  { value: "sabado", label: "Sábado", short: "Sáb" },
   { value: "domingo", label: "Domingo", short: "Dom" },
 ]
 
 const courseAgeOptions = [
   { value: "todas_las_edades", label: "Todas las edades" },
-  { value: "ninos", label: "Ninos" },
+  { value: "ninos", label: "Niños" },
   { value: "adolescentes", label: "Adolescentes" },
   { value: "adultos", label: "Adultos" },
   { value: "adultos_mayores", label: "Adultos mayores" },
@@ -80,8 +80,8 @@ const courseAgeOptions = [
 const ageFilterOptions = [{ value: "todos", label: "Todos" }, ...courseAgeOptions]
 
 const timeFilterOptions: { value: TimeFilter; label: string }[] = [
-  { value: "todos", label: "Todo el dia" },
-  { value: "manana", label: "Manana" },
+  { value: "todos", label: "Todo el día" },
+  { value: "manana", label: "Mañana" },
   { value: "tarde", label: "Tarde" },
   { value: "noche", label: "Noche" },
 ]
@@ -93,7 +93,7 @@ const viewOptions: {
   icon: typeof LayoutList
 }[] = [
   { value: "lista", label: "Lista", shortLabel: "Lista", icon: LayoutList },
-  { value: "dia", label: "Por dia", shortLabel: "Dia", icon: CalendarDays },
+  { value: "dia", label: "Por día", shortLabel: "Día", icon: CalendarDays },
   { value: "semana", label: "Agenda semanal", shortLabel: "Semana", icon: Columns3 },
 ]
 
@@ -158,7 +158,7 @@ const formatCourseSchedule = (curso: Curso, day?: string) => {
 
 const formatAllCourseSchedules = (curso: Curso) => {
   const schedules = getCourseSchedules(curso)
-  if (!schedules.length) return "Dias y horarios a definir"
+  if (!schedules.length) return "Días y horarios a definir"
 
   return schedules
     .map((schedule) => {
@@ -210,42 +210,50 @@ function CursoAgendaCard({
   onOpen: (curso: Curso) => void
 }) {
   return (
-    <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-blue-700">{formatCourseSchedule(curso, day)}</p>
-          <h3 className="mt-1 text-lg font-bold leading-tight text-slate-950">{curso.nombre}</h3>
-        </div>
-        <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+    <article
+      role="button"
+      tabIndex={0}
+      aria-label={`Ver detalles de ${curso.nombre}`}
+      onClick={() => onOpen(curso)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault()
+          onOpen(curso)
+        }
+      }}
+      className="group flex cursor-pointer flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <p className="text-sm font-semibold text-blue-700">{formatCourseSchedule(curso, day)}</p>
+        <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
           {courseCostLabel(curso.costo_tipo)}
         </span>
       </div>
+      <h3 className="mt-2 text-lg font-bold leading-tight text-slate-950">{curso.nombre}</h3>
 
-      <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-slate-600">
-        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1">
+      <div className="mt-3 space-y-1.5 text-xs font-medium text-slate-600">
+        <span className="flex items-start gap-1.5">
           <MapPin className="h-3.5 w-3.5" />
           {curso.lugar || "Lugar a confirmar"}
         </span>
-        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1">
+        <span className="flex items-start gap-1.5">
           <Tags className="h-3.5 w-3.5" />
           {curso.categoria || "General"}
         </span>
         {!compact ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1">
+          <span className="flex items-start gap-1.5">
             <UserRound className="h-3.5 w-3.5" />
             {courseAgeLabels(curso.edad_destino)}
           </span>
         ) : null}
       </div>
 
-      <button
-        type="button"
-        onClick={() => onOpen(curso)}
-        className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-blue-700 transition hover:text-blue-500"
+      <span
+        className="mt-4 inline-flex items-center gap-2 self-start text-sm font-semibold text-blue-700 transition group-hover:text-blue-500"
       >
-        Ver mas
+        Ver más
         <ArrowRight className="h-4 w-4" />
-      </button>
+      </span>
     </article>
   )
 }
@@ -398,10 +406,15 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
     [filteredCursos, timeFilter]
   )
 
+  const visibleWeekDays = useMemo(
+    () => weekDayOptions.filter((day) => (coursesByDay.get(day.value) || []).length > 0),
+    [coursesByDay]
+  )
+
   const emptyMessage =
     cursos.length === 0
-      ? "Todavia no hay cursos o clases cargados."
-      : "No hay actividades cargadas para este dia."
+      ? "Todavía no hay cursos o clases cargados."
+      : "No hay actividades cargadas para este día."
 
   return (
     <main className="min-h-screen bg-white">
@@ -506,7 +519,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
             </p>
             <h1 className="mt-3 text-3xl font-bold text-gray-900">Cursos y Clases</h1>
             <p className="mt-2 max-w-2xl text-gray-600">
-              Mira que hay cada dia, filtra por horario y encontra rapido la propuesta que te sirve.
+              Mirá qué hay cada día, filtrá por horario y encontrá rápido la propuesta que te sirve.
             </p>
           </div>
 
@@ -520,7 +533,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
               <p className="mt-1 text-sm text-slate-600">
                 {todayCourses.length
                   ? `${todayCourses.length} actividades para hoy`
-                  : "No hay actividades cargadas para este dia."}
+                  : "No hay actividades cargadas para este día."}
               </p>
             </div>
             <button
@@ -559,7 +572,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar por curso, lugar, categoria o responsable"
+                placeholder="Buscar por curso, lugar, categoría o responsable"
                 className="w-full text-sm outline-none"
               />
             </div>
@@ -593,7 +606,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
               onChange={(e) => setSelectedDay(e.target.value)}
               className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 outline-none focus:border-blue-500"
             >
-              <option value="todos">Todos los dias</option>
+              <option value="todos">Todos los días</option>
               {weekDayOptions.map((day) => (
                 <option key={day.value} value={day.value}>
                   {day.label}
@@ -620,7 +633,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
             >
               {categoryOptions.map((category) => (
                 <option key={category} value={category}>
-                  {category === "todos" ? "Todas las categorias" : category}
+                  {category === "todos" ? "Todas las categorías" : category}
                 </option>
               ))}
             </select>
@@ -632,7 +645,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
             >
               {ageFilterOptions.map((option) => (
                 <option key={option.value} value={option.value}>
-                  {option.value === "todos" ? "Todo publico" : option.label}
+                  {option.value === "todos" ? "Todo público" : option.label}
                 </option>
               ))}
             </select>
@@ -692,13 +705,13 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
 
         {viewMode === "semana" ? (
           <section className="mt-8">
-            <div className="hidden grid-cols-7 gap-3 lg:grid">
-              {weekDayOptions.map((day) => {
+            <div className="hidden gap-4 lg:grid lg:grid-cols-3 xl:grid-cols-5">
+              {visibleWeekDays.map((day) => {
                 const dayCourses = coursesByDay.get(day.value) || []
                 return (
                   <div
                     key={day.value}
-                    className={`min-h-80 rounded-lg border p-3 ${
+                    className={`min-w-0 rounded-xl border p-3 ${
                       day.value === todayValue
                         ? "border-blue-200 bg-blue-50/60"
                         : "border-slate-200 bg-slate-50/60"
@@ -724,16 +737,18 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                             onOpen={handleOpenCurso}
                           />
                         ))
-                      ) : (
-                        <p className="rounded-lg border border-dashed border-slate-200 bg-white p-3 text-sm text-slate-500">
-                          Sin actividades.
-                        </p>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 )
               })}
             </div>
+
+            {visibleWeekDays.length === 0 ? (
+              <div className="hidden rounded-xl border border-slate-200 bg-slate-50 p-8 text-center text-slate-600 lg:block">
+                No hay actividades que coincidan con estos filtros.
+              </div>
+            ) : null}
 
             <div className="space-y-5 lg:hidden">
               {weekDayOptions.map((day) => {
@@ -762,7 +777,7 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                       </div>
                     ) : (
                       <div className="rounded-lg border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
-                        No hay actividades cargadas para este dia.
+                        No hay actividades cargadas para este día.
                       </div>
                     )}
                   </div>
