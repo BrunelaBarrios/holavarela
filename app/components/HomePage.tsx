@@ -2035,20 +2035,17 @@ export function HomePage({
                 Desafío Hola Varela
               </div>
               <h2 className="mt-4 text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">
-                Jugá, descubrí comercios locales y sumá puntos
+                Jugá, divertite y poné a prueba tus habilidades
               </h2>
-              <p className="hidden">
-                Participá en desafíos cortos: sopa de letras, memoria con logos, puzzle de imágenes y más. Completá el juego y quedá participando por premios.
-              </p>
               <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
-                Participa en desafios cortos
+                Disfrutá desafíos cortos de memoria, palabras e imágenes. Sumá puntos y superá tu mejor resultado.
               </p>
             </div>
             <Link
               href="/juga-y-gana"
               className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-950 px-6 py-4 text-base font-semibold text-white shadow-[0_18px_40px_-22px_rgba(15,23,42,0.9)] transition hover:-translate-y-0.5 hover:bg-emerald-700 md:w-auto"
             >
-              Entrar al juego
+              Jugar ahora
               <ArrowRight className="h-5 w-5" />
             </Link>
           </div>
