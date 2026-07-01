@@ -1056,6 +1056,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
 
   const [participantName, setParticipantName] = useState("")
   const [participantPhone, setParticipantPhone] = useState("")
+  const [submittedPoints, setSubmittedPoints] = useState<number | null>(null)
   const [submitError, setSubmitError] = useState("")
   const [submitLoading, setSubmitLoading] = useState(false)
 
@@ -1874,6 +1875,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
       return
     }
 
+    setSubmittedPoints(totalPoints)
     assignNextChallengeSet()
     setSubmitLoading(false)
     setStage("done")
@@ -2081,7 +2083,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
                 <DonePanel
                   participantName={participantName}
                   participantPhone={participantPhone}
-                  totalPoints={totalPoints}
+                  totalPoints={submittedPoints ?? totalPoints}
                 />
               ) : null}
 
