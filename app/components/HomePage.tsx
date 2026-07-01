@@ -610,14 +610,14 @@ export function HomePage({
     [eventos]
   )
   const visibleAvisoEventos = useMemo(
-    () => sortEventsForHome(eventos.filter((event) => isAvisoCategory(event.categoria))).slice(0, 4),
+    () => sortEventsForHome(eventos.filter((event) => isAvisoCategory(event.categoria))).slice(0, 12),
     [eventos]
   )
   const visiblePromoEventos = useMemo(
     () =>
       sortEventsForHome(
         eventos.filter((event) => isPromoOrSweepstakesCategory(event.categoria))
-      ).slice(0, 8),
+      ).slice(0, 12),
     [eventos]
   )
   const visiblePromoImageEventos = useMemo(
@@ -2478,27 +2478,29 @@ export function HomePage({
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-6">
-                    {visibleAvisoEventos.map((event, index) => (
-                      <HomeEventCard
-                        key={event.id}
-                        event={event}
-                        className={index >= 3 ? "lg:hidden" : ""}
-                        count={eventLikeCounts[String(event.id)]}
-                        liked={Boolean(likedEvents[String(event.id)])}
-                        disabled={likingEventId === String(event.id)}
-                        onLike={() => void handleEventLike(String(event.id), event.titulo)}
-                        onOpen={() =>
-                          handleViewMoreClick(
-                            "eventos",
-                            String(event.id),
-                            event.titulo,
-                            () => setSelectedEvento(event)
-                          )
-                        }
-                        onCardKeyDown={handleCardKeyDown}
-                      />
-                    ))}
+                  <div className="-mx-4 overflow-x-auto px-4 pb-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+                    <div className="flex min-w-full snap-x snap-mandatory gap-4 lg:gap-6">
+                      {visibleAvisoEventos.map((event) => (
+                        <HomeEventCard
+                          key={event.id}
+                          event={event}
+                          className="w-[78vw] shrink-0 snap-start sm:w-[22rem] lg:w-[calc((100%_-_3rem)/3)]"
+                          count={eventLikeCounts[String(event.id)]}
+                          liked={Boolean(likedEvents[String(event.id)])}
+                          disabled={likingEventId === String(event.id)}
+                          onLike={() => void handleEventLike(String(event.id), event.titulo)}
+                          onOpen={() =>
+                            handleViewMoreClick(
+                              "eventos",
+                              String(event.id),
+                              event.titulo,
+                              () => setSelectedEvento(event)
+                            )
+                          }
+                          onCardKeyDown={handleCardKeyDown}
+                        />
+                      ))}
+                    </div>
                   </div>
                 )}
               </section>
@@ -2521,7 +2523,7 @@ export function HomePage({
                   </div>
                 ) : (
                   <div className="-mx-4 overflow-x-auto px-4 pb-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-                    <div className="flex min-w-full gap-4 lg:gap-6">
+                    <div className="flex min-w-full snap-x snap-mandatory gap-4 lg:gap-6">
                       {visiblePromoImageEventos.map((event) => (
                         <HomePromoImageCard
                           key={event.id}
@@ -2929,7 +2931,7 @@ function HomePromoImageCard({
       aria-label={`Ver ${event.titulo}`}
       onClick={onOpen}
       onKeyDown={(eventKey) => onCardKeyDown(eventKey, onOpen)}
-      className="group relative aspect-[4/5] w-[72vw] shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-slate-100 shadow-[0_18px_42px_-30px_rgba(15,23,42,0.7)] outline-none ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-34px_rgba(15,23,42,0.65)] focus-visible:ring-2 focus-visible:ring-amber-400 sm:w-72 lg:w-80"
+      className="group relative aspect-[4/5] w-[72vw] shrink-0 snap-start cursor-pointer overflow-hidden rounded-2xl bg-slate-100 shadow-[0_18px_42px_-30px_rgba(15,23,42,0.7)] outline-none ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-34px_rgba(15,23,42,0.65)] focus-visible:ring-2 focus-visible:ring-amber-400 sm:w-72 lg:w-80"
     >
       <OptimizedImage
         src={event.imagen}
