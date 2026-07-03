@@ -310,7 +310,7 @@ export default function UsuariosHomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-4 py-8 text-slate-900 sm:px-6 lg:px-8">
+    <main className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#eef7f2_45%,#ffffff_100%)] px-3 py-6 text-slate-900 sm:px-6 sm:py-8 lg:px-8">
       <AdminConfirmModal
         isOpen={deletingEventId !== null}
         title="Eliminar evento"
@@ -326,9 +326,9 @@ export default function UsuariosHomePage() {
       />
       <div className="mx-auto max-w-[1500px] space-y-6">
         {error ? <AuthFormStatus tone="error" message={error} /> : null}
-        <section className="rounded-[36px] border border-slate-200 bg-white p-4 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)] sm:p-5">
+        <section className="min-w-0 rounded-[28px] border border-slate-200 bg-white p-2 shadow-[0_24px_80px_-36px_rgba(15,23,42,0.35)] sm:rounded-[36px] sm:p-5">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
-            <div className="relative flex-1 rounded-[32px] bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-6 py-8 sm:px-8 sm:py-10">
+            <div className="relative min-w-0 flex-1 rounded-[24px] bg-[radial-gradient(circle_at_top_left,#d7f0db_0%,#e9f7ef_35%,#edf5ff_100%)] px-4 py-6 sm:rounded-[32px] sm:px-8 sm:py-10">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="inline-flex rounded-full bg-white/85 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Mi panel</div>
                 <div className="relative z-20">
@@ -343,7 +343,7 @@ export default function UsuariosHomePage() {
                     Menú
                   </button>
                     {actionsOpen ? (
-                      <div className="absolute right-0 top-full z-20 mt-3 w-[340px] max-h-[70vh] overflow-y-auto rounded-[28px] border border-white/80 bg-white/95 p-4 shadow-[0_20px_50px_-26px_rgba(15,23,42,0.35)] backdrop-blur">
+                      <div className="absolute right-0 top-full z-20 mt-3 max-h-[70vh] w-[min(340px,calc(100vw-2.5rem))] overflow-y-auto rounded-[28px] border border-white/80 bg-white/95 p-3 shadow-[0_20px_50px_-26px_rgba(15,23,42,0.35)] backdrop-blur sm:p-4">
                         <div className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Acciones</div>
                         <div className="space-y-3">
                           <QuickLink href="/usuarios/perfil" icon={<FilePenLine className="h-5 w-5 text-slate-400 transition group-hover:text-blue-600" />} title="Editar mis datos" description="Actualiza la ficha base: contacto, direccion, redes e imagen principal." />
@@ -358,11 +358,11 @@ export default function UsuariosHomePage() {
                 </div>
               </div>
               <div className="mt-6 flex flex-wrap items-start justify-between gap-5">
-                <div className="max-w-4xl">
+                <div className="min-w-0 max-w-4xl">
                   <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-500">{userEntityLabels[ownedEntity.type]}</p>
-                  <h1 className="mt-3 max-w-4xl text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl xl:text-6xl">{ownedEntity.record.nombre}</h1>
+                  <h1 className="mt-3 max-w-4xl break-words text-3xl font-semibold tracking-tight text-slate-950 sm:text-5xl xl:text-6xl">{ownedEntity.record.nombre}</h1>
                   <p className="mt-4 max-w-xl text-lg leading-8 text-slate-600">Desde aquí puedes revisar tu perfil, mantenerlo actualizado, ver tus eventos y gestionar tu suscripción sin perderte entre opciones.</p>
-                  <div className="mt-5 inline-flex rounded-full border border-white/70 bg-white/80 px-4 py-2 text-sm text-slate-600 shadow-sm">{user?.email}</div>
+                  <div className="mt-5 max-w-full break-all rounded-2xl border border-white/70 bg-white/80 px-4 py-2 text-sm text-slate-600 shadow-sm sm:inline-flex sm:rounded-full">{user?.email}</div>
                 </div>
               </div>
               <div className="mt-8 grid gap-4 md:grid-cols-2">
@@ -382,7 +382,7 @@ export default function UsuariosHomePage() {
                 />
               </div>
             </div>
-            <div className="w-full rounded-[32px] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-6 py-8 sm:px-8 sm:py-10 lg:w-[420px]">
+            <div className="min-w-0 w-full rounded-[24px] bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] px-3 py-6 sm:rounded-[32px] sm:px-8 sm:py-10 lg:w-[420px]">
               {imageSrc ? <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm"><div className="relative h-72 w-full"><OptimizedImage src={imageSrc} alt={ownedEntity.record.nombre} sizes="(max-width: 1024px) 100vw, 420px" className="object-cover" /></div></div> : <div className="rounded-[28px] border border-dashed border-slate-200 bg-white p-8 shadow-sm"><div className="flex items-start gap-4"><div className="rounded-[20px] bg-slate-100 p-4"><ImageIcon className="h-6 w-6 text-slate-400" /></div><div><h3 className="text-lg font-semibold text-slate-900">Agrega una imagen</h3><p className="mt-2 text-sm leading-7 text-slate-500">Tu perfil se ve mucho mejor cuando tiene una foto o imagen principal.</p></div></div></div>}
               <ProfileSummaryCard
                 title={ownedEntity.record.nombre}
@@ -428,7 +428,7 @@ function ProfileSummaryCard({
   description: string
 }) {
   return (
-    <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.25)]">
+    <div className="min-w-0 overflow-hidden rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_18px_45px_-30px_rgba(15,23,42,0.25)] sm:rounded-[28px] sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold text-slate-950">Tu ficha</h2>
@@ -439,7 +439,7 @@ function ProfileSummaryCard({
       <div className="mt-6 grid gap-4">
         {fields.map((field) => {
           const Icon = field.icon
-          return <div key={field.label} className="rounded-[24px] border border-slate-200 bg-slate-50 p-5"><div className="flex items-center gap-3"><div className="rounded-2xl bg-white p-3 shadow-sm"><Icon className="h-4 w-4 text-slate-500" /></div><div><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{field.label}</div><div className="mt-1 text-sm leading-6 text-slate-700">{field.value}</div></div></div></div>
+          return <div key={field.label} className="min-w-0 rounded-[24px] border border-slate-200 bg-slate-50 p-4 sm:p-5"><div className="flex min-w-0 items-center gap-3"><div className="shrink-0 rounded-2xl bg-white p-3 shadow-sm"><Icon className="h-4 w-4 text-slate-500" /></div><div className="min-w-0"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{field.label}</div><div className="mt-1 break-words text-sm leading-6 text-slate-700 [overflow-wrap:anywhere]">{field.value}</div></div></div></div>
         })}
       </div>
       <div className="mt-5 rounded-[24px] border border-slate-200 bg-slate-50 p-5"><div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Descripción</div><div className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">{description}</div></div>
@@ -448,7 +448,7 @@ function ProfileSummaryCard({
 }
 
 function QuickLink({ href, title, description, icon }: { href: string; title: string; description: string; icon: React.ReactNode }) {
-  return <Link href={href} className="group flex items-center justify-between rounded-[24px] border border-slate-200 bg-white px-5 py-4 transition hover:border-blue-300 hover:bg-blue-50/60"><div><div className="text-base font-semibold text-slate-900">{title}</div><div className="mt-1 text-sm text-slate-500">{description}</div></div>{icon}</Link>
+  return <Link href={href} className="group flex min-w-0 items-center justify-between gap-3 rounded-[24px] border border-slate-200 bg-white px-4 py-4 transition hover:border-blue-300 hover:bg-blue-50/60 sm:px-5"><div className="min-w-0"><div className="break-words text-base font-semibold text-slate-900">{title}</div><div className="mt-1 break-words text-sm text-slate-500">{description}</div></div><span className="shrink-0">{icon}</span></Link>
 }
 
 function UnifiedEventsSection({

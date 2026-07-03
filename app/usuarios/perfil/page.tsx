@@ -697,7 +697,7 @@ function TextAreaField({
   label,
   value,
   onChange,
-  rows = 5,
+  rows = 8,
 }: {
   label: string
   value: string
@@ -711,7 +711,7 @@ function TextAreaField({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={rows}
-        className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-400"
+        className="min-h-52 w-full resize-y rounded-2xl border border-slate-200 px-4 py-3 leading-7 outline-none transition focus:border-blue-400"
       />
     </div>
   )
@@ -762,18 +762,18 @@ function ImageUploadField({
       />
       {helper ? <p className="text-xs text-slate-500">{helper}</p> : null}
       {images.length ? (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           {images.map((image, index) => (
             <div key={`${index}-${image.slice(0, 24)}`} className="overflow-hidden rounded-[22px] border border-slate-200 bg-white">
-              <div className="relative h-40 w-full">
+              <div className="relative h-28 w-full sm:h-40">
                 <OptimizedImage
                   src={image}
                   alt={`Vista previa ${index + 1}`}
-                  sizes="(max-width: 640px) 100vw, 50vw"
+                  sizes="(max-width: 640px) 50vw, 50vw"
                   className="object-cover"
                 />
               </div>
-              <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-4 py-3">
+              <div className="flex flex-col items-start gap-2 border-t border-slate-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-4">
                 <span className="text-sm text-slate-500">Imagen {index + 1}</span>
                 <button
                   type="button"
