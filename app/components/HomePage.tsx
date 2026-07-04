@@ -610,14 +610,14 @@ export function HomePage({
     [eventos]
   )
   const visibleAvisoEventos = useMemo(
-    () => sortEventsForHome(eventos.filter((event) => isAvisoCategory(event.categoria))).slice(0, 12),
+    () => sortEventsForHome(eventos.filter((event) => isAvisoCategory(event.categoria))).slice(0, 8),
     [eventos]
   )
   const visiblePromoEventos = useMemo(
     () =>
       sortEventsForHome(
         eventos.filter((event) => isPromoOrSweepstakesCategory(event.categoria))
-      ).slice(0, 12),
+      ).slice(0, 8),
     [eventos]
   )
   const visiblePromoImageEventos = useMemo(
@@ -2210,7 +2210,7 @@ export function HomePage({
                     })
                   }
                   aria-label={`Ver mas de ${business.nombre}`}
-                  className={`cursor-pointer overflow-hidden rounded-2xl border bg-white shadow-[0_14px_32px_-24px_rgba(15,23,42,0.5)] transition hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:rounded-[28px] ${index >= ITEMS_PER_ROTATION ? "xl:hidden" : ""} ${business.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(59,130,246,0.35)]"}`}
+                  className={`cursor-pointer overflow-hidden rounded-2xl border bg-white [content-visibility:auto] [contain-intrinsic-size:160px] shadow-[0_14px_32px_-24px_rgba(15,23,42,0.5)] transition hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:rounded-[28px] ${index >= ITEMS_PER_ROTATION ? "xl:hidden" : ""} ${business.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(59,130,246,0.35)]"}`}
                 >
                   {imageSrc ? (
                     <div className="relative aspect-square w-full bg-white">
@@ -2321,7 +2321,7 @@ export function HomePage({
                           })
                         }
                         aria-label={`Ver mas de ${servicio.nombre}`}
-                        className={`cursor-pointer overflow-hidden rounded-2xl border bg-white shadow-[0_14px_32px_-24px_rgba(15,23,42,0.45)] transition hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:rounded-[28px] ${index >= ITEMS_PER_ROTATION ? "xl:hidden" : ""} ${servicio.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"}`}
+                        className={`cursor-pointer overflow-hidden rounded-2xl border bg-white [content-visibility:auto] [contain-intrinsic-size:160px] shadow-[0_14px_32px_-24px_rgba(15,23,42,0.45)] transition hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:rounded-[28px] ${index >= ITEMS_PER_ROTATION ? "xl:hidden" : ""} ${servicio.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"}`}
                       >
                         {servicio.imagen ? (
                           <div className="relative aspect-square w-full bg-white">
@@ -2862,7 +2862,7 @@ function HomeEventCard({
       tabIndex={0}
       onClick={onOpen}
       onKeyDown={(eventKey) => onCardKeyDown(eventKey, onOpen)}
-      className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/95 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${className} ${
+      className={`cursor-pointer overflow-hidden rounded-[28px] border bg-white/95 [content-visibility:auto] [contain-intrinsic-size:420px] shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] transition hover:-translate-y-1.5 hover:shadow-[0_28px_60px_-30px_rgba(14,165,233,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${className} ${
         normalizeEventCategory(event.categoria) === "Evento"
           ? "border-emerald-200/80"
           : "border-white/80"
@@ -2931,13 +2931,13 @@ function HomePromoImageCard({
       aria-label={`Ver ${event.titulo}`}
       onClick={onOpen}
       onKeyDown={(eventKey) => onCardKeyDown(eventKey, onOpen)}
-      className="group relative aspect-[4/5] w-[72vw] shrink-0 snap-start cursor-pointer overflow-hidden rounded-2xl bg-slate-100 shadow-[0_18px_42px_-30px_rgba(15,23,42,0.7)] outline-none ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-34px_rgba(15,23,42,0.65)] focus-visible:ring-2 focus-visible:ring-amber-400 sm:w-72 lg:w-80"
+      className="group relative aspect-[4/5] w-[72vw] shrink-0 snap-start cursor-pointer overflow-hidden rounded-2xl bg-slate-100 [content-visibility:auto] [contain-intrinsic-size:520px] shadow-[0_18px_42px_-30px_rgba(15,23,42,0.7)] outline-none ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_28px_60px_-34px_rgba(15,23,42,0.65)] focus-visible:ring-2 focus-visible:ring-amber-400 sm:w-72 lg:w-80"
     >
       <OptimizedImage
         src={event.imagen}
         alt={event.titulo}
         sizes="(max-width: 640px) 72vw, (max-width: 1024px) 18rem, 20rem"
-        quality={78}
+        quality={68}
         className="object-contain p-2 transition duration-300 group-hover:scale-[1.02]"
       />
     </div>
