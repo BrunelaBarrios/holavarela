@@ -29,6 +29,8 @@ type SitioForm = {
   imagen_url: string
   mostrar_juegos_home: boolean
   mostrar_ranking_juego_home: boolean
+  mostrar_galeria_home: boolean
+  galeria_home: string[]
 }
 
 type PopupInicioForm = {
@@ -75,6 +77,8 @@ type SitioConfigRow = {
   imagen_url?: string | null
   mostrar_juegos_home?: boolean | null
   mostrar_ranking_juego_home?: boolean | null
+  mostrar_galeria_home?: boolean | null
+  galeria_home?: string[] | null
   burbuja_home_activa?: boolean | null
   burbuja_home_titulo?: string | null
   burbuja_home_texto?: string | null
@@ -93,6 +97,8 @@ const initialForm: SitioForm = {
   imagen_url: "",
   mostrar_juegos_home: true,
   mostrar_ranking_juego_home: false,
+  mostrar_galeria_home: false,
+  galeria_home: [],
 }
 
 const initialPopupForm: PopupInicioForm = {
@@ -134,6 +140,7 @@ export default function AdminSitioPage() {
   const [saveMessage, setSaveMessage] = useState("")
   const [saveError, setSaveError] = useState("")
   const [popupSchemaReady, setPopupSchemaReady] = useState(true)
+  const [gallerySchemaReady, setGallerySchemaReady] = useState(true)
   const [highlightForm, setHighlightForm] =
     useState<HomeHighlightForm>(initialHighlightForm)
   const [highlights, setHighlights] = useState<HomeHighlight[]>([])
@@ -168,14 +175,14 @@ export default function AdminSitioPage() {
     const cargarConfiguracion = async () => {
       const result = await supabase
         .from("sitio")
-        .select("titulo, texto_1, texto_2, texto_3, imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home, burbuja_home_activa, burbuja_home_titulo, burbuja_home_texto, burbuja_home_visible_desde, burbuja_home_visible_hasta")
+        .select("titulo, texto_1, texto_2, texto_3, imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home, mostrar_galeria_home, galeria_home, burbuja_home_activa, burbuja_home_titulo, burbuja_home_texto, burbuja_home_visible_desde, burbuja_home_visible_hasta")
         .eq("id", 1)
         .maybeSingle()
       const { data, error } =
         result.error?.code === "42703"
           ? await supabase
               .from("sitio")
-              .select("titulo, texto_1, texto_2, texto_3, imagen_url")
+              .select("titulo, texto_1, texto_2, texto_3, imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home, burbuja_home_activa, burbuja_home_titulo, burbuja_home_texto, burbuja_home_visible_desde, burbuja_home_visible_hasta")
               .eq("id", 1)
               .maybeSingle()
           : result
@@ -197,6 +204,14 @@ export default function AdminSitioPage() {
             "mostrar_ranking_juego_home" in siteData
               ? siteData.mostrar_ranking_juego_home === true
               : false,
+          mostrar_galeria_home:
+            "mostrar_galeria_home" in siteData
+              ? siteData.mostrar_galeria_home === true
+              : false,
+          galeria_home:
+            "galeria_home" in siteData && Array.isArray(siteData.galeria_home)
+              ? siteData.galeria_home.filter(Boolean)
+              : [],
         })
 
         if ("burbuja_home_activa" in siteData) {
@@ -209,6 +224,9 @@ export default function AdminSitioPage() {
           })
         } else {
           setPopupSchemaReady(false)
+        }
+        if (!("galeria_home" in siteData)) {
+          setGallerySchemaReady(false)
         }
       }
 
@@ -235,6 +253,34 @@ export default function AdminSitioPage() {
         error instanceof Error ? error.message : "No se pudo cargar la imagen."
       )
     }
+  }
+
+  const handleHomeGalleryChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).slice(0, 10 - formData.galeria_home.length)
+    if (!files.length) return
+
+    try {
+      const images = await Promise.all(files.map((file) => fileToDataUrl(file)))
+      setFormData((prev) => ({
+        ...prev,
+        galeria_home: [...prev.galeria_home, ...images].slice(0, 10),
+      }))
+      setSaveError("")
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "No se pudieron cargar las fotos.")
+    } finally {
+      e.target.value = ""
+    }
+  }
+
+  const moveHomeGalleryImage = (index: number, direction: -1 | 1) => {
+    setFormData((prev) => {
+      const nextIndex = index + direction
+      if (nextIndex < 0 || nextIndex >= prev.galeria_home.length) return prev
+      const images = [...prev.galeria_home]
+      ;[images[index], images[nextIndex]] = [images[nextIndex], images[index]]
+      return { ...prev, galeria_home: images }
+    })
   }
 
   const handleHighlightImageChange = async (
@@ -394,6 +440,8 @@ export default function AdminSitioPage() {
       imagen_url: formData.imagen_url || null,
       mostrar_juegos_home: formData.mostrar_juegos_home,
       mostrar_ranking_juego_home: formData.mostrar_ranking_juego_home,
+      mostrar_galeria_home: formData.mostrar_galeria_home,
+      galeria_home: formData.galeria_home,
       burbuja_home_activa: popupData.activo,
       burbuja_home_titulo: popupData.titulo.trim() || initialPopupForm.titulo,
       burbuja_home_texto: popupData.descripcion.trim(),
@@ -402,6 +450,7 @@ export default function AdminSitioPage() {
     }
     let savedHomeGamesVisibility = true
     let savedPopupSettings = true
+    let savedHomeGallerySettings = true
 
     const siteResponse = await fetch("/api/admin/sitio", {
       method: "POST",
@@ -412,6 +461,7 @@ export default function AdminSitioPage() {
       error?: string
       savedHomeGamesVisibility?: boolean
       savedHomeBubbleSettings?: boolean
+      savedHomeGallerySettings?: boolean
     } | null
 
     if (!siteResponse.ok || siteResult?.error) {
@@ -426,7 +476,9 @@ export default function AdminSitioPage() {
 
     savedHomeGamesVisibility = siteResult?.savedHomeGamesVisibility !== false
     savedPopupSettings = siteResult?.savedHomeBubbleSettings !== false
+    savedHomeGallerySettings = siteResult?.savedHomeGallerySettings !== false
     setPopupSchemaReady(savedPopupSettings)
+    setGallerySchemaReady(savedHomeGallerySettings)
 
     const pendingMessages = [
       !savedHomeGamesVisibility
@@ -434,6 +486,9 @@ export default function AdminSitioPage() {
         : "",
       !savedPopupSettings
         ? "Para programar la burbuja falta aplicar las columnas nuevas burbuja_home_* en Supabase."
+        : "",
+      !savedHomeGallerySettings
+        ? "Para guardar la galería falta aplicar las columnas galeria_home y mostrar_galeria_home en Supabase."
         : "",
     ].filter(Boolean)
 
@@ -582,6 +637,71 @@ export default function AdminSitioPage() {
                   >
                     Quitar foto
                   </button>
+                ) : null}
+              </div>
+
+              <div className="rounded-2xl border border-sky-100 bg-sky-50/60 p-4">
+                <div className="mb-4 flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="font-semibold text-slate-950">Galería horizontal de la Home</h3>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">
+                      Subí hasta 10 fotos. Podés cambiar el orden antes de guardar.
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={formData.mostrar_galeria_home}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, mostrar_galeria_home: e.target.checked }))
+                    }
+                    className="mt-1 h-5 w-5 shrink-0 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                    aria-label="Mostrar galería horizontal en la Home"
+                  />
+                </div>
+
+                {!gallerySchemaReady ? (
+                  <div className="mb-4 rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm text-amber-800">
+                    Falta aplicar las columnas galeria_home y mostrar_galeria_home en Supabase.
+                  </div>
+                ) : null}
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleHomeGalleryChange}
+                  disabled={formData.galeria_home.length >= 10}
+                  className="w-full rounded-xl border border-sky-200 bg-white px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-sky-100 file:px-4 file:py-2 file:font-medium file:text-sky-700 hover:file:bg-sky-200 disabled:opacity-50"
+                />
+
+                {formData.galeria_home.length ? (
+                  <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {formData.galeria_home.map((image, index) => (
+                      <div key={`${index}-${image.slice(0, 24)}`} className="overflow-hidden rounded-xl border border-sky-100 bg-white">
+                        <div className="relative aspect-[4/3] w-full">
+                          <OptimizedImage
+                            src={image}
+                            alt={`Foto de la galería ${index + 1}`}
+                            sizes="(max-width: 640px) 50vw, 33vw"
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="space-y-2 p-2">
+                          <div className="flex gap-1">
+                            <button type="button" disabled={index === 0} onClick={() => moveHomeGalleryImage(index, -1)} className="flex-1 rounded-lg border border-slate-200 px-2 py-1 text-xs disabled:opacity-30">←</button>
+                            <button type="button" disabled={index === formData.galeria_home.length - 1} onClick={() => moveHomeGalleryImage(index, 1)} className="flex-1 rounded-lg border border-slate-200 px-2 py-1 text-xs disabled:opacity-30">→</button>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setFormData((prev) => ({ ...prev, galeria_home: prev.galeria_home.filter((_, imageIndex) => imageIndex !== index) }))}
+                            className="w-full rounded-lg bg-rose-50 px-2 py-1 text-xs font-medium text-rose-600"
+                          >
+                            Quitar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 ) : null}
               </div>
 

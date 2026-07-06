@@ -26,6 +26,8 @@ const defaultSobreVarela = {
   imagen_url: null,
   mostrar_juegos_home: true,
   mostrar_ranking_juego_home: false,
+  mostrar_galeria_home: false,
+  galeria_home: [] as string[],
 }
 
 const RECENT_COMMERCIAL_EVENT_DAYS = 1
@@ -103,14 +105,14 @@ const getHomePageData = unstable_cache(
 
     const sitioPromise = supabaseServer
       .from("sitio")
-      .select("titulo, texto_1, texto_2, texto_3, imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home")
+      .select("titulo, texto_1, texto_2, texto_3, imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home, mostrar_galeria_home, galeria_home")
       .eq("id", 1)
       .maybeSingle()
       .then(async (result) => {
         if (result.error?.code === "42703") {
           return supabaseServer
             .from("sitio")
-            .select("titulo, texto_1, texto_2, texto_3, imagen_url")
+            .select("titulo, texto_1, texto_2, texto_3, imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home")
             .eq("id", 1)
             .maybeSingle()
         }

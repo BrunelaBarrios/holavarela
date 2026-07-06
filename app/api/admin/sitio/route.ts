@@ -14,6 +14,8 @@ type SaveSitePayload = {
     imagen_url?: string | null
     mostrar_juegos_home?: boolean
     mostrar_ranking_juego_home?: boolean
+    mostrar_galeria_home?: boolean
+    galeria_home?: string[]
     burbuja_home_activa?: boolean
     burbuja_home_titulo?: string | null
     burbuja_home_texto?: string | null
@@ -49,6 +51,10 @@ export async function POST(request: NextRequest) {
       imagen_url: body.payload.imagen_url || null,
       mostrar_juegos_home: body.payload.mostrar_juegos_home !== false,
       mostrar_ranking_juego_home: body.payload.mostrar_ranking_juego_home === true,
+      mostrar_galeria_home: body.payload.mostrar_galeria_home === true,
+      galeria_home: Array.isArray(body.payload.galeria_home)
+        ? body.payload.galeria_home.filter(Boolean).slice(0, 10)
+        : [],
       burbuja_home_activa: body.payload.burbuja_home_activa === true,
       burbuja_home_titulo: normalizeText(body.payload.burbuja_home_titulo),
       burbuja_home_texto: normalizeText(body.payload.burbuja_home_texto),
@@ -58,7 +64,30 @@ export async function POST(request: NextRequest) {
 
     let savedHomeGamesVisibility = true
     let savedHomeBubbleSettings = true
+    let savedHomeGallerySettings = true
     let { error } = await supabaseAdmin.from("sitio").upsert(sitePayload)
+
+    if (error?.code === "42703") {
+      const withoutGalleryPayload = {
+        id: sitePayload.id,
+        titulo: sitePayload.titulo,
+        texto_1: sitePayload.texto_1,
+        texto_2: sitePayload.texto_2,
+        texto_3: sitePayload.texto_3,
+        imagen_url: sitePayload.imagen_url,
+        mostrar_juegos_home: sitePayload.mostrar_juegos_home,
+        mostrar_ranking_juego_home: sitePayload.mostrar_ranking_juego_home,
+        burbuja_home_activa: sitePayload.burbuja_home_activa,
+        burbuja_home_titulo: sitePayload.burbuja_home_titulo,
+        burbuja_home_texto: sitePayload.burbuja_home_texto,
+        burbuja_home_visible_desde: sitePayload.burbuja_home_visible_desde,
+        burbuja_home_visible_hasta: sitePayload.burbuja_home_visible_hasta,
+      }
+
+      const withoutGalleryResult = await supabaseAdmin.from("sitio").upsert(withoutGalleryPayload)
+      error = withoutGalleryResult.error
+      savedHomeGallerySettings = false
+    }
 
     if (error?.code === "42703") {
       const visibilityOnlyPayload = {
@@ -91,6 +120,7 @@ export async function POST(request: NextRequest) {
       error = legacyResult.error
       savedHomeGamesVisibility = false
       savedHomeBubbleSettings = false
+      savedHomeGallerySettings = false
     }
 
     if (error) throw error
@@ -104,7 +134,12 @@ export async function POST(request: NextRequest) {
 
     revalidatePath("/")
 
-    return NextResponse.json({ ok: true, savedHomeGamesVisibility, savedHomeBubbleSettings })
+    return NextResponse.json({
+      ok: true,
+      savedHomeGamesVisibility,
+      savedHomeBubbleSettings,
+      savedHomeGallerySettings,
+    })
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "No se pudo guardar la configuracion."

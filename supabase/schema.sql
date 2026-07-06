@@ -281,6 +281,12 @@ alter table public.sitio
 add column if not exists mostrar_ranking_juego_home boolean not null default false;
 
 alter table public.sitio
+add column if not exists mostrar_galeria_home boolean not null default false;
+
+alter table public.sitio
+add column if not exists galeria_home text[] not null default '{}';
+
+alter table public.sitio
 add column if not exists burbuja_home_activa boolean not null default false;
 
 alter table public.sitio
@@ -379,6 +385,8 @@ create table if not exists public.sitio (
   plan_destacado_plus_features text,
   mostrar_juegos_home boolean not null default true,
   mostrar_ranking_juego_home boolean not null default false,
+  mostrar_galeria_home boolean not null default false,
+  galeria_home text[] not null default '{}',
   burbuja_home_activa boolean not null default false,
   burbuja_home_titulo text,
   burbuja_home_texto text,

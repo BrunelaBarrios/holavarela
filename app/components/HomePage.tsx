@@ -217,6 +217,8 @@ type SobreVarelaConfig = {
   imagen_url: string | null
   mostrar_juegos_home?: boolean | null
   mostrar_ranking_juego_home?: boolean | null
+  mostrar_galeria_home?: boolean | null
+  galeria_home?: string[] | null
 }
 
 type ChallengeRankingEntry = {
@@ -391,6 +393,8 @@ const defaultSobreVarela: SobreVarelaConfig = {
   imagen_url: null,
   mostrar_juegos_home: true,
   mostrar_ranking_juego_home: false,
+  mostrar_galeria_home: false,
+  galeria_home: [],
 }
 
 const defaultRadioConfig: RadioConfig = {
@@ -521,6 +525,11 @@ export function HomePage({
   const shouldShowHomeGames = sobreVarela.mostrar_juegos_home !== false
   const shouldShowGameRanking =
     sobreVarela.mostrar_ranking_juego_home === true && challengeRanking.length > 0
+  const homeGallery = Array.isArray(sobreVarela.galeria_home)
+    ? sobreVarela.galeria_home.filter(Boolean).slice(0, 10)
+    : []
+  const shouldShowHomeGallery =
+    sobreVarela.mostrar_galeria_home === true && homeGallery.length > 0
   const [radio, setRadio] = useState<RadioConfig>(defaultRadioConfig)
   const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null)
   const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
@@ -1913,6 +1922,25 @@ export function HomePage({
         backgroundClassName="bg-white/80"
       />
 
+      <aside className="border-y border-emerald-200 bg-[linear-gradient(90deg,#ecfdf5_0%,#eff6ff_50%,#ecfdf5_100%)] px-4 py-2.5 text-emerald-950">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-center gap-1.5 text-center text-sm sm:flex-row sm:gap-2 sm:text-base">
+          <span className="font-semibold">
+            Sumate como colaborador de Hola Varela y participá por premios mensuales.
+          </span>
+          <span className="font-medium">Más información:</span>
+          <a
+            href="https://wa.me/59892715516"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-700 px-3 py-1 font-bold tracking-wide text-white transition hover:bg-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+            aria-label="Más información por WhatsApp al 092 715 516"
+          >
+            <Phone className="h-3.5 w-3.5" />
+            092 715 516
+          </a>
+        </div>
+      </aside>
+
       <section
         id="inicio"
         className="relative overflow-hidden bg-[linear-gradient(135deg,#eefaf2_0%,#f7fbff_46%,#eaf4ff_100%)] py-16 md:py-24"
@@ -1972,6 +2000,45 @@ export function HomePage({
           </div>
         </div>
       </section>
+
+      {shouldShowHomeGallery ? (
+        <section className="border-y border-sky-100 bg-white/75 py-8 sm:py-10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-5 flex items-end justify-between gap-4">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-600">
+                  Imágenes de nuestra comunidad
+                </div>
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                  Galería Hola Varela
+                </h2>
+              </div>
+              <span className="hidden text-sm text-slate-500 sm:block">Deslizá para ver más →</span>
+            </div>
+            <div className="-mx-4 overflow-x-auto px-4 pb-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+              <div className="flex min-w-full snap-x snap-mandatory gap-4 lg:gap-6">
+                {homeGallery.map((image, index) => (
+                  <button
+                    key={`${index}-${image.slice(0, 32)}`}
+                    type="button"
+                    onClick={() => setZoomedImage({ src: image, alt: `Galería Hola Varela ${index + 1}` })}
+                    className="relative aspect-[4/3] w-[82vw] shrink-0 snap-start overflow-hidden rounded-2xl bg-slate-100 [content-visibility:auto] [contain-intrinsic-size:320px] shadow-[0_18px_42px_-30px_rgba(15,23,42,0.55)] ring-1 ring-slate-200 transition hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 sm:w-[24rem] lg:w-[calc((100%_-_3rem)/3)]"
+                    aria-label={`Ampliar foto ${index + 1} de la galería`}
+                  >
+                    <OptimizedImage
+                      src={image}
+                      alt={`Galería Hola Varela ${index + 1}`}
+                      sizes="(max-width: 640px) 82vw, (max-width: 1024px) 24rem, 33vw"
+                      quality={68}
+                      className="object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {shouldShowGoalGame ? (
         <section className="py-8">
