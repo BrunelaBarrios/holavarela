@@ -2001,63 +2001,24 @@ export function HomePage({
         </div>
       </section>
 
-      {shouldShowHomeGallery ? (
-        <section className="border-y border-sky-100 bg-white/75 py-8 sm:py-10">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-5 flex items-end justify-between gap-4">
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-600">
-                  Imágenes de nuestra comunidad
-                </div>
-                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
-                  Galería Hola Varela
-                </h2>
-              </div>
-              <span className="hidden text-sm text-slate-500 sm:block">Deslizá para ver más →</span>
-            </div>
-            <div className="-mx-4 overflow-x-auto px-4 pb-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-              <div className="flex min-w-full snap-x snap-mandatory gap-4 lg:gap-6">
-                {homeGallery.map((image, index) => (
-                  <button
-                    key={`${index}-${image.slice(0, 32)}`}
-                    type="button"
-                    onClick={() => setZoomedImage({ src: image, alt: `Galería Hola Varela ${index + 1}` })}
-                    className="relative aspect-[4/3] w-[82vw] shrink-0 snap-start overflow-hidden rounded-2xl bg-slate-100 [content-visibility:auto] [contain-intrinsic-size:320px] shadow-[0_18px_42px_-30px_rgba(15,23,42,0.55)] ring-1 ring-slate-200 transition hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 sm:w-[24rem] lg:w-[calc((100%_-_3rem)/3)]"
-                    aria-label={`Ampliar foto ${index + 1} de la galería`}
-                  >
-                    <OptimizedImage
-                      src={image}
-                      alt={`Galería Hola Varela ${index + 1}`}
-                      sizes="(max-width: 640px) 82vw, (max-width: 1024px) 24rem, 33vw"
-                      quality={68}
-                      className="object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : null}
-
       {shouldShowGoalGame ? (
-        <section className="py-8">
+        <section className="py-4">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-6 rounded-[28px] border border-cyan-100 bg-[linear-gradient(135deg,#ecfeff_0%,#f8fafc_52%,#ecfdf5_100%)] p-6 shadow-[0_22px_55px_-36px_rgba(8,145,178,0.42)] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:p-8">
+            <div className="grid gap-4 rounded-2xl border border-cyan-100 bg-[linear-gradient(135deg,#ecfeff_0%,#f8fafc_52%,#ecfdf5_100%)] p-4 shadow-[0_18px_42px_-34px_rgba(8,145,178,0.42)] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:px-5 md:py-4">
               <div>
                 <div className="inline-flex rounded-full bg-white/85 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-700 ring-1 ring-cyan-100">
                   {goalGameConfig.titulo}
                 </div>
-                <h2 className="mt-4 text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">
+                <h2 className="mt-2 text-xl font-black tracking-normal text-slate-950 sm:text-2xl">
                   {goalGameConfig.textoBanner}
                 </h2>
-                <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
+                <p className="mt-1.5 max-w-3xl text-sm leading-6 text-slate-600">
                   Patea penales, suma goles y queda en el ranking local.
                 </p>
               </div>
               <Link
                 href="/juego-gol"
-                className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-950 px-6 py-4 text-base font-semibold text-white shadow-[0_18px_40px_-22px_rgba(15,23,42,0.9)] transition hover:-translate-y-0.5 hover:bg-cyan-700 md:w-auto"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_-22px_rgba(15,23,42,0.9)] transition hover:-translate-y-0.5 hover:bg-cyan-700 md:w-auto"
               >
                 {goalGameConfig.textoBanner}
                 <ArrowRight className="h-5 w-5" />
@@ -2065,24 +2026,24 @@ export function HomePage({
             </div>
 
             {shouldShowGoalGameRanking ? (
-              <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <div className="mt-2 grid gap-2 md:grid-cols-3">
                 {goalGameRanking.slice(0, 3).map((entry, index) => (
                   <div
                     key={entry.id}
-                    className="rounded-2xl border border-white/80 bg-white/90 p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.45)]"
+                    className="rounded-xl border border-white/80 bg-white/90 p-3 shadow-[0_14px_32px_-28px_rgba(15,23,42,0.4)]"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-50 text-lg font-black text-cyan-700 ring-1 ring-cyan-100">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-50 text-sm font-black text-cyan-700 ring-1 ring-cyan-100">
                         {index + 1}
                       </span>
                       <span className="rounded-full bg-slate-950 px-3 py-1 text-sm font-bold text-white">
                         {entry.puntaje} pts
                       </span>
                     </div>
-                    <div className="mt-4 text-lg font-black text-slate-950">
+                    <div className="mt-2 text-base font-black text-slate-950">
                       {entry.nombre}
                     </div>
-                    <div className="mt-1 text-sm font-medium text-slate-500">
+                    <div className="text-xs font-medium text-slate-500">
                       Desafio del Gol
                     </div>
                   </div>
@@ -2094,23 +2055,23 @@ export function HomePage({
       ) : null}
 
       {shouldShowHomeGames ? (
-        <section className="py-8">
+        <section className="py-4">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="grid gap-6 rounded-[28px] border border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#f8fafc_52%,#eff6ff_100%)] p-6 shadow-[0_22px_55px_-36px_rgba(15,118,110,0.42)] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:p-8">
+            <div className="grid gap-4 rounded-2xl border border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#f8fafc_52%,#eff6ff_100%)] p-4 shadow-[0_18px_42px_-34px_rgba(15,118,110,0.42)] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:px-5 md:py-4">
             <div>
               <div className="inline-flex rounded-full bg-white/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 ring-1 ring-emerald-100">
                 Desafío Hola Varela
               </div>
-              <h2 className="mt-4 text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">
+              <h2 className="mt-2 text-xl font-black tracking-normal text-slate-950 sm:text-2xl">
                 Jugá, divertite y poné a prueba tus habilidades
               </h2>
-              <p className="mt-3 max-w-3xl text-base leading-7 text-slate-600">
+              <p className="mt-1.5 max-w-3xl text-sm leading-6 text-slate-600">
                 Disfrutá desafíos cortos de memoria, palabras e imágenes. Sumá puntos y superá tu mejor resultado.
               </p>
             </div>
             <Link
               href="/juga-y-gana"
-              className="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-slate-950 px-6 py-4 text-base font-semibold text-white shadow-[0_18px_40px_-22px_rgba(15,23,42,0.9)] transition hover:-translate-y-0.5 hover:bg-emerald-700 md:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_-22px_rgba(15,23,42,0.9)] transition hover:-translate-y-0.5 hover:bg-emerald-700 md:w-auto"
             >
               Jugar ahora
               <ArrowRight className="h-5 w-5" />
@@ -2121,16 +2082,16 @@ export function HomePage({
       ) : null}
 
       {shouldShowGameRanking ? (
-        <section className="py-8">
+        <section className="py-4">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="rounded-[28px] border border-amber-100 bg-[linear-gradient(135deg,#fff7ed_0%,#f8fafc_54%,#eef2ff_100%)] p-6 shadow-[0_22px_55px_-38px_rgba(217,119,6,0.38)] md:p-8">
+            <div className="rounded-2xl border border-amber-100 bg-[linear-gradient(135deg,#fff7ed_0%,#f8fafc_54%,#eef2ff_100%)] p-4 shadow-[0_18px_42px_-36px_rgba(217,119,6,0.38)] md:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/85 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-amber-700 ring-1 ring-amber-100">
                     <Trophy className="h-4 w-4" />
                     Top del juego
                   </div>
-                  <h2 className="mt-4 text-2xl font-black tracking-normal text-slate-950 sm:text-3xl">
+                  <h2 className="mt-2 text-xl font-black tracking-normal text-slate-950 sm:text-2xl">
                     Los 3 mejores lugares
                   </h2>
                 </div>
@@ -2142,24 +2103,24 @@ export function HomePage({
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
-              <div className="mt-6 grid gap-3 md:grid-cols-3">
+              <div className="mt-3 grid gap-2 md:grid-cols-3">
                 {challengeRanking.slice(0, 3).map((entry, index) => (
                   <div
                     key={entry.id}
-                    className="rounded-2xl border border-white/80 bg-white/90 p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.45)]"
+                    className="rounded-xl border border-white/80 bg-white/90 p-3 shadow-[0_14px_32px_-28px_rgba(15,23,42,0.4)]"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-lg font-black text-amber-700 ring-1 ring-amber-100">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-sm font-black text-amber-700 ring-1 ring-amber-100">
                         {index + 1}
                       </span>
                       <span className="rounded-full bg-slate-950 px-3 py-1 text-sm font-bold text-white">
                         {entry.puntajeTotal} pts
                       </span>
                     </div>
-                    <div className="mt-4 text-lg font-black text-slate-950">
+                    <div className="mt-2 text-base font-black text-slate-950">
                       {entry.nombre}
                     </div>
-                    <div className="mt-1 text-sm font-medium text-slate-500">
+                    <div className="text-xs font-medium text-slate-500">
                       Puesto {index + 1}
                     </div>
                   </div>
@@ -2760,6 +2721,45 @@ export function HomePage({
       </section>
 
       </div>
+
+      {shouldShowHomeGallery ? (
+        <section className="border-y border-sky-100 bg-white/75 py-8 sm:py-10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-5 flex items-end justify-between gap-4">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-600">
+                  Imágenes de nuestra comunidad
+                </div>
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                  Galería Hola Varela
+                </h2>
+              </div>
+              <span className="hidden text-sm text-slate-500 sm:block">Deslizá para ver más →</span>
+            </div>
+            <div className="-mx-4 overflow-x-auto px-4 pb-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+              <div className="flex min-w-full snap-x snap-mandatory gap-4 lg:gap-6">
+                {homeGallery.map((image, index) => (
+                  <button
+                    key={`${index}-${image.slice(0, 32)}`}
+                    type="button"
+                    onClick={() => setZoomedImage({ src: image, alt: `Galería Hola Varela ${index + 1}` })}
+                    className="relative aspect-[4/3] w-[82vw] shrink-0 snap-start overflow-hidden rounded-2xl bg-slate-100 [content-visibility:auto] [contain-intrinsic-size:320px] shadow-[0_18px_42px_-30px_rgba(15,23,42,0.55)] ring-1 ring-slate-200 transition hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 sm:w-[24rem] lg:w-[calc((100%_-_3rem)/3)]"
+                    aria-label={`Ampliar foto ${index + 1} de la galería`}
+                  >
+                    <OptimizedImage
+                      src={image}
+                      alt={`Galería Hola Varela ${index + 1}`}
+                      sizes="(max-width: 640px) 82vw, (max-width: 1024px) 24rem, 33vw"
+                      quality={68}
+                      className="object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
