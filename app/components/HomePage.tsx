@@ -2048,7 +2048,7 @@ export function HomePage({
         </section>
       ) : null}
 
-      {shouldShowHomeGames ? (
+      {false && shouldShowHomeGames ? (
         <section className="py-4">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-4 rounded-2xl border border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#f8fafc_52%,#eff6ff_100%)] p-4 shadow-[0_18px_42px_-34px_rgba(15,118,110,0.42)] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:px-5 md:py-4">
