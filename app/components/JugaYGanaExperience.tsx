@@ -1930,6 +1930,14 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
     setStage("play")
   }
 
+  const handlePlayAgain = () => {
+    setSubmittedPoints(null)
+    setSubmitError("")
+    setSubmitLoading(false)
+    assignNextChallengeSet()
+    setStage("play")
+  }
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fff2d9_0%,#fffdf8_28%,#e9f7ff_64%,#f9fcff_100%)] text-slate-950">
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
@@ -2084,6 +2092,7 @@ export function JugaYGanaExperience({ challengeSlug }: JugaYGanaExperienceProps 
                   participantName={participantName}
                   participantPhone={participantPhone}
                   totalPoints={submittedPoints ?? totalPoints}
+                  onPlayAgain={handlePlayAgain}
                 />
               ) : null}
 
@@ -2891,7 +2900,12 @@ function EntryFormPanel(props: {
   )
 }
 
-function DonePanel(props: { participantName: string; participantPhone: string; totalPoints: number }) {
+function DonePanel(props: {
+  participantName: string
+  participantPhone: string
+  totalPoints: number
+  onPlayAgain: () => void
+}) {
   return (
     <div className="flex h-full flex-col justify-center">
       <div className="inline-flex w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
@@ -2915,11 +2929,19 @@ function DonePanel(props: { participantName: string; participantPhone: string; t
         <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
           Descubre comercios, servicios, cursos, eventos y propuestas cerca tuyo en un solo lugar.
         </p>
-        <div className="mt-5">
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={props.onPlayAgain}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-6 py-4 text-sm font-semibold text-white transition hover:bg-emerald-700"
+          >
+            Volver a jugar
+            <Trophy className="h-4 w-4" />
+          </button>
           <button
             type="button"
             onClick={() => window.location.assign("/")}
-            className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-6 py-4 text-sm font-semibold text-white transition hover:bg-sky-600"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-6 py-4 text-sm font-semibold text-white transition hover:bg-sky-600"
           >
             Ir a conocer Hola Varela
             <ArrowRight className="h-4 w-4" />

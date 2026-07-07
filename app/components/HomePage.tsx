@@ -2081,7 +2081,7 @@ export function HomePage({
         </section>
       ) : null}
 
-      {shouldShowGameRanking ? (
+      {false && shouldShowGameRanking ? (
         <section className="py-4">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="rounded-2xl border border-amber-100 bg-[linear-gradient(135deg,#fff7ed_0%,#f8fafc_54%,#eef2ff_100%)] p-4 shadow-[0_18px_42px_-36px_rgba(217,119,6,0.38)] md:p-5">
