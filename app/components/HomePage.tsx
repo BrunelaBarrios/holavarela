@@ -633,14 +633,8 @@ export function HomePage({
     () => visiblePromoEventos.filter((event) => Boolean(event.imagen)),
     [visiblePromoEventos]
   )
-  const visibleCursos = useMemo(() => cursos.slice(0, 4), [cursos])
-  const visibleInstituciones = useMemo(
-    () =>
-      [...instituciones]
-        .sort((left, right) => Number(isFeaturedListing(right)) - Number(isFeaturedListing(left)))
-        .slice(0, 5),
-    [instituciones]
-  )
+  const visibleCursos = useMemo(() => [] as Curso[], [])
+  const visibleInstituciones = useMemo(() => [] as Institucion[], [])
   const delayedPromo = useMemo<DelayedPromo | null>(() => {
     const activeAds = initialData.destacadosHome || []
     if (activeAds.length === 0) return null
@@ -1922,9 +1916,9 @@ export function HomePage({
         backgroundClassName="bg-white/80"
       />
 
-      <aside className="border-y border-emerald-200 bg-[linear-gradient(90deg,#ecfdf5_0%,#eff6ff_50%,#ecfdf5_100%)] px-4 py-2.5 text-emerald-950">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-center gap-1.5 text-center text-sm sm:flex-row sm:gap-2 sm:text-base">
-          <span className="font-semibold">
+      <aside className="border-b border-emerald-100 bg-emerald-50/45 px-4 py-1.5 text-slate-600">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-center gap-1 text-center text-xs sm:flex-row sm:gap-1.5">
+          <span className="font-medium">
             Sumate como colaborador de Hola Varela y participá por premios mensuales.
           </span>
           <span className="font-medium">Más información:</span>
@@ -1932,10 +1926,10 @@ export function HomePage({
             href="https://wa.me/59892715516"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-700 px-3 py-1 font-bold tracking-wide text-white transition hover:bg-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-200 bg-white/80 px-2.5 py-0.5 font-semibold tracking-wide text-emerald-700 transition hover:border-emerald-300 hover:bg-white hover:text-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
             aria-label="Más información por WhatsApp al 092 715 516"
           >
-            <Phone className="h-3.5 w-3.5" />
+            <Phone className="h-3 w-3" />
             092 715 516
           </a>
         </div>
