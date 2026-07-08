@@ -12,6 +12,16 @@ type SaveSitePayload = {
     texto_2?: string
     texto_3?: string
     imagen_url?: string | null
+    cursos_home_tagline?: string | null
+    cursos_home_titulo?: string | null
+    cursos_home_texto?: string | null
+    cursos_home_boton?: string | null
+    cursos_home_imagen_url?: string | null
+    instituciones_home_tagline?: string | null
+    instituciones_home_titulo?: string | null
+    instituciones_home_texto?: string | null
+    instituciones_home_boton?: string | null
+    instituciones_home_imagen_url?: string | null
     mostrar_juegos_home?: boolean
     mostrar_ranking_juego_home?: boolean
     mostrar_galeria_home?: boolean
@@ -49,6 +59,27 @@ export async function POST(request: NextRequest) {
       texto_2: body.payload.texto_2,
       texto_3: body.payload.texto_3,
       imagen_url: body.payload.imagen_url || null,
+      cursos_home_tagline:
+        normalizeText(body.payload.cursos_home_tagline) || "Aprende y crece",
+      cursos_home_titulo:
+        normalizeText(body.payload.cursos_home_titulo) || "Cursos y Clases",
+      cursos_home_texto: normalizeText(body.payload.cursos_home_texto),
+      cursos_home_boton:
+        normalizeText(body.payload.cursos_home_boton) || "Ver más cursos y clases",
+      cursos_home_imagen_url: body.payload.cursos_home_imagen_url || null,
+      instituciones_home_tagline:
+        normalizeText(body.payload.instituciones_home_tagline) ||
+        "Nuestra comunidad",
+      instituciones_home_titulo:
+        normalizeText(body.payload.instituciones_home_titulo) || "Instituciones",
+      instituciones_home_texto: normalizeText(
+        body.payload.instituciones_home_texto
+      ),
+      instituciones_home_boton:
+        normalizeText(body.payload.instituciones_home_boton) ||
+        "Ver más instituciones",
+      instituciones_home_imagen_url:
+        body.payload.instituciones_home_imagen_url || null,
       mostrar_juegos_home: body.payload.mostrar_juegos_home !== false,
       mostrar_ranking_juego_home: body.payload.mostrar_ranking_juego_home === true,
       mostrar_galeria_home: body.payload.mostrar_galeria_home === true,
@@ -65,7 +96,34 @@ export async function POST(request: NextRequest) {
     let savedHomeGamesVisibility = true
     let savedHomeBubbleSettings = true
     let savedHomeGallerySettings = true
+    let savedHomeAccessSettings = true
     let { error } = await supabaseAdmin.from("sitio").upsert(sitePayload)
+
+    if (error?.code === "42703") {
+      const withoutHomeAccessPayload = {
+        id: sitePayload.id,
+        titulo: sitePayload.titulo,
+        texto_1: sitePayload.texto_1,
+        texto_2: sitePayload.texto_2,
+        texto_3: sitePayload.texto_3,
+        imagen_url: sitePayload.imagen_url,
+        mostrar_juegos_home: sitePayload.mostrar_juegos_home,
+        mostrar_ranking_juego_home: sitePayload.mostrar_ranking_juego_home,
+        mostrar_galeria_home: sitePayload.mostrar_galeria_home,
+        galeria_home: sitePayload.galeria_home,
+        burbuja_home_activa: sitePayload.burbuja_home_activa,
+        burbuja_home_titulo: sitePayload.burbuja_home_titulo,
+        burbuja_home_texto: sitePayload.burbuja_home_texto,
+        burbuja_home_visible_desde: sitePayload.burbuja_home_visible_desde,
+        burbuja_home_visible_hasta: sitePayload.burbuja_home_visible_hasta,
+      }
+
+      const withoutHomeAccessResult = await supabaseAdmin
+        .from("sitio")
+        .upsert(withoutHomeAccessPayload)
+      error = withoutHomeAccessResult.error
+      savedHomeAccessSettings = false
+    }
 
     if (error?.code === "42703") {
       const withoutGalleryPayload = {
@@ -87,6 +145,7 @@ export async function POST(request: NextRequest) {
       const withoutGalleryResult = await supabaseAdmin.from("sitio").upsert(withoutGalleryPayload)
       error = withoutGalleryResult.error
       savedHomeGallerySettings = false
+      savedHomeAccessSettings = false
     }
 
     if (error?.code === "42703") {
@@ -121,6 +180,7 @@ export async function POST(request: NextRequest) {
       savedHomeGamesVisibility = false
       savedHomeBubbleSettings = false
       savedHomeGallerySettings = false
+      savedHomeAccessSettings = false
     }
 
     if (error) throw error
@@ -139,6 +199,7 @@ export async function POST(request: NextRequest) {
       savedHomeGamesVisibility,
       savedHomeBubbleSettings,
       savedHomeGallerySettings,
+      savedHomeAccessSettings,
     })
   } catch (error) {
     const message =

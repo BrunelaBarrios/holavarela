@@ -24,6 +24,18 @@ const defaultSobreVarela = {
   texto_3:
     "Cartelera online de José Pedro Varela: encontrá acá eventos, cursos, clases, servicios y más.",
   imagen_url: null,
+  cursos_home_tagline: "Aprende y crece",
+  cursos_home_titulo: "Cursos y Clases",
+  cursos_home_texto:
+    "Descubrí propuestas educativas y talleres en José Pedro Varela. Aprendé, desarrollá nuevas habilidades y alcanzá tus metas.",
+  cursos_home_boton: "Ver más cursos y clases",
+  cursos_home_imagen_url: null,
+  instituciones_home_tagline: "Nuestra comunidad",
+  instituciones_home_titulo: "Instituciones",
+  instituciones_home_texto:
+    "Conocé las instituciones que hacen crecer nuestra ciudad. Explorá organizaciones, entidades y espacios que nos unen.",
+  instituciones_home_boton: "Ver más instituciones",
+  instituciones_home_imagen_url: null,
   mostrar_juegos_home: true,
   mostrar_ranking_juego_home: false,
   mostrar_galeria_home: false,
@@ -105,7 +117,7 @@ const getHomePageData = unstable_cache(
 
     const sitioPromise = supabaseServer
       .from("sitio")
-      .select("titulo, texto_1, texto_2, texto_3, imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home, mostrar_galeria_home, galeria_home")
+      .select("titulo, texto_1, texto_2, texto_3, imagen_url, cursos_home_tagline, cursos_home_titulo, cursos_home_texto, cursos_home_boton, cursos_home_imagen_url, instituciones_home_tagline, instituciones_home_titulo, instituciones_home_texto, instituciones_home_boton, instituciones_home_imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home, mostrar_galeria_home, galeria_home")
       .eq("id", 1)
       .maybeSingle()
       .then(async (result) => {

@@ -287,6 +287,36 @@ alter table public.sitio
 add column if not exists galeria_home text[] not null default '{}';
 
 alter table public.sitio
+add column if not exists cursos_home_tagline text;
+
+alter table public.sitio
+add column if not exists cursos_home_titulo text;
+
+alter table public.sitio
+add column if not exists cursos_home_texto text;
+
+alter table public.sitio
+add column if not exists cursos_home_boton text;
+
+alter table public.sitio
+add column if not exists cursos_home_imagen_url text;
+
+alter table public.sitio
+add column if not exists instituciones_home_tagline text;
+
+alter table public.sitio
+add column if not exists instituciones_home_titulo text;
+
+alter table public.sitio
+add column if not exists instituciones_home_texto text;
+
+alter table public.sitio
+add column if not exists instituciones_home_boton text;
+
+alter table public.sitio
+add column if not exists instituciones_home_imagen_url text;
+
+alter table public.sitio
 add column if not exists burbuja_home_activa boolean not null default false;
 
 alter table public.sitio
@@ -387,6 +417,16 @@ create table if not exists public.sitio (
   mostrar_ranking_juego_home boolean not null default false,
   mostrar_galeria_home boolean not null default false,
   galeria_home text[] not null default '{}',
+  cursos_home_tagline text,
+  cursos_home_titulo text,
+  cursos_home_texto text,
+  cursos_home_boton text,
+  cursos_home_imagen_url text,
+  instituciones_home_tagline text,
+  instituciones_home_titulo text,
+  instituciones_home_texto text,
+  instituciones_home_boton text,
+  instituciones_home_imagen_url text,
   burbuja_home_activa boolean not null default false,
   burbuja_home_titulo text,
   burbuja_home_texto text,

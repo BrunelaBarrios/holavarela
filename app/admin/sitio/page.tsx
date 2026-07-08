@@ -27,6 +27,16 @@ type SitioForm = {
   texto_2: string
   texto_3: string
   imagen_url: string
+  cursos_home_tagline: string
+  cursos_home_titulo: string
+  cursos_home_texto: string
+  cursos_home_boton: string
+  cursos_home_imagen_url: string
+  instituciones_home_tagline: string
+  instituciones_home_titulo: string
+  instituciones_home_texto: string
+  instituciones_home_boton: string
+  instituciones_home_imagen_url: string
   mostrar_juegos_home: boolean
   mostrar_ranking_juego_home: boolean
   mostrar_galeria_home: boolean
@@ -75,6 +85,16 @@ type SitioConfigRow = {
   texto_2?: string | null
   texto_3?: string | null
   imagen_url?: string | null
+  cursos_home_tagline?: string | null
+  cursos_home_titulo?: string | null
+  cursos_home_texto?: string | null
+  cursos_home_boton?: string | null
+  cursos_home_imagen_url?: string | null
+  instituciones_home_tagline?: string | null
+  instituciones_home_titulo?: string | null
+  instituciones_home_texto?: string | null
+  instituciones_home_boton?: string | null
+  instituciones_home_imagen_url?: string | null
   mostrar_juegos_home?: boolean | null
   mostrar_ranking_juego_home?: boolean | null
   mostrar_galeria_home?: boolean | null
@@ -95,6 +115,18 @@ const initialForm: SitioForm = {
   texto_3:
     "Cartelera online de José Pedro Varela: encontrá acá eventos, cursos, clases, servicios y más.",
   imagen_url: "",
+  cursos_home_tagline: "Aprende y crece",
+  cursos_home_titulo: "Cursos y Clases",
+  cursos_home_texto:
+    "DescubrÃ­ propuestas educativas y talleres en JosÃ© Pedro Varela. AprendÃ©, desarrollÃ¡ nuevas habilidades y alcanzÃ¡ tus metas.",
+  cursos_home_boton: "Ver mÃ¡s cursos y clases",
+  cursos_home_imagen_url: "",
+  instituciones_home_tagline: "Nuestra comunidad",
+  instituciones_home_titulo: "Instituciones",
+  instituciones_home_texto:
+    "ConocÃ© las instituciones que hacen crecer nuestra ciudad. ExplorÃ¡ organizaciones, entidades y espacios que nos unen.",
+  instituciones_home_boton: "Ver mÃ¡s instituciones",
+  instituciones_home_imagen_url: "",
   mostrar_juegos_home: true,
   mostrar_ranking_juego_home: false,
   mostrar_galeria_home: false,
@@ -141,6 +173,7 @@ export default function AdminSitioPage() {
   const [saveError, setSaveError] = useState("")
   const [popupSchemaReady, setPopupSchemaReady] = useState(true)
   const [gallerySchemaReady, setGallerySchemaReady] = useState(true)
+  const [homeAccessSchemaReady, setHomeAccessSchemaReady] = useState(true)
   const [highlightForm, setHighlightForm] =
     useState<HomeHighlightForm>(initialHighlightForm)
   const [highlights, setHighlights] = useState<HomeHighlight[]>([])
@@ -175,7 +208,7 @@ export default function AdminSitioPage() {
     const cargarConfiguracion = async () => {
       const result = await supabase
         .from("sitio")
-        .select("titulo, texto_1, texto_2, texto_3, imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home, mostrar_galeria_home, galeria_home, burbuja_home_activa, burbuja_home_titulo, burbuja_home_texto, burbuja_home_visible_desde, burbuja_home_visible_hasta")
+        .select("titulo, texto_1, texto_2, texto_3, imagen_url, cursos_home_tagline, cursos_home_titulo, cursos_home_texto, cursos_home_boton, cursos_home_imagen_url, instituciones_home_tagline, instituciones_home_titulo, instituciones_home_texto, instituciones_home_boton, instituciones_home_imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home, mostrar_galeria_home, galeria_home, burbuja_home_activa, burbuja_home_titulo, burbuja_home_texto, burbuja_home_visible_desde, burbuja_home_visible_hasta")
         .eq("id", 1)
         .maybeSingle()
       const { data, error } =
@@ -196,6 +229,29 @@ export default function AdminSitioPage() {
           texto_2: siteData.texto_2 || initialForm.texto_2,
           texto_3: siteData.texto_3 || initialForm.texto_3,
           imagen_url: siteData.imagen_url || "",
+          cursos_home_tagline:
+            siteData.cursos_home_tagline || initialForm.cursos_home_tagline,
+          cursos_home_titulo:
+            siteData.cursos_home_titulo || initialForm.cursos_home_titulo,
+          cursos_home_texto:
+            siteData.cursos_home_texto || initialForm.cursos_home_texto,
+          cursos_home_boton:
+            siteData.cursos_home_boton || initialForm.cursos_home_boton,
+          cursos_home_imagen_url: siteData.cursos_home_imagen_url || "",
+          instituciones_home_tagline:
+            siteData.instituciones_home_tagline ||
+            initialForm.instituciones_home_tagline,
+          instituciones_home_titulo:
+            siteData.instituciones_home_titulo ||
+            initialForm.instituciones_home_titulo,
+          instituciones_home_texto:
+            siteData.instituciones_home_texto ||
+            initialForm.instituciones_home_texto,
+          instituciones_home_boton:
+            siteData.instituciones_home_boton ||
+            initialForm.instituciones_home_boton,
+          instituciones_home_imagen_url:
+            siteData.instituciones_home_imagen_url || "",
           mostrar_juegos_home:
             "mostrar_juegos_home" in siteData
               ? siteData.mostrar_juegos_home !== false
@@ -227,6 +283,9 @@ export default function AdminSitioPage() {
         }
         if (!("galeria_home" in siteData)) {
           setGallerySchemaReady(false)
+        }
+        if (!("cursos_home_titulo" in siteData)) {
+          setHomeAccessSchemaReady(false)
         }
       }
 
@@ -268,6 +327,30 @@ export default function AdminSitioPage() {
       setSaveError("")
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "No se pudieron cargar las fotos.")
+    } finally {
+      e.target.value = ""
+    }
+  }
+
+  const handleHomeAccessImageChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: "cursos_home_imagen_url" | "instituciones_home_imagen_url"
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      const imageDataUrl = await fileToDataUrl(file, {
+        maxWidth: 900,
+        maxHeight: 520,
+        targetFileSizeBytes: 130 * 1024,
+      })
+      setFormData((prev) => ({ ...prev, [field]: imageDataUrl }))
+      setSaveError("")
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "No se pudo cargar la imagen."
+      )
     } finally {
       e.target.value = ""
     }
@@ -438,6 +521,17 @@ export default function AdminSitioPage() {
       texto_2: formData.texto_2,
       texto_3: formData.texto_3,
       imagen_url: formData.imagen_url || null,
+      cursos_home_tagline: formData.cursos_home_tagline,
+      cursos_home_titulo: formData.cursos_home_titulo,
+      cursos_home_texto: formData.cursos_home_texto,
+      cursos_home_boton: formData.cursos_home_boton,
+      cursos_home_imagen_url: formData.cursos_home_imagen_url || null,
+      instituciones_home_tagline: formData.instituciones_home_tagline,
+      instituciones_home_titulo: formData.instituciones_home_titulo,
+      instituciones_home_texto: formData.instituciones_home_texto,
+      instituciones_home_boton: formData.instituciones_home_boton,
+      instituciones_home_imagen_url:
+        formData.instituciones_home_imagen_url || null,
       mostrar_juegos_home: formData.mostrar_juegos_home,
       mostrar_ranking_juego_home: formData.mostrar_ranking_juego_home,
       mostrar_galeria_home: formData.mostrar_galeria_home,
@@ -451,6 +545,7 @@ export default function AdminSitioPage() {
     let savedHomeGamesVisibility = true
     let savedPopupSettings = true
     let savedHomeGallerySettings = true
+    let savedHomeAccessSettings = true
 
     const siteResponse = await fetch("/api/admin/sitio", {
       method: "POST",
@@ -462,6 +557,7 @@ export default function AdminSitioPage() {
       savedHomeGamesVisibility?: boolean
       savedHomeBubbleSettings?: boolean
       savedHomeGallerySettings?: boolean
+      savedHomeAccessSettings?: boolean
     } | null
 
     if (!siteResponse.ok || siteResult?.error) {
@@ -477,8 +573,10 @@ export default function AdminSitioPage() {
     savedHomeGamesVisibility = siteResult?.savedHomeGamesVisibility !== false
     savedPopupSettings = siteResult?.savedHomeBubbleSettings !== false
     savedHomeGallerySettings = siteResult?.savedHomeGallerySettings !== false
+    savedHomeAccessSettings = siteResult?.savedHomeAccessSettings !== false
     setPopupSchemaReady(savedPopupSettings)
     setGallerySchemaReady(savedHomeGallerySettings)
+    setHomeAccessSchemaReady(savedHomeAccessSettings)
 
     const pendingMessages = [
       !savedHomeGamesVisibility
@@ -489,6 +587,9 @@ export default function AdminSitioPage() {
         : "",
       !savedHomeGallerySettings
         ? "Para guardar la galería falta aplicar las columnas galeria_home y mostrar_galeria_home en Supabase."
+        : "",
+      !savedHomeAccessSettings
+        ? "Para guardar las tarjetas de cursos e instituciones falta aplicar las columnas cursos_home_* e instituciones_home_* en Supabase."
         : "",
     ].filter(Boolean)
 
@@ -703,6 +804,202 @@ export default function AdminSitioPage() {
                     ))}
                   </div>
                 ) : null}
+              </div>
+
+              <div className="rounded-2xl border border-violet-100 bg-violet-50/60 p-4">
+                <div className="mb-4">
+                  <h3 className="font-semibold text-slate-950">
+                    Tarjetas de Cursos e Instituciones
+                  </h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">
+                    Edita el texto y sube una imagen horizontal para cada tarjeta de la Home.
+                  </p>
+                </div>
+
+                {!homeAccessSchemaReady ? (
+                  <div className="mb-4 rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm text-amber-800">
+                    Falta aplicar las columnas cursos_home_* e instituciones_home_* en Supabase.
+                  </div>
+                ) : null}
+
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-2xl border border-violet-100 bg-white p-4">
+                    <h4 className="mb-3 font-semibold text-violet-900">
+                      Cursos y Clases
+                    </h4>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={formData.cursos_home_tagline}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            cursos_home_tagline: e.target.value,
+                          }))
+                        }
+                        placeholder="Etiqueta"
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-violet-500"
+                      />
+                      <input
+                        type="text"
+                        value={formData.cursos_home_titulo}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            cursos_home_titulo: e.target.value,
+                          }))
+                        }
+                        placeholder="Titulo"
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-violet-500"
+                      />
+                      <textarea
+                        value={formData.cursos_home_texto}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            cursos_home_texto: e.target.value,
+                          }))
+                        }
+                        placeholder="Texto"
+                        className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-violet-500"
+                      />
+                      <input
+                        type="text"
+                        value={formData.cursos_home_boton}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            cursos_home_boton: e.target.value,
+                          }))
+                        }
+                        placeholder="Texto del boton"
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-violet-500"
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          handleHomeAccessImageChange(e, "cursos_home_imagen_url")
+                        }
+                        className="w-full rounded-xl border border-violet-100 bg-violet-50 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-white file:px-4 file:py-2 file:font-medium file:text-violet-700"
+                      />
+                      {formData.cursos_home_imagen_url ? (
+                        <div className="overflow-hidden rounded-xl border border-violet-100 bg-violet-50">
+                          <div className="relative aspect-[16/7]">
+                            <OptimizedImage
+                              src={formData.cursos_home_imagen_url}
+                              alt="Imagen de Cursos y Clases"
+                              sizes="(max-width: 1024px) 100vw, 40vw"
+                              className="object-contain p-3"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                cursos_home_imagen_url: "",
+                              }))
+                            }
+                            className="w-full border-t border-violet-100 px-3 py-2 text-sm font-medium text-red-600"
+                          >
+                            Quitar imagen
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-100 bg-white p-4">
+                    <h4 className="mb-3 font-semibold text-emerald-900">
+                      Instituciones
+                    </h4>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={formData.instituciones_home_tagline}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            instituciones_home_tagline: e.target.value,
+                          }))
+                        }
+                        placeholder="Etiqueta"
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500"
+                      />
+                      <input
+                        type="text"
+                        value={formData.instituciones_home_titulo}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            instituciones_home_titulo: e.target.value,
+                          }))
+                        }
+                        placeholder="Titulo"
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500"
+                      />
+                      <textarea
+                        value={formData.instituciones_home_texto}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            instituciones_home_texto: e.target.value,
+                          }))
+                        }
+                        placeholder="Texto"
+                        className="h-28 w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500"
+                      />
+                      <input
+                        type="text"
+                        value={formData.instituciones_home_boton}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            instituciones_home_boton: e.target.value,
+                          }))
+                        }
+                        placeholder="Texto del boton"
+                        className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-emerald-500"
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          handleHomeAccessImageChange(
+                            e,
+                            "instituciones_home_imagen_url"
+                          )
+                        }
+                        className="w-full rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-lg file:border-0 file:bg-white file:px-4 file:py-2 file:font-medium file:text-emerald-700"
+                      />
+                      {formData.instituciones_home_imagen_url ? (
+                        <div className="overflow-hidden rounded-xl border border-emerald-100 bg-emerald-50">
+                          <div className="relative aspect-[16/7]">
+                            <OptimizedImage
+                              src={formData.instituciones_home_imagen_url}
+                              alt="Imagen de Instituciones"
+                              sizes="(max-width: 1024px) 100vw, 40vw"
+                              className="object-contain p-3"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                instituciones_home_imagen_url: "",
+                              }))
+                            }
+                            className="w-full border-t border-emerald-100 px-3 py-2 text-sm font-medium text-red-600"
+                          >
+                            Quitar imagen
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">

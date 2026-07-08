@@ -215,6 +215,16 @@ type SobreVarelaConfig = {
   texto_2: string
   texto_3: string
   imagen_url: string | null
+  cursos_home_tagline?: string | null
+  cursos_home_titulo?: string | null
+  cursos_home_texto?: string | null
+  cursos_home_boton?: string | null
+  cursos_home_imagen_url?: string | null
+  instituciones_home_tagline?: string | null
+  instituciones_home_titulo?: string | null
+  instituciones_home_texto?: string | null
+  instituciones_home_boton?: string | null
+  instituciones_home_imagen_url?: string | null
   mostrar_juegos_home?: boolean | null
   mostrar_ranking_juego_home?: boolean | null
   mostrar_galeria_home?: boolean | null
@@ -391,6 +401,18 @@ const defaultSobreVarela: SobreVarelaConfig = {
   texto_3:
     "Cartelera online de José Pedro Varela: encontrá acá eventos, cursos, clases, servicios y más.",
   imagen_url: null,
+  cursos_home_tagline: "Aprende y crece",
+  cursos_home_titulo: "Cursos y Clases",
+  cursos_home_texto:
+    "DescubrÃ­ propuestas educativas y talleres en JosÃ© Pedro Varela. AprendÃ©, desarrollÃ¡ nuevas habilidades y alcanzÃ¡ tus metas.",
+  cursos_home_boton: "Ver mÃ¡s cursos y clases",
+  cursos_home_imagen_url: null,
+  instituciones_home_tagline: "Nuestra comunidad",
+  instituciones_home_titulo: "Instituciones",
+  instituciones_home_texto:
+    "ConocÃ© las instituciones que hacen crecer nuestra ciudad. ExplorÃ¡ organizaciones, entidades y espacios que nos unen.",
+  instituciones_home_boton: "Ver mÃ¡s instituciones",
+  instituciones_home_imagen_url: null,
   mostrar_juegos_home: true,
   mostrar_ranking_juego_home: false,
   mostrar_galeria_home: false,
@@ -513,6 +535,29 @@ export function HomePage({
   const allServicios = initialData.allServicios
   const instituciones = initialData.instituciones
   const sobreVarela = initialData.sobreVarela || defaultSobreVarela
+  const cursosHome = {
+    tagline: sobreVarela.cursos_home_tagline || defaultSobreVarela.cursos_home_tagline || "Aprende y crece",
+    titulo: sobreVarela.cursos_home_titulo || defaultSobreVarela.cursos_home_titulo || "Cursos y Clases",
+    texto: sobreVarela.cursos_home_texto || defaultSobreVarela.cursos_home_texto || "",
+    boton: sobreVarela.cursos_home_boton || defaultSobreVarela.cursos_home_boton || "Ver mÃ¡s cursos y clases",
+    imagenUrl: sobreVarela.cursos_home_imagen_url || null,
+  }
+  const institucionesHome = {
+    tagline:
+      sobreVarela.instituciones_home_tagline ||
+      defaultSobreVarela.instituciones_home_tagline ||
+      "Nuestra comunidad",
+    titulo:
+      sobreVarela.instituciones_home_titulo ||
+      defaultSobreVarela.instituciones_home_titulo ||
+      "Instituciones",
+    texto: sobreVarela.instituciones_home_texto || defaultSobreVarela.instituciones_home_texto || "",
+    boton:
+      sobreVarela.instituciones_home_boton ||
+      defaultSobreVarela.instituciones_home_boton ||
+      "Ver mÃ¡s instituciones",
+    imagenUrl: sobreVarela.instituciones_home_imagen_url || null,
+  }
   const challengeRanking = initialData.challengeRanking || []
   const goalGameConfig = initialData.goalGameConfig
   const goalGameRanking = initialData.goalGameRanking || []
@@ -1996,7 +2041,7 @@ export function HomePage({
       </section>
 
       {shouldShowGoalGame ? (
-        <section className="py-4">
+        <section className="py-4 [content-visibility:auto] [contain-intrinsic-size:260px]">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-4 rounded-2xl border border-cyan-100 bg-[linear-gradient(135deg,#ecfeff_0%,#f8fafc_52%,#ecfdf5_100%)] p-4 shadow-[0_18px_42px_-34px_rgba(8,145,178,0.42)] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:px-5 md:py-4">
               <div>
@@ -2049,7 +2094,7 @@ export function HomePage({
       ) : null}
 
       {false && shouldShowHomeGames ? (
-        <section className="py-4">
+        <section className="py-4 [content-visibility:auto] [contain-intrinsic-size:260px]">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-4 rounded-2xl border border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#f8fafc_52%,#eff6ff_100%)] p-4 shadow-[0_18px_42px_-34px_rgba(15,118,110,0.42)] md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:px-5 md:py-4">
             <div>
@@ -2076,7 +2121,7 @@ export function HomePage({
       ) : null}
 
       {shouldShowGameRanking ? (
-        <section className="py-4">
+        <section className="py-4 [content-visibility:auto] [contain-intrinsic-size:320px]">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="rounded-2xl border border-amber-100 bg-[linear-gradient(135deg,#fff7ed_0%,#f8fafc_54%,#eef2ff_100%)] p-4 shadow-[0_18px_42px_-36px_rgba(217,119,6,0.38)] md:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -2126,7 +2171,7 @@ export function HomePage({
       ) : null}
 
       {weather && (
-        <section className="py-6">
+        <section className="py-6 [content-visibility:auto] [contain-intrinsic-size:190px]">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-4 rounded-[28px] border border-sky-100 bg-white/90 p-6 shadow-[0_18px_45px_-30px_rgba(14,165,233,0.35)] backdrop-blur md:grid-cols-[auto_1fr_auto] md:items-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
@@ -2155,7 +2200,7 @@ export function HomePage({
       )}
 
       {radio.isLive && (
-        <section ref={radioSectionRef} className="py-6">
+        <section ref={radioSectionRef} className="py-6 [content-visibility:auto] [contain-intrinsic-size:280px]">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {shouldLoadRadioWidget ? (
               <MyTunerWidget
@@ -2172,7 +2217,7 @@ export function HomePage({
 
       <div className="flex flex-col">
 
-      <section id="comercios" className="order-5 py-18">
+      <section id="comercios" className="order-5 py-18 [content-visibility:auto] [contain-intrinsic-size:760px]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
@@ -2280,7 +2325,7 @@ export function HomePage({
         </div>
       </section>
 
-      <section id="servicios" className="order-6 py-16">
+      <section id="servicios" className="order-6 py-16 [content-visibility:auto] [contain-intrinsic-size:760px]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
@@ -2405,7 +2450,7 @@ export function HomePage({
       <section
         id="eventos"
         ref={eventsSectionRef}
-        className="order-2 py-16"
+        className="order-2 py-16 [content-visibility:auto] [contain-intrinsic-size:920px]"
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
@@ -2570,33 +2615,48 @@ export function HomePage({
         </div>
       </section>
 
-      <section id="cursos" className="order-3 py-8 sm:py-10">
+      <section id="cursos" className="order-3 py-8 [content-visibility:auto] [contain-intrinsic-size:430px] sm:py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-[28px] border border-violet-100 bg-[linear-gradient(135deg,#fbf8ff_0%,#ffffff_44%,#f1eaff_100%)] p-7 shadow-[0_24px_70px_-46px_rgba(109,40,217,0.55)] sm:rounded-[34px] sm:p-10 lg:p-12">
-            <div className="absolute right-0 top-0 h-full w-3/5 bg-[radial-gradient(circle_at_72%_35%,rgba(139,92,246,0.22),transparent_35%),radial-gradient(circle_at_42%_85%,rgba(196,181,253,0.28),transparent_38%)]" />
+          <div className="relative overflow-hidden rounded-[28px] border border-violet-100/70 bg-[linear-gradient(135deg,#faf8ff_0%,#ffffff_58%,#f7f2ff_100%)] p-7 shadow-[0_18px_48px_-38px_rgba(88,28,135,0.32)] sm:rounded-[34px] sm:p-10 lg:p-12">
+            <div className="absolute right-0 top-0 h-full w-3/5 bg-[radial-gradient(circle_at_72%_35%,rgba(139,92,246,0.1),transparent_36%),radial-gradient(circle_at_42%_85%,rgba(196,181,253,0.14),transparent_40%)]" />
             <div className="relative grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
               <div>
                 <div className="inline-flex items-center gap-3 text-sm font-black uppercase tracking-[0.16em] text-violet-700">
                   <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
                     <GraduationCap className="h-6 w-6" />
                   </span>
-                  Aprende y crece
+                  {cursosHome.tagline}
                 </div>
                 <h2 className="mt-5 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
-                  Cursos y Clases
+                  {cursosHome.titulo}
                 </h2>
                 <p className="mt-5 max-w-xl text-base leading-8 text-slate-600 sm:text-lg">
+                  {cursosHome.texto}
+                </p>
+                <p className="hidden">
                   Descubrí propuestas educativas y talleres en José Pedro Varela. Aprendé, desarrollá nuevas habilidades y alcanzá tus metas.
                 </p>
                 <Link
                   href="/cursos"
-                  className="mt-7 inline-flex items-center justify-center gap-3 rounded-full bg-violet-600 px-7 py-3.5 text-sm font-bold text-white shadow-[0_18px_36px_-24px_rgba(109,40,217,0.9)] transition hover:-translate-y-0.5 hover:bg-violet-700"
+                  className="mt-7 inline-flex items-center justify-center gap-3 rounded-full bg-violet-600 px-7 py-3.5 text-[0px] font-bold text-white shadow-[0_14px_28px_-22px_rgba(109,40,217,0.65)] transition hover:-translate-y-0.5 hover:bg-violet-700"
                 >
+                  <span className="text-sm">{cursosHome.boton}</span>
                   Ver más cursos y clases
                   <ArrowRight className="h-5 w-5" />
                 </Link>
               </div>
               <div className="relative hidden min-h-[230px] lg:block">
+                {cursosHome.imagenUrl ? (
+                  <div className="absolute inset-0 z-20 overflow-hidden rounded-[28px]">
+                    <OptimizedImage
+                      src={cursosHome.imagenUrl}
+                      alt={cursosHome.titulo}
+                      sizes="(max-width: 1024px) 0px, 50vw"
+                      quality={72}
+                      className="object-contain p-4"
+                    />
+                  </div>
+                ) : null}
                 <div className="absolute bottom-4 left-16 h-20 w-36 rounded-xl border-2 border-violet-300 bg-white/70 shadow-sm" />
                 <div className="absolute bottom-12 left-28 h-20 w-56 rotate-3 rounded-xl border-2 border-violet-300 bg-white/80 shadow-sm" />
                 <div className="absolute bottom-8 right-24 h-32 w-56 -rotate-3 rounded-2xl border-2 border-violet-400 bg-violet-200/60 shadow-sm">
@@ -2617,33 +2677,48 @@ export function HomePage({
         </div>
       </section>
 
-      <section id="instituciones" className="order-4 py-8 sm:py-10">
+      <section id="instituciones" className="order-4 py-8 [content-visibility:auto] [contain-intrinsic-size:450px] sm:py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-[28px] border border-emerald-100 bg-[linear-gradient(135deg,#f8fffb_0%,#ffffff_44%,#e8f7ef_100%)] p-7 shadow-[0_24px_70px_-46px_rgba(5,150,105,0.5)] sm:rounded-[34px] sm:p-10 lg:p-12">
-            <div className="absolute right-0 top-0 h-full w-3/5 bg-[radial-gradient(circle_at_68%_40%,rgba(16,185,129,0.18),transparent_34%),radial-gradient(circle_at_40%_88%,rgba(167,243,208,0.42),transparent_38%)]" />
+          <div className="relative overflow-hidden rounded-[28px] border border-emerald-100/70 bg-[linear-gradient(135deg,#f9fffc_0%,#ffffff_58%,#f1fbf6_100%)] p-7 shadow-[0_18px_48px_-38px_rgba(6,95,70,0.3)] sm:rounded-[34px] sm:p-10 lg:p-12">
+            <div className="absolute right-0 top-0 h-full w-3/5 bg-[radial-gradient(circle_at_68%_40%,rgba(16,185,129,0.08),transparent_36%),radial-gradient(circle_at_40%_88%,rgba(167,243,208,0.2),transparent_40%)]" />
             <div className="relative grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
               <div>
                 <div className="inline-flex items-center gap-3 text-sm font-black uppercase tracking-[0.16em] text-emerald-700">
                   <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
                     <Building2 className="h-6 w-6" />
                   </span>
-                  Nuestra comunidad
+                  {institucionesHome.tagline}
                 </div>
                 <h2 className="mt-5 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
-                  Instituciones
+                  {institucionesHome.titulo}
                 </h2>
                 <p className="mt-5 max-w-xl text-base leading-8 text-slate-600 sm:text-lg">
+                  {institucionesHome.texto}
+                </p>
+                <p className="hidden">
                   Conocé las instituciones que hacen crecer nuestra ciudad. Explorá organizaciones, entidades y espacios que nos unen.
                 </p>
                 <Link
                   href="/instituciones"
-                  className="mt-7 inline-flex items-center justify-center gap-3 rounded-full bg-emerald-600 px-7 py-3.5 text-sm font-bold text-white shadow-[0_18px_36px_-24px_rgba(5,150,105,0.9)] transition hover:-translate-y-0.5 hover:bg-emerald-700"
+                  className="mt-7 inline-flex items-center justify-center gap-3 rounded-full bg-emerald-600 px-7 py-3.5 text-[0px] font-bold text-white shadow-[0_14px_28px_-22px_rgba(5,150,105,0.62)] transition hover:-translate-y-0.5 hover:bg-emerald-700"
                 >
+                  <span className="text-sm">{institucionesHome.boton}</span>
                   Ver más instituciones
                   <ArrowRight className="h-5 w-5" />
                 </Link>
               </div>
               <div className="relative hidden min-h-[250px] lg:block">
+                {institucionesHome.imagenUrl ? (
+                  <div className="absolute inset-0 z-20 overflow-hidden rounded-[28px]">
+                    <OptimizedImage
+                      src={institucionesHome.imagenUrl}
+                      alt={institucionesHome.titulo}
+                      sizes="(max-width: 1024px) 0px, 50vw"
+                      quality={72}
+                      className="object-contain p-4"
+                    />
+                  </div>
+                ) : null}
                 <div className="absolute bottom-4 left-36 h-40 w-72 rounded-t-[34px] border-2 border-emerald-500/45 bg-white/65" />
                 <div className="absolute bottom-4 left-48 h-28 w-48 border-x-2 border-t-2 border-emerald-500/45 bg-emerald-50/80" />
                 <div className="absolute bottom-4 left-[17.5rem] h-20 w-12 rounded-t-full border-2 border-emerald-600/55 bg-emerald-100" />
@@ -2809,7 +2884,7 @@ export function HomePage({
       </div>
 
       {shouldShowHomeGallery ? (
-        <section className="border-y border-sky-100 bg-white/75 py-8 sm:py-10">
+        <section className="border-y border-sky-100 bg-white/75 py-8 [content-visibility:auto] [contain-intrinsic-size:380px] sm:py-10">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="mb-5 flex items-end justify-between gap-4">
               <div>
@@ -2847,7 +2922,7 @@ export function HomePage({
         </section>
       ) : null}
 
-      <section className="py-16">
+      <section className="py-16 [content-visibility:auto] [contain-intrinsic-size:560px]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
             <div>
@@ -2890,7 +2965,7 @@ export function HomePage({
         </div>
       </section>
 
-      <section className="py-10">
+      <section className="py-10 [content-visibility:auto] [contain-intrinsic-size:260px]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-[28px] border border-sky-100 bg-[linear-gradient(135deg,#eff6ff_0%,#f0f9ff_55%,#ffffff_100%)] px-6 py-8 text-center shadow-[0_20px_55px_-38px_rgba(14,165,233,0.45)]">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-sky-500 shadow-sm">
@@ -2910,7 +2985,7 @@ export function HomePage({
         </div>
       </section>
 
-      <footer id="contacto" className="mt-6 border-t border-slate-200/80 bg-white/80 py-14 backdrop-blur">
+      <footer id="contacto" className="mt-6 border-t border-slate-200/80 bg-white/80 py-14 [content-visibility:auto] [contain-intrinsic-size:420px] backdrop-blur">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 sm:px-6 md:grid-cols-2 lg:px-8">
           <div>
             <div className="flex items-center gap-3">
