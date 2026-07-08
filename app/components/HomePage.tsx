@@ -1961,7 +1961,7 @@ export function HomePage({
         backgroundClassName="bg-white/80"
       />
 
-      <aside className="border-b border-emerald-100 bg-emerald-50/45 px-4 py-1.5 text-slate-600">
+      <aside className="hidden">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-center gap-1 text-center text-xs sm:flex-row sm:gap-1.5">
           <span className="font-medium">
             Sumate como colaborador de Hola Varela y participá por premios mensuales.
@@ -2984,6 +2984,32 @@ export function HomePage({
           </div>
         </div>
       </section>
+
+      <aside className="px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 overflow-hidden rounded-[28px] border border-emerald-100 bg-white/85 px-5 py-4 text-center text-sm text-slate-600 shadow-[0_18px_46px_-36px_rgba(15,23,42,0.35)] sm:flex-row sm:text-left">
+          <div className="w-full overflow-hidden sm:flex-1" aria-label="Sumate como colaborador de Hola Varela y participa por premios mensuales.">
+            <div className="hola-varela-marquee flex w-max min-w-full items-center gap-8 whitespace-nowrap font-medium">
+              <span>Sumate como colaborador de Hola Varela y participá por premios mensuales.</span>
+              <span aria-hidden="true">Sumate como colaborador de Hola Varela y participá por premios mensuales.</span>
+              <span aria-hidden="true">Sumate como colaborador de Hola Varela y participá por premios mensuales.</span>
+              <span aria-hidden="true">Sumate como colaborador de Hola Varela y participá por premios mensuales.</span>
+            </div>
+          </div>
+          <p className="hidden">
+            Sumate como colaborador de Hola Varela y participá por premios mensuales.
+          </p>
+          <a
+            href="https://wa.me/59892715516"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 font-semibold tracking-wide text-emerald-700 transition hover:border-emerald-300 hover:bg-emerald-100 hover:text-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+            aria-label="Más información por WhatsApp al 092 715 516"
+          >
+            <Phone className="h-4 w-4" />
+            092 715 516
+          </a>
+        </div>
+      </aside>
 
       <footer id="contacto" className="mt-6 border-t border-slate-200/80 bg-white/80 py-14 [content-visibility:auto] [contain-intrinsic-size:420px] backdrop-blur">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 sm:px-6 md:grid-cols-2 lg:px-8">

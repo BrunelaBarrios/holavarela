@@ -33,3 +33,23 @@ body {
   -webkit-line-clamp: 5;
   overflow: hidden;
 }
+
+@keyframes hola-varela-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.hola-varela-marquee {
+  animation: hola-varela-marquee 22s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hola-varela-marquee {
+    animation: none;
+  }
+}
