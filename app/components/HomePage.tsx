@@ -2570,7 +2570,99 @@ export function HomePage({
         </div>
       </section>
 
-      <section id="cursos" className="order-3 py-16">
+      <section id="cursos" className="order-3 py-8 sm:py-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="relative overflow-hidden rounded-[28px] border border-violet-100 bg-[linear-gradient(135deg,#fbf8ff_0%,#ffffff_44%,#f1eaff_100%)] p-7 shadow-[0_24px_70px_-46px_rgba(109,40,217,0.55)] sm:rounded-[34px] sm:p-10 lg:p-12">
+            <div className="absolute right-0 top-0 h-full w-3/5 bg-[radial-gradient(circle_at_72%_35%,rgba(139,92,246,0.22),transparent_35%),radial-gradient(circle_at_42%_85%,rgba(196,181,253,0.28),transparent_38%)]" />
+            <div className="relative grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+              <div>
+                <div className="inline-flex items-center gap-3 text-sm font-black uppercase tracking-[0.16em] text-violet-700">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
+                    <GraduationCap className="h-6 w-6" />
+                  </span>
+                  Aprende y crece
+                </div>
+                <h2 className="mt-5 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
+                  Cursos y Clases
+                </h2>
+                <p className="mt-5 max-w-xl text-base leading-8 text-slate-600 sm:text-lg">
+                  Descubrí propuestas educativas y talleres en José Pedro Varela. Aprendé, desarrollá nuevas habilidades y alcanzá tus metas.
+                </p>
+                <Link
+                  href="/cursos"
+                  className="mt-7 inline-flex items-center justify-center gap-3 rounded-full bg-violet-600 px-7 py-3.5 text-sm font-bold text-white shadow-[0_18px_36px_-24px_rgba(109,40,217,0.9)] transition hover:-translate-y-0.5 hover:bg-violet-700"
+                >
+                  Ver más cursos y clases
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+              </div>
+              <div className="relative hidden min-h-[230px] lg:block">
+                <div className="absolute bottom-4 left-16 h-20 w-36 rounded-xl border-2 border-violet-300 bg-white/70 shadow-sm" />
+                <div className="absolute bottom-12 left-28 h-20 w-56 rotate-3 rounded-xl border-2 border-violet-300 bg-white/80 shadow-sm" />
+                <div className="absolute bottom-8 right-24 h-32 w-56 -rotate-3 rounded-2xl border-2 border-violet-400 bg-violet-200/60 shadow-sm">
+                  <div className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
+                </div>
+                <GraduationCap className="absolute right-6 top-4 h-24 w-24 text-violet-700/25" />
+                <div className="absolute right-36 top-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-violet-300 bg-yellow-100 text-violet-900">
+                  <span className="text-3xl">✦</span>
+                </div>
+                <div className="absolute bottom-0 right-64 h-2 w-28 rotate-[-10deg] rounded-full bg-violet-700/55" />
+                <div className="absolute left-6 top-12 h-28 w-14 rounded-full bg-violet-400/70" />
+                <div className="absolute left-16 top-20 h-24 w-10 rounded-full bg-violet-700/80" />
+                <span className="absolute left-2 top-4 text-3xl font-light text-violet-500">+</span>
+                <span className="absolute right-2 bottom-10 h-3 w-3 rounded-full border-2 border-violet-400" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="instituciones" className="order-4 py-8 sm:py-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="relative overflow-hidden rounded-[28px] border border-emerald-100 bg-[linear-gradient(135deg,#f8fffb_0%,#ffffff_44%,#e8f7ef_100%)] p-7 shadow-[0_24px_70px_-46px_rgba(5,150,105,0.5)] sm:rounded-[34px] sm:p-10 lg:p-12">
+            <div className="absolute right-0 top-0 h-full w-3/5 bg-[radial-gradient(circle_at_68%_40%,rgba(16,185,129,0.18),transparent_34%),radial-gradient(circle_at_40%_88%,rgba(167,243,208,0.42),transparent_38%)]" />
+            <div className="relative grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+              <div>
+                <div className="inline-flex items-center gap-3 text-sm font-black uppercase tracking-[0.16em] text-emerald-700">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                    <Building2 className="h-6 w-6" />
+                  </span>
+                  Nuestra comunidad
+                </div>
+                <h2 className="mt-5 text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
+                  Instituciones
+                </h2>
+                <p className="mt-5 max-w-xl text-base leading-8 text-slate-600 sm:text-lg">
+                  Conocé las instituciones que hacen crecer nuestra ciudad. Explorá organizaciones, entidades y espacios que nos unen.
+                </p>
+                <Link
+                  href="/instituciones"
+                  className="mt-7 inline-flex items-center justify-center gap-3 rounded-full bg-emerald-600 px-7 py-3.5 text-sm font-bold text-white shadow-[0_18px_36px_-24px_rgba(5,150,105,0.9)] transition hover:-translate-y-0.5 hover:bg-emerald-700"
+                >
+                  Ver más instituciones
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+              </div>
+              <div className="relative hidden min-h-[250px] lg:block">
+                <div className="absolute bottom-4 left-36 h-40 w-72 rounded-t-[34px] border-2 border-emerald-500/45 bg-white/65" />
+                <div className="absolute bottom-4 left-48 h-28 w-48 border-x-2 border-t-2 border-emerald-500/45 bg-emerald-50/80" />
+                <div className="absolute bottom-4 left-[17.5rem] h-20 w-12 rounded-t-full border-2 border-emerald-600/55 bg-emerald-100" />
+                <div className="absolute bottom-32 left-[18.1rem] h-10 w-10 rounded-full border-2 border-emerald-600/55 bg-white/70" />
+                <div className="absolute bottom-44 left-[19rem] h-12 w-1 bg-emerald-700/60" />
+                <div className="absolute bottom-52 left-[19rem] h-8 w-16 rounded-r-full border border-emerald-600/60 bg-emerald-100" />
+                <div className="absolute bottom-4 left-10 h-28 w-16 rounded-full bg-emerald-500/65" />
+                <div className="absolute bottom-4 right-16 h-32 w-20 rounded-full bg-emerald-500/55" />
+                <div className="absolute bottom-4 right-0 h-14 w-36 rounded-t-2xl border-2 border-amber-700/45 bg-amber-100/70" />
+                <Cloud className="absolute right-24 top-8 h-20 w-20 text-emerald-700/35" />
+                <span className="absolute left-20 top-14 h-5 w-5 rounded-full border-2 border-emerald-500" />
+                <span className="absolute right-8 top-24 text-3xl font-light text-emerald-600">+</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="cursos-anterior" className="hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
@@ -2645,7 +2737,7 @@ export function HomePage({
         </div>
       </section>
 
-      <section id="instituciones" className="order-4 py-16">
+      <section id="instituciones-anterior" className="hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
