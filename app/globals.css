@@ -45,7 +45,7 @@ body {
 }
 
 .hola-varela-marquee {
-  animation: hola-varela-marquee 22s linear infinite;
+  animation: hola-varela-marquee 32s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
