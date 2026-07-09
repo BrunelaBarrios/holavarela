@@ -39,6 +39,8 @@ type Evento = {
   comercio_id?: number | null
   servicio_id?: number | null
   institucion_id?: number | null
+  ciudad?: string | null
+  mostrar_ciudades_cercanas?: boolean | null
 }
 
 type EventoForm = {
@@ -58,6 +60,8 @@ type EventoForm = {
   imagen: string
   usaWhatsapp: boolean
   relatedProfile: string
+  ciudad: string
+  mostrarCiudadesCercanas: boolean
 }
 
 type RelatedProfileOption = {
@@ -83,6 +87,8 @@ const initialForm: EventoForm = {
   imagen: "",
   usaWhatsapp: true,
   relatedProfile: "",
+  ciudad: "",
+  mostrarCiudadesCercanas: false,
 }
 
 const normalizeAdminEventCategory = (categoria?: string | null) => {
@@ -125,7 +131,7 @@ export default function AdminEventosPage() {
       supabase
         .from("eventos")
         .select(
-          "id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, descripcion, estado, usa_whatsapp, owner_email, comercio_id, servicio_id, institucion_id"
+          "id, titulo, categoria, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, descripcion, estado, usa_whatsapp, owner_email, comercio_id, servicio_id, institucion_id, ciudad, mostrar_ciudades_cercanas"
         )
         .order("fecha", { ascending: true }),
       supabase.from("share_events").select("item_id").eq("section", "eventos"),
@@ -294,6 +300,8 @@ export default function AdminEventosPage() {
       imagen: eventoToEdit.imagen || "",
       usaWhatsapp: eventoToEdit.usa_whatsapp ?? true,
       relatedProfile: getRelatedProfileValue(eventoToEdit),
+      ciudad: eventoToEdit.ciudad || "",
+      mostrarCiudadesCercanas: eventoToEdit.mostrar_ciudades_cercanas === true,
     })
     setIsFormOpen(true)
   }
@@ -450,7 +458,9 @@ export default function AdminEventosPage() {
           : editingEvento?.estado === "oculto"
             ? "oculto"
             : "activo",
-        usa_whatsapp: hasPhone ? formData.usaWhatsapp : false,
+      usa_whatsapp: hasPhone ? formData.usaWhatsapp : false,
+      ciudad: formData.mostrarCiudadesCercanas ? formData.ciudad.trim() : null,
+      mostrar_ciudades_cercanas: formData.mostrarCiudadesCercanas,
       }
 
     try {
@@ -556,6 +566,47 @@ export default function AdminEventosPage() {
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-emerald-500"
                   required
                 />
+              </div>
+
+              <div className="space-y-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
+                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={formData.mostrarCiudadesCercanas}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        mostrarCiudadesCercanas: e.target.checked,
+                        ciudad: e.target.checked ? prev.ciudad : "",
+                      }))
+                    }
+                    className="mt-0.5 h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span>
+                    <strong className="block text-slate-900">
+                      Mostrar en “Actividades de ciudades cercanas”
+                    </strong>
+                    Aparecerá en el carrusel de la home mientras el evento esté vigente.
+                  </span>
+                </label>
+
+                {formData.mostrarCiudadesCercanas ? (
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-900">
+                      Ciudad *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.ciudad}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, ciudad: e.target.value }))
+                      }
+                      placeholder="Ejemplo: Treinta y Tres"
+                      className="w-full rounded-xl border border-emerald-200 bg-white px-4 py-3 outline-none transition focus:border-emerald-500"
+                      required
+                    />
+                  </div>
+                ) : null}
               </div>
 
               <div>

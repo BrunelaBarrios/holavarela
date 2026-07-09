@@ -150,6 +150,7 @@ const getHomePageData = unstable_cache(
     const [
       { data: featuredBusinesses },
       { data: eventosData },
+      nearbyActivities,
       { data: cursos },
       { data: servicios },
       { data: instituciones },
@@ -174,6 +175,23 @@ const getHomePageData = unstable_cache(
         .or(buildActiveEventsFilter(today))
         .order("fecha", { ascending: true })
         .limit(HOME_EVENTS_LIMIT),
+      (async () => {
+        try {
+          const { data, error } = await supabaseServer
+            .from("eventos")
+            .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, ciudad, imagen, estado")
+            .eq("mostrar_ciudades_cercanas", true)
+            .or("estado.is.null,estado.eq.activo")
+            .or(buildActiveEventsFilter(today))
+            .order("fecha", { ascending: true })
+            .limit(12)
+
+          if (error) return []
+          return (data || []).map((item) => withApiImage(item, "eventos"))
+        } catch {
+          return []
+        }
+      })(),
       supabaseServer
         .from("cursos")
         .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, edad_destino, imagen, premium_galeria, destacado, usa_whatsapp")
@@ -334,22 +352,30 @@ const getHomePageData = unstable_cache(
       featuredBusinesses: (featuredBusinesses || []).map((item) => withApiImage(item, "comercios")),
       eventos: (() => {
         const activeEvents = eventosData || []
+        const nearbyActivityIds = new Set(
+          nearbyActivities.map((activity) => String(activity.id))
+        )
         const recentCommercialCutoff = getDateKeyDaysAgo(RECENT_COMMERCIAL_EVENT_DAYS)
-        const eventsForHome = activeEvents.filter((evento) =>
-          isEventCurrentOrUpcoming(evento) ||
-          (!evento.fecha &&
-            isCommercialEventCategory(evento.categoria) &&
-            typeof evento.created_at === "string" &&
-            evento.created_at.slice(0, 10) >= recentCommercialCutoff)
+        const localEvents = activeEvents.filter(
+          (evento) => !nearbyActivityIds.has(String(evento.id))
+        )
+        const eventsForHome = localEvents.filter(
+          (evento) =>
+            isEventCurrentOrUpcoming(evento) ||
+            (!evento.fecha &&
+              isCommercialEventCategory(evento.categoria) &&
+              typeof evento.created_at === "string" &&
+              evento.created_at.slice(0, 10) >= recentCommercialCutoff)
         )
 
         // Show current/upcoming items in home, and only allow very recent
         // commercial posts without a usable event date as a fallback.
-        return (eventsForHome.length ? eventsForHome : activeEvents)
+        return (eventsForHome.length ? eventsForHome : localEvents)
           .sort((first, second) => compareUpcomingEvents(first, second, today))
           .slice(0, 30)
           .map((item) => withApiImage(item, "eventos"))
       })(),
+      nearbyActivities,
       cursos: (cursos || []).slice(0, 8).map((item) => ({
         ...item,
         imagen: item.imagen ? `/api/cursos/${item.id}/image` : null,
@@ -389,7 +415,7 @@ const getHomePageData = unstable_cache(
       weather,
     }
   },
-  ["home-page-data-v14"],
+  ["home-page-data-v15"],
   { revalidate: 300 }
 )
 

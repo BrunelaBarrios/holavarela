@@ -172,6 +172,12 @@ add column if not exists instagram_url text;
 alter table public.eventos
 add column if not exists facebook_url text;
 
+alter table public.eventos
+add column if not exists ciudad text;
+
+alter table public.eventos
+add column if not exists mostrar_ciudades_cercanas boolean not null default false;
+
 alter table public.instituciones
 add column if not exists usa_whatsapp boolean default true;
 

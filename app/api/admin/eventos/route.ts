@@ -25,6 +25,8 @@ type SaveEventoPayload = {
     comercio_id?: number | null
     servicio_id?: number | null
     institucion_id?: number | null
+    ciudad?: string | null
+    mostrar_ciudades_cercanas?: boolean
   }
 }
 
@@ -209,6 +211,8 @@ export async function POST(request: NextRequest) {
         comercio_id: existing.comercio_id || null,
         servicio_id: existing.servicio_id || null,
         institucion_id: existing.institucion_id || null,
+        ciudad: normalizeText(existing.ciudad),
+        mostrar_ciudades_cercanas: Boolean(existing.mostrar_ciudades_cercanas),
       }
 
       const { data, error } = await supabaseAdmin
@@ -252,6 +256,15 @@ export async function POST(request: NextRequest) {
       comercio_id: body.payload.comercio_id || null,
       servicio_id: body.payload.servicio_id || null,
       institucion_id: body.payload.institucion_id || null,
+      ciudad: normalizeText(body.payload.ciudad),
+      mostrar_ciudades_cercanas: Boolean(body.payload.mostrar_ciudades_cercanas),
+    }
+
+    if (payload.mostrar_ciudades_cercanas && !payload.ciudad) {
+      return NextResponse.json(
+        { error: "Escribe la ciudad para mostrar el evento entre las actividades cercanas." },
+        { status: 400 }
+      )
     }
 
     if (!payload.titulo || !payload.fecha || !payload.ubicacion || !payload.descripcion) {

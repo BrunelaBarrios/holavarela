@@ -26,15 +26,18 @@ const hasMissingInstitutionIdColumn = (message?: string | null) =>
 export default async function EventosPage() {
   const eventsWithInstitutionResult = await supabaseServer
     .from("eventos")
-    .select(`${EVENT_BASE_SELECT}, institucion_id`)
+    .select(`${EVENT_BASE_SELECT}, institucion_id, mostrar_ciudades_cercanas`)
     .or("estado.is.null,estado.eq.activo")
     .order("fecha", { ascending: true })
   const eventsResult =
-    eventsWithInstitutionResult.error &&
-    hasMissingInstitutionIdColumn(eventsWithInstitutionResult.error.message)
+    eventsWithInstitutionResult.error
       ? await supabaseServer
           .from("eventos")
-          .select(EVENT_BASE_SELECT)
+          .select(
+            hasMissingInstitutionIdColumn(eventsWithInstitutionResult.error.message)
+              ? EVENT_BASE_SELECT
+              : `${EVENT_BASE_SELECT}, institucion_id`
+          )
           .or("estado.is.null,estado.eq.activo")
           .order("fecha", { ascending: true })
       : eventsWithInstitutionResult
@@ -43,6 +46,7 @@ export default async function EventosPage() {
     Evento & {
       owner_email?: string | null
       institucion_id?: number | null
+      mostrar_ciudades_cercanas?: boolean | null
     }
   >
   const ownerEmails = Array.from(
@@ -99,7 +103,11 @@ export default async function EventosPage() {
   // Public listings only surface current or upcoming events.
   const today = getTodayInMontevideo()
   const enrichedEvents = activeEvents
-    .filter((evento) => isEventCurrentOrUpcoming(evento))
+    .filter(
+      (evento) =>
+        evento.mostrar_ciudades_cercanas !== true &&
+        isEventCurrentOrUpcoming(evento)
+    )
     .sort((first, second) => compareUpcomingEvents(first, second, today))
     .map((evento) => {
     const ownerInfo =

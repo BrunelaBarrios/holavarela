@@ -113,6 +113,7 @@ type Evento = {
   estado?: string | null
   usa_whatsapp?: boolean | null
   created_at?: string | null
+  ciudad?: string | null
 }
 
 const normalizeEventCategory = (categoria?: string | null) => {
@@ -261,6 +262,7 @@ export type WeatherData = {
 export type HomePageData = {
   featuredBusinesses: Comercio[]
   eventos: Evento[]
+  nearbyActivities: Evento[]
   cursos: Curso[]
   servicios: Servicio[]
   instituciones: Institucion[]
@@ -535,6 +537,7 @@ export function HomePage({
   const allServicios = initialData.allServicios
   const instituciones = initialData.instituciones
   const sobreVarela = initialData.sobreVarela || defaultSobreVarela
+  const nearbyActivities = initialData.nearbyActivities || []
   const cursosHome = {
     tagline: sobreVarela.cursos_home_tagline || defaultSobreVarela.cursos_home_tagline || "Aprende y crece",
     titulo: sobreVarela.cursos_home_titulo || defaultSobreVarela.cursos_home_titulo || "Cursos y Clases",
@@ -2882,6 +2885,84 @@ export function HomePage({
       </section>
 
       </div>
+
+      {nearbyActivities.length > 0 ? (
+        <section className="border-y border-emerald-100/80 bg-white/70 py-10 [content-visibility:auto] [contain-intrinsic-size:430px] sm:py-12">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-6 flex items-end justify-between gap-4">
+              <div>
+                <div className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-600">
+                  Para descubrir en la región
+                </div>
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                  Actividades de ciudades cercanas
+                </h2>
+              </div>
+              <span className="hidden text-sm text-slate-500 sm:block">
+                Deslizá para ver más →
+              </span>
+            </div>
+
+            <div className="-mx-4 overflow-x-auto px-4 pb-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+              <div className="flex min-w-full snap-x snap-mandatory gap-4 lg:gap-5">
+                {nearbyActivities.map((activity) => (
+                  <Link
+                    key={activity.id}
+                    href={`/eventos/${activity.id}`}
+                    onClick={() => {
+                      void recordViewMore("eventos", String(activity.id), activity.titulo)
+                      void recordContentVisit("eventos", String(activity.id), activity.titulo)
+                    }}
+                    className="group w-[78vw] max-w-[330px] shrink-0 snap-start overflow-hidden rounded-[24px] border border-slate-200/80 bg-white shadow-[0_18px_42px_-30px_rgba(15,23,42,0.55)] transition hover:-translate-y-1 hover:border-emerald-200 hover:shadow-[0_24px_52px_-30px_rgba(16,185,129,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 sm:w-[310px] lg:w-[calc((100%_-_3.75rem)/4)]"
+                    aria-label={`Ver más sobre ${activity.titulo}`}
+                  >
+                    <div className="relative aspect-[16/10] bg-slate-100">
+                      {activity.imagen ? (
+                        <OptimizedImage
+                          src={activity.imagen}
+                          alt={activity.titulo}
+                          sizes="(max-width: 640px) 78vw, 330px"
+                          quality={68}
+                          className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-emerald-600">
+                          <CalendarDays className="h-10 w-10" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="line-clamp-2 text-lg font-bold leading-snug text-slate-950">
+                        {activity.titulo}
+                      </h3>
+                      <div className="mt-3 space-y-2 text-sm text-slate-600">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 shrink-0 text-emerald-600" />
+                          <span className="truncate">{activity.ciudad || activity.ubicacion}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <CalendarDays className="h-4 w-4 shrink-0 text-emerald-600" />
+                          <span>
+                            {formatEventDateRange(
+                              activity.fecha,
+                              activity.fecha_fin,
+                              activity.fecha_solo_mes ?? false
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="mt-4 inline-flex items-center gap-2 text-sm font-bold text-emerald-700">
+                        Ver más
+                        <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {shouldShowHomeGallery ? (
         <section className="border-y border-sky-100 bg-white/75 py-8 [content-visibility:auto] [contain-intrinsic-size:380px] sm:py-10">
