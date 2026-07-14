@@ -615,14 +615,31 @@ export default function AdminSorteosPage() {
       updated_at: new Date().toISOString(),
     }
 
-    const query = selectedId
-      ? supabase.from("sorteo_popup_config").update(payload).eq("id", selectedId).select("id").single()
-      : supabase.from("sorteo_popup_config").insert(payload).select("id").single()
+    const saveResult = selectedId
+      ? await supabase.from("sorteo_popup_config").update(payload).eq("id", selectedId)
+      : await supabase.from("sorteo_popup_config").insert(payload)
 
-    const { data, error } = await query
+    if (saveResult.error) {
+      setSaveError(`No se pudo guardar el sorteo: ${saveResult.error.message}`)
+      setSaving(false)
+      return
+    }
+
+    const { data, error } = selectedId
+      ? await supabase
+          .from("sorteo_popup_config")
+          .select("id")
+          .eq("id", selectedId)
+          .maybeSingle()
+      : await supabase
+          .from("sorteo_popup_config")
+          .select("id")
+          .order("id", { ascending: false })
+          .limit(1)
+          .maybeSingle()
 
     if (error) {
-      setSaveError(`No se pudo guardar el sorteo: ${error.message}`)
+      setSaveError(`El sorteo se guardó, pero no se pudo recargar: ${error.message}`)
       setSaving(false)
       return
     }

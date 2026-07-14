@@ -17,7 +17,7 @@ type SaveCursoPayload = {
     dias_semana?: string[] | null
     hora_inicio?: string | null
     hora_fin?: string | null
-    horarios?: Array<{ dia?: string; hora_inicio?: string; hora_fin?: string }> | null
+    horarios?: Array<{ dia?: string; hora_inicio?: string | null; hora_fin?: string | null }> | null
     costo_tipo?: string | null
     responsable?: string
     contacto?: string
@@ -131,7 +131,7 @@ function normalizeCostType(value?: string | null) {
 }
 
 function normalizeCourseSchedules(
-  value?: Array<{ dia?: string; hora_inicio?: string; hora_fin?: string }> | null
+  value?: Array<{ dia?: string; hora_inicio?: string | null; hora_fin?: string | null }> | null
 ) {
   if (!Array.isArray(value)) return []
 
@@ -139,7 +139,7 @@ function normalizeCourseSchedules(
     const dia = schedule.dia?.trim()
     const horaInicio = normalizeTime(schedule.hora_inicio)
     const horaFin = normalizeTime(schedule.hora_fin)
-    if (!dia || !COURSE_DAYS.has(dia) || !horaInicio) return []
+    if (!dia || !COURSE_DAYS.has(dia)) return []
 
     return [{ dia, hora_inicio: horaInicio, hora_fin: horaFin }]
   })
@@ -276,8 +276,12 @@ export async function POST(request: NextRequest) {
       dias_semana: horarios.length
         ? Array.from(new Set(horarios.map((schedule) => schedule.dia)))
         : legacyDays,
-      hora_inicio: horarios[0]?.hora_inicio || normalizeTime(body.payload.hora_inicio),
-      hora_fin: horarios[0]?.hora_fin || normalizeTime(body.payload.hora_fin),
+      hora_inicio:
+        horarios.find((schedule) => schedule.hora_inicio)?.hora_inicio ||
+        normalizeTime(body.payload.hora_inicio),
+      hora_fin:
+        horarios.find((schedule) => schedule.hora_fin)?.hora_fin ||
+        normalizeTime(body.payload.hora_fin),
       horarios,
       costo_tipo: normalizeCostType(body.payload.costo_tipo),
       responsable: body.payload.responsable?.trim() || "",

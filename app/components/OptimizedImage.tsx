@@ -1,6 +1,7 @@
 'use client'
 
 import Image, { type ImageLoaderProps } from "next/image"
+import { useState } from "react"
 
 type OptimizedImageProps = {
   src: string
@@ -63,6 +64,10 @@ export function OptimizedImage({
   preload,
   quality,
 }: OptimizedImageProps) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
+
+  if (failedSrc === src) return null
+
   return (
     <Image
       src={src}
@@ -76,6 +81,7 @@ export function OptimizedImage({
       loading={priority ? "eager" : "lazy"}
       loader={isSupabaseStorageUrl(src) ? supabaseLoader : undefined}
       unoptimized={shouldBypassNextImageOptimizer(src)}
+      onError={() => setFailedSrc(src)}
       className={className}
     />
   )

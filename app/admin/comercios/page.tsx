@@ -74,6 +74,8 @@ const initialForm: ComercioForm = {
 }
 
 const ITEMS_PER_PAGE = 6
+const ADMIN_COMMERCE_LIST_SELECT =
+  "id, nombre, descripcion, direccion, telefono, web_url, instagram_url, facebook_url, imagen_url, estado, destacado, usa_whatsapp, premium_activo, plan_suscripcion, estado_suscripcion"
 
 export default function AdminComerciosPage() {
   const [comercios, setComercios] = useState<Comercio[]>([])
@@ -99,10 +101,10 @@ export default function AdminComerciosPage() {
     ] = await Promise.all([
       supabase
         .from("comercios")
-        .select("*")
+        .select(ADMIN_COMMERCE_LIST_SELECT)
         .order("id", { ascending: false }),
-      supabase.from("share_events").select("item_id").eq("section", "comercios"),
-      supabase.from("whatsapp_clicks").select("item_id").eq("section", "comercios"),
+      supabase.from("share_events").select("item_id").eq("section", "comercios").limit(5000),
+      supabase.from("whatsapp_clicks").select("item_id").eq("section", "comercios").limit(5000),
     ])
 
     if (error) {
@@ -147,24 +149,40 @@ export default function AdminComerciosPage() {
     setSubmitMode("publish")
   }
 
-  const handleEdit = (comercio: Comercio) => {
-    setEditingComercio(comercio)
+  const handleEdit = async (comercio: Comercio) => {
+    const { data: fullComercio, error } = await supabase
+      .from("comercios")
+      .select("*")
+      .eq("id", comercio.id)
+      .single()
+
+    if (error) {
+      setSaveError(`No se pudo abrir el comercio para editar: ${error.message}`)
+      return
+    }
+
+    const comercioParaEditar = {
+      ...comercio,
+      ...fullComercio,
+    } as Comercio
+
+    setEditingComercio(comercioParaEditar)
     setFormData({
-      nombre: comercio.nombre || "",
-      direccion: comercio.direccion || "",
-      telefono: comercio.telefono || "",
-      descripcion: comercio.descripcion || "",
-      premium_detalle: comercio.premium_detalle || "",
-      premium_galeria: (comercio.premium_galeria || []).join("\n"),
-      premium_extra_titulo: comercio.premium_extra_titulo || "",
-      premium_extra_detalle: comercio.premium_extra_detalle || "",
-      premium_extra_galeria: (comercio.premium_extra_galeria || []).join("\n"),
-      premium_activo: comercio.premium_activo ?? false,
-      web_url: comercio.web_url || "",
-      instagram_url: comercio.instagram_url || "",
-      facebook_url: comercio.facebook_url || "",
-      imagen_url: comercio.imagen_url || comercio.imagen || "",
-      usa_whatsapp: comercio.usa_whatsapp ?? true,
+      nombre: comercioParaEditar.nombre || "",
+      direccion: comercioParaEditar.direccion || "",
+      telefono: comercioParaEditar.telefono || "",
+      descripcion: comercioParaEditar.descripcion || "",
+      premium_detalle: comercioParaEditar.premium_detalle || "",
+      premium_galeria: (comercioParaEditar.premium_galeria || []).join("\n"),
+      premium_extra_titulo: comercioParaEditar.premium_extra_titulo || "",
+      premium_extra_detalle: comercioParaEditar.premium_extra_detalle || "",
+      premium_extra_galeria: (comercioParaEditar.premium_extra_galeria || []).join("\n"),
+      premium_activo: comercioParaEditar.premium_activo ?? false,
+      web_url: comercioParaEditar.web_url || "",
+      instagram_url: comercioParaEditar.instagram_url || "",
+      facebook_url: comercioParaEditar.facebook_url || "",
+      imagen_url: comercioParaEditar.imagen_url || comercioParaEditar.imagen || "",
+      usa_whatsapp: comercioParaEditar.usa_whatsapp ?? true,
     })
     setIsFormOpen(true)
   }
@@ -1021,7 +1039,7 @@ export default function AdminComerciosPage() {
                   </button>
 
                   <button
-                    onClick={() => handleEdit(comercio)}
+                    onClick={() => void handleEdit(comercio)}
                     className="rounded-lg p-2 text-blue-600 transition hover:bg-blue-50"
                     title="Editar"
                   >

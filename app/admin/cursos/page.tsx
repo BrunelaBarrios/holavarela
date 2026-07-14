@@ -40,8 +40,8 @@ type Curso = {
 
 type CursoHorario = {
   dia: string
-  hora_inicio: string
-  hora_fin: string
+  hora_inicio?: string | null
+  hora_fin?: string | null
 }
 
 type CursoForm = Omit<
@@ -122,8 +122,10 @@ const formatCourseSchedule = (curso: Curso) => {
     return curso.horarios
       .map((schedule) => {
         const day = weekDayOptions.find((option) => option.value === schedule.dia)?.label
+        const start = formatCourseTime(schedule.hora_inicio)
         const end = formatCourseTime(schedule.hora_fin)
-        return `${day || schedule.dia} ${formatCourseTime(schedule.hora_inicio)}${end ? ` a ${end}` : ""}`
+        const hours = start ? `${start}${end ? ` a ${end}` : ""}` : "Horario a confirmar"
+        return `${day || schedule.dia} ${hours}`
       })
       .join(" | ")
   }
@@ -758,23 +760,22 @@ export default function AdminCursosPage() {
                           </label>
 
                           <label className="block text-xs font-medium text-slate-600">
-                            Inicio
+                            Inicio opcional
                             <input
                               type="time"
-                              value={schedule.hora_inicio}
+                              value={schedule.hora_inicio || ""}
                               onChange={(event) =>
                                 updateCourseSchedule(index, "hora_inicio", event.target.value)
                               }
                               className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none focus:border-violet-500"
-                              required
                             />
                           </label>
 
                           <label className="block text-xs font-medium text-slate-600">
-                            Fin
+                            Fin opcional
                             <input
                               type="time"
-                              value={schedule.hora_fin}
+                              value={schedule.hora_fin || ""}
                               onChange={(event) =>
                                 updateCourseSchedule(index, "hora_fin", event.target.value)
                               }

@@ -52,7 +52,7 @@ export type Curso = {
 
 type CursoHorario = {
   dia: string
-  hora_inicio: string
+  hora_inicio?: string | null
   hora_fin?: string | null
 }
 
@@ -163,8 +163,10 @@ const formatAllCourseSchedules = (curso: Curso) => {
   return schedules
     .map((schedule) => {
       const day = weekDayOptions.find((option) => option.value === schedule.dia)?.short
+      const start = normalizeTime(schedule.hora_inicio)
       const end = normalizeTime(schedule.hora_fin)
-      return `${day || schedule.dia} ${normalizeTime(schedule.hora_inicio)}${end ? ` a ${end}` : ""}`
+      const hours = start ? `${start}${end ? ` a ${end}` : ""}` : "Horario a confirmar"
+      return `${day || schedule.dia} ${hours}`
     })
     .join(" · ")
 }

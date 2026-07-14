@@ -170,7 +170,7 @@ const getHomePageData = unstable_cache(
         .limit(HOME_BUSINESS_LIMIT),
       supabaseServer
         .from("eventos")
-        .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, imagen, estado, usa_whatsapp, created_at")
+        .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, estado, usa_whatsapp, created_at")
         .or("estado.is.null,estado.eq.activo")
         .or(buildActiveEventsFilter(today))
         .order("fecha", { ascending: true })
@@ -179,7 +179,7 @@ const getHomePageData = unstable_cache(
         try {
           const { data, error } = await supabaseServer
             .from("eventos")
-            .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, ciudad, imagen, estado")
+            .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, ciudad, estado")
             .eq("mostrar_ciudades_cercanas", true)
             .or("estado.is.null,estado.eq.activo")
             .or(buildActiveEventsFilter(today))
@@ -194,7 +194,7 @@ const getHomePageData = unstable_cache(
       })(),
       supabaseServer
         .from("cursos")
-        .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, edad_destino, imagen, premium_galeria, destacado, usa_whatsapp")
+        .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, edad_destino, destacado, usa_whatsapp")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
         .limit(HOME_COURSES_LIMIT),
@@ -378,15 +378,15 @@ const getHomePageData = unstable_cache(
       nearbyActivities,
       cursos: (cursos || []).slice(0, 8).map((item) => ({
         ...item,
-        imagen: item.imagen ? `/api/cursos/${item.id}/image` : null,
-        premium_galeria: item.premium_galeria || [],
+        imagen: `/api/cursos/${item.id}/image`,
+        premium_galeria: [],
       })),
       servicios: (servicios || []).slice(0, 16).map((item) => withApiImage(item, "servicios")),
       instituciones: (instituciones || []).map((item) => ({ ...item, foto: null })),
       allCursos: (highlightedCursos.length ? highlightedCursos : cursos || []).map((item) => ({
         ...item,
-        imagen: item.imagen ? `/api/cursos/${item.id}/image` : null,
-        premium_galeria: item.premium_galeria || [],
+        imagen: `/api/cursos/${item.id}/image`,
+        premium_galeria: [],
       })),
       allServicios: (highlightedServicios.length ? highlightedServicios : servicios || []).map((item) =>
         withApiImage(item, "servicios")
