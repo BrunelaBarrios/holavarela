@@ -811,26 +811,37 @@ export default function AdminInstitucionesPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="space-y-3 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
         {instituciones.map((institucion) => (
           <div
             key={institucion.id}
-            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
+            className="flex min-w-[980px] items-center gap-4 rounded-xl border border-slate-100 bg-white p-3 transition hover:bg-slate-50"
           >
-            {institucion.foto && (
+            {institucion.foto ? (
               <>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={institucion.foto}
                   alt={institucion.nombre}
-                  className="h-48 w-full object-cover"
+                  className="h-14 w-20 shrink-0 rounded-xl border border-slate-100 object-cover"
                 />
               </>
+            ) : (
+              <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50">
+                <Building2 className="h-5 w-5 text-slate-300" />
+              </div>
             )}
 
-            <div className="p-5">
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-xl font-semibold text-slate-900">{institucion.nombre}</h3>
+            <div className="grid flex-1 grid-cols-[1.25fr_1.25fr_0.75fr_auto] items-center gap-4">
+              <div className="min-w-0">
+                <h3 className="truncate text-base font-semibold text-slate-900">{institucion.nombre}</h3>
+                <p className="truncate text-xs text-slate-500">{institucion.descripcion || "Sin descripción"}</p>
+              </div>
+              <div className="min-w-0 text-sm text-slate-600">
+                <div className="truncate">{institucion.direccion || "Sin dirección"}</div>
+                <div className="truncate text-xs text-slate-400">{institucion.telefono || "Sin teléfono"}</div>
+              </div>
+              <div>
                 <div
                   className={`rounded-full px-3 py-1 text-xs font-medium ${
                     institucion.estado === "borrador"
@@ -847,19 +858,8 @@ export default function AdminInstitucionesPage() {
                       : "visible"}
                 </div>
               </div>
-              {institucion.direccion && (
-                <p className="mt-2 text-sm text-slate-500">{institucion.direccion}</p>
-              )}
-              {institucion.telefono && (
-                <p className="mt-1 text-sm text-slate-500">{institucion.telefono}</p>
-              )}
-              {institucion.descripcion && (
-                <p className="mt-3 line-clamp-3 whitespace-pre-line text-sm text-slate-500">
-                  {institucion.descripcion}
-                </p>
-              )}
 
-              <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+              <div className="flex items-center justify-end gap-2">
                 {institucion.premium_activo ? (
                   <span className="mr-auto inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
                     Premium

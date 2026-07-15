@@ -919,156 +919,128 @@ export default function AdminServiciosPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {servicios.map((servicio) => (
-          <div
-            key={servicio.id}
-            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
-          >
-            {servicio.imagen && (
-              <div className="relative h-56 w-full">
-                <OptimizedImage
-                  src={servicio.imagen}
-                  alt={servicio.nombre}
-                  sizes="(max-width: 1280px) 50vw, 33vw"
-                  className="object-cover"
-                />
-              </div>
-            )}
-
-            <div className="p-5">
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-xl font-semibold text-slate-900">
-                    {servicio.nombre}
-                  </h3>
-                  <p className="text-sm text-amber-600">{servicio.categoria}</p>
-                </div>
-
-                <div
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${
-                    servicio.estado === "borrador"
-                      ? "bg-amber-100 text-amber-700"
-                      : servicio.estado === "oculto"
-                        ? "bg-slate-200 text-slate-700"
-                        : "bg-emerald-50 text-emerald-700"
-                  }`}
-                >
-                  {servicio.estado === "borrador"
-                    ? "borrador"
-                    : servicio.estado === "oculto"
-                      ? "oculto"
-                      : "visible"}
-                </div>
-              </div>
-
-              {servicio.descripcion && (
-                <p className="line-clamp-3 text-sm leading-7 text-slate-500">
-                  {servicio.descripcion}
-                </p>
-              )}
-
-              <div className="mt-4 space-y-2 text-sm text-slate-600">
-                {servicio.responsable && (
-                  <div className="flex items-center gap-2">
-                    <UserRound className="h-4 w-4" />
-                    <span>{servicio.responsable}</span>
-                  </div>
-                )}
-
-                {servicio.contacto && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    <span>{servicio.contacto}</span>
-                  </div>
-                )}
-              </div>
-
-              {servicio.destacado && (
-                <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                  <Star className="h-3.5 w-3.5 fill-current" />
-                  Destacado
-                </div>
-              )}
-
-              {servicio.premium_activo && (
-                <div className="mt-4 ml-2 inline-flex items-center gap-2 rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
-                  <Star className="h-3.5 w-3.5" />
-                  Premium activo
-                </div>
-              )}
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                  <span>{subscriptionPlans[servicio.plan_suscripcion || "presencia"].shortLabel}</span>
-                </div>
-                <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${getSubscriptionStatusBadge(servicio.estado_suscripcion)}`}>
-                  <span>{getSubscriptionStatusLabel(servicio.estado_suscripcion)}</span>
-                </div>
-              </div>
-
-              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                <Share2 className="h-3.5 w-3.5" />
-                {servicio.share_count || 0} compartidos
-              </div>
-
-              <div className="mt-4 ml-2 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                <MessageCircle className="h-3.5 w-3.5" />
-                {servicio.whatsapp_count || 0} WhatsApp
-              </div>
-
-              <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
-                  <button
-                    onClick={() => toggleVisibility(servicio)}
-                    className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
-                    title={
-                      servicio.estado === "borrador"
-                        ? "Publicar borrador"
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="min-w-[980px] w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-[0.12em] text-slate-500">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Servicio</th>
+                <th className="px-4 py-3 font-semibold">Responsable</th>
+                <th className="px-4 py-3 font-semibold">Plan</th>
+                <th className="px-4 py-3 font-semibold">Estado</th>
+                <th className="px-4 py-3 font-semibold">Métricas</th>
+                <th className="px-4 py-3 text-right font-semibold">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {servicios.map((servicio) => (
+                <tr key={servicio.id} className="align-middle transition hover:bg-slate-50/70">
+                  <td className="px-4 py-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
+                        {servicio.imagen ? (
+                          <OptimizedImage
+                            src={servicio.imagen}
+                            alt={servicio.nombre}
+                            sizes="64px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <ShieldAlert className="m-auto h-full w-5 text-slate-300" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate font-semibold text-slate-900">{servicio.nombre}</div>
+                        <div className="truncate text-xs text-amber-600">{servicio.categoria || "Sin categoría"}</div>
+                        <div className="mt-1 flex flex-wrap gap-1.5">
+                          {servicio.destacado ? (
+                            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                              Destacado
+                            </span>
+                          ) : null}
+                          {servicio.premium_activo ? (
+                            <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-700">
+                              Premium
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-slate-600">
+                    <div>{servicio.responsable || "Sin responsable"}</div>
+                    <div className="text-xs text-slate-400">{servicio.contacto || "Sin contacto"}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                      {subscriptionPlans[servicio.plan_suscripcion || "presencia"].shortLabel}
+                    </div>
+                    <div className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getSubscriptionStatusBadge(servicio.estado_suscripcion)}`}>
+                      {getSubscriptionStatusLabel(servicio.estado_suscripcion)}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        servicio.estado === "borrador"
+                          ? "bg-amber-100 text-amber-700"
+                          : servicio.estado === "oculto"
+                            ? "bg-slate-200 text-slate-700"
+                            : "bg-emerald-50 text-emerald-700"
+                      }`}
+                    >
+                      {servicio.estado === "borrador"
+                        ? "borrador"
                         : servicio.estado === "oculto"
-                          ? "Mostrar"
-                          : "Ocultar"
-                    }
-                  >
-                  {servicio.estado === "oculto" ? (
-                    <Eye className="h-4 w-4" />
-                  ) : (
-                    <EyeOff className="h-4 w-4" />
-                  )}
-                </button>
-
-                <button
-                  onClick={() => toggleFeatured(servicio)}
-                  className={`rounded-lg p-2 transition ${
-                    servicio.destacado
-                      ? "bg-amber-50 text-amber-700"
-                      : "text-slate-500 hover:bg-slate-100"
-                  }`}
-                  title="Destacar"
-                >
-                  <Star
-                    className={`h-4 w-4 ${servicio.destacado ? "fill-current" : ""}`}
-                  />
-                </button>
-
-                <button
-                  onClick={() => handleEdit(servicio)}
-                  className="rounded-lg p-2 text-amber-600 transition hover:bg-amber-50"
-                  title="Editar"
-                >
-                  <Pencil className="h-4 w-4" />
-                </button>
-
-                <button
-                  onClick={() => setDeletingServicio(servicio)}
-                  className="rounded-lg p-2 text-red-600 transition hover:bg-red-50"
-                  title="Eliminar"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+                          ? "oculto"
+                          : "visible"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-xs font-semibold text-slate-600">
+                    <div className="flex flex-col gap-1">
+                      <span>{servicio.share_count || 0} compartidos</span>
+                      <span>{servicio.whatsapp_count || 0} WhatsApp</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        onClick={() => toggleVisibility(servicio)}
+                        className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
+                        title={servicio.estado === "oculto" ? "Mostrar" : "Ocultar"}
+                      >
+                        {servicio.estado === "oculto" ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                      </button>
+                      <button
+                        onClick={() => toggleFeatured(servicio)}
+                        className={`rounded-lg p-2 transition ${
+                          servicio.destacado ? "bg-amber-50 text-amber-700" : "text-slate-500 hover:bg-slate-100"
+                        }`}
+                        title="Destacar"
+                      >
+                        <Star className={`h-4 w-4 ${servicio.destacado ? "fill-current" : ""}`} />
+                      </button>
+                      <button
+                        onClick={() => handleEdit(servicio)}
+                        className="rounded-lg p-2 text-amber-600 transition hover:bg-amber-50"
+                        title="Editar"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => setDeletingServicio(servicio)}
+                        className="rounded-lg p-2 text-red-600 transition hover:bg-red-50"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {servicios.length === 0 && (

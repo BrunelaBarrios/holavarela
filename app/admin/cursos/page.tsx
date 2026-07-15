@@ -1132,26 +1132,43 @@ export default function AdminCursosPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="space-y-3 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
         {cursos.map((curso) => (
           <div
             key={curso.id}
-            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
+            className="flex min-w-[980px] items-center gap-4 rounded-xl border border-slate-100 bg-white p-3 transition hover:bg-slate-50"
           >
-            {curso.imagen && (
-              <div className="relative h-56 w-full border-b border-slate-100 bg-slate-50">
+            {curso.imagen ? (
+              <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
                 <OptimizedImage
                   src={curso.imagen}
                   alt={curso.nombre}
-                  sizes="(max-width: 1280px) 50vw, 33vw"
-                  className="object-contain p-3"
+                  sizes="80px"
+                  className="object-contain p-1"
                 />
+              </div>
+            ) : (
+              <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50">
+                <GraduationCap className="h-5 w-5 text-slate-300" />
               </div>
             )}
 
-            <div className="p-5">
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-xl font-semibold text-slate-900">{curso.nombre}</h3>
+            <div className="grid flex-1 grid-cols-[1.25fr_1.15fr_0.85fr_0.65fr_auto] items-center gap-4">
+              <div className="min-w-0">
+                <h3 className="truncate text-base font-semibold text-slate-900">{curso.nombre}</h3>
+                <p className="truncate text-xs text-slate-500">
+                  {curso.categoria || "General"} · {courseAgeLabels(curso.edad_destino)}
+                </p>
+              </div>
+              <div className="min-w-0 text-sm text-slate-600">
+                <div className="truncate">{formatCourseSchedule(curso)}</div>
+                <div className="truncate text-xs text-slate-400">{curso.lugar || "Lugar a confirmar"}</div>
+              </div>
+              <div className="min-w-0 text-sm text-slate-600">
+                <div className="truncate">{curso.responsable}</div>
+                <div className="truncate text-xs text-slate-400">{curso.contacto}</div>
+              </div>
+              <div>
                 <div
                   className={`rounded-full px-3 py-1 text-xs font-medium ${
                     curso.estado === "borrador"
@@ -1168,11 +1185,7 @@ export default function AdminCursosPage() {
                       : "visible"}
                 </div>
               </div>
-              <p className="mt-3 line-clamp-3 text-sm leading-7 text-slate-500">
-                {curso.descripcion}
-              </p>
-
-              <div className="mt-4 space-y-2 text-sm text-slate-600">
+              <div className="hidden">
                 <div className="flex items-center gap-2">
                   <UserRound className="h-4 w-4" />
                   <span>{courseAgeLabels(curso.edad_destino)}</span>
@@ -1224,27 +1237,27 @@ export default function AdminCursosPage() {
               </div>
 
               {curso.destacado && (
-                <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
+                <div className="hidden">
                   <Star className="h-3.5 w-3.5 fill-current" />
                   Destacado
                 </div>
               )}
               {curso.premium_galeria?.length ? (
-                <div className="mt-4 ml-2 inline-flex items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+                <div className="hidden">
                   {curso.premium_galeria.length} fotos
                 </div>
               ) : null}
-              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+              <div className="hidden">
                 <Share2 className="h-3.5 w-3.5" />
                 {curso.share_count || 0} compartidos
               </div>
 
-              <div className="mt-4 ml-2 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+              <div className="hidden">
                 <MessageCircle className="h-3.5 w-3.5" />
                 {curso.whatsapp_count || 0} WhatsApp
               </div>
 
-              <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+              <div className="flex items-center justify-end gap-2">
                   <button
                     onClick={() => toggleVisibility(curso)}
                     className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"

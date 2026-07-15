@@ -983,35 +983,50 @@ export default function AdminEventosPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="space-y-3 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
         {visibleEventos.map((evento) => (
           <div
             key={evento.id}
-            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
+            className="flex min-w-[1040px] items-center gap-4 rounded-xl border border-slate-100 bg-white p-3 transition hover:bg-slate-50"
           >
             {(() => {
               const parsedDescription = parseEventDescription(evento.descripcion)
 
               return (
                 <>
-            {evento.imagen && (
-              <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
+            {evento.imagen ? (
+              <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
                 <OptimizedImage
                   src={evento.imagen}
                   alt={evento.titulo}
-                  sizes="(max-width: 1280px) 50vw, 33vw"
-                  className="object-cover"
+                  sizes="80px"
+                  className="object-contain p-1"
                 />
+              </div>
+            ) : (
+              <div className="flex h-14 w-20 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50">
+                <Calendar className="h-5 w-5 text-slate-300" />
               </div>
             )}
 
-            <div className="p-5">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-sm text-emerald-600">
-                  <Calendar className="h-4 w-4" />
-                  <span>{formatEventDateRange(evento.fecha, evento.fecha_fin, evento.fecha_solo_mes ?? false)}</span>
-                </div>
-
+            <div className="grid flex-1 grid-cols-[1.25fr_1fr_0.75fr_0.55fr_auto] items-center gap-4">
+              <div className="min-w-0">
+                <h3 className="truncate text-base font-semibold text-slate-900">
+                  {evento.titulo}
+                </h3>
+                <p className="truncate text-xs text-slate-500">
+                  {normalizeAdminEventCategory(evento.categoria)} · {evento.ubicacion}
+                </p>
+              </div>
+              <div className="min-w-0 text-sm text-slate-600">
+                <div className="truncate">{formatEventDateRange(evento.fecha, evento.fecha_fin, evento.fecha_solo_mes ?? false)}</div>
+                <div className="truncate text-xs text-slate-400">{evento.telefono || "Sin teléfono"}</div>
+              </div>
+              <div className="min-w-0 text-xs text-slate-500">
+                <div className="truncate">{parsedDescription.submissionContact ? `Enviado por ${parsedDescription.submissionContact.senderName}` : parsedDescription.baseDescription}</div>
+                <div className="font-semibold text-slate-600">{evento.share_count || 0} compartidos</div>
+              </div>
+              <div>
                 <div
                   className={`rounded-full px-3 py-1 text-xs font-medium ${
                     evento.estado === "borrador"
@@ -1028,32 +1043,7 @@ export default function AdminEventosPage() {
                       : "visible"}
                 </div>
               </div>
-
-              <h3 className="mb-2 text-lg font-medium text-slate-900">
-                {evento.titulo}
-              </h3>
-              <div className="mb-3 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                {normalizeAdminEventCategory(evento.categoria)}
-              </div>
-              <p className="mb-1 text-sm text-slate-500">{evento.ubicacion}</p>
-              {evento.telefono && (
-                <p className="mb-1 text-sm text-slate-500">{evento.telefono}</p>
-              )}
-              {parsedDescription.submissionContact ? (
-                <div className="mb-3 rounded-xl border border-sky-100 bg-sky-50 px-3 py-2 text-sm text-sky-900">
-                  Enviado por {parsedDescription.submissionContact.senderName} - {parsedDescription.submissionContact.senderPhone}
-                </div>
-              ) : null}
-              <p className="mb-4 line-clamp-2 text-sm text-slate-500">
-                {parsedDescription.baseDescription}
-              </p>
-
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                <Share2 className="h-3.5 w-3.5" />
-                {evento.share_count || 0} compartidos
-              </div>
-
-              <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+              <div className="flex items-center justify-end gap-2">
                 <button
                   onClick={() => void handleDuplicate(evento)}
                   disabled={loading}

@@ -910,154 +910,134 @@ export default function AdminComerciosPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {comerciosVisibles.map((comercio) => {
-          const imagenSrc = comercio.imagen_url || comercio.imagen
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="min-w-[980px] w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-[0.12em] text-slate-500">
+              <tr>
+                <th className="px-4 py-3 font-semibold">Comercio</th>
+                <th className="px-4 py-3 font-semibold">Contacto</th>
+                <th className="px-4 py-3 font-semibold">Plan</th>
+                <th className="px-4 py-3 font-semibold">Estado</th>
+                <th className="px-4 py-3 font-semibold">Métricas</th>
+                <th className="px-4 py-3 text-right font-semibold">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {comerciosVisibles.map((comercio) => {
+                const imagenSrc = comercio.imagen_url || comercio.imagen
 
-          return (
-            <div
-              key={comercio.id}
-              className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
-            >
-              {imagenSrc && (
-                <div className="relative h-48 w-full">
-                  <OptimizedImage
-                    src={imagenSrc}
-                    alt={comercio.nombre}
-                    sizes="(max-width: 1280px) 50vw, 33vw"
-                    className="object-cover"
-                  />
-                </div>
-              )}
-
-              <div className="p-5">
-                <div className="mb-3 flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-slate-900">
-                      {comercio.nombre}
-                    </h3>
-                    {comercio.direccion && (
-                      <p className="mt-1 text-sm text-slate-500">
-                        {comercio.direccion}
-                      </p>
-                    )}
-                  </div>
-
-                  <div
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      comercio.estado === "borrador"
-                        ? "bg-amber-100 text-amber-700"
-                        : comercio.estado === "oculto"
-                          ? "bg-slate-200 text-slate-700"
-                          : "bg-blue-50 text-blue-600"
-                    }`}
-                  >
-                    {comercio.estado === "borrador"
-                      ? "borrador"
-                      : comercio.estado === "oculto"
-                        ? "oculto"
-                        : "visible"}
-                  </div>
-                </div>
-
-                {comercio.destacado && (
-                  <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-600">
-                    <Star className="h-3.5 w-3.5 fill-current" />
-                    Destacado en home
-                  </div>
-                )}
-
-                {comercio.premium_activo && (
-                  <div className="mb-3 ml-2 inline-flex items-center gap-2 rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
-                    <Star className="h-3.5 w-3.5" />
-                    Premium activo
-                  </div>
-                )}
-
-                <div className="mb-3 flex flex-wrap gap-2">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                    <span>{subscriptionPlans[comercio.plan_suscripcion || "presencia"].shortLabel}</span>
-                  </div>
-                  <div className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${getSubscriptionStatusBadge(comercio.estado_suscripcion)}`}>
-                    <span>{getSubscriptionStatusLabel(comercio.estado_suscripcion)}</span>
-                  </div>
-                </div>
-
-                {comercio.telefono && (
-                  <p className="mb-2 text-sm text-slate-500">{comercio.telefono}</p>
-                )}
-
-                {comercio.descripcion && (
-                  <p className="mb-4 line-clamp-2 text-sm text-slate-500">
-                    {comercio.descripcion}
-                  </p>
-                )}
-
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                  <Share2 className="h-3.5 w-3.5" />
-                  {comercio.share_count || 0} compartidos
-                </div>
-
-                <div className="mb-4 ml-2 inline-flex items-center gap-2 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                  <MessageCircle className="h-3.5 w-3.5" />
-                  {comercio.whatsapp_count || 0} WhatsApp
-                </div>
-
-                <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
-                  <button
-                    onClick={() => toggleVisibility(comercio)}
-                    className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
-                    title={
-                      comercio.estado === "borrador"
-                        ? "Publicar borrador"
-                        : comercio.estado === "oculto"
-                          ? "Mostrar"
-                          : "Ocultar"
-                    }
-                  >
-                    {comercio.estado === "oculto" ? (
-                      <Eye className="h-4 w-4" />
-                    ) : (
-                      <EyeOff className="h-4 w-4" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => toggleFeatured(comercio)}
-                    className={`rounded-lg p-2 transition ${
-                      comercio.destacado
-                        ? "bg-amber-50 text-amber-600"
-                        : "text-slate-500 hover:bg-slate-100"
-                    }`}
-                    title="Destacar en home"
-                  >
-                    <Star
-                      className={`h-4 w-4 ${
-                        comercio.destacado ? "fill-current" : ""
-                      }`}
-                    />
-                  </button>
-
-                  <button
-                    onClick={() => void handleEdit(comercio)}
-                    className="rounded-lg p-2 text-blue-600 transition hover:bg-blue-50"
-                    title="Editar"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-
-                  <button
-                    onClick={() => setDeletingComercio(comercio)}
-                    className="rounded-lg p-2 text-red-600 transition hover:bg-red-50"
-                    title="Eliminar"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )
-        })}
+                return (
+                  <tr key={comercio.id} className="align-middle transition hover:bg-slate-50/70">
+                    <td className="px-4 py-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
+                          {imagenSrc ? (
+                            <OptimizedImage
+                              src={imagenSrc}
+                              alt={comercio.nombre}
+                              sizes="64px"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <Store className="m-auto h-full w-5 text-slate-300" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="truncate font-semibold text-slate-900">{comercio.nombre}</div>
+                          <div className="truncate text-xs text-slate-500">{comercio.direccion || "Sin dirección"}</div>
+                          <div className="mt-1 flex flex-wrap gap-1.5">
+                            {comercio.destacado ? (
+                              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                                Destacado
+                              </span>
+                            ) : null}
+                            {comercio.premium_activo ? (
+                              <span className="rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-semibold text-violet-700">
+                                Premium
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-slate-600">
+                      <div>{comercio.telefono || "Sin teléfono"}</div>
+                      <div className="max-w-[260px] truncate text-xs text-slate-400">
+                        {comercio.descripcion || "Sin descripción"}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                        {subscriptionPlans[comercio.plan_suscripcion || "presencia"].shortLabel}
+                      </div>
+                      <div className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getSubscriptionStatusBadge(comercio.estado_suscripcion)}`}>
+                        {getSubscriptionStatusLabel(comercio.estado_suscripcion)}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          comercio.estado === "borrador"
+                            ? "bg-amber-100 text-amber-700"
+                            : comercio.estado === "oculto"
+                              ? "bg-slate-200 text-slate-700"
+                              : "bg-blue-50 text-blue-600"
+                        }`}
+                      >
+                        {comercio.estado === "borrador"
+                          ? "borrador"
+                          : comercio.estado === "oculto"
+                            ? "oculto"
+                            : "visible"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs font-semibold text-slate-600">
+                      <div className="flex flex-col gap-1">
+                        <span>{comercio.share_count || 0} compartidos</span>
+                        <span>{comercio.whatsapp_count || 0} WhatsApp</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => toggleVisibility(comercio)}
+                          className="rounded-lg p-2 text-slate-600 transition hover:bg-slate-100"
+                          title={comercio.estado === "oculto" ? "Mostrar" : "Ocultar"}
+                        >
+                          {comercio.estado === "oculto" ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                        </button>
+                        <button
+                          onClick={() => toggleFeatured(comercio)}
+                          className={`rounded-lg p-2 transition ${
+                            comercio.destacado ? "bg-amber-50 text-amber-600" : "text-slate-500 hover:bg-slate-100"
+                          }`}
+                          title="Destacar en home"
+                        >
+                          <Star className={`h-4 w-4 ${comercio.destacado ? "fill-current" : ""}`} />
+                        </button>
+                        <button
+                          onClick={() => void handleEdit(comercio)}
+                          className="rounded-lg p-2 text-blue-600 transition hover:bg-blue-50"
+                          title="Editar"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingComercio(comercio)}
+                          className="rounded-lg p-2 text-red-600 transition hover:bg-red-50"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {comercios.length === 0 && (
