@@ -2923,7 +2923,7 @@ export function HomePage({
                           alt={activity.titulo}
                           sizes="(max-width: 640px) 78vw, 330px"
                           quality={68}
-                          className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                          className="object-contain p-2 transition duration-500 group-hover:scale-[1.02]"
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center text-emerald-600">
@@ -3210,7 +3210,7 @@ function HomeEventCard({
             alt={event.titulo}
             sizes="(max-width: 1024px) 100vw, 33vw"
             quality={62}
-            className="object-cover transition duration-500 group-hover:scale-[1.03]"
+            className="object-contain p-2 transition duration-500 group-hover:scale-[1.02]"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-sky-600">
