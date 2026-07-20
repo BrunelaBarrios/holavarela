@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { revalidatePath } from "next/cache"
 import { readAdminSessionFromRequest } from "../../../lib/adminSession"
 import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
 import { JOB_STATUSES } from "../../../lib/jobOpportunities"
@@ -6,18 +7,55 @@ import { JOB_STATUSES } from "../../../lib/jobOpportunities"
 export async function GET(request: NextRequest) {
   if (!await readAdminSessionFromRequest(request)) return NextResponse.json({ error: "No autorizado." }, { status: 401 })
   const params = request.nextUrl.searchParams
-  let query = getSupabaseAdmin().from("oportunidades_laborales").select("*").order("fecha_creacion", { ascending: false })
+  const supabaseAdmin = getSupabaseAdmin()
+  let query = supabaseAdmin.from("oportunidades_laborales").select("*").order("fecha_creacion", { ascending: false })
   const type = params.get("tipo"), status = params.get("estado"), category = params.get("categoria")
   if (type) query = query.eq("tipo_publicacion", type)
   if (status) query = query.eq("estado", status)
   if (category) query = query.eq("categoria", category)
-  const { data, error } = await query.limit(300)
-  return error ? NextResponse.json({ error: error.message }, { status: 500 }) : NextResponse.json({ items: data || [] })
+  const [{ data, error }, visibilityResult] = await Promise.all([
+    query.limit(300),
+    supabaseAdmin
+      .from("sitio")
+      .select("mostrar_oportunidades_laborales_home")
+      .eq("id", 1)
+      .maybeSingle(),
+  ])
+  return error
+    ? NextResponse.json({ error: error.message }, { status: 500 })
+    : NextResponse.json({
+        items: data || [],
+        visibleEnHome:
+          visibilityResult.error?.code === "42703"
+            ? true
+            : visibilityResult.data?.mostrar_oportunidades_laborales_home !== false,
+      })
 }
 
 export async function PATCH(request: NextRequest) {
   if (!await readAdminSessionFromRequest(request)) return NextResponse.json({ error: "No autorizado." }, { status: 401 })
   const body = await request.json()
+  if (body.action === "toggle_home_visibility") {
+    const visible = body.visible === true
+    const { error } = await getSupabaseAdmin()
+      .from("sitio")
+      .upsert({ id: 1, mostrar_oportunidades_laborales_home: visible })
+
+    if (error) {
+      return NextResponse.json(
+        {
+          error:
+            error.code === "42703"
+              ? "Falta aplicar la columna de visibilidad de oportunidades en Supabase."
+              : error.message,
+        },
+        { status: 500 }
+      )
+    }
+
+    revalidatePath("/")
+    return NextResponse.json({ ok: true, visibleEnHome: visible })
+  }
   if (!body.id) return NextResponse.json({ error: "Falta el identificador." }, { status: 400 })
   const allowed = ["nombre_publicante","titulo","categoria","descripcion","requisitos","experiencia","habilidades","tipo_jornada","horario","disponibilidad","localidad","telefono","email","forma_postulacion","imagen_url","cv_url","fecha_vencimiento"]
   const changes: Record<string, unknown> = {}

@@ -571,6 +571,62 @@ export default function AdminSorteosPage() {
     })
   }
 
+  const handleActiveChange = async (nextActive: boolean) => {
+    setForm((current) => ({ ...current, activo: nextActive }))
+
+    if (!selectedCampaign) return
+
+    setSaving(true)
+    setSaveMessage("")
+    setSaveError("")
+
+    const { error: deactivateError } = await supabase
+      .from("sorteo_popup_config")
+      .update({ activo: false })
+      .neq("id", -1)
+
+    if (deactivateError) {
+      setForm((current) => ({ ...current, activo: selectedCampaign.activo }))
+      setSaveError(`No se pudieron desactivar los sorteos: ${deactivateError.message}`)
+      setSaving(false)
+      return
+    }
+
+    const { data: updatedCampaign, error: updateError } = await supabase
+      .from("sorteo_popup_config")
+      .update({ activo: nextActive, updated_at: new Date().toISOString() })
+      .eq("id", selectedCampaign.id)
+      .select("id, activo")
+      .maybeSingle()
+
+    if (updateError || !updatedCampaign || updatedCampaign.activo !== nextActive) {
+      setForm((current) => ({ ...current, activo: selectedCampaign.activo }))
+      setSaveError(
+        updateError
+          ? `No se pudo cambiar el estado del sorteo: ${updateError.message}`
+          : "No se pudo confirmar el cambio de estado del sorteo."
+      )
+      setSaving(false)
+      return
+    }
+
+    await logAdminActivity({
+      action: nextActive ? "Activar" : "Desactivar",
+      section: "Sorteos",
+      target: selectedCampaign.titulo,
+      details: nextActive ? "Activo el sorteo." : "Desactivo el sorteo.",
+    })
+
+    setCampaigns((current) =>
+      current.map((campaign) => ({
+        ...campaign,
+        activo: campaign.id === selectedCampaign.id ? nextActive : false,
+      }))
+    )
+    setSaveMessage(nextActive ? "Sorteo activado." : "Sorteo desactivado.")
+    setSaving(false)
+  }
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setSaving(true)
@@ -839,16 +895,16 @@ export default function AdminSorteosPage() {
                 <input
                   type="checkbox"
                   checked={form.activo}
-                  onChange={(event) =>
-                    setForm((current) => ({ ...current, activo: event.target.checked }))
-                  }
+                  onChange={(event) => void handleActiveChange(event.target.checked)}
+                  disabled={saving}
                   className="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
                 />
-                <span>Activar este sorteo</span>
+                <span>{selectedCampaign ? "Sorteo activo" : "Crear como sorteo activo"}</span>
               </label>
               <p className="text-sm leading-6 text-slate-500">
-                Si apagas el sorteo que figura activo, se detendran tambien las campanas activas residuales para que el popup no vuelva a aparecer.
-                Al crear una campana nueva inactiva, el sorteo activo actual no cambia.
+                {selectedCampaign
+                  ? "El cambio se guarda inmediatamente. Al apagarlo, el popup deja de mostrarse."
+                  : "Al crear una campaña nueva inactiva, el sorteo activo actual no cambia."}
               </p>
 
               <div>

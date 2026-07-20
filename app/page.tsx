@@ -38,6 +38,7 @@ const defaultSobreVarela = {
   instituciones_home_imagen_url: null,
   mostrar_juegos_home: true,
   mostrar_ranking_juego_home: false,
+  mostrar_oportunidades_laborales_home: true,
   mostrar_galeria_home: false,
   galeria_home: [] as string[],
 }
@@ -117,7 +118,7 @@ const getHomePageData = unstable_cache(
 
     const sitioPromise = supabaseServer
       .from("sitio")
-      .select("titulo, texto_1, texto_2, texto_3, imagen_url, cursos_home_tagline, cursos_home_titulo, cursos_home_texto, cursos_home_boton, cursos_home_imagen_url, instituciones_home_tagline, instituciones_home_titulo, instituciones_home_texto, instituciones_home_boton, instituciones_home_imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home, mostrar_galeria_home, galeria_home")
+      .select("titulo, texto_1, texto_2, texto_3, imagen_url, cursos_home_tagline, cursos_home_titulo, cursos_home_texto, cursos_home_boton, cursos_home_imagen_url, instituciones_home_tagline, instituciones_home_titulo, instituciones_home_texto, instituciones_home_boton, instituciones_home_imagen_url, mostrar_juegos_home, mostrar_ranking_juego_home, mostrar_oportunidades_laborales_home, mostrar_galeria_home, galeria_home")
       .eq("id", 1)
       .maybeSingle()
       .then(async (result) => {
@@ -415,7 +416,7 @@ const getHomePageData = unstable_cache(
       weather,
     }
   },
-  ["home-page-data-v15"],
+  ["home-page-data-v16"],
   { revalidate: 300 }
 )
 

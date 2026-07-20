@@ -287,6 +287,9 @@ alter table public.sitio
 add column if not exists mostrar_ranking_juego_home boolean not null default false;
 
 alter table public.sitio
+add column if not exists mostrar_oportunidades_laborales_home boolean not null default true;
+
+alter table public.sitio
 add column if not exists mostrar_galeria_home boolean not null default false;
 
 alter table public.sitio

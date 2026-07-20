@@ -229,6 +229,7 @@ type SobreVarelaConfig = {
   instituciones_home_imagen_url?: string | null
   mostrar_juegos_home?: boolean | null
   mostrar_ranking_juego_home?: boolean | null
+  mostrar_oportunidades_laborales_home?: boolean | null
   mostrar_galeria_home?: boolean | null
   galeria_home?: string[] | null
 }
@@ -418,6 +419,7 @@ const defaultSobreVarela: SobreVarelaConfig = {
   instituciones_home_imagen_url: null,
   mostrar_juegos_home: true,
   mostrar_ranking_juego_home: false,
+  mostrar_oportunidades_laborales_home: true,
   mostrar_galeria_home: false,
   galeria_home: [],
 }
@@ -2205,7 +2207,9 @@ export function HomePage({
         </section>
       )}
 
-      <HomeJobOpportunities />
+      {sobreVarela.mostrar_oportunidades_laborales_home !== false ? (
+        <HomeJobOpportunities />
+      ) : null}
 
       {radio.isLive && (
         <section ref={radioSectionRef} className="py-6 [content-visibility:auto] [contain-intrinsic-size:280px]">
