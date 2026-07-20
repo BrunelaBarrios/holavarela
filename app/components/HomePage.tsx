@@ -2212,8 +2212,6 @@ export function HomePage({
         <HomeJobOpportunities />
       ) : null}
 
-      <CommunityMessages />
-
       {radio.isLive && (
         <section ref={radioSectionRef} className="py-6 [content-visibility:auto] [contain-intrinsic-size:280px]">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -2229,6 +2227,8 @@ export function HomePage({
           </div>
         </section>
       )}
+
+      <CommunityMessages />
 
       <div className="flex flex-col">
 

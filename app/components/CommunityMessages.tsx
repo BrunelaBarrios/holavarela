@@ -29,6 +29,7 @@ function remainingLabel(expiresAt: string) {
 
 export function CommunityMessages() {
   const [messages, setMessages] = useState<Message[]>([])
+  const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set())
   const [institutions, setInstitutions] = useState<Institution[]>([])
   const [open, setOpen] = useState(false)
   const [preview, setPreview] = useState(false)
@@ -105,9 +106,28 @@ export function CommunityMessages() {
           {messages.length ? (
             <div className="mt-7 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {messages.map((message) => (
-                <article key={message.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5">
-                  <p className="whitespace-pre-wrap text-base leading-7 text-slate-800">{message.mensaje}</p>
-                  <div className="mt-5 space-y-1.5 border-t border-slate-200 pt-4 text-sm text-slate-600">
+                <article key={message.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <p className="whitespace-pre-wrap text-sm leading-6 text-slate-800">
+                    {expandedMessages.has(message.id) || message.mensaje.length <= 150
+                      ? message.mensaje
+                      : `${message.mensaje.slice(0, 150).trimEnd()}…`}
+                  </p>
+                  {message.mensaje.length > 150 ? (
+                    <button
+                      type="button"
+                      onClick={() => setExpandedMessages((current) => {
+                        const next = new Set(current)
+                        if (next.has(message.id)) next.delete(message.id)
+                        else next.add(message.id)
+                        return next
+                      })}
+                      className="mt-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+                      aria-expanded={expandedMessages.has(message.id)}
+                    >
+                      {expandedMessages.has(message.id) ? "Ver menos" : "Ver más"}
+                    </button>
+                  ) : null}
+                  <div className="mt-4 space-y-1 border-t border-slate-200 pt-3 text-xs text-slate-600">
                     <p><strong className="text-slate-800">Publicado por:</strong> {message.nombre}</p>
                     {institutionName(message) ? <p><strong className="text-slate-800">En referencia a:</strong> {institutionName(message)}</p> : null}
                     <p className="flex items-center gap-1.5"><Clock3 className="h-4 w-4" /> {new Intl.DateTimeFormat("es-UY", { hour: "2-digit", minute: "2-digit" }).format(new Date(message.fecha_publicacion))}</p>
