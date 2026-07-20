@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation"
 import { ContactActionLink } from "./ContactActionLink"
 import { ExternalLinksButtons } from "./ExternalLinksButtons"
 import { HomeJobOpportunities } from "./HomeJobOpportunities"
+import { CommunityMessages } from "./CommunityMessages"
 import { EventLikeButton } from "./EventLikeButton"
 import { OptimizedImage } from "./OptimizedImage"
 import { PublicHeader } from "./PublicHeader"
@@ -2210,6 +2211,8 @@ export function HomePage({
       {sobreVarela.mostrar_oportunidades_laborales_home !== false ? (
         <HomeJobOpportunities />
       ) : null}
+
+      <CommunityMessages />
 
       {radio.isLive && (
         <section ref={radioSectionRef} className="py-6 [content-visibility:auto] [contain-intrinsic-size:280px]">

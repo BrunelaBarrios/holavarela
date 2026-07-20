@@ -13,6 +13,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   Mail,
+  MessageSquareText,
   BriefcaseBusiness,
   Radio,
   ShieldAlert,
@@ -119,6 +120,15 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     roles: ["superadmin", "admin"],
     description: "Mensajes, consultas y solicitudes de alta.",
     keywords: ["mensajes", "consultas", "altas"],
+  },
+  {
+    href: "/admin/mensajes-comunidad",
+    icon: MessageSquareText,
+    label: "Mensajes de la comunidad",
+    group: "gestion",
+    roles: ["superadmin", "admin"],
+    description: "Moderación y programación de mensajes breves.",
+    keywords: ["mensajes", "comunidad", "moderacion", "programados"],
   },
   {
     href: "/admin/usuarios",

@@ -1214,3 +1214,46 @@ drop policy if exists "Public read active job opportunities" on public.oportunid
 create policy "Public read active job opportunities" on public.oportunidades_laborales for select to anon, authenticated using (estado = 'activa');
 drop policy if exists "Public submit job opportunities" on public.oportunidades_laborales;
 create policy "Public submit job opportunities" on public.oportunidades_laborales for insert to anon, authenticated with check (estado = 'pendiente');
+
+-- Mensajes breves de la comunidad, siempre sujetos a moderacion.
+create table if not exists public.mensajes_comunidad (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete set null,
+  nombre text not null check (char_length(trim(nombre)) between 1 and 80),
+  mensaje text not null check (char_length(trim(mensaje)) between 1 and 300),
+  institucion_id bigint references public.instituciones(id) on delete set null,
+  fecha_creacion timestamptz not null default now(),
+  fecha_programada timestamptz,
+  fecha_publicacion timestamptz,
+  fecha_vencimiento timestamptz,
+  estado text not null default 'pendiente'
+    check (estado in ('pendiente', 'programado', 'activo', 'vencido', 'rechazado', 'cancelado')),
+  check (fecha_programada is null or fecha_programada >= fecha_creacion)
+);
+
+create or replace function public.set_mensaje_comunidad_vencimiento()
+returns trigger language plpgsql as $$
+begin
+  new.fecha_vencimiento := case
+    when new.fecha_publicacion is null then null
+    else new.fecha_publicacion + interval '24 hours'
+  end;
+  return new;
+end;
+$$;
+
+drop trigger if exists mensajes_comunidad_set_vencimiento on public.mensajes_comunidad;
+create trigger mensajes_comunidad_set_vencimiento
+before insert or update of fecha_publicacion on public.mensajes_comunidad
+for each row execute function public.set_mensaje_comunidad_vencimiento();
+
+create index if not exists mensajes_comunidad_publicos_idx
+on public.mensajes_comunidad (estado, fecha_publicacion desc, fecha_vencimiento);
+create index if not exists mensajes_comunidad_moderacion_idx
+on public.mensajes_comunidad (fecha_creacion desc);
+
+alter table public.mensajes_comunidad enable row level security;
+drop policy if exists "Public read active community messages" on public.mensajes_comunidad;
+create policy "Public read active community messages"
+on public.mensajes_comunidad for select to anon, authenticated
+using (estado = 'activo' and fecha_publicacion <= now() and fecha_vencimiento > now());
