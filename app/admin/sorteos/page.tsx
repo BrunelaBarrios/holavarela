@@ -589,14 +589,16 @@ export default function AdminSorteosPage() {
         ? parseParticipantKey(form.participante2Key)
         : null
 
-    if (form.activo) {
+    const isDisablingActiveCampaign = selectedCampaign?.activo === true && !form.activo
+
+    if (form.activo || isDisablingActiveCampaign) {
       const { error: deactivateError } = await supabase
         .from("sorteo_popup_config")
         .update({ activo: false })
-        .neq("id", selectedId || -1)
+        .neq("id", form.activo ? selectedId || -1 : -1)
 
       if (deactivateError && !isMissingSweepstakesSchemaError(deactivateError)) {
-        setSaveError(`No se pudieron desactivar otros sorteos: ${deactivateError.message}`)
+        setSaveError(`No se pudieron desactivar los sorteos: ${deactivateError.message}`)
         setSaving(false)
         return
       }
@@ -845,7 +847,8 @@ export default function AdminSorteosPage() {
                 <span>Activar este sorteo</span>
               </label>
               <p className="text-sm leading-6 text-slate-500">
-                Si este casillero queda apagado, el sorteo se guarda como inactivo y el sorteo activo actual sigue igual.
+                Si apagas el sorteo que figura activo, se detendran tambien las campanas activas residuales para que el popup no vuelva a aparecer.
+                Al crear una campana nueva inactiva, el sorteo activo actual no cambia.
               </p>
 
               <div>

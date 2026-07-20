@@ -1075,7 +1075,9 @@ export function HomePage({
           />
         ) : null}
 
-        {sweepstakesPopup.config && !sweepstakesPopup.open ? (
+        {sweepstakesPopup.config &&
+        sweepstakesPopup.mode === "info" &&
+        !sweepstakesPopup.open ? (
           <button
             type="button"
             onClick={openHomePopup}

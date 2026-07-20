@@ -33,7 +33,11 @@ export function useSweepstakesPopup() {
 
     const { fetchHomeSweepstakesPopupConfig } = await import("./sweepstakes")
     const resultConfig = await fetchHomeSweepstakesPopupConfig()
-    if (!resultConfig.config) return
+    if (!resultConfig.config) {
+      setConfig(null)
+      setOpen(false)
+      return
+    }
 
     setConfig(resultConfig.config)
     setCurrentTotalLikes(3)
@@ -42,12 +46,26 @@ export function useSweepstakesPopup() {
     setSubmitError("")
   }, [])
 
-  const openHomePopup = useCallback(() => {
-    if (typeof window !== "undefined") {
-      window.sessionStorage.setItem(HOME_SWEEPSTAKES_POPUP_SESSION_KEY, "true")
+  const openHomePopup = useCallback(async () => {
+    if (typeof window === "undefined") return
+
+    // Revalidate before opening so an admin switch that was turned off after
+    // the Home loaded cannot leave a stale bubble visible in the browser.
+    const { fetchHomeSweepstakesPopupConfig } = await import("./sweepstakes")
+    const resultConfig = await fetchHomeSweepstakesPopupConfig()
+
+    if (!resultConfig.config) {
+      setConfig(null)
+      setOpen(false)
+      return
     }
 
+    window.sessionStorage.setItem(HOME_SWEEPSTAKES_POPUP_SESSION_KEY, "true")
+    setConfig(resultConfig.config)
+    setCurrentTotalLikes(3)
+    setEntrySource("web")
     setMode("info")
+    setSubmitError("")
     setOpen(true)
   }, [])
 
