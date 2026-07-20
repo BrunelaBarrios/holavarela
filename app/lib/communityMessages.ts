@@ -1,4 +1,4 @@
-export const COMMUNITY_MESSAGE_MAX_LENGTH = 300
+export const COMMUNITY_MESSAGE_MAX_LENGTH = 500
 
 export const COMMUNITY_MESSAGE_STATES = [
   "pendiente",

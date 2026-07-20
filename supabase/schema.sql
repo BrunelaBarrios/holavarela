@@ -1220,7 +1220,7 @@ create table if not exists public.mensajes_comunidad (
   id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete set null,
   nombre text not null check (char_length(trim(nombre)) between 1 and 80),
-  mensaje text not null check (char_length(trim(mensaje)) between 1 and 300),
+  mensaje text not null check (char_length(trim(mensaje)) between 1 and 500),
   institucion_id bigint references public.instituciones(id) on delete set null,
   fecha_creacion timestamptz not null default now(),
   fecha_programada timestamptz,
@@ -1230,6 +1230,13 @@ create table if not exists public.mensajes_comunidad (
     check (estado in ('pendiente', 'programado', 'activo', 'vencido', 'rechazado', 'cancelado')),
   check (fecha_programada is null or fecha_programada >= fecha_creacion)
 );
+
+-- Actualiza el limite si la tabla ya existia con el maximo anterior.
+alter table public.mensajes_comunidad
+  drop constraint if exists mensajes_comunidad_mensaje_check;
+alter table public.mensajes_comunidad
+  add constraint mensajes_comunidad_mensaje_check
+  check (char_length(trim(mensaje)) between 1 and 500);
 
 create or replace function public.set_mensaje_comunidad_vencimiento()
 returns trigger language plpgsql as $$

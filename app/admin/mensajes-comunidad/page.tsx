@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Ban, Check, Clock3, Pencil, Play, Search, Trash2, XCircle } from "lucide-react"
 import { AdminEmptyState, AdminLoadingPanel, AdminNotice, AdminPageHeader } from "../components/AdminUI"
+import { COMMUNITY_MESSAGE_MAX_LENGTH } from "../../lib/communityMessages"
 
 type Message = {
   id: string; nombre: string; mensaje: string; institucion_id: number | null
@@ -84,7 +85,7 @@ export default function AdminCommunityMessagesPage() {
                 <button onClick={() => { if (window.confirm("¿Eliminar este mensaje definitivamente?")) void action(item.id, "delete") }} className="admin-btn border border-rose-200 text-rose-700"><Trash2 className="h-4 w-4" /> Eliminar</button>
               </div>
             </div>
-            {editing?.id === item.id ? <div className="mt-5 grid gap-3 border-t border-slate-100 pt-5"><input value={editName} maxLength={80} onChange={(e) => setEditName(e.target.value)} className="rounded-xl border border-slate-200 px-4 py-3" /><textarea value={editText} maxLength={300} onChange={(e) => setEditText(e.target.value)} rows={4} className="rounded-xl border border-slate-200 px-4 py-3" /><div className="flex gap-2"><button onClick={() => void action(item.id, "edit", { nombre: editName, mensaje: editText, institucionId: item.institucion_id })} className="admin-btn bg-slate-950 text-white">Guardar cambios</button><button onClick={() => setEditing(null)} className="admin-btn border border-slate-200">Cerrar</button></div></div> : null}
+            {editing?.id === item.id ? <div className="mt-5 grid gap-3 border-t border-slate-100 pt-5"><input value={editName} maxLength={80} onChange={(e) => setEditName(e.target.value)} className="rounded-xl border border-slate-200 px-4 py-3" /><textarea value={editText} maxLength={COMMUNITY_MESSAGE_MAX_LENGTH} onChange={(e) => setEditText(e.target.value)} rows={4} className="rounded-xl border border-slate-200 px-4 py-3" /><div className="flex gap-2"><button onClick={() => void action(item.id, "edit", { nombre: editName, mensaje: editText, institucionId: item.institucion_id })} className="admin-btn bg-slate-950 text-white">Guardar cambios</button><button onClick={() => setEditing(null)} className="admin-btn border border-slate-200">Cerrar</button></div></div> : null}
             {scheduleId === item.id ? <div className="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row"><input type="datetime-local" value={scheduledAt} onChange={(e) => setScheduledAt(e.target.value)} className="rounded-xl border border-slate-200 px-4 py-3" /><button onClick={() => void action(item.id, "reschedule", { fechaProgramada: new Date(scheduledAt).toISOString() })} disabled={!scheduledAt} className="admin-btn bg-sky-600 text-white disabled:opacity-50">Guardar fecha</button></div> : null}
           </article>
         })}</div>
