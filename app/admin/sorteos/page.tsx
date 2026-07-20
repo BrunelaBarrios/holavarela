@@ -580,42 +580,23 @@ export default function AdminSorteosPage() {
     setSaveMessage("")
     setSaveError("")
 
-    const { error: deactivateError } = await supabase
-      .from("sorteo_popup_config")
-      .update({ activo: false })
-      .neq("id", -1)
-
-    if (deactivateError) {
-      setForm((current) => ({ ...current, activo: selectedCampaign.activo }))
-      setSaveError(`No se pudieron desactivar los sorteos: ${deactivateError.message}`)
-      setSaving(false)
-      return
-    }
-
-    const { data: updatedCampaign, error: updateError } = await supabase
-      .from("sorteo_popup_config")
-      .update({ activo: nextActive, updated_at: new Date().toISOString() })
-      .eq("id", selectedCampaign.id)
-      .select("id, activo")
-      .maybeSingle()
-
-    if (updateError || !updatedCampaign || updatedCampaign.activo !== nextActive) {
-      setForm((current) => ({ ...current, activo: selectedCampaign.activo }))
-      setSaveError(
-        updateError
-          ? `No se pudo cambiar el estado del sorteo: ${updateError.message}`
-          : "No se pudo confirmar el cambio de estado del sorteo."
-      )
-      setSaving(false)
-      return
-    }
-
-    await logAdminActivity({
-      action: nextActive ? "Activar" : "Desactivar",
-      section: "Sorteos",
-      target: selectedCampaign.titulo,
-      details: nextActive ? "Activo el sorteo." : "Desactivo el sorteo.",
+    const response = await fetch("/api/admin/sorteos", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "set_active",
+        id: selectedCampaign.id,
+        activo: nextActive,
+      }),
     })
+    const result = (await response.json()) as { error?: string; activo?: boolean }
+
+    if (!response.ok || result.activo !== nextActive) {
+      setForm((current) => ({ ...current, activo: selectedCampaign.activo }))
+      setSaveError(result.error || "No se pudo confirmar el cambio de estado del sorteo.")
+      setSaving(false)
+      return
+    }
 
     setCampaigns((current) =>
       current.map((campaign) => ({
