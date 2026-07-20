@@ -1177,3 +1177,37 @@ on public.juego_gol_participaciones
 for insert
 to anon, authenticated
 with check (char_length(trim(nombre)) > 0 and char_length(nombre) <= 30 and puntaje >= 0);
+
+-- Oportunidades laborales: las publicaciones públicas siempre ingresan a moderación.
+create table if not exists public.oportunidades_laborales (
+  id uuid primary key default gen_random_uuid(),
+  tipo_publicacion text not null check (tipo_publicacion in ('oferta', 'busqueda')),
+  nombre_publicante text not null,
+  titulo text not null,
+  categoria text not null,
+  descripcion text not null,
+  requisitos text,
+  experiencia text,
+  habilidades text,
+  tipo_jornada text,
+  horario text,
+  disponibilidad text,
+  localidad text not null default 'José Pedro Varela',
+  telefono text,
+  email text,
+  forma_postulacion text,
+  imagen_url text,
+  cv_url text,
+  estado text not null default 'pendiente' check (estado in ('pendiente', 'activa', 'rechazada', 'vencida')),
+  fecha_creacion timestamptz not null default now(),
+  fecha_vencimiento date,
+  user_id uuid references auth.users(id) on delete set null
+);
+
+create index if not exists oportunidades_laborales_public_idx on public.oportunidades_laborales (estado, fecha_creacion desc);
+create index if not exists oportunidades_laborales_filters_idx on public.oportunidades_laborales (tipo_publicacion, categoria, tipo_jornada, localidad);
+alter table public.oportunidades_laborales enable row level security;
+drop policy if exists "Public read active job opportunities" on public.oportunidades_laborales;
+create policy "Public read active job opportunities" on public.oportunidades_laborales for select to anon, authenticated using (estado = 'activa');
+drop policy if exists "Public submit job opportunities" on public.oportunidades_laborales;
+create policy "Public submit job opportunities" on public.oportunidades_laborales for insert to anon, authenticated with check (estado = 'pendiente');

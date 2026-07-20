@@ -13,6 +13,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   Mail,
+  BriefcaseBusiness,
   Radio,
   ShieldAlert,
   Store,
@@ -100,6 +101,15 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     roles: ["superadmin", "admin"],
     description: "Clases, talleres y propuestas educativas.",
     keywords: ["clases", "talleres", "educacion"],
+  },
+  {
+    href: "/admin/oportunidades-laborales",
+    icon: BriefcaseBusiness,
+    label: "Oportunidades Laborales",
+    group: "contenido",
+    roles: ["superadmin", "admin"],
+    description: "Ofertas, búsquedas y moderación laboral.",
+    keywords: ["trabajo", "empleo", "ofertas", "postulantes"],
   },
   {
     href: "/admin/contactos",

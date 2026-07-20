@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { Calendar, Copy, Eye, EyeOff, Pencil, Plus, Share2, Trash2, X } from "lucide-react"
+import { Calendar, Copy, Eye, EyeOff, Pencil, Plus, Search, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { OptimizedImage } from "../../components/OptimizedImage"
 import { buildShareCountMap } from "../../lib/shareTracking"
@@ -101,9 +101,17 @@ const normalizeAdminEventCategory = (categoria?: string | null) => {
 
 const categoriasEvento = ["Evento", "Aviso", "Promocion", "Sorteo", "Beneficio", "Consulta"]
 
+const normalizeSearchText = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+
 export default function AdminEventosPage() {
   const [eventos, setEventos] = useState<Evento[]>([])
   const [activeTab, setActiveTab] = useState<"vigentes" | "pasados" | "borradores">("vigentes")
+  const [searchTerm, setSearchTerm] = useState("")
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingEvento, setEditingEvento] = useState<Evento | null>(null)
   const [formData, setFormData] = useState<EventoForm>(initialForm)
@@ -224,6 +232,9 @@ export default function AdminEventosPage() {
       if (evento.estado === "borrador") return false
       return activeTab === "vigentes" ? !isPastEvent(evento) : isPastEvent(evento)
     })
+    .filter((evento) =>
+      normalizeSearchText(evento.titulo).includes(normalizeSearchText(searchTerm))
+    )
     .sort((first, second) =>
       activeTab === "pasados"
         ? comparePastEvents(first, second)
@@ -983,6 +994,21 @@ export default function AdminEventosPage() {
         ))}
       </div>
 
+      <div className="relative mb-6 max-w-md">
+        <Search
+          aria-hidden="true"
+          className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+        />
+        <input
+          type="search"
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          placeholder="Buscar evento por nombre"
+          aria-label="Buscar evento por nombre"
+          className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-12 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+        />
+      </div>
+
       <div className="space-y-3 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
         {visibleEventos.map((evento) => (
           <div
@@ -1100,14 +1126,24 @@ export default function AdminEventosPage() {
         <div className="rounded-2xl border border-slate-200 bg-white py-12 text-center shadow-sm">
           <Calendar className="mx-auto mb-3 h-12 w-12 text-slate-300" />
           <h3 className="mb-2 text-lg font-medium text-slate-900">
-            {activeTab === "vigentes" ? "No hay eventos vigentes" : "No hay eventos pasados"}
+            {searchTerm.trim()
+              ? "No encontramos eventos con ese nombre"
+              : activeTab === "vigentes"
+                ? "No hay eventos vigentes"
+                : activeTab === "borradores"
+                  ? "No hay eventos en borrador"
+                  : "No hay eventos pasados"}
           </h3>
           <p className="mb-4 text-slate-500">
-            {activeTab === "vigentes"
-              ? "Comienza agregando tu primer evento"
-              : "Todavía no hay eventos que hayan pasado."}
+            {searchTerm.trim()
+              ? "Prueba con otro nombre o borra la búsqueda."
+              : activeTab === "vigentes"
+                ? "Comienza agregando tu primer evento"
+                : activeTab === "borradores"
+                  ? "Todavía no hay eventos guardados como borrador."
+                  : "Todavía no hay eventos que hayan pasado."}
           </p>
-          {activeTab === "vigentes" ? (
+          {activeTab === "vigentes" && !searchTerm.trim() ? (
             <button
               onClick={() => setIsFormOpen(true)}
               className="rounded-xl bg-emerald-600 px-6 py-3 font-medium text-white transition hover:bg-emerald-500"
