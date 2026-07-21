@@ -10,6 +10,7 @@ import { getSubscriptionStatusBadge, getSubscriptionStatusLabel, type Subscripti
 import { buildWhatsappCountMap } from "../../lib/whatsappTracking"
 import { supabase } from "../../supabase"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
+import { MoveCategoryButton } from "../components/MoveCategoryButton"
 
 type Comercio = {
   id: number
@@ -1023,6 +1024,12 @@ export default function AdminComerciosPage() {
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
+                        <MoveCategoryButton
+                          sourceType="comercio"
+                          sourceId={comercio.id}
+                          name={comercio.nombre}
+                          onMoved={cargarComercios}
+                        />
                         <button
                           onClick={() => setDeletingComercio(comercio)}
                           className="rounded-lg p-2 text-red-600 transition hover:bg-red-50"

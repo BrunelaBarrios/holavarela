@@ -11,6 +11,7 @@ import { buildWhatsappCountMap } from "../../lib/whatsappTracking"
 import { supabase } from "../../supabase"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
 import { postAdminAction } from "../lib/adminActions"
+import { MoveCategoryButton } from "../components/MoveCategoryButton"
 
 type Servicio = {
   id: number
@@ -1027,6 +1028,12 @@ export default function AdminServiciosPage() {
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
+                      <MoveCategoryButton
+                        sourceType="servicio"
+                        sourceId={servicio.id}
+                        name={servicio.nombre}
+                        onMoved={cargarServicios}
+                      />
                       <button
                         onClick={() => setDeletingServicio(servicio)}
                         className="rounded-lg p-2 text-red-600 transition hover:bg-red-50"

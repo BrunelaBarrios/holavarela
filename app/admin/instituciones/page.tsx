@@ -6,6 +6,7 @@ import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { OptimizedImage } from "../../components/OptimizedImage"
 import { supabase } from "../../supabase"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
+import { MoveCategoryButton } from "../components/MoveCategoryButton"
 
 type Institucion = {
   id: number
@@ -914,6 +915,13 @@ export default function AdminInstitucionesPage() {
                 >
                   <Pencil className="h-4 w-4" />
                 </button>
+
+                <MoveCategoryButton
+                  sourceType="institucion"
+                  sourceId={institucion.id}
+                  name={institucion.nombre}
+                  onMoved={cargarInstituciones}
+                />
 
                 <button
                   onClick={() => setDeletingInstitucion(institucion)}
