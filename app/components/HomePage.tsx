@@ -15,12 +15,10 @@ import { ContactActionLink } from "./ContactActionLink"
 import { ExternalLinksButtons } from "./ExternalLinksButtons"
 import { HomeJobOpportunities } from "./HomeJobOpportunities"
 import { CommunityMessages } from "./CommunityMessages"
-import { EventLikeButton } from "./EventLikeButton"
 import { OptimizedImage } from "./OptimizedImage"
 import { PublicHeader } from "./PublicHeader"
 import { ShareButton } from "./ShareButton"
 import { formatEventDateRange } from "../lib/eventDates"
-import { fetchEventLikes, recordEventLike } from "../lib/eventLikes"
 import { parseEventDescription, shouldHideEventDate } from "../lib/eventSubmissionMeta"
 import { recordContentVisit, recordHighlightImpression, recordSiteVisit } from "../lib/contentVisits"
 import { RADIO_STORAGE_KEY } from "../lib/localStorageKeys"
@@ -39,7 +37,6 @@ import {
   CloudSun,
   Gift,
   GraduationCap,
-  Heart,
   Mail,
   MapPin,
   Phone,
@@ -276,7 +273,6 @@ export type HomePageData = {
   challengeRanking: ChallengeRankingEntry[]
   goalGameConfig: GoalGameConfig
   goalGameRanking: GoalGameRankingEntry[]
-  totalEventLikes: number
   weather: WeatherData | null
 }
 
@@ -568,7 +564,6 @@ export function HomePage({
   const challengeRanking = initialData.challengeRanking || []
   const goalGameConfig = initialData.goalGameConfig
   const goalGameRanking = initialData.goalGameRanking || []
-  const totalEventLikes = initialData.totalEventLikes || 0
   const shouldShowGoalGame = goalGameConfig?.activo === true
   const shouldShowGoalGameRanking =
     shouldShowGoalGame &&
@@ -588,9 +583,6 @@ export function HomePage({
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null)
   const [selectedCurso, setSelectedCurso] = useState<Curso | null>(null)
   const [selectedInstitucion, setSelectedInstitucion] = useState<Institucion | null>(null)
-  const [eventLikeCounts, setEventLikeCounts] = useState<Record<string, number>>({})
-  const [likedEvents, setLikedEvents] = useState<Record<string, boolean>>({})
-  const [likingEventId, setLikingEventId] = useState<string | null>(null)
   const [contactLeadForm, setContactLeadForm] = useState<ContactLeadForm>(
     initialContactLeadForm
   )
@@ -759,18 +751,6 @@ export function HomePage({
   }, [])
 
   useEffect(() => {
-    if (eventos.length === 0) return
-
-    return scheduleIdleTask(() => {
-      const eventIds = eventos.map((evento) => String(evento.id))
-      void fetchEventLikes(eventIds).then(({ countMap, likedMap }) => {
-        setEventLikeCounts(countMap)
-        setLikedEvents(likedMap)
-      })
-    })
-  }, [eventos])
-
-  useEffect(() => {
     if (shouldLoadRadioWidget || !radio.isLive) return
 
     const section = radioSectionRef.current
@@ -914,39 +894,6 @@ export function HomePage({
       institucion.nombre,
       () => setSelectedInstitucion(institucion)
     )
-  }
-
-  const handleEventLike = async (eventId: string, eventTitle: string) => {
-    if (likedEvents[eventId] || likingEventId === eventId) return
-
-    setLikingEventId(eventId)
-    setLikedEvents((prev) => ({
-      ...prev,
-      [eventId]: true,
-    }))
-    setEventLikeCounts((prev) => ({
-      ...prev,
-      [eventId]: (prev[eventId] || 0) + 1,
-    }))
-
-    const result = await recordEventLike(eventId, eventTitle)
-
-    if (result.status === "exists" || result.status === "error") {
-      setEventLikeCounts((prev) => ({
-        ...prev,
-        [eventId]: Math.max((prev[eventId] || 1) - 1, 0),
-      }))
-    }
-
-    if (result.status === "error") {
-      setLikedEvents((prev) => ({
-        ...prev,
-        [eventId]: false,
-      }))
-    }
-
-    await sweepstakesPopup.handleLikeResult(result)
-    setLikingEventId(null)
   }
 
   const closeWelcomeHighlight = () => {
@@ -1673,18 +1620,6 @@ export function HomePage({
                 section="eventos"
                 itemId={String(selectedEvento.id)}
                 className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
-              />
-            ) : null}
-
-            {selectedEvento ? (
-              <EventLikeButton
-                count={eventLikeCounts[String(selectedEvento.id)]}
-                liked={Boolean(likedEvents[String(selectedEvento.id)])}
-                onClick={() =>
-                  void handleEventLike(String(selectedEvento.id), selectedEvento.titulo)
-                }
-                disabled={likingEventId === String(selectedEvento.id)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-sky-100 bg-sky-50 px-4 py-3 text-sm font-medium text-sky-600 transition hover:bg-sky-100 disabled:cursor-default disabled:opacity-70"
               />
             ) : null}
 
@@ -2524,10 +2459,6 @@ export function HomePage({
                       <HomeEventCard
                         key={event.id}
                         event={event}
-                        count={eventLikeCounts[String(event.id)]}
-                        liked={Boolean(likedEvents[String(event.id)])}
-                        disabled={likingEventId === String(event.id)}
-                        onLike={() => void handleEventLike(String(event.id), event.titulo)}
                         onOpen={() =>
                           handleViewMoreClick(
                             "eventos",
@@ -2567,10 +2498,6 @@ export function HomePage({
                           key={event.id}
                           event={event}
                           className="w-[78vw] shrink-0 snap-start sm:w-[22rem] lg:w-[calc((100%_-_3rem)/3)]"
-                          count={eventLikeCounts[String(event.id)]}
-                          liked={Boolean(likedEvents[String(event.id)])}
-                          disabled={likingEventId === String(event.id)}
-                          onLike={() => void handleEventLike(String(event.id), event.titulo)}
                           onOpen={() =>
                             handleViewMoreClick(
                               "eventos",
@@ -3058,11 +2985,10 @@ export function HomePage({
         </div>
       </section>
 
-      <section className="py-10 [content-visibility:auto] [contain-intrinsic-size:260px]">
+      <section className="hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-[28px] border border-sky-100 bg-[linear-gradient(135deg,#eff6ff_0%,#f0f9ff_55%,#ffffff_100%)] px-6 py-8 text-center shadow-[0_20px_55px_-38px_rgba(14,165,233,0.45)]">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-sky-500 shadow-sm">
-              <Heart className="h-7 w-7 fill-current" />
             </div>
             <h2 className="mt-5 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
               Gracias por tu apoyo
@@ -3070,7 +2996,7 @@ export function HomePage({
             <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
               La comunidad ya regaló{" "}
               <span className="font-semibold text-sky-600">
-                {totalEventLikes.toLocaleString("es-UY")} corazones
+                la participación de todos
               </span>{" "}
               a eventos y propuestas de Hola Varela.
             </p>
@@ -3160,19 +3086,11 @@ function InstagramMark() {
 
 function HomeEventCard({
   event,
-  count,
-  liked,
-  disabled,
-  onLike,
   onOpen,
   onCardKeyDown,
   className = "",
 }: {
   event: Evento
-  count?: number
-  liked: boolean
-  disabled: boolean
-  onLike: () => void
   onOpen: () => void
   onCardKeyDown: (event: KeyboardEvent<HTMLElement>, action: () => void) => void
   className?: string
@@ -3231,14 +3149,7 @@ function HomeEventCard({
           ) : null}
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3" onClick={(eventLikeWrapper) => eventLikeWrapper.stopPropagation()}>
-          <EventLikeButton
-            count={count}
-            liked={liked}
-            onClick={onLike}
-            disabled={disabled}
-            className="inline-flex items-center gap-1.5 rounded-full border border-sky-100 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 transition hover:bg-sky-100 disabled:cursor-default disabled:opacity-70"
-          />
+        <div className="mt-4 flex items-center justify-end gap-3">
           <span className="inline-flex items-center gap-1.5 text-sm font-bold text-sky-700">
             Ver m&aacute;s
             <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
