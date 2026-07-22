@@ -47,6 +47,8 @@ export async function GET(request: NextRequest) {
       pendingComercios,
       pendingServicios,
       pendingInstituciones,
+      pendingJobOpportunities,
+      pendingCommunityMessages,
     ] = await Promise.all([
       safeCount(
         "Comercios",
@@ -123,6 +125,20 @@ export async function GET(request: NextRequest) {
           .select("id", { count: "exact", head: true })
           .eq("estado_suscripcion", "pendiente")
       ),
+      safeCount(
+        "Oportunidades laborales pendientes",
+        supabaseAdmin
+          .from("oportunidades_laborales")
+          .select("id", { count: "exact", head: true })
+          .eq("estado", "pendiente")
+      ),
+      safeCount(
+        "Mensajes de la comunidad pendientes",
+        supabaseAdmin
+          .from("mensajes_comunidad")
+          .select("id", { count: "exact", head: true })
+          .eq("estado", "pendiente")
+      ),
     ])
     const warnings = [
       comercios.warning,
@@ -138,6 +154,8 @@ export async function GET(request: NextRequest) {
       pendingComercios.warning,
       pendingServicios.warning,
       pendingInstituciones.warning,
+      pendingJobOpportunities.warning,
+      pendingCommunityMessages.warning,
     ].filter(Boolean)
 
     return NextResponse.json({
@@ -154,6 +172,8 @@ export async function GET(request: NextRequest) {
         pendingPasswordRequests: pendingPasswordRequests.count,
         pendingSubscriptions:
           pendingComercios.count + pendingServicios.count + pendingInstituciones.count,
+        pendingJobOpportunities: pendingJobOpportunities.count,
+        pendingCommunityMessages: pendingCommunityMessages.count,
       },
       warnings,
     })

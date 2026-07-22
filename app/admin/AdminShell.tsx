@@ -31,6 +31,7 @@ export default function AdminLayout({
   const [isCheckingSession, setIsCheckingSession] = useState(true)
   const [session, setSession] = useState(() => (isLoginPage ? null : getAdminSession()))
   const [navSearch, setNavSearch] = useState("")
+  const [sidebarCounts, setSidebarCounts] = useState<Record<string, number>>({})
   const adminRole: AdminRole = session?.role || "admin"
   const adminName = session?.name || ""
   const isLoggedIn = Boolean(session)
@@ -145,6 +146,37 @@ export default function AdminLayout({
     }
   }, [router, shouldRedirectByRole, shouldRedirectToDashboard, shouldRedirectToLogin])
 
+  useEffect(() => {
+    if (!isLoggedIn || isLoginPage) return
+
+    let mounted = true
+    const loadSidebarCounts = async () => {
+      try {
+        const response = await fetch("/api/admin/dashboard", { cache: "no-store" })
+        const result = (await response.json()) as {
+          counts?: {
+            pendingJobOpportunities?: number
+            pendingCommunityMessages?: number
+          }
+        }
+        if (!response.ok || !mounted) return
+        setSidebarCounts({
+          "/admin/oportunidades-laborales": result.counts?.pendingJobOpportunities || 0,
+          "/admin/mensajes-comunidad": result.counts?.pendingCommunityMessages || 0,
+        })
+      } catch {
+        // El menú sigue funcionando aunque el contador no esté disponible.
+      }
+    }
+
+    void loadSidebarCounts()
+    const intervalId = window.setInterval(() => void loadSidebarCounts(), 60_000)
+    return () => {
+      mounted = false
+      window.clearInterval(intervalId)
+    }
+  }, [isLoggedIn, isLoginPage, pathname])
+
   if (
     isCheckingSession ||
     shouldRedirectToLogin ||
@@ -245,6 +277,7 @@ export default function AdminLayout({
                       {group.items.map((item) => {
                         const isActive = isActiveAdminRoute(pathname, item.href)
                         const Icon = item.icon
+                        const unreadCount = sidebarCounts[item.href] || 0
 
                         return (
                           <Link
@@ -258,8 +291,22 @@ export default function AdminLayout({
                             }`}
                           >
                             <Icon className="mt-0.5 h-4 w-4 shrink-0" />
-                            <span>
-                              <span className="block text-sm font-medium">{item.label}</span>
+                            <span className="min-w-0 flex-1">
+                              <span className="flex items-center justify-between gap-2 text-sm font-medium">
+                                <span>{item.label}</span>
+                                {unreadCount > 0 ? (
+                                  <span
+                                    className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
+                                      isActive
+                                        ? "bg-white text-slate-950"
+                                        : "bg-red-500 text-white"
+                                    }`}
+                                    aria-label={`${unreadCount} pendientes`}
+                                  >
+                                    {unreadCount > 99 ? "99+" : unreadCount}
+                                  </span>
+                                ) : null}
+                              </span>
                               <span
                                 className={`mt-0.5 block text-xs leading-5 ${
                                   isActive ? "text-slate-200" : "text-slate-400"
