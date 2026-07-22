@@ -3,11 +3,26 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react"
 import { ArrowRight, BriefcaseBusiness, CalendarDays, Clock3, MapPin, Search, X } from "lucide-react"
 import { PublicHeader } from "../components/PublicHeader"
+import { OptimizedImage } from "../components/OptimizedImage"
 import { buildHomePublicNav } from "../lib/publicNav"
 import { fileToDataUrl } from "../lib/fileToDataUrl"
 import { formatJobDate, JOB_CATEGORIES, JOB_SCHEDULES, type JobOpportunity, type JobType } from "../lib/jobOpportunities"
 
-const emptyForm = { nombre_publicante: "", titulo: "", categoria: "", descripcion: "", requisitos: "", experiencia: "", habilidades: "", tipo_jornada: "", horario: "", disponibilidad: "", localidad: "José Pedro Varela", telefono: "", email: "", forma_postulacion: "", fecha_vencimiento: "", imagen_url: "", cv_url: "", consentimiento: false }
+const emptyForm = {
+  nombre_publicante: "", titulo: "", descripcion: "", requisitos: "",
+  experiencia: "", habilidades: "", horario: "", disponibilidad: "",
+  localidad: "José Pedro Varela", telefono: "", email: "", forma_postulacion: "",
+  fecha_vencimiento: "", duracion_publicacion: "30", imagen_url: "", cv_url: "",
+  consentimiento: false,
+}
+
+const JOB_SEARCH_DURATIONS = [
+  { value: "15", label: "15 días" },
+  { value: "30", label: "30 días" },
+  { value: "60", label: "60 días" },
+  { value: "90", label: "90 días" },
+  { value: "hasta_aviso", label: "Hasta que avise que ya no estoy buscando" },
+] as const
 
 export function OpportunitiesClient() {
   const [type, setType] = useState<JobType>("oferta")
@@ -17,6 +32,7 @@ export function OpportunitiesClient() {
   const [category, setCategory] = useState("")
   const [schedule, setSchedule] = useState("")
   const [location, setLocation] = useState("")
+  const [position, setPosition] = useState("")
   const [modal, setModal] = useState<JobType | "detail" | null>(null)
   const [selected, setSelected] = useState<JobOpportunity | null>(null)
   const [form, setForm] = useState(emptyForm)
@@ -26,8 +42,9 @@ export function OpportunitiesClient() {
   const load = useCallback(async () => {
     setLoading(true); setError("")
     const query = new URLSearchParams({ tipo: type })
-    if (category) query.set("categoria", category)
-    if (schedule) query.set("jornada", schedule)
+    if (type === "oferta" && category) query.set("categoria", category)
+    if (type === "oferta" && schedule) query.set("jornada", schedule)
+    if (type === "busqueda" && position.trim()) query.set("puesto", position.trim())
     if (location.trim()) query.set("localidad", location.trim())
     try {
       const response = await fetch(`/api/oportunidades-laborales?${query}`, { cache: "no-store" })
@@ -36,10 +53,16 @@ export function OpportunitiesClient() {
       setItems(result.items || [])
     } catch (cause) { setError(cause instanceof Error ? cause.message : "No se pudieron cargar los datos.") }
     finally { setLoading(false) }
-  }, [type, category, schedule, location])
+  }, [type, category, schedule, location, position])
   useEffect(() => { void load() }, [load])
 
   const locations = useMemo(() => Array.from(new Set(items.map(item => item.localidad))).sort(), [items])
+  const changeType = (next: JobType) => {
+    setType(next)
+    setCategory("")
+    setSchedule("")
+    setPosition("")
+  }
   const openForm = (next: JobType) => { setType(next); setForm(emptyForm); setNotice(""); setModal(next) }
   const openDetail = async (item: JobOpportunity) => {
     setSelected(item); setModal("detail")
@@ -67,7 +90,11 @@ export function OpportunitiesClient() {
       reader.readAsDataURL(selectedFile)
       return
     }
-    update(key, await fileToDataUrl(selectedFile))
+    try {
+      update(key, await fileToDataUrl(selectedFile))
+    } catch (cause) {
+      setNotice(cause instanceof Error ? cause.message : "No se pudo procesar la foto.")
+    }
   }
 
   return <main className="min-h-screen bg-[linear-gradient(180deg,#f0f9ff_0%,#ffffff_32%,#f8fafc_100%)] text-slate-900">
@@ -85,37 +112,42 @@ export function OpportunitiesClient() {
     </section>
     <section className="mx-auto max-w-6xl px-4 py-10">
       <div className="grid grid-cols-2 rounded-2xl bg-slate-100 p-1.5">
-        {(["oferta", "busqueda"] as JobType[]).map(value => <button key={value} onClick={() => setType(value)} className={`rounded-xl px-3 py-3 font-bold transition ${type === value ? "bg-white text-sky-700 shadow-sm" : "text-slate-500"}`}>{value === "oferta" ? "Buscan personal" : "Buscan trabajo"}</button>)}
+        {(["oferta", "busqueda"] as JobType[]).map(value => <button key={value} onClick={() => changeType(value)} className={`rounded-xl px-3 py-3 font-bold transition ${type === value ? "bg-white text-sky-700 shadow-sm" : "text-slate-500"}`}>{value === "oferta" ? "Buscan personal" : "Buscan trabajo"}</button>)}
       </div>
       <div className="mt-5 grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-3">
-        <select aria-label="Categoría" value={category} onChange={e => setCategory(e.target.value)} className="rounded-xl border border-slate-200 px-4 py-3"><option value="">Todas las categorías</option>{JOB_CATEGORIES.map(value => <option key={value}>{value}</option>)}</select>
-        <select aria-label="Tipo de jornada" value={schedule} onChange={e => setSchedule(e.target.value)} className="rounded-xl border border-slate-200 px-4 py-3"><option value="">Todas las jornadas</option>{JOB_SCHEDULES.map(value => <option key={value}>{value}</option>)}</select>
+        {type === "oferta" ? <><select aria-label="Categoría" value={category} onChange={e => setCategory(e.target.value)} className="rounded-xl border border-slate-200 px-4 py-3"><option value="">Todas las categorías</option>{JOB_CATEGORIES.map(value => <option key={value}>{value}</option>)}</select><select aria-label="Tipo de jornada" value={schedule} onChange={e => setSchedule(e.target.value)} className="rounded-xl border border-slate-200 px-4 py-3"><option value="">Todas las jornadas</option>{JOB_SCHEDULES.map(value => <option key={value}>{value}</option>)}</select></> : <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 md:col-span-2"><Search className="h-4 w-4 text-slate-400"/><input value={position} onChange={e => setPosition(e.target.value)} placeholder="Área o puesto buscado" className="w-full py-3 outline-none"/></label>}
         <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-4"><Search className="h-4 w-4 text-slate-400"/><input list="job-locations" value={location} onChange={e => setLocation(e.target.value)} placeholder="Localidad" className="w-full py-3 outline-none"/><datalist id="job-locations">{locations.map(value => <option key={value} value={value}/>)}</datalist></label>
       </div>
       {loading ? <div className="grid gap-5 py-8 md:grid-cols-2">{[1,2,3,4].map(i => <div key={i} className="h-72 animate-pulse rounded-3xl bg-slate-100"/>)}</div> : error ? <p className="my-10 rounded-2xl bg-red-50 p-5 text-center text-red-700">{error}</p> : items.length === 0 ? <div className="my-10 rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center"><BriefcaseBusiness className="mx-auto h-10 w-10 text-slate-300"/><h2 className="mt-4 text-xl font-bold">Todavía no hay publicaciones activas</h2><p className="mt-2 text-slate-500">Podés ser la primera persona en compartir una oportunidad.</p></div> : <div className="grid gap-5 py-8 md:grid-cols-2">{items.map(item => <article key={item.id} className="flex flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_18px_45px_-35px_rgba(15,23,42,.55)]">
         <div className="flex justify-between gap-3"><span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-bold uppercase text-sky-700">{item.tipo_publicacion === "oferta" ? "Buscan personal" : "Busca trabajo"}</span><span className="text-xs text-slate-400">{formatJobDate(item.fecha_creacion)}</span></div>
+        {item.imagen_url ? <div className="relative mt-5 h-28 w-28 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"><OptimizedImage src={item.imagen_url} alt={`Foto de ${item.nombre_publicante}`} sizes="112px" className="object-cover" /></div> : null}
         <h2 className="mt-5 text-2xl font-black">{item.titulo}</h2><p className="mt-1 font-semibold text-slate-600">{item.nombre_publicante}</p>
-        <div className="mt-4 flex flex-wrap gap-2 text-sm text-slate-600"><span className="rounded-lg bg-slate-100 px-3 py-1.5">{item.categoria}</span>{(item.tipo_jornada || item.disponibilidad) && <span className="rounded-lg bg-slate-100 px-3 py-1.5">{item.tipo_jornada || item.disponibilidad}</span>}<span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5"><MapPin className="h-3.5 w-3.5"/>{item.localidad}</span></div>
+        <div className="mt-4 flex flex-wrap gap-2 text-sm text-slate-600">{item.tipo_publicacion === "oferta" ? <span className="rounded-lg bg-slate-100 px-3 py-1.5">{item.categoria}</span> : null}{(item.tipo_jornada || item.disponibilidad) && <span className="rounded-lg bg-slate-100 px-3 py-1.5">{item.tipo_jornada || item.disponibilidad}</span>}<span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5"><MapPin className="h-3.5 w-3.5"/>{item.localidad}</span></div>
         <p className="mt-5 line-clamp-3 leading-7 text-slate-600">{item.descripcion}</p><button onClick={() => void openDetail(item)} className="mt-6 inline-flex items-center gap-2 self-start font-bold text-sky-700">{type === "oferta" ? "Ver propuesta" : "Ver perfil"}<ArrowRight className="h-4 w-4"/></button>
       </article>)}</div>}
     </section>
     {modal && <div className="fixed inset-0 z-[70] overflow-y-auto bg-slate-950/55 p-4 backdrop-blur-sm"><div className="mx-auto my-4 max-w-3xl rounded-3xl bg-white p-5 shadow-2xl sm:p-8"><button onClick={() => setModal(null)} aria-label="Cerrar" className="float-right rounded-full p-2 hover:bg-slate-100"><X/></button>
       {modal === "detail" && selected ? <JobDetail item={selected}/> : <form onSubmit={submit}><h2 className="pr-12 text-2xl font-black">{modal === "oferta" ? "Publicar una oferta laboral" : "Publicar mi búsqueda laboral"}</h2><p className="mt-2 text-sm text-slate-500">La publicación quedará pendiente hasta que sea revisada.</p>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2"><Field label={modal === "oferta" ? "Nombre de empresa, institución o particular" : "Nombre"} value={form.nombre_publicante} onChange={v => update("nombre_publicante", v)} required/><Field label={modal === "oferta" ? "Puesto solicitado" : "Área o puesto buscado"} value={form.titulo} onChange={v => update("titulo", v)} required/>
-        <Select label="Categoría" value={form.categoria} onChange={v => update("categoria", v)} values={JOB_CATEGORIES} required/><Select label="Tipo de jornada" value={form.tipo_jornada} onChange={v => update("tipo_jornada", v)} values={JOB_SCHEDULES}/><Field label="Localidad" value={form.localidad} onChange={v => update("localidad", v)} required/><Field label={modal === "oferta" ? "Horario" : "Disponibilidad"} value={modal === "oferta" ? form.horario : form.disponibilidad} onChange={v => update(modal === "oferta" ? "horario" : "disponibilidad", v)}/></div>
-        <Area label={modal === "oferta" ? "Descripción del puesto" : "Presentación personal"} value={form.descripcion} onChange={v => update("descripcion", v)} required/>{modal === "oferta" ? <Area label="Requisitos" value={form.requisitos} onChange={v => update("requisitos", v)}/> : <><Area label="Experiencia" value={form.experiencia} onChange={v => update("experiencia", v)}/><Area label="Habilidades" value={form.habilidades} onChange={v => update("habilidades", v)}/></>}
+        {modal === "oferta" ? <>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2"><Field label="Nombre de empresa, institución o particular" value={form.nombre_publicante} onChange={v => update("nombre_publicante", v)} required/><Field label="Puesto solicitado" value={form.titulo} onChange={v => update("titulo", v)} required/><Field label="Localidad" value={form.localidad} onChange={v => update("localidad", v)} required/><Field label="Horario" value={form.horario} onChange={v => update("horario", v)}/></div>
+          <Area label="Descripción del puesto" value={form.descripcion} onChange={v => update("descripcion", v)} required/><Area label="Requisitos" value={form.requisitos} onChange={v => update("requisitos", v)}/>
+        </> : <>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2"><Field label="Nombre completo" value={form.nombre_publicante} onChange={v => update("nombre_publicante", v)} required/><Field label="Área o puesto buscado (opcional)" value={form.titulo} onChange={v => update("titulo", v)}/><Field label="Localidad" value={form.localidad} onChange={v => update("localidad", v)} required/><Field label="Disponibilidad (opcional)" value={form.disponibilidad} onChange={v => update("disponibilidad", v)}/></div>
+          <Area label="Presentación personal" value={form.descripcion} onChange={v => update("descripcion", v)} required/><Area label="Experiencia" value={form.experiencia} onChange={v => update("experiencia", v)} required/><Area label="Habilidades" value={form.habilidades} onChange={v => update("habilidades", v)} required/>
+          <label className="mt-4 block text-sm font-semibold">¿Por cuánto tiempo querés publicar tu búsqueda?<select value={form.duracion_publicacion} onChange={e => update("duracion_publicacion", e.target.value)} required className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-normal">{JOB_SEARCH_DURATIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
+          {form.duracion_publicacion === "hasta_aviso" ? <p className="mt-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Cuando ya no estés buscando trabajo, avisanos para retirar tu publicación.</p> : null}
+        </>}
         <div className="grid gap-4 sm:grid-cols-2"><Field label="Teléfono (opcional)" value={form.telefono} onChange={v => update("telefono", v)} type="tel"/><Field label="Correo electrónico (opcional)" value={form.email} onChange={v => update("email", v)} type="email"/>{modal === "oferta" && <><Field label="Forma de postulación" value={form.forma_postulacion} onChange={v => update("forma_postulacion", v)}/><Field label="Fecha límite (opcional)" value={form.fecha_vencimiento} onChange={v => update("fecha_vencimiento", v)} type="date"/></>}</div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2"><FileField label="Imagen o logo (opcional)" accept="image/*" onChange={f => void file("imagen_url", f)}/>{modal === "busqueda" && <FileField label="Currículum (opcional, PDF)" accept="application/pdf" onChange={f => void file("cv_url", f)}/>}</div>
-        <label className="mt-5 flex gap-3 rounded-2xl bg-sky-50 p-4 text-sm text-slate-700"><input type="checkbox" checked={form.consentimiento} onChange={e => update("consentimiento", e.target.checked)} required className="mt-1"/><span>Autorizo a Hola Varela a publicar la información ingresada. Entiendo que los datos de contacto solo aparecerán en el detalle.</span></label>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2"><FileField label={modal === "busqueda" ? "Foto (opcional)" : "Imagen o logo (opcional)"} accept="image/*" onChange={f => void file("imagen_url", f)}/>{modal === "busqueda" && <FileField label="Currículum vitae (opcional, PDF de hasta 2 MB)" accept="application/pdf" onChange={f => void file("cv_url", f)}/>}</div>
+        <label className="mt-5 flex gap-3 rounded-2xl bg-sky-50 p-4 text-sm text-slate-700"><input type="checkbox" checked={form.consentimiento} onChange={e => update("consentimiento", e.target.checked)} required className="mt-1"/><span>{modal === "busqueda" ? "Estoy de acuerdo con que Hola Varela publique la información ingresada y, si adjunto mi currículum, lo conserve en su base de datos y lo ponga a disposición ante solicitudes de empresas." : "Autorizo a Hola Varela a publicar la información ingresada. Entiendo que los datos de contacto solo aparecerán en el detalle."}</span></label>
         {notice && <p className={`mt-4 rounded-xl p-3 text-sm ${notice.startsWith("Publicación") ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{notice}</p>}<button disabled={sending} className="mt-5 w-full rounded-xl bg-sky-600 py-3.5 font-bold text-white hover:bg-sky-700 disabled:opacity-60">{sending ? "Enviando..." : "Enviar para revisión"}</button>
       </form>}
     </div></div>}
   </main>
 }
 
-function JobDetail({ item }: { item: JobOpportunity }) { return <div className="pr-8"><span className="text-sm font-bold uppercase text-sky-700">{item.tipo_publicacion === "oferta" ? "Buscan personal" : "Busca trabajo"}</span><h2 className="mt-2 text-3xl font-black">{item.titulo}</h2><p className="mt-1 font-semibold text-slate-600">{item.nombre_publicante}</p><div className="mt-5 flex flex-wrap gap-3 text-sm text-slate-600"><span className="flex items-center gap-1"><MapPin className="h-4 w-4"/>{item.localidad}</span><span className="flex items-center gap-1"><CalendarDays className="h-4 w-4"/>{formatJobDate(item.fecha_creacion)}</span>{item.tipo_jornada && <span className="flex items-center gap-1"><Clock3 className="h-4 w-4"/>{item.tipo_jornada}</span>}</div><p className="mt-6 whitespace-pre-wrap leading-7 text-slate-700">{item.descripcion}</p>{item.requisitos && <Detail label="Requisitos" value={item.requisitos}/>} {item.experiencia && <Detail label="Experiencia" value={item.experiencia}/>} {item.habilidades && <Detail label="Habilidades" value={item.habilidades}/>} {item.disponibilidad && <Detail label="Disponibilidad" value={item.disponibilidad}/>} {item.forma_postulacion && <Detail label="Cómo postularse" value={item.forma_postulacion}/>}<div className="mt-6 flex flex-wrap gap-3">{item.email && <a className="rounded-full bg-sky-600 px-5 py-2.5 font-bold text-white" href={`mailto:${item.email}`}>Enviar correo</a>}{item.telefono && <a className="rounded-full border border-sky-200 px-5 py-2.5 font-bold text-sky-700" href={`tel:${item.telefono}`}>Llamar</a>}{item.cv_url && <a className="rounded-full border border-slate-200 px-5 py-2.5 font-bold" href={item.cv_url} download="curriculum.pdf">Ver currículum</a>}</div></div> }
+function JobDetail({ item }: { item: JobOpportunity }) { return <div className="pr-8"><span className="text-sm font-bold uppercase text-sky-700">{item.tipo_publicacion === "oferta" ? "Buscan personal" : "Busca trabajo"}</span>{item.imagen_url ? <div className="relative mt-4 h-32 w-32 overflow-hidden rounded-2xl border border-slate-200"><OptimizedImage src={item.imagen_url} alt={`Foto de ${item.nombre_publicante}`} sizes="128px" className="object-cover" /></div> : null}<h2 className="mt-2 text-3xl font-black">{item.titulo}</h2><p className="mt-1 font-semibold text-slate-600">{item.nombre_publicante}</p><div className="mt-5 flex flex-wrap gap-3 text-sm text-slate-600"><span className="flex items-center gap-1"><MapPin className="h-4 w-4"/>{item.localidad}</span><span className="flex items-center gap-1"><CalendarDays className="h-4 w-4"/>{formatJobDate(item.fecha_creacion)}</span>{item.tipo_jornada && <span className="flex items-center gap-1"><Clock3 className="h-4 w-4"/>{item.tipo_jornada}</span>}</div><p className="mt-6 whitespace-pre-wrap leading-7 text-slate-700">{item.descripcion}</p>{item.requisitos && <Detail label="Requisitos" value={item.requisitos}/>} {item.experiencia && <Detail label="Experiencia" value={item.experiencia}/>} {item.habilidades && <Detail label="Habilidades" value={item.habilidades}/>} {item.disponibilidad && <Detail label="Disponibilidad" value={item.disponibilidad}/>} {item.tipo_publicacion === "oferta" && item.forma_postulacion && <Detail label="Cómo postularse" value={item.forma_postulacion}/>}<div className="mt-6 flex flex-wrap gap-3">{item.email && <a className="rounded-full bg-sky-600 px-5 py-2.5 font-bold text-white" href={`mailto:${item.email}`}>Enviar correo</a>}{item.telefono && <a className="rounded-full border border-sky-200 px-5 py-2.5 font-bold text-sky-700" href={`tel:${item.telefono}`}>Llamar</a>}</div></div> }
 function Detail({ label, value }: { label: string; value: string }) { return <div className="mt-5"><h3 className="font-bold">{label}</h3><p className="mt-1 whitespace-pre-wrap text-slate-600">{value}</p></div> }
 function Field({ label, value, onChange, required, type="text" }: { label:string; value:string; onChange:(v:string)=>void; required?:boolean; type?:string }) { return <label className="block text-sm font-semibold">{label}<input type={type} value={value} onChange={e=>onChange(e.target.value)} required={required} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-normal outline-none focus:border-sky-500"/></label> }
 function Area({ label, value, onChange, required }: { label:string; value:string; onChange:(v:string)=>void; required?:boolean }) { return <label className="mt-4 block text-sm font-semibold">{label}<textarea value={value} onChange={e=>onChange(e.target.value)} required={required} rows={4} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-normal outline-none focus:border-sky-500"/></label> }
-function Select({ label, value, onChange, values, required }: {label:string;value:string;onChange:(v:string)=>void;values:readonly string[];required?:boolean}) { return <label className="block text-sm font-semibold">{label}<select value={value} onChange={e=>onChange(e.target.value)} required={required} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-normal"><option value="">Seleccionar</option>{values.map(v=><option key={v}>{v}</option>)}</select></label> }
 function FileField({label,accept,onChange}:{label:string;accept:string;onChange:(file?:File)=>void}) { return <label className="block text-sm font-semibold">{label}<input type="file" accept={accept} onChange={e=>onChange(e.target.files?.[0])} className="mt-2 block w-full rounded-xl border border-slate-200 p-2 text-sm file:rounded-lg file:border-0 file:bg-sky-50 file:px-3 file:py-2"/></label> }
