@@ -4,6 +4,9 @@ import { readAdminSessionFromRequest } from "../../../lib/adminSession"
 import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
 import { JOB_STATUSES } from "../../../lib/jobOpportunities"
 
+const clean = (value: unknown, max = 3000) =>
+  typeof value === "string" ? value.trim().slice(0, max) : ""
+
 export async function GET(request: NextRequest) {
   if (!await readAdminSessionFromRequest(request)) return NextResponse.json({ error: "No autorizado." }, { status: 401 })
   const params = request.nextUrl.searchParams
@@ -30,6 +33,53 @@ export async function GET(request: NextRequest) {
             ? true
             : visibilityResult.data?.mostrar_oportunidades_laborales_home !== false,
       })
+}
+
+export async function POST(request: NextRequest) {
+  if (!await readAdminSessionFromRequest(request)) {
+    return NextResponse.json({ error: "No autorizado." }, { status: 401 })
+  }
+
+  const body = await request.json()
+  const nombrePublicante = clean(body.nombre_publicante, 120)
+  const titulo = clean(body.titulo, 160)
+  const descripcion = clean(body.descripcion)
+  const localidad = clean(body.localidad, 100)
+  const imagenUrl = clean(body.imagen_url, 1_000_000)
+
+  if (!nombrePublicante || !titulo || !localidad || !imagenUrl.startsWith("data:image/")) {
+    return NextResponse.json(
+      { error: "Completá el título, el anunciante, la localidad y seleccioná un afiche válido." },
+      { status: 400 }
+    )
+  }
+
+  const payload = {
+    tipo_publicacion: "oferta",
+    nombre_publicante: nombrePublicante,
+    titulo,
+    categoria: clean(body.categoria, 80) || "Otros",
+    descripcion: descripcion || "Consultá toda la información en el afiche.",
+    requisitos: clean(body.requisitos) || null,
+    localidad,
+    telefono: clean(body.telefono, 50) || null,
+    email: clean(body.email, 180).toLowerCase() || null,
+    forma_postulacion: clean(body.forma_postulacion, 500) || null,
+    imagen_url: imagenUrl,
+    fecha_vencimiento: clean(body.fecha_vencimiento, 20) || null,
+    estado: "activa",
+  }
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("oportunidades_laborales")
+    .insert(payload)
+    .select("id")
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  revalidatePath("/oportunidades-laborales")
+  revalidatePath("/")
+  return NextResponse.json({ ok: true, id: data.id }, { status: 201 })
 }
 
 export async function PATCH(request: NextRequest) {
