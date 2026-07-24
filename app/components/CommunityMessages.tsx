@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from "react"
-import { CalendarClock, Clock3, MessageCircle, Send, X } from "lucide-react"
+import Link from "next/link"
+import { useEffect, useMemo, useRef, useState, type TouchEvent } from "react"
+import { ArrowRight, BriefcaseBusiness, CalendarClock, ChevronLeft, ChevronRight, MessageCircle, Send, X } from "lucide-react"
 import { COMMUNITY_MESSAGE_MAX_LENGTH } from "../lib/communityMessages"
 
 type Institution = { id: number; nombre: string }
@@ -27,10 +28,13 @@ function remainingLabel(expiresAt: string) {
   return `Disponible por ${hours} hora${hours === 1 ? "" : "s"} más`
 }
 
-export function CommunityMessages() {
+export function CommunityMessages({ showOpportunities = true }: { showOpportunities?: boolean }) {
   const [messages, setMessages] = useState<Message[]>([])
-  const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set())
   const [institutions, setInstitutions] = useState<Institution[]>([])
+  const [activeOpportunityCount, setActiveOpportunityCount] = useState(0)
+  const [activeMessage, setActiveMessage] = useState(0)
+  const [carouselPaused, setCarouselPaused] = useState(false)
+  const touchStartX = useRef<number | null>(null)
   const [open, setOpen] = useState(false)
   const [preview, setPreview] = useState(false)
   const [form, setForm] = useState(emptyForm)
@@ -43,13 +47,35 @@ export function CommunityMessages() {
     if (!response.ok) return
     const data = await response.json()
     setMessages(data.messages || [])
+    setActiveMessage(0)
     setInstitutions(data.institutions || [])
+    setActiveOpportunityCount(data.activeOpportunityCount || 0)
   }
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => { void load() }, 0)
     return () => window.clearTimeout(timeoutId)
   }, [])
+  useEffect(() => {
+    if (messages.length < 2 || carouselPaused) return
+    const intervalId = window.setInterval(
+      () => setActiveMessage(current => (current + 1) % messages.length),
+      5500
+    )
+    return () => window.clearInterval(intervalId)
+  }, [carouselPaused, messages.length])
+
+  const moveCarousel = (direction: -1 | 1) => {
+    if (messages.length < 2) return
+    setActiveMessage(current => (current + direction + messages.length) % messages.length)
+  }
+
+  const finishSwipe = (event: TouchEvent<HTMLDivElement>) => {
+    if (touchStartX.current === null) return
+    const distance = event.changedTouches[0].clientX - touchStartX.current
+    touchStartX.current = null
+    if (Math.abs(distance) > 45) moveCarousel(distance < 0 ? 1 : -1)
+  }
   const selectedInstitution = useMemo(
     () => institutions.find((item) => String(item.id) === form.institucionId),
     [form.institucionId, institutions]
@@ -89,54 +115,51 @@ export function CommunityMessages() {
   }
 
   return (
-    <section className="py-10 sm:py-14">
+    <section className="py-4 sm:py-6">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="rounded-[28px] border border-emerald-100 bg-white/90 p-5 shadow-sm sm:p-8">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className={`grid overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_16px_45px_-36px_rgba(15,23,42,.5)] ${showOpportunities ? "md:grid-cols-2" : ""}`}>
+          {showOpportunities ? <div className="flex min-h-[250px] flex-col justify-between p-6 sm:p-7 md:border-r md:border-slate-200">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-700">La voz de Varela</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">Mensajes de la comunidad</h2>
-              <p className="mt-3 text-base text-slate-600">Compartí un mensaje con la comunidad. Estará visible durante 24 horas.</p>
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700"><BriefcaseBusiness className="h-5 w-5" /></span>
+                <h2 className="text-xl font-bold tracking-tight text-slate-900">Oportunidades laborales</h2>
+              </div>
+              <p className="mt-4 max-w-md text-sm leading-6 text-slate-600">Encontrá ofertas de trabajo o compartí tu búsqueda laboral.</p>
+              {activeOpportunityCount > 0 ? <p className="mt-3 inline-flex rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">{activeOpportunityCount} {activeOpportunityCount === 1 ? "oportunidad activa" : "oportunidades activas"}</p> : null}
             </div>
-            <button type="button" onClick={() => { setOpen(true); setSuccess(false); setError("") }} className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-700 px-5 py-3 font-semibold text-white transition hover:bg-emerald-800">
-              <MessageCircle className="h-5 w-5" /> Publicar un mensaje
-            </button>
-          </div>
+            <Link href="/oportunidades-laborales" className="mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800">Ver oportunidades <ArrowRight className="h-4 w-4" /></Link>
+          </div> : null}
 
-          {messages.length ? (
-            <div className="mt-7 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {messages.map((message) => (
-                <article key={message.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-                  <p className="whitespace-pre-wrap text-sm leading-6 text-slate-800">
-                    {expandedMessages.has(message.id) || message.mensaje.length <= 150
-                      ? message.mensaje
-                      : `${message.mensaje.slice(0, 150).trimEnd()}…`}
-                  </p>
-                  {message.mensaje.length > 150 ? (
-                    <button
-                      type="button"
-                      onClick={() => setExpandedMessages((current) => {
-                        const next = new Set(current)
-                        if (next.has(message.id)) next.delete(message.id)
-                        else next.add(message.id)
-                        return next
-                      })}
-                      className="mt-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800"
-                      aria-expanded={expandedMessages.has(message.id)}
-                    >
-                      {expandedMessages.has(message.id) ? "Ver menos" : "Ver más"}
-                    </button>
-                  ) : null}
-                  <div className="mt-4 space-y-1 border-t border-slate-200 pt-3 text-xs text-slate-600">
-                    <p><strong className="text-slate-800">Publicado por:</strong> {message.nombre}</p>
-                    {institutionName(message) ? <p><strong className="text-slate-800">En referencia a:</strong> {institutionName(message)}</p> : null}
-                    <p className="flex items-center gap-1.5"><Clock3 className="h-4 w-4" /> {new Intl.DateTimeFormat("es-UY", { hour: "2-digit", minute: "2-digit" }).format(new Date(message.fecha_publicacion))}</p>
-                    <p className="font-medium text-emerald-700">{remainingLabel(message.fecha_vencimiento)}</p>
-                  </div>
-                </article>
-              ))}
+          <div className={`flex min-h-[250px] flex-col p-6 sm:p-7 ${showOpportunities ? "border-t border-slate-200 md:border-t-0" : ""}`} onMouseEnter={() => setCarouselPaused(true)} onMouseLeave={() => setCarouselPaused(false)} onTouchStart={event => { touchStartX.current = event.touches[0].clientX }} onTouchEnd={finishSwipe}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700"><MessageCircle className="h-5 w-5" /></span>
+                <h2 className="text-sm font-bold uppercase tracking-[0.12em] text-emerald-800">La comunidad comparte</h2>
+              </div>
+              {messages.length > 1 ? <div className="hidden items-center gap-1 md:flex">
+                <button type="button" onClick={() => moveCarousel(-1)} aria-label="Ver mensaje anterior" className="rounded-full p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-emerald-700"><ChevronLeft className="h-4 w-4"/></button>
+                <button type="button" onClick={() => moveCarousel(1)} aria-label="Ver mensaje siguiente" className="rounded-full p-1.5 text-slate-500 transition hover:bg-slate-100 hover:text-emerald-700"><ChevronRight className="h-4 w-4"/></button>
+              </div> : null}
             </div>
-          ) : <p className="mt-7 rounded-2xl bg-slate-50 px-5 py-6 text-center text-sm text-slate-500">Todavía no hay mensajes activos.</p>}
+            <div className="mt-4 min-h-[112px] flex-1 overflow-hidden">
+              {messages.length ? <div className="flex h-full transition-transform duration-500 ease-out" style={{ transform: `translateX(-${activeMessage * 100}%)` }}>
+                {messages.map(message => <article key={message.id} className="w-full shrink-0">
+                  <p className="line-clamp-3 text-[15px] leading-6 text-slate-800">“{message.mensaje}”</p>
+                  <div className="mt-2 text-xs leading-5 text-slate-500">
+                    {message.nombre ? <span className="font-medium text-slate-700">Publicado por {message.nombre}</span> : null}
+                    {institutionName(message) ? <span> · {institutionName(message)}</span> : null}
+                    <p className="text-emerald-700">{remainingLabel(message.fecha_vencimiento)}</p>
+                  </div>
+                </article>)}
+              </div> : <div className="rounded-xl border border-dashed border-emerald-200 bg-emerald-50/50 px-4 py-3 text-sm leading-5 text-slate-600">Publicá aquí una felicitación, un saludo o un mensaje para alguien. Estará visible durante 24 horas.</div>}
+            </div>
+            <div className="mt-2 flex min-h-8 items-end justify-between gap-4">
+              <div className="flex gap-1.5" aria-label={messages.length > 1 ? `Mensaje ${activeMessage + 1} de ${messages.length}` : undefined}>
+                {messages.length > 1 ? messages.map((message, index) => <button key={message.id} type="button" onClick={() => setActiveMessage(index)} aria-label={`Ver mensaje ${index + 1}`} className={`h-1.5 rounded-full transition-all ${index === activeMessage ? "w-5 bg-emerald-600" : "w-1.5 bg-slate-300"}`}/>) : null}
+              </div>
+              <button type="button" onClick={() => { setOpen(true); setSuccess(false); setError("") }} className="text-sm font-semibold text-emerald-700 transition hover:text-emerald-900">Publicar mensaje</button>
+            </div>
+          </div>
         </div>
       </div>
 

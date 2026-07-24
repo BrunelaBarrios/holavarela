@@ -13,7 +13,6 @@ import {
 import { useRouter } from "next/navigation"
 import { ContactActionLink } from "./ContactActionLink"
 import { ExternalLinksButtons } from "./ExternalLinksButtons"
-import { HomeJobOpportunities } from "./HomeJobOpportunities"
 import { CommunityMessages } from "./CommunityMessages"
 import { OptimizedImage } from "./OptimizedImage"
 import { PublicHeader } from "./PublicHeader"
@@ -2143,10 +2142,6 @@ export function HomePage({
         </section>
       )}
 
-      {sobreVarela.mostrar_oportunidades_laborales_home !== false ? (
-        <HomeJobOpportunities />
-      ) : null}
-
       {radio.isLive && (
         <section ref={radioSectionRef} className="py-6 [content-visibility:auto] [contain-intrinsic-size:280px]">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -2163,7 +2158,7 @@ export function HomePage({
         </section>
       )}
 
-      <CommunityMessages />
+      <CommunityMessages showOpportunities={sobreVarela.mostrar_oportunidades_laborales_home !== false} />
 
       <div className="flex flex-col">
 

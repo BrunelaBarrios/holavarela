@@ -26,7 +26,11 @@ export async function GET() {
     await activateDueMessages()
     const admin = getSupabaseAdmin()
     const now = new Date().toISOString()
-    const [{ data: messages, error }, { data: institutions }] = await Promise.all([
+    const [
+      { data: messages, error },
+      { data: institutions },
+      { count: activeOpportunityCount },
+    ] = await Promise.all([
       admin
         .from("mensajes_comunidad")
         .select("id, nombre, mensaje, fecha_publicacion, fecha_vencimiento, institucion_id, instituciones(nombre)")
@@ -40,9 +44,18 @@ export async function GET() {
         .select("id, nombre")
         .or("estado.is.null,estado.eq.activo")
         .order("nombre", { ascending: true }),
+      admin
+        .from("oportunidades_laborales")
+        .select("id", { count: "exact", head: true })
+        .eq("estado", "activa")
+        .or(`fecha_vencimiento.is.null,fecha_vencimiento.gte.${now.slice(0, 10)}`),
     ])
     if (error) throw error
-    return NextResponse.json({ messages: messages || [], institutions: institutions || [] })
+    return NextResponse.json({
+      messages: messages || [],
+      institutions: institutions || [],
+      activeOpportunityCount: activeOpportunityCount || 0,
+    })
   } catch (error) {
     console.error("community messages GET", error)
     return NextResponse.json({ error: "No pudimos cargar los mensajes." }, { status: 500 })
