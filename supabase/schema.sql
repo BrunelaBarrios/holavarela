@@ -1219,6 +1219,32 @@ create policy "Public read active job opportunities" on public.oportunidades_lab
 drop policy if exists "Public submit job opportunities" on public.oportunidades_laborales;
 create policy "Public submit job opportunities" on public.oportunidades_laborales for insert to anon, authenticated with check (estado = 'pendiente');
 
+-- Base privada de personas en búsqueda laboral. No tiene políticas públicas de lectura.
+create table if not exists public.candidatos_laborales (
+  id uuid primary key default gen_random_uuid(),
+  nombre_completo text not null,
+  puesto_buscado text,
+  presentacion text not null,
+  experiencia text not null,
+  habilidades text not null,
+  disponibilidad text,
+  localidad text not null default 'José Pedro Varela',
+  telefono text,
+  email text,
+  cv_url text,
+  foto_url text,
+  autoriza_publicacion boolean not null default false,
+  estado text not null default 'nuevo' check (estado in ('nuevo', 'contactado', 'entrevistado', 'archivado')),
+  notas_internas text,
+  fecha_creacion timestamptz not null default now()
+);
+
+create index if not exists candidatos_laborales_fecha_idx
+on public.candidatos_laborales (fecha_creacion desc);
+create index if not exists candidatos_laborales_estado_idx
+on public.candidatos_laborales (estado, localidad);
+alter table public.candidatos_laborales enable row level security;
+
 -- Mensajes breves de la comunidad, siempre sujetos a moderacion.
 create table if not exists public.mensajes_comunidad (
   id uuid primary key default gen_random_uuid(),

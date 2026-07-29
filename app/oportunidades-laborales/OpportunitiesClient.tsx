@@ -13,7 +13,7 @@ const emptyForm = {
   experiencia: "", habilidades: "", horario: "", disponibilidad: "",
   localidad: "José Pedro Varela", telefono: "", email: "", forma_postulacion: "",
   fecha_vencimiento: "", duracion_publicacion: "30", imagen_url: "", cv_url: "",
-  consentimiento: false,
+  consentimiento: false, publicar_perfil: false,
 }
 
 const JOB_SEARCH_DURATIONS = [
@@ -73,7 +73,8 @@ export function OpportunitiesClient() {
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setSending(true); setNotice("")
     try {
-      const response = await fetch("/api/oportunidades-laborales", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, tipo_publicacion: modal }) })
+      const endpoint = modal === "busqueda" ? "/api/candidatos-laborales" : "/api/oportunidades-laborales"
+      const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, tipo_publicacion: modal }) })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error)
       setNotice(result.message); setForm(emptyForm)
@@ -106,7 +107,7 @@ export function OpportunitiesClient() {
         <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-600">Conectamos personas que buscan empleo con comercios, empresas e instituciones de José Pedro Varela.</p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <button onClick={() => openForm("oferta")} className="rounded-full bg-slate-950 px-6 py-3 font-bold text-white hover:bg-sky-700">Publicar una oferta laboral</button>
-          <button onClick={() => openForm("busqueda")} className="rounded-full border border-sky-200 bg-white px-6 py-3 font-bold text-sky-700 hover:bg-sky-50">Publicar mi búsqueda laboral</button>
+          <button onClick={() => openForm("busqueda")} className="rounded-full border border-sky-200 bg-white px-6 py-3 font-bold text-sky-700 hover:bg-sky-50">Cargar mi currículum</button>
         </div>
       </div>
     </section>
@@ -127,20 +128,20 @@ export function OpportunitiesClient() {
       </article>)}</div>}
     </section>
     {modal && <div className="fixed inset-0 z-[70] overflow-y-auto bg-slate-950/55 p-4 backdrop-blur-sm"><div className="mx-auto my-4 max-w-3xl rounded-3xl bg-white p-5 shadow-2xl sm:p-8"><button onClick={() => setModal(null)} aria-label="Cerrar" className="float-right rounded-full p-2 hover:bg-slate-100"><X/></button>
-      {modal === "detail" && selected ? <JobDetail item={selected}/> : <form onSubmit={submit}><h2 className="pr-12 text-2xl font-black">{modal === "oferta" ? "Publicar una oferta laboral" : "Publicar mi búsqueda laboral"}</h2><p className="mt-2 text-sm text-slate-500">La publicación quedará pendiente hasta que sea revisada.</p>
+      {modal === "detail" && selected ? <JobDetail item={selected}/> : <form onSubmit={submit}><h2 className="pr-12 text-2xl font-black">{modal === "oferta" ? "Publicar una oferta laboral" : "Cargar mis datos y currículum"}</h2><p className="mt-2 text-sm text-slate-500">{modal === "busqueda" ? "Tu información se guardará de forma privada. Solo se publicará si lo elegís expresamente." : "La publicación quedará pendiente hasta que sea revisada."}</p>
         {modal === "oferta" ? <>
           <div className="mt-6 grid gap-4 sm:grid-cols-2"><Field label="Nombre de empresa, institución o particular" value={form.nombre_publicante} onChange={v => update("nombre_publicante", v)} required/><Field label="Puesto solicitado" value={form.titulo} onChange={v => update("titulo", v)} required/><Field label="Localidad" value={form.localidad} onChange={v => update("localidad", v)} required/><Field label="Horario" value={form.horario} onChange={v => update("horario", v)}/></div>
           <Area label="Descripción del puesto" value={form.descripcion} onChange={v => update("descripcion", v)} required/><Area label="Requisitos" value={form.requisitos} onChange={v => update("requisitos", v)}/>
         </> : <>
           <div className="mt-6 grid gap-4 sm:grid-cols-2"><Field label="Nombre completo" value={form.nombre_publicante} onChange={v => update("nombre_publicante", v)} required/><Field label="Área o puesto buscado (opcional)" value={form.titulo} onChange={v => update("titulo", v)}/><Field label="Localidad" value={form.localidad} onChange={v => update("localidad", v)} required/><Field label="Disponibilidad (opcional)" value={form.disponibilidad} onChange={v => update("disponibilidad", v)}/></div>
           <Area label="Presentación personal" value={form.descripcion} onChange={v => update("descripcion", v)} required/><Area label="Experiencia" value={form.experiencia} onChange={v => update("experiencia", v)} required/><Area label="Habilidades" value={form.habilidades} onChange={v => update("habilidades", v)} required/>
-          <label className="mt-4 block text-sm font-semibold">¿Por cuánto tiempo querés publicar tu búsqueda?<select value={form.duracion_publicacion} onChange={e => update("duracion_publicacion", e.target.value)} required className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-normal">{JOB_SEARCH_DURATIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
-          {form.duracion_publicacion === "hasta_aviso" ? <p className="mt-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Cuando ya no estés buscando trabajo, avisanos para retirar tu publicación.</p> : null}
+          <label className="mt-5 flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-slate-700"><input type="checkbox" checked={form.publicar_perfil} onChange={e => update("publicar_perfil", e.target.checked)} className="mt-1"/><span><strong className="block text-slate-900">También quiero publicar mi búsqueda laboral</strong>Si no marcás esta opción, tus datos y tu currículum permanecerán privados y solo serán visibles para la administración de Hola Varela.</span></label>
+          {form.publicar_perfil ? <><label className="mt-4 block text-sm font-semibold">¿Por cuánto tiempo querés publicar tu búsqueda?<select value={form.duracion_publicacion} onChange={e => update("duracion_publicacion", e.target.value)} required className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-normal">{JOB_SEARCH_DURATIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>{form.duracion_publicacion === "hasta_aviso" ? <p className="mt-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Cuando ya no estés buscando trabajo, avisanos para retirar tu publicación.</p> : null}</> : null}
         </>}
         <div className="grid gap-4 sm:grid-cols-2"><Field label="Teléfono (opcional)" value={form.telefono} onChange={v => update("telefono", v)} type="tel"/><Field label="Correo electrónico (opcional)" value={form.email} onChange={v => update("email", v)} type="email"/>{modal === "oferta" && <><Field label="Forma de postulación" value={form.forma_postulacion} onChange={v => update("forma_postulacion", v)}/><Field label="Fecha límite (opcional)" value={form.fecha_vencimiento} onChange={v => update("fecha_vencimiento", v)} type="date"/></>}</div>
         <div className="mt-4 grid gap-4 sm:grid-cols-2"><FileField label={modal === "busqueda" ? "Foto (opcional)" : "Imagen o logo (opcional)"} accept="image/*" onChange={f => void file("imagen_url", f)}/>{modal === "busqueda" && <FileField label="Currículum vitae (opcional, PDF de hasta 2 MB)" accept="application/pdf" onChange={f => void file("cv_url", f)}/>}</div>
-        <label className="mt-5 flex gap-3 rounded-2xl bg-sky-50 p-4 text-sm text-slate-700"><input type="checkbox" checked={form.consentimiento} onChange={e => update("consentimiento", e.target.checked)} required className="mt-1"/><span>{modal === "busqueda" ? "Estoy de acuerdo con que Hola Varela publique la información ingresada y, si adjunto mi currículum, lo conserve en su base de datos y lo ponga a disposición ante solicitudes de empresas." : "Autorizo a Hola Varela a publicar la información ingresada. Entiendo que los datos de contacto solo aparecerán en el detalle."}</span></label>
-        {notice && <p className={`mt-4 rounded-xl p-3 text-sm ${notice.startsWith("Publicación") ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{notice}</p>}<button disabled={sending} className="mt-5 w-full rounded-xl bg-sky-600 py-3.5 font-bold text-white hover:bg-sky-700 disabled:opacity-60">{sending ? "Enviando..." : "Enviar para revisión"}</button>
+        <label className="mt-5 flex gap-3 rounded-2xl bg-sky-50 p-4 text-sm text-slate-700"><input type="checkbox" checked={form.consentimiento} onChange={e => update("consentimiento", e.target.checked)} required className="mt-1"/><span>{modal === "busqueda" ? "Autorizo a Hola Varela a almacenar mis datos y mi currículum en su base privada para facilitar contactos laborales. Puedo solicitar su eliminación. La publicación pública depende exclusivamente de la opción anterior." : "Autorizo a Hola Varela a publicar la información ingresada. Entiendo que los datos de contacto solo aparecerán en el detalle."}</span></label>
+        {notice && <p className={`mt-4 rounded-xl p-3 text-sm ${notice.includes("Guardamos") || notice.startsWith("Publicaci") ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{notice}</p>}<button disabled={sending} className="mt-5 w-full rounded-xl bg-sky-600 py-3.5 font-bold text-white hover:bg-sky-700 disabled:opacity-60">{sending ? "Enviando..." : modal === "busqueda" ? "Guardar información" : "Enviar para revisión"}</button>
       </form>}
     </div></div>}
   </main>

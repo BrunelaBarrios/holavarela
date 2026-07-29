@@ -113,6 +113,15 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     keywords: ["trabajo", "empleo", "ofertas", "postulantes"],
   },
   {
+    href: "/admin/curriculums",
+    icon: FileText,
+    label: "Currículums",
+    group: "gestion",
+    roles: ["superadmin", "admin"],
+    description: "Base privada de personas en búsqueda laboral.",
+    keywords: ["cv", "curriculum", "candidatos", "postulantes", "empleo"],
+  },
+  {
     href: "/admin/contactos",
     icon: Mail,
     label: "Contactos",
