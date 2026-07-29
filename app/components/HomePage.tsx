@@ -40,6 +40,7 @@ import {
   MapPin,
   Phone,
   Plus,
+  Search,
   Store,
   Trophy,
   UserRound,
@@ -207,6 +208,23 @@ type Institucion = {
   premium_activo?: boolean | null
   plan_suscripcion?: string | null
 }
+
+type HomeSearchResult = {
+  id: string
+  title: string
+  description: string
+  category: string
+  href: string
+  icon: typeof Search
+  searchableText: string
+}
+
+const normalizeSearchText = (value: string | null | undefined) =>
+  (value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
 
 type SobreVarelaConfig = {
   titulo: string
@@ -577,6 +595,80 @@ export function HomePage({
   const shouldShowHomeGallery =
     sobreVarela.mostrar_galeria_home === true && homeGallery.length > 0
   const [radio, setRadio] = useState<RadioConfig>(defaultRadioConfig)
+  const [homeSearch, setHomeSearch] = useState("")
+  const homeSearchResults = useMemo(() => {
+    const query = normalizeSearchText(homeSearch)
+    if (query.length < 2) return []
+
+    const candidates: HomeSearchResult[] = [
+      ...featuredBusinesses.map((item) => ({
+        id: `comercio-${item.id}`,
+        title: item.nombre,
+        description: item.direccion || item.descripcion || "Comercio local",
+        category: "Comercio",
+        href: `/comercios/${item.id}`,
+        icon: Store,
+        searchableText: normalizeSearchText(
+          `${item.nombre} ${item.descripcion || ""} ${item.direccion || ""}`
+        ),
+      })),
+      ...allServicios.map((item) => ({
+        id: `servicio-${item.id}`,
+        title: item.nombre,
+        description: item.categoria || item.responsable || "Servicio local",
+        category: "Servicio o profesional",
+        href: `/servicios/${item.id}`,
+        icon: BriefcaseBusiness,
+        searchableText: normalizeSearchText(
+          `${item.nombre} ${item.categoria || ""} ${item.descripcion || ""} ${item.responsable || ""}`
+        ),
+      })),
+      ...eventos.map((item) => ({
+        id: `evento-${item.id}`,
+        title: item.titulo,
+        description: item.ubicacion || normalizeEventCategory(item.categoria),
+        category: "Evento o beneficio",
+        href: `/eventos/${item.id}`,
+        icon: CalendarDays,
+        searchableText: normalizeSearchText(
+          `${item.titulo} ${item.categoria || ""} ${item.descripcion || ""} ${item.ubicacion || ""}`
+        ),
+      })),
+      ...allCursos.map((item) => ({
+        id: `curso-${item.id}`,
+        title: item.nombre,
+        description: item.responsable || "Curso o clase",
+        category: "Curso o clase",
+        href: `/cursos/${item.id}`,
+        icon: GraduationCap,
+        searchableText: normalizeSearchText(
+          `${item.nombre} ${item.descripcion || ""} ${item.responsable || ""}`
+        ),
+      })),
+      ...instituciones.map((item) => ({
+        id: `institucion-${item.id}`,
+        title: item.nombre,
+        description: item.direccion || item.descripcion || "Institución local",
+        category: "Institución",
+        href: `/instituciones/${item.id}`,
+        icon: Building2,
+        searchableText: normalizeSearchText(
+          `${item.nombre} ${item.descripcion || ""} ${item.direccion || ""}`
+        ),
+      })),
+    ]
+
+    return candidates
+      .filter((item) => item.searchableText.includes(query))
+      .sort((first, second) => {
+        const firstTitle = normalizeSearchText(first.title)
+        const secondTitle = normalizeSearchText(second.title)
+        const firstScore = firstTitle === query ? 0 : firstTitle.startsWith(query) ? 1 : 2
+        const secondScore = secondTitle === query ? 0 : secondTitle.startsWith(query) ? 1 : 2
+        return firstScore - secondScore || firstTitle.localeCompare(secondTitle)
+      })
+      .slice(0, 8)
+  }, [allCursos, allServicios, eventos, featuredBusinesses, homeSearch, instituciones])
   const [selectedComercio, setSelectedComercio] = useState<Comercio | null>(null)
   const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
   const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null)
@@ -1902,6 +1994,7 @@ export function HomePage({
         items={buildHomePublicNav()}
         borderClassName="border-white/60"
         backgroundClassName="bg-white/80"
+        action={{ href: "/sumate", label: "Publicá gratis" }}
       />
 
       <aside className="hidden">
@@ -1923,8 +2016,155 @@ export function HomePage({
         </div>
       </aside>
 
+      <section id="inicio" className="relative z-20 isolate overflow-visible bg-slate-900">
+        {sobreVarela.imagen_url ? (
+          <OptimizedImage
+            src={sobreVarela.imagen_url}
+            alt=""
+            sizes="100vw"
+            quality={76}
+            priority
+            className="absolute inset-0 -z-20 object-cover"
+          />
+        ) : null}
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(2,15,35,0.9)_0%,rgba(2,21,45,0.68)_52%,rgba(2,21,45,0.32)_100%)]" />
+        <div className="mx-auto flex min-h-[410px] max-w-7xl items-center px-4 py-16 sm:px-6 md:min-h-[470px] lg:px-8">
+          <div className="max-w-2xl">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-white/90 backdrop-blur">
+              <MapPin className="h-3.5 w-3.5" />
+              José Pedro Varela, Uruguay
+            </div>
+            <h1 className="text-4xl font-black leading-[1.04] tracking-tight text-white sm:text-5xl lg:text-6xl">
+              Todo lo que necesitás,
+              <br />
+              está en <span className="text-emerald-400">Varela</span>
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-7 text-white/85 sm:text-lg">
+              Encontrá eventos, comercios, servicios, profesionales y más.
+              Conectando a nuestra comunidad.
+            </p>
+            <form
+              className="relative mt-8 flex max-w-2xl gap-2 rounded-2xl bg-white p-2 shadow-[0_22px_55px_-20px_rgba(0,0,0,0.75)]"
+              onSubmit={(event) => {
+                event.preventDefault()
+                if (homeSearchResults[0]) router.push(homeSearchResults[0].href)
+              }}
+            >
+              <label htmlFor="home-search" className="sr-only">Buscar en Hola Varela</label>
+              <div className="flex min-w-0 flex-1 items-center gap-3 px-3">
+                <Search className="h-5 w-5 shrink-0 text-slate-400" />
+                <input
+                  id="home-search"
+                  value={homeSearch}
+                  onChange={(event) => setHomeSearch(event.target.value)}
+                  autoComplete="off"
+                  aria-autocomplete="list"
+                  aria-controls="home-search-results"
+                  placeholder="Buscá comercios, eventos, servicios o profesionales"
+                  className="min-w-0 flex-1 bg-transparent py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 sm:text-base"
+                />
+                {homeSearch ? (
+                  <button
+                    type="button"
+                    onClick={() => setHomeSearch("")}
+                    aria-label="Limpiar búsqueda"
+                    className="rounded-full p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                ) : null}
+              </div>
+              <button
+                type="submit"
+                disabled={!homeSearchResults.length}
+                className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 sm:px-7"
+              >
+                Buscar
+              </button>
+
+              {normalizeSearchText(homeSearch).length >= 2 ? (
+                <div
+                  id="home-search-results"
+                  role="listbox"
+                  className="absolute left-0 right-0 top-[calc(100%+0.65rem)] z-30 max-h-[390px] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 text-left shadow-[0_24px_60px_-22px_rgba(15,23,42,0.55)]"
+                >
+                  {homeSearchResults.length ? (
+                    <>
+                      <p className="px-3 pb-2 pt-1 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+                        Coincidencias
+                      </p>
+                      {homeSearchResults.map((result) => {
+                        const ResultIcon = result.icon
+                        return (
+                          <Link
+                            key={result.id}
+                            href={result.href}
+                            role="option"
+                            className="flex items-center gap-3 rounded-xl px-3 py-3 transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                          >
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                              <ResultIcon className="h-5 w-5" />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-black text-slate-950">
+                                {result.title}
+                              </span>
+                              <span className="block truncate text-xs text-slate-500">
+                                {result.category} · {result.description}
+                              </span>
+                            </span>
+                            <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
+                          </Link>
+                        )
+                      })}
+                      <p className="px-3 pb-1 pt-2 text-xs text-slate-500">
+                        Enter o Buscar abre la primera coincidencia.
+                      </p>
+                    </>
+                  ) : (
+                    <div className="px-4 py-5 text-center">
+                      <p className="text-sm font-bold text-slate-800">No encontramos coincidencias</p>
+                      <p className="mt-1 text-xs text-slate-500">Probá con otra palabra o una categoría.</p>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative z-10 border-b border-slate-200 bg-white py-9">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Todo en un solo lugar</p>
+          <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950">Explorá por categoría</h2>
+          <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+            {[
+              { href: "/eventos", label: "Eventos y beneficios", text: "Enterate de lo que pasa", icon: CalendarDays, color: "text-indigo-600 bg-indigo-50" },
+              { href: "/comercios", label: "Comercios", text: "Productos y servicios", icon: Store, color: "text-emerald-600 bg-emerald-50" },
+              { href: "/servicios", label: "Servicios", text: "Soluciones para vos", icon: BriefcaseBusiness, color: "text-amber-600 bg-amber-50" },
+              { href: "/oportunidades-laborales", label: "Propuestas laborales", text: "Trabajo en Varela", icon: BriefcaseBusiness, color: "text-violet-600 bg-violet-50" },
+              { href: "/cursos", label: "Cursos y clases", text: "Aprendé y crecé", icon: GraduationCap, color: "text-teal-600 bg-teal-50" },
+              { href: "/instituciones", label: "Instituciones", text: "Organizaciones locales", icon: Building2, color: "text-sky-600 bg-sky-50" },
+            ].map((category) => {
+              const Icon = category.icon
+              return (
+                <Link key={category.label} href={category.href} className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_12px_34px_-26px_rgba(15,23,42,0.45)] transition hover:-translate-y-1 hover:border-blue-200">
+                  <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${category.color}`}>
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <h3 className="mt-4 text-sm font-black leading-tight text-slate-950">{category.label}</h3>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">{category.text}</p>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
       <section
-        id="inicio"
+        id="inicio-anterior"
+        hidden
         className="relative overflow-hidden bg-[linear-gradient(135deg,#eefaf2_0%,#f7fbff_46%,#eaf4ff_100%)] py-16 md:py-24"
       >
         <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_center,rgba(255,255,255,0.86),transparent_38%)]" />

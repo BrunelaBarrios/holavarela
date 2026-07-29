@@ -306,35 +306,36 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 tabIndex={0}
                 onClick={() => handleOpenEvento(evento)}
                 onKeyDown={(event) => handleCardKeyDown(event, () => handleOpenEvento(evento))}
-                className="cursor-pointer rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:p-5"
+                className="flex cursor-pointer flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:p-4"
               >
                 {evento.imagen && (
-                  <div className="relative mb-4 h-48 w-full overflow-hidden rounded-lg border border-slate-100 bg-white">
+                  <div className="relative mb-4 h-56 w-full overflow-hidden rounded-xl border border-slate-100 bg-slate-50 sm:h-64">
                     <OptimizedImage
                       src={evento.imagen}
                       alt={evento.titulo}
                       sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                      quality={62}
-                      className="object-contain p-2"
+                      quality={68}
+                      className="object-contain p-1.5"
                     />
+                    <div className="absolute left-3 top-3 z-10 inline-flex rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-blue-700 shadow-sm backdrop-blur">
+                      {normalizeEventCategory(evento.categoria)}
+                    </div>
                   </div>
                 )}
 
-                <h2 className="text-lg font-semibold leading-tight text-gray-900 sm:text-xl">
+                <h2 className="line-clamp-2 text-lg font-semibold leading-tight text-gray-900 sm:text-xl">
                   {evento.titulo}
                 </h2>
-                <div className="mt-2 inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold leading-none text-blue-700 sm:mt-3 sm:px-3 sm:text-xs">
-                  {normalizeEventCategory(evento.categoria)}
-                </div>
-
                 {!shouldHideEventDate(evento.descripcion, evento.categoria) ? (
-                  <p className="mt-2 text-xs leading-snug text-gray-600 sm:text-sm">
+                  <p className="mt-3 flex items-start gap-2 text-xs font-medium leading-snug text-gray-700 sm:text-sm">
+                    <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
                     Fecha: {formatEventDateRange(evento.fecha, evento.fecha_fin, evento.fecha_solo_mes ?? false)}
                   </p>
                 ) : null}
 
-                <p className="mt-1 text-xs leading-snug text-gray-600 sm:text-sm">
-                  Ubicación: {evento.ubicacion}
+                <p className="mt-2 flex items-start gap-2 text-xs leading-snug text-gray-600 sm:text-sm">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                  {evento.ubicacion}
                 </p>
 
                 {evento.ownerLabel && evento.ownerHref ? (
@@ -351,12 +352,12 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                 ) : null}
 
                 {evento.telefono && (
-                  <p className="mt-1 text-xs leading-snug text-gray-600 sm:text-sm">
+                  <p className="hidden">
                     Teléfono: {evento.telefono}
                   </p>
                 )}
 
-                <p className="line-clamp-3 mt-2 whitespace-pre-line text-xs leading-snug text-gray-700 sm:mt-3 sm:text-sm sm:leading-relaxed">
+                <p className="hidden">
                   {parseEventDescription(evento.descripcion).baseDescription}
                 </p>
 
@@ -366,7 +367,7 @@ export function EventosPageClient({ initialEventos }: { initialEventos: Evento[]
                     event.stopPropagation()
                     handleOpenEvento(evento)
                   }}
-                  className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600 sm:mt-5 sm:px-4 sm:text-sm"
+                  className="mt-auto inline-flex w-fit items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
                 >
                   Ver más
                   <ArrowRight className="h-4 w-4" />

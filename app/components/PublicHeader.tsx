@@ -15,12 +15,14 @@ type PublicHeaderProps = {
   items: NavItem[]
   borderClassName?: string
   backgroundClassName?: string
+  action?: { href: string; label: string }
 }
 
 export function PublicHeader({
   items = [],
   borderClassName = "border-slate-200",
   backgroundClassName = "bg-white/95",
+  action,
 }: PublicHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -58,7 +60,8 @@ export function PublicHeader({
               </span>
             </Link>
 
-            <nav className="hidden items-center gap-8 text-[15px] font-medium text-slate-700 md:flex">
+            <div className="hidden items-center gap-5 md:flex">
+            <nav className="flex items-center gap-5 text-[13px] font-semibold text-slate-700 lg:gap-7 lg:text-[14px]">
               {items.map((item) => (
                 <Link
                   key={item.href}
@@ -69,6 +72,12 @@ export function PublicHeader({
                 </Link>
               ))}
             </nav>
+            {action ? (
+              <Link href={action.href} className="shrink-0 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-blue-700">
+                {action.label}
+              </Link>
+            ) : null}
+            </div>
 
             <button
               type="button"
@@ -102,6 +111,15 @@ export function PublicHeader({
                     {item.label}
                   </Link>
                 ))}
+                {action ? (
+                  <Link
+                    href={action.href}
+                    className="mt-2 rounded-xl bg-blue-600 px-3 py-3 text-center text-sm font-bold text-white"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {action.label}
+                  </Link>
+                ) : null}
               </div>
             </nav>
           ) : null}
