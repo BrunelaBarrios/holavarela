@@ -22,6 +22,12 @@ type Candidate = {
 }
 
 const statuses = ["nuevo", "contactado", "entrevistado", "archivado"] as const
+const cvExtension = (value: string) => {
+  if (value.startsWith("data:image/jpeg")) return "jpg"
+  if (value.startsWith("data:image/png")) return "png"
+  if (value.startsWith("data:image/webp")) return "webp"
+  return "pdf"
+}
 
 export default function AdminCurriculumsPage() {
   const [items, setItems] = useState<Candidate[]>([])
@@ -95,7 +101,7 @@ export default function AdminCurriculumsPage() {
               <td className="px-5 py-4">{item.localidad}</td>
               <td className="px-5 py-4">{item.telefono || item.email || "Sin dato"}</td>
               <td className="px-5 py-4"><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase">{item.estado}</span></td>
-              <td className="px-5 py-4">{item.cv_url ? <a href={item.cv_url} download={`CV-${item.nombre_completo}.pdf`} onClick={event => event.stopPropagation()} className="inline-flex items-center gap-1 font-bold text-sky-700"><Download className="h-4 w-4"/>Descargar</a> : <span className="text-slate-400">Sin archivo</span>}</td>
+              <td className="px-5 py-4">{item.cv_url ? <a href={item.cv_url} download={`CV-${item.nombre_completo}.${cvExtension(item.cv_url)}`} onClick={event => event.stopPropagation()} className="inline-flex items-center gap-1 font-bold text-sky-700"><Download className="h-4 w-4"/>Descargar</a> : <span className="text-slate-400">Sin archivo</span>}</td>
             </tr>)}</tbody>
           </table>
         </div>
@@ -111,7 +117,7 @@ export default function AdminCurriculumsPage() {
       <label className="mt-6 block text-sm font-bold">Notas internas<textarea defaultValue={selected.notas_internas || ""} onBlur={event => void update(selected, { notas_internas: event.target.value })} rows={4} className="mt-2 w-full rounded-xl border border-slate-200 p-3 font-normal"/></label>
       <div className="mt-6 flex flex-wrap gap-3">
         <select value={selected.estado} onChange={event => void update(selected, { estado: event.target.value as Candidate["estado"] })} className="rounded-xl border px-4 py-3 font-semibold">{statuses.map(value => <option key={value}>{value}</option>)}</select>
-        {selected.cv_url ? <a href={selected.cv_url} download={`CV-${selected.nombre_completo}.pdf`} className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-3 font-bold text-white"><Download className="h-4 w-4"/>Descargar CV</a> : null}
+        {selected.cv_url ? <a href={selected.cv_url} download={`CV-${selected.nombre_completo}.${cvExtension(selected.cv_url)}`} className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-5 py-3 font-bold text-white"><Download className="h-4 w-4"/>Descargar CV</a> : null}
         <button onClick={() => void remove(selected)} className="ml-auto inline-flex items-center gap-2 rounded-xl bg-red-50 px-5 py-3 font-bold text-red-700"><Trash2 className="h-4 w-4"/>Eliminar</button>
       </div>
     </div></div> : null}

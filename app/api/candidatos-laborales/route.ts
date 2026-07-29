@@ -28,8 +28,14 @@ export async function POST(request: NextRequest) {
     if (!body.consentimiento || !nombre || !presentacion || !experiencia || !habilidades || !localidad) {
       return NextResponse.json({ error: "Revisá los campos obligatorios y la autorización de almacenamiento." }, { status: 400 })
     }
-    if (cvUrl && !cvUrl.startsWith("data:application/pdf;base64,")) {
-      return NextResponse.json({ error: "El currículum debe ser un archivo PDF válido." }, { status: 400 })
+    const validCvPrefixes = [
+      "data:application/pdf;base64,",
+      "data:image/jpeg;base64,",
+      "data:image/png;base64,",
+      "data:image/webp;base64,",
+    ]
+    if (cvUrl && !validCvPrefixes.some(prefix => cvUrl.startsWith(prefix))) {
+      return NextResponse.json({ error: "El currículum debe ser un PDF o una imagen válida." }, { status: 400 })
     }
 
     const supabase = getSupabaseAdmin()
