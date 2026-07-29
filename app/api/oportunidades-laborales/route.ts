@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     let query = getSupabaseAdmin().from("oportunidades_laborales").select(
       id
         ? "*"
-        : "id,tipo_publicacion,nombre_publicante,titulo,categoria,descripcion,requisitos,experiencia,habilidades,tipo_jornada,horario,disponibilidad,localidad,imagen_url,enlace_url,estado,fecha_creacion,fecha_vencimiento"
+        : "id,tipo_publicacion,nombre_publicante,titulo,categoria,descripcion,requisitos,experiencia,habilidades,tipo_jornada,horario,disponibilidad,localidad,imagen_url,estado,fecha_creacion,fecha_vencimiento"
     ).eq("estado", "activa")
     query = query.or(`fecha_vencimiento.is.null,fecha_vencimiento.gte.${new Date().toISOString().slice(0, 10)}`)
     if (id) query = query.eq("id", id)

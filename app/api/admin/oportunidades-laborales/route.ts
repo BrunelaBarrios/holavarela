@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     telefono: clean(body.telefono, 50) || null,
     email: clean(body.email, 180).toLowerCase() || null,
     forma_postulacion: clean(body.forma_postulacion, 500) || null,
-    enlace_url: link,
+    horario: link,
     imagen_url: posterImages.length === 1 ? posterImages[0] : JSON.stringify(posterImages),
     fecha_vencimiento: clean(body.fecha_vencimiento, 20) || null,
     estado: "activa",
@@ -140,7 +140,7 @@ export async function PATCH(request: NextRequest) {
       const submittedLink = clean(body[key], 500)
       const link = cleanHttpUrl(submittedLink)
       if (submittedLink && !link) return NextResponse.json({ error: "Ingresá un enlace válido, por ejemplo www.ejemplo.com." }, { status: 400 })
-      changes[key] = link
+      changes.horario = link
     } else {
       changes[key] = typeof body[key] === "string" ? body[key].trim() || null : body[key]
     }

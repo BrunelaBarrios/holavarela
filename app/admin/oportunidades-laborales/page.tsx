@@ -5,7 +5,7 @@ import Image from "next/image"
 import { BriefcaseBusiness, Check, Eye, EyeOff, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
-import { formatJobDate, getJobImages, JOB_CATEGORIES, JOB_STATUSES, type JobOpportunity, type JobStatus } from "../../lib/jobOpportunities"
+import { formatJobDate, getJobImages, getJobLink, JOB_CATEGORIES, JOB_STATUSES, type JobOpportunity, type JobStatus } from "../../lib/jobOpportunities"
 
 const emptyPoster = {
   nombre_publicante: "",
@@ -71,7 +71,7 @@ export default function AdminJobsPage() {
     await fetch("/api/admin/oportunidades-laborales", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(editing),
+    body: JSON.stringify({ ...editing, enlace_url: getJobLink(editing) || "" }),
     })
     setEditing(null)
     void load()
@@ -235,7 +235,7 @@ export default function AdminJobsPage() {
       </form>
     </div> : null}
 
-    {editing ? <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4"><div className="mx-auto my-8 max-w-2xl rounded-2xl bg-white p-6"><h2 className="text-xl font-bold">Editar publicación</h2><div className="mt-5 grid gap-4"><AdminField label="Nombre" value={editing.nombre_publicante} onChange={value => setEditing({...editing, nombre_publicante: value})}/><AdminField label="Título" value={editing.titulo} onChange={value => setEditing({...editing, titulo: value})}/><AdminField label="Localidad" value={editing.localidad} onChange={value => setEditing({...editing, localidad: value})}/><AdminField label="Enlace al sitio (opcional)" value={editing.enlace_url || ""} onChange={value => setEditing({...editing, enlace_url: value})} placeholder="www.ejemplo.com"/><label className="text-sm font-semibold">Descripción<textarea rows={6} value={editing.descripcion} onChange={event => setEditing({...editing, descripcion: event.target.value})} className="mt-2 w-full rounded-xl border p-3 font-normal"/></label></div><div className="mt-5 flex gap-3"><button onClick={() => void save()} className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white">Guardar</button><button onClick={() => setEditing(null)} className="rounded-xl border px-5 py-3">Cancelar</button></div></div></div> : null}
+    {editing ? <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4"><div className="mx-auto my-8 max-w-2xl rounded-2xl bg-white p-6"><h2 className="text-xl font-bold">Editar publicación</h2><div className="mt-5 grid gap-4"><AdminField label="Nombre" value={editing.nombre_publicante} onChange={value => setEditing({...editing, nombre_publicante: value})}/><AdminField label="Título" value={editing.titulo} onChange={value => setEditing({...editing, titulo: value})}/><AdminField label="Localidad" value={editing.localidad} onChange={value => setEditing({...editing, localidad: value})}/><AdminField label="Enlace al sitio (opcional)" value={getJobLink(editing) || ""} onChange={value => setEditing({...editing, enlace_url: value})} placeholder="www.ejemplo.com"/><label className="text-sm font-semibold">Descripción<textarea rows={6} value={editing.descripcion} onChange={event => setEditing({...editing, descripcion: event.target.value})} className="mt-2 w-full rounded-xl border p-3 font-normal"/></label></div><div className="mt-5 flex gap-3"><button onClick={() => void save()} className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white">Guardar</button><button onClick={() => setEditing(null)} className="rounded-xl border px-5 py-3">Cancelar</button></div></div></div> : null}
     <AdminConfirmModal isOpen={Boolean(deleting)} title="Eliminar publicación" description={`Se eliminará definitivamente “${deleting?.titulo || ""}”.`} confirmLabel="Eliminar" confirmVariant="danger" onCancel={() => setDeleting(null)} onConfirm={() => void remove()}/>
   </div>
 }

@@ -56,3 +56,7 @@ export function getJobImages(item: Pick<JobOpportunity, "imagen_url">) {
     return []
   }
 }
+
+export function getJobLink(item: Pick<JobOpportunity, "enlace_url" | "horario">) {
+  return item.enlace_url || (item.horario?.startsWith("http://") || item.horario?.startsWith("https://") ? item.horario : null)
+}
