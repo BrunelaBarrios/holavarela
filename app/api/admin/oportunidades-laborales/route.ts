@@ -7,6 +7,18 @@ import { JOB_STATUSES } from "../../../lib/jobOpportunities"
 const clean = (value: unknown, max = 3000) =>
   typeof value === "string" ? value.trim().slice(0, max) : ""
 
+const cleanHttpUrl = (value: unknown) => {
+  const raw = clean(value, 500)
+  if (!raw) return null
+  try {
+    const normalized = /^[a-z][a-z\d+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`
+    const url = new URL(normalized)
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null
+  } catch {
+    return null
+  }
+}
+
 export async function GET(request: NextRequest) {
   if (!await readAdminSessionFromRequest(request)) return NextResponse.json({ error: "No autorizado." }, { status: 401 })
   const params = request.nextUrl.searchParams
@@ -45,13 +57,25 @@ export async function POST(request: NextRequest) {
   const titulo = clean(body.titulo, 160)
   const descripcion = clean(body.descripcion)
   const localidad = clean(body.localidad, 100)
-  const imagenUrl = clean(body.imagen_url, 1_000_000)
+  const images = Array.isArray(body.imagenes_url)
+    ? body.imagenes_url
+        .slice(0, 6)
+        .map((value: unknown) => clean(value, 1_000_000))
+        .filter((value: string) => value.startsWith("data:image/"))
+    : []
+  const legacyImage = clean(body.imagen_url, 1_000_000)
+  const posterImages = images.length ? images : legacyImage.startsWith("data:image/") ? [legacyImage] : []
+  const submittedLink = clean(body.enlace_url, 500)
+  const link = cleanHttpUrl(submittedLink)
 
-  if (!nombrePublicante || !titulo || !localidad || !imagenUrl.startsWith("data:image/")) {
+  if (!nombrePublicante || !titulo || !localidad || !posterImages.length) {
     return NextResponse.json(
       { error: "Completá el título, el anunciante, la localidad y seleccioná un afiche válido." },
       { status: 400 }
     )
+  }
+  if (submittedLink && !link) {
+    return NextResponse.json({ error: "Ingresá un enlace válido, por ejemplo www.ejemplo.com." }, { status: 400 })
   }
 
   const payload = {
@@ -65,7 +89,8 @@ export async function POST(request: NextRequest) {
     telefono: clean(body.telefono, 50) || null,
     email: clean(body.email, 180).toLowerCase() || null,
     forma_postulacion: clean(body.forma_postulacion, 500) || null,
-    imagen_url: imagenUrl,
+    enlace_url: link,
+    imagen_url: posterImages.length === 1 ? posterImages[0] : JSON.stringify(posterImages),
     fecha_vencimiento: clean(body.fecha_vencimiento, 20) || null,
     estado: "activa",
   }
@@ -107,9 +132,19 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ ok: true, visibleEnHome: visible })
   }
   if (!body.id) return NextResponse.json({ error: "Falta el identificador." }, { status: 400 })
-  const allowed = ["nombre_publicante","titulo","categoria","descripcion","requisitos","experiencia","habilidades","tipo_jornada","horario","disponibilidad","localidad","telefono","email","forma_postulacion","imagen_url","cv_url","fecha_vencimiento"]
+  const allowed = ["nombre_publicante","titulo","categoria","descripcion","requisitos","experiencia","habilidades","tipo_jornada","horario","disponibilidad","localidad","telefono","email","forma_postulacion","enlace_url","imagen_url","cv_url","fecha_vencimiento"]
   const changes: Record<string, unknown> = {}
-  for (const key of allowed) if (key in body) changes[key] = typeof body[key] === "string" ? body[key].trim() || null : body[key]
+  for (const key of allowed) {
+    if (!(key in body)) continue
+    if (key === "enlace_url") {
+      const submittedLink = clean(body[key], 500)
+      const link = cleanHttpUrl(submittedLink)
+      if (submittedLink && !link) return NextResponse.json({ error: "Ingresá un enlace válido, por ejemplo www.ejemplo.com." }, { status: 400 })
+      changes[key] = link
+    } else {
+      changes[key] = typeof body[key] === "string" ? body[key].trim() || null : body[key]
+    }
+  }
   if (body.estado && JOB_STATUSES.includes(body.estado)) changes.estado = body.estado
   const { error } = await getSupabaseAdmin().from("oportunidades_laborales").update(changes).eq("id", body.id)
   return error ? NextResponse.json({ error: error.message }, { status: 500 }) : NextResponse.json({ ok: true })

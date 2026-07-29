@@ -1199,6 +1199,7 @@ create table if not exists public.oportunidades_laborales (
   telefono text,
   email text,
   forma_postulacion text,
+  enlace_url text,
   imagen_url text,
   cv_url text,
   estado text not null default 'pendiente' check (estado in ('pendiente', 'activa', 'rechazada', 'vencida')),
@@ -1206,6 +1207,9 @@ create table if not exists public.oportunidades_laborales (
   fecha_vencimiento date,
   user_id uuid references auth.users(id) on delete set null
 );
+
+alter table public.oportunidades_laborales
+add column if not exists enlace_url text;
 
 create index if not exists oportunidades_laborales_public_idx on public.oportunidades_laborales (estado, fecha_creacion desc);
 create index if not exists oportunidades_laborales_filters_idx on public.oportunidades_laborales (tipo_publicacion, categoria, tipo_jornada, localidad);

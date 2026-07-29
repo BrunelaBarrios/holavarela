@@ -5,7 +5,7 @@ import Image from "next/image"
 import { BriefcaseBusiness, Check, Eye, EyeOff, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
-import { formatJobDate, JOB_CATEGORIES, JOB_STATUSES, type JobOpportunity, type JobStatus } from "../../lib/jobOpportunities"
+import { formatJobDate, getJobImages, JOB_CATEGORIES, JOB_STATUSES, type JobOpportunity, type JobStatus } from "../../lib/jobOpportunities"
 
 const emptyPoster = {
   nombre_publicante: "",
@@ -16,8 +16,10 @@ const emptyPoster = {
   telefono: "",
   email: "",
   forma_postulacion: "",
+  enlace_url: "",
   fecha_vencimiento: "",
   imagen_url: "",
+  imagenes_url: [] as string[],
 }
 
 export default function AdminJobsPage() {
@@ -97,25 +99,30 @@ export default function AdminJobsPage() {
     setVisibilitySaving(false)
   }
 
-  const selectPoster = async (selectedFile?: File) => {
-    if (!selectedFile) return
+  const selectPosters = async (selectedFiles?: FileList | null) => {
+    if (!selectedFiles?.length) return
     setPosterError("")
     try {
-      const imagenUrl = await fileToDataUrl(selectedFile, {
-        maxWidth: 1200,
-        maxHeight: 1800,
-        targetFileSizeBytes: 400 * 1024,
-      })
-      setPoster(current => ({ ...current, imagen_url: imagenUrl }))
+      const files = Array.from(selectedFiles)
+      if (files.length > 6) throw new Error("Podés cargar hasta 6 fotos por afiche.")
+      const imagenesUrl: string[] = []
+      for (const selectedFile of files) {
+        imagenesUrl.push(await fileToDataUrl(selectedFile, {
+          maxWidth: 1200,
+          maxHeight: 1800,
+          targetFileSizeBytes: 400 * 1024,
+        }))
+      }
+      setPoster(current => ({ ...current, imagen_url: imagenesUrl[0] || "", imagenes_url: imagenesUrl }))
     } catch (cause) {
-      setPosterError(cause instanceof Error ? cause.message : "No se pudo procesar el afiche.")
+      setPosterError(cause instanceof Error ? cause.message : "No se pudieron procesar las fotos.")
     }
   }
 
   const publishPoster = async (event: FormEvent) => {
     event.preventDefault()
-    if (!poster.imagen_url) {
-      setPosterError("Seleccioná la imagen del afiche.")
+    if (!poster.imagenes_url.length) {
+      setPosterError("Seleccioná al menos una foto del afiche.")
       return
     }
     setPosterSaving(true)
@@ -175,7 +182,7 @@ export default function AdminJobsPage() {
     {loading ? <div className="py-16 text-center text-slate-500">Cargando publicaciones...</div> : items.length === 0 ? <div className="mt-6 rounded-2xl bg-white py-16 text-center"><BriefcaseBusiness className="mx-auto h-12 w-12 text-slate-300"/><p className="mt-3 text-slate-500">No hay publicaciones con estos filtros.</p></div> : <div className="mt-6 space-y-3">{items.map(item => <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex flex-col justify-between gap-4 lg:flex-row">
         <div className="flex min-w-0 gap-4">
-          {item.imagen_url ? <Image src={item.imagen_url} alt="" width={80} height={96} unoptimized className="h-24 w-20 shrink-0 rounded-lg border border-slate-200 bg-slate-50 object-contain" /> : null}
+          {getJobImages(item)[0] ? <div className="relative shrink-0"><Image src={getJobImages(item)[0]} alt="" width={80} height={96} unoptimized className="h-24 w-20 rounded-lg border border-slate-200 bg-slate-50 object-contain" />{getJobImages(item).length > 1 ? <span className="absolute -right-2 -top-2 rounded-full bg-sky-700 px-2 py-0.5 text-[10px] font-bold text-white">{getJobImages(item).length} fotos</span> : null}</div> : null}
           <div className="min-w-0">
             <div className="flex flex-wrap gap-2 text-xs font-bold uppercase"><span className="rounded-full bg-sky-50 px-3 py-1 text-sky-700">{item.tipo_publicacion}</span><span className="rounded-full bg-slate-100 px-3 py-1 text-slate-600">{item.estado}</span></div>
             <h2 className="mt-3 text-xl font-bold">{item.titulo}</h2>
@@ -206,23 +213,33 @@ export default function AdminJobsPage() {
             <AdminField label="Correo (opcional)" value={poster.email} onChange={value => setPoster({...poster, email: value})} type="email" />
             <AdminField label="Fecha límite (opcional)" value={poster.fecha_vencimiento} onChange={value => setPoster({...poster, fecha_vencimiento: value})} type="date" />
             <AdminField label="Cómo postularse (opcional)" value={poster.forma_postulacion} onChange={value => setPoster({...poster, forma_postulacion: value})} />
+            <AdminField label="Enlace al sitio (opcional)" value={poster.enlace_url} onChange={value => setPoster({...poster, enlace_url: value})} placeholder="www.ejemplo.com" />
             <label className="text-sm font-semibold sm:col-span-2">Descripción breve (opcional)<textarea rows={4} value={poster.descripcion} onChange={event => setPoster({...poster, descripcion: event.target.value})} placeholder="Si la dejás vacía, invitaremos a consultar el afiche." className="mt-2 w-full rounded-xl border p-3 font-normal"/></label>
           </div>
-          <label className="group flex min-h-80 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-sky-200 bg-sky-50 text-center transition hover:border-sky-400">
-            {poster.imagen_url ? <Image src={poster.imagen_url} alt="Vista previa del afiche" width={1200} height={1800} unoptimized className="h-full max-h-[520px] w-full object-contain" /> : <span className="p-8"><ImagePlus className="mx-auto h-10 w-10 text-sky-600"/><strong className="mt-3 block text-slate-900">Seleccionar afiche</strong><small className="mt-1 block text-slate-500">JPG, PNG, WEBP o AVIF, hasta 6 MB</small></span>}
-            <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={event => void selectPoster(event.target.files?.[0])} className="sr-only" />
-          </label>
+          <div className="flex min-h-80 flex-col rounded-2xl border-2 border-dashed border-sky-200 bg-sky-50 p-3">
+            {poster.imagenes_url.length ? <div className="grid max-h-[450px] flex-1 grid-cols-2 gap-2 overflow-y-auto">
+              {poster.imagenes_url.map((image, index) => <div key={`${image.slice(-24)}-${index}`} className="relative overflow-hidden rounded-xl border border-sky-100 bg-white">
+                <Image src={image} alt={`Vista previa, foto ${index + 1}`} width={600} height={900} unoptimized className="aspect-[4/5] h-full w-full object-contain" />
+                <span className="absolute left-2 top-2 rounded-full bg-slate-950/75 px-2 py-1 text-[10px] font-bold text-white">{index + 1}</span>
+                <button type="button" onClick={() => setPoster(current => { const next = current.imagenes_url.filter((_, imageIndex) => imageIndex !== index); return {...current, imagenes_url: next, imagen_url: next[0] || ""} })} aria-label={`Quitar foto ${index + 1}`} className="absolute right-2 top-2 rounded-full bg-white p-1 text-red-600 shadow"><X className="h-3.5 w-3.5"/></button>
+              </div>)}
+            </div> : <div className="flex flex-1 flex-col items-center justify-center p-8 text-center"><ImagePlus className="h-10 w-10 text-sky-600"/><strong className="mt-3 block text-slate-900">Seleccionar fotos</strong><small className="mt-1 block text-slate-500">Hasta 6 fotos, de 6 MB cada una</small></div>}
+            <label className="mt-3 cursor-pointer rounded-xl bg-sky-700 px-4 py-2.5 text-center text-sm font-bold text-white hover:bg-sky-800">
+              {poster.imagenes_url.length ? "Cambiar fotos" : "Elegir fotos"}
+              <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" onChange={event => void selectPosters(event.target.files)} className="sr-only" />
+            </label>
+          </div>
         </div>
         {posterError ? <p className="mt-5 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{posterError}</p> : null}
         <div className="mt-6 flex flex-wrap justify-end gap-3"><button type="button" onClick={() => setPosterOpen(false)} className="rounded-xl border px-5 py-3 font-semibold">Cancelar</button><button disabled={posterSaving} className="rounded-xl bg-sky-600 px-6 py-3 font-bold text-white disabled:opacity-60">{posterSaving ? "Publicando..." : "Publicar ahora"}</button></div>
       </form>
     </div> : null}
 
-    {editing ? <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4"><div className="mx-auto my-8 max-w-2xl rounded-2xl bg-white p-6"><h2 className="text-xl font-bold">Editar publicación</h2><div className="mt-5 grid gap-4"><AdminField label="Nombre" value={editing.nombre_publicante} onChange={value => setEditing({...editing, nombre_publicante: value})}/><AdminField label="Título" value={editing.titulo} onChange={value => setEditing({...editing, titulo: value})}/><AdminField label="Localidad" value={editing.localidad} onChange={value => setEditing({...editing, localidad: value})}/><label className="text-sm font-semibold">Descripción<textarea rows={6} value={editing.descripcion} onChange={event => setEditing({...editing, descripcion: event.target.value})} className="mt-2 w-full rounded-xl border p-3 font-normal"/></label></div><div className="mt-5 flex gap-3"><button onClick={() => void save()} className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white">Guardar</button><button onClick={() => setEditing(null)} className="rounded-xl border px-5 py-3">Cancelar</button></div></div></div> : null}
+    {editing ? <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4"><div className="mx-auto my-8 max-w-2xl rounded-2xl bg-white p-6"><h2 className="text-xl font-bold">Editar publicación</h2><div className="mt-5 grid gap-4"><AdminField label="Nombre" value={editing.nombre_publicante} onChange={value => setEditing({...editing, nombre_publicante: value})}/><AdminField label="Título" value={editing.titulo} onChange={value => setEditing({...editing, titulo: value})}/><AdminField label="Localidad" value={editing.localidad} onChange={value => setEditing({...editing, localidad: value})}/><AdminField label="Enlace al sitio (opcional)" value={editing.enlace_url || ""} onChange={value => setEditing({...editing, enlace_url: value})} placeholder="www.ejemplo.com"/><label className="text-sm font-semibold">Descripción<textarea rows={6} value={editing.descripcion} onChange={event => setEditing({...editing, descripcion: event.target.value})} className="mt-2 w-full rounded-xl border p-3 font-normal"/></label></div><div className="mt-5 flex gap-3"><button onClick={() => void save()} className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white">Guardar</button><button onClick={() => setEditing(null)} className="rounded-xl border px-5 py-3">Cancelar</button></div></div></div> : null}
     <AdminConfirmModal isOpen={Boolean(deleting)} title="Eliminar publicación" description={`Se eliminará definitivamente “${deleting?.titulo || ""}”.`} confirmLabel="Eliminar" confirmVariant="danger" onCancel={() => setDeleting(null)} onConfirm={() => void remove()}/>
   </div>
 }
 
-function AdminField({ label, value, onChange, required, type = "text" }: { label: string; value: string; onChange: (value: string) => void; required?: boolean; type?: string }) {
-  return <label className="text-sm font-semibold">{label}<input type={type} value={value} onChange={event => onChange(event.target.value)} required={required} className="mt-2 w-full rounded-xl border p-3 font-normal"/></label>
+function AdminField({ label, value, onChange, required, type = "text", placeholder }: { label: string; value: string; onChange: (value: string) => void; required?: boolean; type?: string; placeholder?: string }) {
+  return <label className="text-sm font-semibold">{label}<input type={type} value={value} onChange={event => onChange(event.target.value)} required={required} placeholder={placeholder} className="mt-2 w-full rounded-xl border p-3 font-normal"/></label>
 }

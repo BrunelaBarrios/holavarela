@@ -29,6 +29,7 @@ export type JobOpportunity = {
   telefono?: string | null
   email?: string | null
   forma_postulacion?: string | null
+  enlace_url?: string | null
   imagen_url?: string | null
   cv_url?: string | null
   estado: JobStatus
@@ -39,4 +40,19 @@ export type JobOpportunity = {
 
 export function formatJobDate(value: string) {
   return new Intl.DateTimeFormat("es-UY", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value))
+}
+
+export function getJobImages(item: Pick<JobOpportunity, "imagen_url">) {
+  const value = item.imagen_url?.trim()
+  if (!value) return []
+  if (!value.startsWith("[")) return [value]
+
+  try {
+    const parsed: unknown = JSON.parse(value)
+    return Array.isArray(parsed)
+      ? parsed.filter((image): image is string => typeof image === "string" && image.startsWith("data:image/"))
+      : []
+  } catch {
+    return []
+  }
 }
