@@ -158,14 +158,16 @@ export default function CurriculumBuilder() {
     const node = previewRef.current
     setBusy(true); setNotice("Preparando tu archivo…")
     try {
-      const { toPng } = await import("html-to-image")
-      const imageData = await toPng(node, {
-        pixelRatio: 2,
+      const html2canvas = (await import("html2canvas-pro")).default
+      const canvas = await html2canvas(node, {
+        scale: 2,
         backgroundColor: "#ffffff",
-        cacheBust: true,
-        width: node.scrollWidth,
-        height: node.scrollHeight,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        windowWidth: 794,
       })
+      const imageData = canvas.toDataURL("image/png", 1)
       if (format === "image") {
         const link = document.createElement("a")
         link.download = `CV-${data.name || "curriculum"}.png`
@@ -189,7 +191,8 @@ export default function CurriculumBuilder() {
         pdf.save(`CV-${data.name || "curriculum"}.pdf`)
       }
       setNotice("Archivo generado correctamente.")
-    } catch {
+    } catch (error) {
+      console.error("Curriculum export error:", error)
       setNotice("No pudimos generar el archivo. Probá nuevamente desde Chrome o Edge.")
     } finally { setBusy(false) }
   }
