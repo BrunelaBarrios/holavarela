@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
 
 const FREE_CODE = "PRUEBAHV2026"
 const HALF_CODE = "MITADHV50"
+const FREE_CODE_MAX_USES = 11
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     if (promo === FREE_CODE) {
       const { count } = await supabase.from("curriculums_generados").select("id", { count: "exact", head: true }).eq("codigo_promocional", FREE_CODE)
-      if ((count || 0) >= 1) return NextResponse.json({ error: "El código de prueba gratuita ya fue utilizado." }, { status: 409 })
+      if ((count || 0) >= FREE_CODE_MAX_USES) return NextResponse.json({ error: "El código de prueba gratuita alcanzó su límite de usos." }, { status: 409 })
       const { error } = await supabase.from("curriculums_generados").update({
         codigo_promocional: FREE_CODE, descuento_porcentaje: 100, monto_pago: 0,
         estado_pago: "approved", aprobado_at: new Date().toISOString(),
