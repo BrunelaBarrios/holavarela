@@ -126,16 +126,42 @@ export default function CurriculumBuilder() {
 
   const download = async (format: "pdf" | "image") => {
     if (paymentStatus !== "approved" || !previewRef.current) return
-    if (format === "pdf") { window.print(); return }
     const node = previewRef.current
-    const clone = node.cloneNode(true) as HTMLElement
-    clone.querySelectorAll("img").forEach(image => image.remove())
-    const css = Array.from(document.styleSheets).flatMap(sheet => { try { return Array.from(sheet.cssRules).map(rule => rule.cssText) } catch { return [] } }).join("\n")
-    const markup = new XMLSerializer().serializeToString(clone)
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="794" height="${Math.max(1123,node.scrollHeight)}"><foreignObject width="100%" height="100%"><style>${css}</style><div xmlns="http://www.w3.org/1999/xhtml">${markup}</div></foreignObject></svg>`
-    const image = new Image(), url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }))
-    image.onload = () => { const canvas=document.createElement("canvas");canvas.width=1588;canvas.height=Math.max(2246,node.scrollHeight*2);const context=canvas.getContext("2d");context?.scale(2,2);context?.drawImage(image,0,0);URL.revokeObjectURL(url);const link=document.createElement("a");link.download=`CV-${data.name||"curriculum"}.png`;link.href=canvas.toDataURL("image/png");link.click() }
-    image.src = url
+    setBusy(true); setNotice("Preparando tu archivo…")
+    try {
+      const html2canvas = (await import("html2canvas")).default
+      const canvas = await html2canvas(node, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        windowWidth: 794,
+      })
+      if (format === "image") {
+        const link = document.createElement("a")
+        link.download = `CV-${data.name || "curriculum"}.png`
+        link.href = canvas.toDataURL("image/png", 1)
+        link.click()
+      } else {
+        const { jsPDF } = await import("jspdf")
+        const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true })
+        const pageWidth = 210
+        const pageHeight = 297
+        const renderedHeight = canvas.height * pageWidth / canvas.width
+        const imageData = canvas.toDataURL("image/jpeg", .97)
+        let offset = 0
+        while (offset < renderedHeight) {
+          if (offset > 0) pdf.addPage()
+          pdf.addImage(imageData, "JPEG", 0, -offset, pageWidth, renderedHeight, undefined, "FAST")
+          offset += pageHeight
+        }
+        pdf.save(`CV-${data.name || "curriculum"}.pdf`)
+      }
+      setNotice("Archivo generado correctamente.")
+    } catch {
+      setNotice("No pudimos generar el archivo. Probá nuevamente desde Chrome o Edge.")
+    } finally { setBusy(false) }
   }
 
   return <main className="min-h-screen bg-[#f5f7f8] text-slate-900">
