@@ -10,6 +10,8 @@ create table if not exists public.curriculums_generados (
   codigo_promocional text,
   descuento_porcentaje integer not null default 0,
   monto_pago integer not null default 200,
+  mp_preference_id text,
+  mp_payment_id text,
   numero_operacion text,
   comprobante text,
   pago_enviado_at timestamptz,
@@ -27,3 +29,5 @@ alter table public.curriculums_generados enable row level security;
 alter table public.curriculums_generados add column if not exists codigo_promocional text;
 alter table public.curriculums_generados add column if not exists descuento_porcentaje integer not null default 0;
 alter table public.curriculums_generados add column if not exists monto_pago integer not null default 200;
+alter table public.curriculums_generados add column if not exists mp_preference_id text;
+alter table public.curriculums_generados add column if not exists mp_payment_id text;

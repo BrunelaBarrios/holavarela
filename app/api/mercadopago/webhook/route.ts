@@ -3,10 +3,28 @@ import { NextResponse } from "next/server"
 import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
 import {
   getMercadoPagoPreapproval,
+  getMercadoPagoPayment,
   getPlanKeyFromMercadoPagoPlanId,
   mapMercadoPagoStatus,
   parseExternalReference,
 } from "../../../lib/mercadoPago"
+
+async function syncCurriculumPayment(paymentId: string) {
+  const payment = await getMercadoPagoPayment(paymentId)
+  const reference = payment.external_reference || ""
+  if (!reference.startsWith("curriculum:")) return false
+  const code = reference.slice("curriculum:".length)
+  if (!/^[0-9a-f-]{36}$/i.test(code)) return false
+  const status = payment.status === "approved" ? "approved" : payment.status === "rejected" || payment.status === "cancelled" ? "rejected" : "pending"
+  const changes: Record<string, unknown> = { estado_pago: status, mp_payment_id: String(payment.id), actualizado_at: new Date().toISOString() }
+  if (status === "approved") {
+    changes.aprobado_at = new Date().toISOString()
+    changes.editable_hasta = new Date(Date.now() + 30 * 86400000).toISOString()
+  }
+  const { error } = await getSupabaseAdmin().from("curriculums_generados").update(changes).eq("codigo", code)
+  if (error) throw error
+  return true
+}
 
 type EntityTable = "comercios" | "servicios" | "instituciones"
 
@@ -153,6 +171,11 @@ export async function POST(request: Request) {
       payload?.id ||
       url.searchParams.get("data.id") ||
       url.searchParams.get("id")
+
+    if (topic && String(topic).includes("payment") && preapprovalId) {
+      await syncCurriculumPayment(String(preapprovalId))
+      return NextResponse.json({ ok: true })
+    }
 
     if (!topic || !String(topic).includes("preapproval") || !preapprovalId) {
       return NextResponse.json({ ok: true, ignored: true })

@@ -47,6 +47,20 @@ async function mercadoPagoRequest<T>(path: string, init?: RequestInit) {
   return (await response.json()) as T
 }
 
+type MercadoPagoPreference = { id: string; init_point: string; sandbox_init_point?: string }
+type MercadoPagoPayment = { id: number; status: string; external_reference?: string | null }
+
+export function createMercadoPagoPreference(payload: Record<string, unknown>) {
+  return mercadoPagoRequest<MercadoPagoPreference>("/checkout/preferences", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  })
+}
+
+export function getMercadoPagoPayment(paymentId: string) {
+  return mercadoPagoRequest<MercadoPagoPayment>(`/v1/payments/${encodeURIComponent(paymentId)}`)
+}
+
 export async function getMercadoPagoPreapproval(preapprovalId: string) {
   return mercadoPagoRequest<MercadoPagoPreapproval>(`/preapproval/${preapprovalId}`)
 }
