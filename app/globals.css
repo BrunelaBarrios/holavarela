@@ -27,6 +27,36 @@ body {
   font-family: var(--font-sans);
 }
 
+.btn-primary, .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  border-radius: .75rem;
+  padding: .8rem 1.15rem;
+  font-weight: 800;
+  transition: .15s ease;
+}
+.btn-primary { background: #0891b2; color: white; }
+.btn-primary:hover { background: #0e7490; }
+.btn-primary:disabled { opacity: .55; }
+.btn-secondary { border: 1px solid #cbd5e1; background: white; color: #334155; }
+.btn-primary svg, .btn-secondary svg { width: 1rem; height: 1rem; }
+
+@media print {
+  body * { visibility: hidden !important; }
+  .cv-classic, .cv-modern, .cv-simple,
+  .cv-classic *, .cv-modern *, .cv-simple * { visibility: visible !important; }
+  .cv-classic, .cv-modern, .cv-simple {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    box-shadow: none !important;
+  }
+  @page { size: A4; margin: 0; }
+}
+
 .line-clamp-5 {
   display: -webkit-box;
   -webkit-box-orient: vertical;
