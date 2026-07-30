@@ -37,6 +37,7 @@ export default function AdminJobsPage() {
   const [poster, setPoster] = useState(emptyPoster)
   const [posterSaving, setPosterSaving] = useState(false)
   const [posterError, setPosterError] = useState("")
+  const [editingImageError, setEditingImageError] = useState("")
 
   const load = useCallback(async () => {
     const query = new URLSearchParams()
@@ -119,6 +120,37 @@ export default function AdminJobsPage() {
     }
   }
 
+  const setEditingImages = (images: string[]) => {
+    if (!editing) return
+    setEditing({
+      ...editing,
+      imagen_url: images.length > 1 ? JSON.stringify(images) : images[0] || null,
+    })
+  }
+
+  const addEditingImages = async (selectedFiles?: FileList | null) => {
+    if (!editing || !selectedFiles?.length) return
+    setEditingImageError("")
+    try {
+      const currentImages = getJobImages(editing)
+      const files = Array.from(selectedFiles)
+      if (currentImages.length + files.length > 6) {
+        throw new Error("Podés tener hasta 6 fotos por publicación.")
+      }
+      const added: string[] = []
+      for (const selectedFile of files) {
+        added.push(await fileToDataUrl(selectedFile, {
+          maxWidth: 1200,
+          maxHeight: 1800,
+          targetFileSizeBytes: 400 * 1024,
+        }))
+      }
+      setEditingImages([...currentImages, ...added])
+    } catch (cause) {
+      setEditingImageError(cause instanceof Error ? cause.message : "No se pudieron procesar las fotos.")
+    }
+  }
+
   const publishPoster = async (event: FormEvent) => {
     event.preventDefault()
     if (!poster.imagenes_url.length) {
@@ -194,7 +226,7 @@ export default function AdminJobsPage() {
           <button onClick={() => void changeStatus(item.id, "activa")} title="Aprobar" className="rounded-lg bg-emerald-50 p-2 text-emerald-700"><Check className="h-4 w-4"/></button>
           <button onClick={() => void changeStatus(item.id, "rechazada")} title="Rechazar" className="rounded-lg bg-amber-50 p-2 text-amber-700"><X className="h-4 w-4"/></button>
           <button onClick={() => void changeStatus(item.id, item.estado === "activa" ? "vencida" : "pendiente")} className="rounded-lg border px-3 py-2 text-xs font-semibold">{item.estado === "activa" ? "Desactivar" : "Pendiente"}</button>
-          <button onClick={() => setEditing(item)} className="rounded-lg bg-blue-50 p-2 text-blue-700"><Pencil className="h-4 w-4"/></button>
+          <button onClick={() => { setEditingImageError(""); setEditing(item) }} className="rounded-lg bg-blue-50 p-2 text-blue-700"><Pencil className="h-4 w-4"/></button>
           <button onClick={() => setDeleting(item)} className="rounded-lg bg-red-50 p-2 text-red-700"><Trash2 className="h-4 w-4"/></button>
         </div>
       </div>
@@ -235,7 +267,44 @@ export default function AdminJobsPage() {
       </form>
     </div> : null}
 
-    {editing ? <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4"><div className="mx-auto my-8 max-w-2xl rounded-2xl bg-white p-6"><h2 className="text-xl font-bold">Editar publicación</h2><div className="mt-5 grid gap-4"><AdminField label="Nombre" value={editing.nombre_publicante} onChange={value => setEditing({...editing, nombre_publicante: value})}/><AdminField label="Título" value={editing.titulo} onChange={value => setEditing({...editing, titulo: value})}/><AdminField label="Localidad" value={editing.localidad} onChange={value => setEditing({...editing, localidad: value})}/><AdminField label="Enlace al sitio (opcional)" value={getJobLink(editing) || ""} onChange={value => setEditing({...editing, enlace_url: value})} placeholder="www.ejemplo.com"/><label className="text-sm font-semibold">Descripción<textarea rows={6} value={editing.descripcion} onChange={event => setEditing({...editing, descripcion: event.target.value})} className="mt-2 w-full rounded-xl border p-3 font-normal"/></label></div><div className="mt-5 flex gap-3"><button onClick={() => void save()} className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white">Guardar</button><button onClick={() => setEditing(null)} className="rounded-xl border px-5 py-3">Cancelar</button></div></div></div> : null}
+    {editing ? <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4">
+      <div className="mx-auto my-8 max-w-3xl rounded-2xl bg-white p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div><h2 className="text-xl font-bold">Editar publicación</h2><p className="mt-1 text-sm text-slate-500">Modificá los datos y administrá las fotos publicadas.</p></div>
+          <button onClick={() => setEditing(null)} aria-label="Cerrar" className="rounded-full p-2 hover:bg-slate-100"><X/></button>
+        </div>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <AdminField label="Nombre" value={editing.nombre_publicante} onChange={value => setEditing({...editing, nombre_publicante: value})}/>
+          <AdminField label="Título" value={editing.titulo} onChange={value => setEditing({...editing, titulo: value})}/>
+          <AdminField label="Localidad" value={editing.localidad} onChange={value => setEditing({...editing, localidad: value})}/>
+          <AdminField label="Enlace al sitio (opcional)" value={getJobLink(editing) || ""} onChange={value => setEditing({...editing, enlace_url: value})} placeholder="www.ejemplo.com"/>
+          <label className="text-sm font-semibold sm:col-span-2">Descripción<textarea rows={5} value={editing.descripcion} onChange={event => setEditing({...editing, descripcion: event.target.value})} className="mt-2 w-full rounded-xl border p-3 font-normal"/></label>
+        </div>
+
+        <section className="mt-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div><h3 className="font-bold text-slate-950">Fotos de la publicación</h3><p className="text-sm text-slate-500">La primera imagen será la portada. Máximo 6 fotos.</p></div>
+            <label className="cursor-pointer rounded-xl bg-sky-50 px-4 py-2.5 text-sm font-bold text-sky-700 hover:bg-sky-100">
+              Agregar fotos
+              <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" onChange={event => { void addEditingImages(event.target.files); event.currentTarget.value = "" }} className="sr-only"/>
+            </label>
+          </div>
+          {getJobImages(editing).length ? <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {getJobImages(editing).map((image, index) => <div key={`${image.slice(-24)}-${index}`} className="relative overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+              <Image src={image} alt={`Foto ${index + 1}`} width={400} height={500} unoptimized className="aspect-[4/5] h-full w-full object-contain"/>
+              <span className="absolute left-2 top-2 rounded-full bg-slate-950/75 px-2 py-1 text-[10px] font-bold text-white">{index === 0 ? "Portada" : index + 1}</span>
+              <div className="absolute bottom-2 left-2 right-2 flex gap-1">
+                {index > 0 ? <button type="button" onClick={() => { const images = getJobImages(editing); setEditingImages([images[index], ...images.filter((_, itemIndex) => itemIndex !== index)]) }} className="flex-1 rounded-lg bg-white/95 px-2 py-1.5 text-[11px] font-bold text-sky-700 shadow">Usar de portada</button> : null}
+                <button type="button" onClick={() => setEditingImages(getJobImages(editing).filter((_, itemIndex) => itemIndex !== index))} aria-label={`Quitar foto ${index + 1}`} className="rounded-lg bg-white/95 p-1.5 text-red-600 shadow"><Trash2 className="h-4 w-4"/></button>
+              </div>
+            </div>)}
+          </div> : <div className="mt-4 rounded-xl border-2 border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">Esta publicación no tiene fotos.</div>}
+          {editingImageError ? <p className="mt-3 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{editingImageError}</p> : null}
+        </section>
+
+        <div className="mt-6 flex justify-end gap-3"><button onClick={() => setEditing(null)} className="rounded-xl border px-5 py-3">Cancelar</button><button onClick={() => void save()} className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white">Guardar cambios</button></div>
+      </div>
+    </div> : null}
     <AdminConfirmModal isOpen={Boolean(deleting)} title="Eliminar publicación" description={`Se eliminará definitivamente “${deleting?.titulo || ""}”.`} confirmLabel="Eliminar" confirmVariant="danger" onCancel={() => setDeleting(null)} onConfirm={() => void remove()}/>
   </div>
 }
