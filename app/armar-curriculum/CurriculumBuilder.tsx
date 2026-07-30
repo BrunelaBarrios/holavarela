@@ -36,6 +36,7 @@ export default function CurriculumBuilder() {
   const [receipt, setReceipt] = useState("")
   const [promoCode, setPromoCode] = useState("")
   const [appliedPromo, setAppliedPromo] = useState<"" | "free" | "half">("")
+  const [privateLink, setPrivateLink] = useState("")
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState("")
   const previewRef = useRef<HTMLDivElement>(null)
@@ -54,6 +55,16 @@ export default function CurriculumBuilder() {
       })
       .catch(() => setNotice("No pudimos recuperar ese currículum. Revisá el código privado."))
   }, [])
+
+  useEffect(() => {
+    if (code) setPrivateLink(`${window.location.origin}/armar-curriculum/editar/${code}`)
+  }, [code])
+
+  const copyPrivateLink = async () => {
+    if (!privateLink) return
+    await navigator.clipboard.writeText(privateLink)
+    setNotice("Enlace privado copiado.")
+  }
 
   const update = <K extends keyof CvData>(key: K, value: CvData[K]) => setData(current => ({ ...current, [key]: value }))
   const updateList = <K extends "experiences" | "studies" | "courses" | "languages" | "references">(key: K, index: number, field: string, value: string | boolean) => {
@@ -189,7 +200,23 @@ export default function CurriculumBuilder() {
         {step < 3 ? <div className="mt-8 flex flex-wrap justify-between gap-3 border-t border-slate-200 pt-6">{step > 0 ? <button onClick={() => setStep(step - 1)} className="btn-secondary"><ArrowLeft/>Volver</button> : <span/>}<button disabled={busy} onClick={() => void save(step + 1)} className="btn-primary">{busy ? "Guardando..." : step === 2 ? "Continuar para descargar" : "Continuar"}<ArrowRight/></button></div> : null}
         {step === 3 && paymentStatus === "approved" ? <div className="mt-6 flex justify-end"><button onClick={() => setStep(4)} className="btn-primary">Ir a descargas<ArrowRight/></button></div> : null}
       </section>
-      {code ? <p className="mt-5 text-center text-sm text-slate-500">Tu código privado: <strong>{code}</strong>. Guardalo para volver a editar durante 30 días.</p> : null}
+      {code ? <section className="mx-auto mt-6 max-w-3xl rounded-2xl border border-amber-200 bg-amber-50 p-5 sm:p-6">
+        <div className="flex items-start gap-3">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-amber-200 font-black text-amber-900">!</div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg font-black text-amber-950">Guardá este enlace privado</h2>
+            <p className="mt-1 text-sm leading-6 text-amber-900">Lo vas a necesitar si querés cambiar cualquier dato, elegir otro diseño o volver a descargar tu currículum durante los próximos 30 días.</p>
+            <div className="mt-4 rounded-xl bg-amber-100 p-4 text-sm leading-6 text-amber-950"><strong className="block">Este enlace no es tu currículum.</strong>No lo uses para postularte ni lo envíes a empresas. Para buscar trabajo, enviá el archivo PDF o la imagen que descargaste.</div>
+            <div className="mt-4 break-all rounded-xl border border-amber-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">{privateLink}</div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button onClick={() => void copyPrivateLink()} className="btn-primary">Copiar enlace</button>
+              <a href={`https://wa.me/?text=${encodeURIComponent(`Mi enlace privado para editar el currículum: ${privateLink}`)}`} target="_blank" rel="noreferrer" className="btn-secondary">Enviármelo por WhatsApp</a>
+              <a href={privateLink} className="btn-secondary">Editar mi currículum</a>
+            </div>
+            <p className="mt-4 text-xs font-bold text-amber-900">Este enlace sirve solamente para editar. No lo compartas públicamente: cualquier persona que lo tenga podrá cambiar tu información.</p>
+          </div>
+        </div>
+      </section> : null}
     </div>
   </main>
 }
