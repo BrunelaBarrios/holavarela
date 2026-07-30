@@ -8,7 +8,7 @@ type Study = { institution: string; title: string; start: string; end: string; s
 type Course = { name: string; institution: string; year: string; duration: string }
 type Language = { language: string; level: string }
 type Reference = { name: string; relation: string; phone: string; role: string }
-type CvData = {
+export type CvData = {
   name: string; phone: string; email: string; city: string; address: string; birth: string; document: string; photo: string
   profile: string; experiences: Entry[]; studies: Study[]; courses: Course[]; skills: string[]; languages: Language[]
   references: Reference[]; additional: string
@@ -155,39 +155,26 @@ export default function CurriculumBuilder() {
 
   const download = async (format: "pdf" | "image") => {
     if (paymentStatus !== "approved" || !previewRef.current) return
-    const node = previewRef.current
     setBusy(true); setNotice("Preparando tu archivo…")
     try {
-      const html2canvas = (await import("html2canvas-pro")).default
-      const canvas = await html2canvas(node, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        windowWidth: 794,
-      })
-      const imageData = canvas.toDataURL("image/png", 1)
+      const { renderCvCanvases } = await import("./canvasExport")
+      const pages = await renderCvCanvases(data, template)
       if (format === "image") {
+        const gap = 24
+        const combined = document.createElement("canvas")
+        combined.width = pages[0].width
+        combined.height = pages.reduce((total,page)=>total+page.height,0)+gap*(pages.length-1)
+        const combinedContext = combined.getContext("2d")
+        let y = 0
+        pages.forEach(page=>{combinedContext?.drawImage(page,0,y);y+=page.height+gap})
         const link = document.createElement("a")
         link.download = `CV-${data.name || "curriculum"}.png`
-        link.href = imageData
+        link.href = combined.toDataURL("image/png", 1)
         link.click()
       } else {
         const { jsPDF } = await import("jspdf")
-        const renderedImage = new Image()
-        renderedImage.src = imageData
-        await renderedImage.decode()
         const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true })
-        const pageWidth = 210
-        const pageHeight = 297
-        const renderedHeight = renderedImage.naturalHeight * pageWidth / renderedImage.naturalWidth
-        let offset = 0
-        while (offset < renderedHeight) {
-          if (offset > 0) pdf.addPage()
-          pdf.addImage(imageData, "PNG", 0, -offset, pageWidth, renderedHeight, undefined, "FAST")
-          offset += pageHeight
-        }
+        pages.forEach((page,index)=>{if(index>0)pdf.addPage();pdf.addImage(page,"PNG",0,0,210,297,undefined,"FAST")})
         pdf.save(`CV-${data.name || "curriculum"}.pdf`)
       }
       setNotice("Archivo generado correctamente.")
