@@ -158,31 +158,32 @@ export default function CurriculumBuilder() {
     const node = previewRef.current
     setBusy(true); setNotice("Preparando tu archivo…")
     try {
-      const html2canvas = (await import("html2canvas")).default
-      const canvas = await html2canvas(node, {
-        scale: 2,
+      const { toPng } = await import("html-to-image")
+      const imageData = await toPng(node, {
+        pixelRatio: 2,
         backgroundColor: "#ffffff",
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        windowWidth: 794,
+        cacheBust: true,
+        width: node.scrollWidth,
+        height: node.scrollHeight,
       })
       if (format === "image") {
         const link = document.createElement("a")
         link.download = `CV-${data.name || "curriculum"}.png`
-        link.href = canvas.toDataURL("image/png", 1)
+        link.href = imageData
         link.click()
       } else {
         const { jsPDF } = await import("jspdf")
+        const renderedImage = new Image()
+        renderedImage.src = imageData
+        await renderedImage.decode()
         const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true })
         const pageWidth = 210
         const pageHeight = 297
-        const renderedHeight = canvas.height * pageWidth / canvas.width
-        const imageData = canvas.toDataURL("image/jpeg", .97)
+        const renderedHeight = renderedImage.naturalHeight * pageWidth / renderedImage.naturalWidth
         let offset = 0
         while (offset < renderedHeight) {
           if (offset > 0) pdf.addPage()
-          pdf.addImage(imageData, "JPEG", 0, -offset, pageWidth, renderedHeight, undefined, "FAST")
+          pdf.addImage(imageData, "PNG", 0, -offset, pageWidth, renderedHeight, undefined, "FAST")
           offset += pageHeight
         }
         pdf.save(`CV-${data.name || "curriculum"}.pdf`)
