@@ -1,4 +1,4 @@
-import type { CvData } from "./CurriculumBuilder"
+import type { CvData, Template } from "./CurriculumBuilder"
 
 const W = 1240
 const H = 1754
@@ -6,7 +6,6 @@ const M = 86
 const BOTTOM = H - 88
 const FONT = "Arial, Helvetica, sans-serif"
 
-type Template = "classic" | "modern" | "simple"
 type Page = { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; y: number; contentX: number; contentW: number }
 
 const clean = (value: unknown) => typeof value === "string" ? value.trim() : ""
@@ -18,9 +17,11 @@ function makePage(template: Template, pageNumber: number): Page {
   const ctx = canvas.getContext("2d")
   if (!ctx) throw new Error("Canvas no disponible")
   ctx.fillStyle = "#ffffff"; ctx.fillRect(0,0,W,H)
-  if (template === "modern") {
-    ctx.fillStyle = "#0e3a4c"; ctx.fillRect(0,0,355,H)
-    return { canvas, ctx, y: pageNumber === 0 ? 92 : 100, contentX: 415, contentW: W-415-M }
+  if (template === "modern" || template === "creative") {
+    const sideWidth=template==="creative"?300:355
+    ctx.fillStyle = template==="creative"?"#ffedd5":"#0e3a4c"; ctx.fillRect(0,0,sideWidth,H)
+    if(template==="creative"){ctx.fillStyle="#ea580c";ctx.fillRect(0,0,sideWidth,24)}
+    return { canvas, ctx, y: pageNumber === 0 ? 92 : 100, contentX: sideWidth+60, contentW: W-sideWidth-60-M }
   }
   return { canvas, ctx, y: pageNumber === 0 ? 92 : 100, contentX: M, contentW: W-M*2 }
 }
@@ -63,17 +64,21 @@ async function loadPhoto(src: string) {
 
 function drawCover(page: Page, data: CvData, template: Template, photo: HTMLImageElement|null) {
   const ctx=page.ctx
-  if (template==="modern") {
+  if (template==="modern" || template==="creative") {
+    const creative=template==="creative",sideWidth=creative?300:355,sideText=creative?"#7c2d12":"#ffffff",sideAccent=creative?"#ea580c":"#67e8f9"
     if(photo){ctx.save();ctx.beginPath();ctx.arc(177,170,94,0,Math.PI*2);ctx.clip();ctx.drawImage(photo,83,76,188,188);ctx.restore();page.y=300}
-    ctx.fillStyle="#ffffff";ctx.font=`800 42px ${FONT}`;ctx.textAlign="left"
-    const nameLines=lines(ctx,data.name||"Tu nombre",270);nameLines.forEach(line=>{ctx.fillText(line,48,page.y,270);page.y+=52})
+    ctx.fillStyle=sideText;ctx.font=`800 42px ${FONT}`;ctx.textAlign="left"
+    const nameLines=lines(ctx,data.name||"Tu nombre",sideWidth-80);nameLines.forEach(line=>{ctx.fillText(line,40,page.y,sideWidth-80);page.y+=52})
     page.y+=25
-    const side=(title:string,values:string[])=>{ctx.font=`700 19px ${FONT}`;ctx.fillStyle="#67e8f9";ctx.fillText(title.toUpperCase(),48,page.y);page.y+=30;ctx.font=`400 19px ${FONT}`;ctx.fillStyle="#ffffff";values.filter(Boolean).forEach(value=>{lines(ctx,value,260).forEach(line=>{ctx.fillText(line,48,page.y,260);page.y+=28})});page.y+=28}
+    const side=(title:string,values:string[])=>{ctx.font=`700 19px ${FONT}`;ctx.fillStyle=sideAccent;ctx.fillText(title.toUpperCase(),40,page.y);page.y+=30;ctx.font=`400 19px ${FONT}`;ctx.fillStyle=sideText;values.filter(Boolean).forEach(value=>{lines(ctx,value,sideWidth-80).forEach(line=>{ctx.fillText(line,40,page.y,sideWidth-80);page.y+=28})});page.y+=28}
     side("Contacto",[data.phone,data.email,data.city,data.address])
     if(data.skills.length)side("Habilidades",data.skills.map(value=>`• ${value}`))
     if(data.languages.some(x=>x.language))side("Idiomas",data.languages.filter(x=>x.language).map(x=>`${x.language} · ${x.level}`))
     page.y=95
     return
+  }
+  if(template==="executive"){
+    ctx.fillStyle="#020617";ctx.fillRect(M,70,W-M*2,205);ctx.fillStyle="#fcd34d";ctx.font=`700 18px ${FONT}`;ctx.fillText("PERFIL PROFESIONAL",M+42,120);ctx.fillStyle="#ffffff";ctx.font=`700 50px Georgia, serif`;ctx.fillText(data.name||"Tu nombre",M+42,185,W-M*2-84);ctx.font=`400 20px ${FONT}`;ctx.fillStyle="#cbd5e1";ctx.fillText([data.phone,data.email,data.city].filter(Boolean).join("  ·  "),M+42,230,W-M*2-84);page.y=320;return
   }
   if(template==="classic"&&photo){ctx.drawImage(photo,M,84,150,150)}
   const center=template==="simple", x=template==="classic"&&photo?M+185:M
@@ -88,7 +93,7 @@ export async function renderCvCanvases(data: CvData, template: Template) {
   const pages: Page[]=[]
   const photo=await loadPhoto(data.photo)
   let page=makePage(template,0);pages.push(page);drawCover(page,data,template,photo)
-  const accent=template==="modern"?"#0e7490":"#0f172a"
+  const accent=template==="modern"?"#0e7490":template==="creative"?"#ea580c":template==="executive"?"#92400e":"#0f172a"
   const nextPage=()=>{page=makePage(template,pages.length);pages.push(page);return page}
   const ensure=(height=130)=>{if(page.y+height>BOTTOM)nextPage()}
   const section=(title:string, entries:Array<{title?:string;meta?:string;text?:string}>)=>{
@@ -115,8 +120,8 @@ export async function renderCvCanvases(data: CvData, template: Template) {
   section("Cursos y capacitaciones",data.courses.filter(x=>x.name).map(x=>({
     title:x.name,meta:[x.institution,x.year,x.duration].filter(Boolean).join(" · ")
   })))
-  if(template!=="modern"&&data.skills.length)section("Habilidades",[{text:data.skills.join(" · ")}])
-  if(template!=="modern"&&data.languages.some(x=>x.language))section("Idiomas",data.languages.filter(x=>x.language).map(x=>({title:x.language,meta:x.level})))
+  if(template!=="modern"&&template!=="creative"&&data.skills.length)section("Habilidades",[{text:data.skills.join(" · ")}])
+  if(template!=="modern"&&template!=="creative"&&data.languages.some(x=>x.language))section("Idiomas",data.languages.filter(x=>x.language).map(x=>({title:x.language,meta:x.level})))
   section("Referencias",data.references.filter(x=>x.name).map(x=>({title:x.name,meta:[x.relation,x.role,x.phone].filter(Boolean).join(" · ")})))
   if(clean(data.additional))section("Información adicional",[{text:data.additional}])
   pages.forEach((item,index)=>{item.ctx.font=`400 16px ${FONT}`;item.ctx.fillStyle=template==="modern"?"#64748b":"#94a3b8";item.ctx.textAlign="right";item.ctx.fillText(`${index+1} / ${pages.length}`,W-55,H-38)})

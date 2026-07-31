@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { getSupabaseAdmin } from "../../lib/supabaseAdmin"
 
-const validTemplate = (value: unknown) => ["classic", "modern", "simple"].includes(String(value)) ? String(value) : "modern"
+const validTemplate = (value: unknown) => ["classic", "modern", "simple", "executive", "creative"].includes(String(value)) ? String(value) : "modern"
 const validCode = (value: unknown) => typeof value === "string" && /^[0-9a-f-]{36}$/i.test(value) ? value : ""
 const validData = (value: unknown) => value && typeof value === "object" ? value : null
 

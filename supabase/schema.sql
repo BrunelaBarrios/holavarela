@@ -1247,7 +1247,7 @@ create table if not exists public.curriculums_generados (
   email text not null,
   telefono text not null,
   datos jsonb not null default '{}'::jsonb,
-  modelo text not null default 'modern' check (modelo in ('classic', 'modern', 'simple')),
+  modelo text not null default 'modern' check (modelo in ('classic', 'modern', 'simple', 'executive', 'creative')),
   estado_pago text not null default 'draft' check (estado_pago in ('draft', 'pending', 'approved', 'rejected')),
   codigo_promocional text,
   descuento_porcentaje integer not null default 0,
@@ -1269,6 +1269,8 @@ alter table public.curriculums_generados add column if not exists descuento_porc
 alter table public.curriculums_generados add column if not exists monto_pago integer not null default 200;
 alter table public.curriculums_generados add column if not exists mp_preference_id text;
 alter table public.curriculums_generados add column if not exists mp_payment_id text;
+alter table public.curriculums_generados drop constraint if exists curriculums_generados_modelo_check;
+alter table public.curriculums_generados add constraint curriculums_generados_modelo_check check (modelo in ('classic', 'modern', 'simple', 'executive', 'creative'));
 
 create index if not exists candidatos_laborales_fecha_idx
 on public.candidatos_laborales (fecha_creacion desc);

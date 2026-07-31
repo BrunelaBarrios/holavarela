@@ -29,7 +29,7 @@ const steps = ["Tus datos", "Elegí el diseño", "Vista previa", "Pago", "Descar
 export default function CurriculumBuilder() {
   const [step, setStep] = useState(0)
   const [data, setData] = useState<CvData>(initialData)
-  const [template, setTemplate] = useState<"classic" | "modern" | "simple">("modern")
+  const [template, setTemplate] = useState<Template>("modern")
   const [code, setCode] = useState("")
   const [paymentStatus, setPaymentStatus] = useState<"draft" | "pending" | "approved">("draft")
   const [operation, setOperation] = useState("")
@@ -254,7 +254,7 @@ function FormSection({title,children}:{title:string;children:React.ReactNode}) {
 function RepeatSection({title,children,add,addLabel}:{title:string;items:any[];children:React.ReactNode;add:()=>void;addLabel:string}) { return <FormSection title={title}>{children}<button type="button" onClick={add} className="mt-4 inline-flex items-center gap-2 rounded-xl border border-cyan-600 px-4 py-3 text-sm font-bold text-cyan-800"><Plus className="h-4 w-4"/>{addLabel}</button></FormSection> }
 function Card({children,remove}:{children:React.ReactNode;remove:()=>void}) { return <div className="relative mb-4 rounded-2xl bg-slate-50 p-4 sm:p-5"><button onClick={remove} type="button" aria-label="Eliminar" className="absolute right-3 top-3 rounded-lg p-2 text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4"/></button><div className="pr-9">{children}</div></div> }
 function TemplatePicker({value,onChange,data}:{value:string;onChange:(v:any)=>void;data:CvData}) {
-  const options=[["classic","Clásico","Formal, neutro y en una columna."],["modern","Moderno","Dos columnas y espacio para fotografía."],["simple","Simple","Minimalista, claro y sin fotografía."]]
+  const options=[["classic","Clásico","Formal, neutro y en una columna."],["modern","Moderno","Dos columnas y espacio para fotografía."],["simple","Simple","Minimalista, claro y sin fotografía."],["executive","Ejecutivo","Sobrio y elegante para perfiles profesionales."],["creative","Creativo","Dinámico, con color y fotografía opcional."]]
   return <div><SectionHeading eyebrow="Paso 2" title="Elegí el diseño" text="Deslizá para comparar los modelos. Tocá uno para seleccionarlo."/>
     <div className="mt-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 lg:hidden"><span>Deslizá</span><ArrowRight className="h-4 w-4"/></div>
     <div className="mt-5 grid auto-cols-[88%] grid-flow-col gap-4 overflow-x-auto pb-4 pr-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:grid-flow-row lg:auto-cols-auto lg:grid-cols-3 lg:overflow-visible lg:pr-0">
@@ -266,15 +266,18 @@ function TemplatePicker({value,onChange,data}:{value:string;onChange:(v:any)=>vo
     <p className="mt-2 text-center text-sm font-semibold text-cyan-800 lg:hidden">Modelo seleccionado: {options.find(([id])=>id===value)?.[1]}</p>
   </div>
 }
-type Template = "classic"|"modern"|"simple"
-const CvPreview = ({data,template,watermark=false,ref}:{data:CvData;template:"classic"|"modern"|"simple";watermark?:boolean;ref?:React.Ref<HTMLDivElement>}) => {
+export type Template = "classic"|"modern"|"simple"|"executive"|"creative"
+const CvPreview = ({data,template,watermark=false,ref}:{data:CvData;template:Template;watermark?:boolean;ref?:React.Ref<HTMLDivElement>}) => {
   const filtered = useMemo(()=>({experiences:data.experiences.filter(x=>x.company||x.role),studies:data.studies.filter(x=>x.institution||x.title),courses:data.courses.filter(x=>x.name),languages:data.languages.filter(x=>x.language),references:data.references.filter(x=>x.name)}),[data])
   return <div ref={ref} className={`relative mx-auto min-h-[1123px] w-[794px] overflow-hidden bg-white text-slate-800 shadow-lg cv-${template}`}>
     {watermark?<div className="pointer-events-none absolute inset-0 z-20 grid place-items-center text-7xl font-black tracking-widest text-slate-900/10 -rotate-45">VISTA PREVIA</div>:null}
-    {template==="modern"?<div className="grid min-h-[1123px] grid-cols-[245px_1fr]"><aside className="bg-[#0e3a4c] p-8 text-white">{data.photo?<img src={data.photo} alt="" className="mb-7 h-40 w-40 rounded-full object-cover"/>:null}<h1 className="text-3xl font-black leading-tight">{data.name||"Tu nombre"}</h1><CvAside data={data}/></aside><div className="p-10"><CvMain data={data} filtered={filtered}/></div></div>:<div className={`p-12 ${template==="simple"?"font-[Arial]":""}`}><header className={`border-b pb-7 ${template==="classic"?"border-slate-900":"border-slate-300 text-center"}`}><div className="flex items-center gap-6">{template==="classic"&&data.photo?<img src={data.photo} alt="" className="h-28 w-28 rounded-lg object-cover"/>:null}<div className={template==="simple"?"w-full":""}><h1 className="text-4xl font-black uppercase tracking-wide">{data.name||"Tu nombre"}</h1><p className="mt-3 text-sm">{[data.phone,data.email,data.city].filter(Boolean).join("  ·  ")}</p></div></div></header><CvMain data={data} filtered={filtered}/></div>}
+    {template==="modern"?<div className="grid min-h-[1123px] grid-cols-[245px_1fr]"><aside className="bg-[#0e3a4c] p-8 text-white">{data.photo?<img src={data.photo} alt="" className="mb-7 h-40 w-40 rounded-full object-cover"/>:null}<h1 className="text-3xl font-black leading-tight">{data.name||"Tu nombre"}</h1><CvAside data={data}/></aside><div className="p-10"><CvMain data={data} filtered={filtered}/></div></div>
+    :template==="creative"?<div className="min-h-[1123px] bg-[#fffaf5]"><header className="flex items-center gap-7 bg-[#ea580c] p-10 text-white">{data.photo?<img src={data.photo} alt="" className="h-36 w-36 rounded-[2rem] border-4 border-white/70 object-cover"/>:null}<div><p className="text-sm font-bold uppercase tracking-[.25em] text-orange-100">Currículum</p><h1 className="mt-2 text-4xl font-black leading-tight">{data.name||"Tu nombre"}</h1><p className="mt-3 text-sm">{[data.phone,data.email,data.city].filter(Boolean).join("  ·  ")}</p></div></header><div className="grid grid-cols-[1fr_220px] gap-8 p-10"><CvMain data={data} filtered={filtered}/><aside className="rounded-3xl bg-orange-100 p-6 text-orange-950"><CvAside data={data}/></aside></div></div>
+    :template==="executive"?<div className="min-h-[1123px] p-12"><header className="bg-slate-950 px-10 py-9 text-white"><p className="text-xs font-bold uppercase tracking-[.3em] text-amber-300">Perfil profesional</p><h1 className="mt-3 font-serif text-4xl font-bold">{data.name||"Tu nombre"}</h1><p className="mt-3 text-sm text-slate-300">{[data.phone,data.email,data.city].filter(Boolean).join("  ·  ")}</p></header><div className="border-x border-b border-slate-200 px-10 pb-10 pt-2"><CvMain data={data} filtered={filtered}/></div></div>
+    :<div className={`p-12 ${template==="simple"?"font-[Arial]":""}`}><header className={`border-b pb-7 ${template==="classic"?"border-slate-900":"border-slate-300 text-center"}`}><div className="flex items-center gap-6">{template==="classic"&&data.photo?<img src={data.photo} alt="" className="h-28 w-28 rounded-lg object-cover"/>:null}<div className={template==="simple"?"w-full":""}><h1 className="text-4xl font-black uppercase tracking-wide">{data.name||"Tu nombre"}</h1><p className="mt-3 text-sm">{[data.phone,data.email,data.city].filter(Boolean).join("  ·  ")}</p></div></div></header><CvMain data={data} filtered={filtered}/></div>}
   </div>
 }
-function ResponsiveCvPreview({ data, template, watermark=false, previewRef }: { data:CvData; template:"classic"|"modern"|"simple"; watermark?:boolean; previewRef:React.RefObject<HTMLDivElement|null> }) {
+function ResponsiveCvPreview({ data, template, watermark=false, previewRef }: { data:CvData; template:Template; watermark?:boolean; previewRef:React.RefObject<HTMLDivElement|null> }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [node,setNode] = useState<HTMLDivElement|null>(null)
   const [scale,setScale] = useState(1)
