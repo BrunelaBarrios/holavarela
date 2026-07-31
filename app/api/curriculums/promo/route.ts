@@ -3,7 +3,7 @@ import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
 
 const FREE_CODE = "PRUEBAHV2026"
 const HALF_CODE = "MITADHV50"
-const FREE_CODE_MAX_USES = 11
+const FREE_CODE_MAX_USES = 25
 
 export async function POST(request: NextRequest) {
   try {
