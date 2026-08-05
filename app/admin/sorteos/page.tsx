@@ -626,21 +626,6 @@ export default function AdminSorteosPage() {
         ? parseParticipantKey(form.participante2Key)
         : null
 
-    const isDisablingActiveCampaign = selectedCampaign?.activo === true && !form.activo
-
-    if (form.activo || isDisablingActiveCampaign) {
-      const { error: deactivateError } = await supabase
-        .from("sorteo_popup_config")
-        .update({ activo: false })
-        .neq("id", form.activo ? selectedId || -1 : -1)
-
-      if (deactivateError && !isMissingSweepstakesSchemaError(deactivateError)) {
-        setSaveError(`No se pudieron desactivar los sorteos: ${deactivateError.message}`)
-        setSaving(false)
-        return
-      }
-    }
-
     const payload = {
       titulo: form.titulo.trim() || "Sorteo Hola Varela",
       activo: form.activo,
@@ -654,12 +639,15 @@ export default function AdminSorteosPage() {
       updated_at: new Date().toISOString(),
     }
 
-    const saveResult = selectedId
-      ? await supabase.from("sorteo_popup_config").update(payload).eq("id", selectedId)
-      : await supabase.from("sorteo_popup_config").insert(payload)
+    const saveResponse = await fetch("/api/admin/sorteos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: selectedId, payload }),
+    })
+    const saveResult = (await saveResponse.json()) as { id?: number; error?: string }
 
-    if (saveResult.error) {
-      setSaveError(`No se pudo guardar el sorteo: ${saveResult.error.message}`)
+    if (!saveResponse.ok || !saveResult.id) {
+      setSaveError(`No se pudo guardar el sorteo: ${saveResult.error || "Error desconocido."}`)
       setSaving(false)
       return
     }
@@ -692,7 +680,7 @@ export default function AdminSorteosPage() {
         : "Creo una nueva campaña de sorteo.",
     })
 
-    const nextId = Number(data?.id || selectedId || 0)
+    const nextId = saveResult.id
     await loadData(nextId)
     setSaveMessage(selectedId ? "Sorteo actualizado." : "Sorteo creado.")
     setSaving(false)
