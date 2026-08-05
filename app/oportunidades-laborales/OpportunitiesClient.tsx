@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react"
 import { ArrowRight, BriefcaseBusiness, CalendarDays, CheckCircle2, Clock3, ExternalLink, Mail, MapPin, Phone, Search, X } from "lucide-react"
 import { PublicHeader } from "../components/PublicHeader"
+import { OpportunityPartnersBand } from "../components/OpportunityPartnersBand"
 import { OptimizedImage } from "../components/OptimizedImage"
 import { buildHomePublicNav } from "../lib/publicNav"
 import { fileToDataUrl } from "../lib/fileToDataUrl"
@@ -168,6 +169,7 @@ export function OpportunitiesClient() {
         <p className="mt-5 line-clamp-3 leading-7 text-slate-600">{item.descripcion}</p><span className="mt-6 inline-flex items-center gap-2 self-start font-bold text-sky-700">{type === "oferta" ? "Ver propuesta" : "Ver perfil"}<ArrowRight className="h-4 w-4 transition group-hover:translate-x-1"/></span>
       </article>)}</div>}
     </section>
+    <OpportunityPartnersBand />
     {modal && <div className="fixed inset-0 z-[70] overflow-y-auto bg-slate-950/55 p-4 backdrop-blur-sm"><div className="mx-auto my-4 max-w-3xl rounded-3xl bg-white p-5 shadow-2xl sm:p-8"><button onClick={() => setModal(null)} aria-label="Cerrar" className="float-right rounded-full p-2 hover:bg-slate-100"><X/></button>
       {modal === "detail" && selected ? <JobDetail item={selected}/> : <form onSubmit={submit}><h2 className="pr-12 text-2xl font-black">{modal === "oferta" ? "Publicar una oferta laboral" : "Cargar mis datos y currículum"}</h2><p className="mt-2 text-sm text-slate-500">{modal === "busqueda" ? "Tu información se guardará de forma privada. Solo se publicará si lo elegís expresamente." : "La publicación quedará pendiente hasta que sea revisada."}</p>
         {modal === "oferta" ? <>
