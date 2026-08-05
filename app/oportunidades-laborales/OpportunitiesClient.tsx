@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react"
-import { ArrowRight, BriefcaseBusiness, CalendarDays, Clock3, ExternalLink, MapPin, Search, X } from "lucide-react"
+import { ArrowRight, BriefcaseBusiness, CalendarDays, CheckCircle2, Clock3, ExternalLink, MapPin, Search, X } from "lucide-react"
 import { PublicHeader } from "../components/PublicHeader"
 import { OptimizedImage } from "../components/OptimizedImage"
 import { buildHomePublicNav } from "../lib/publicNav"
@@ -38,6 +38,7 @@ export function OpportunitiesClient() {
   const [form, setForm] = useState(emptyForm)
   const [sending, setSending] = useState(false)
   const [notice, setNotice] = useState("")
+  const [successMessage, setSuccessMessage] = useState("")
 
   const load = useCallback(async () => {
     setLoading(true); setError("")
@@ -77,7 +78,9 @@ export function OpportunitiesClient() {
       const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, tipo_publicacion: modal }) })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error)
-      setNotice(result.message); setForm(emptyForm)
+      setForm(emptyForm)
+      setModal(null)
+      setSuccessMessage(result.message || "La información se guardó correctamente.")
     } catch (cause) { setNotice(cause instanceof Error ? cause.message : "No se pudo enviar.") }
     finally { setSending(false) }
   }
@@ -86,12 +89,33 @@ export function OpportunitiesClient() {
     if (!selectedFile) return
     if (key === "cv_url") {
       const allowedCvTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"]
-      if (!allowedCvTypes.includes(selectedFile.type) || selectedFile.size > 2_000_000) {
-        setNotice("El currículum debe ser PDF, JPG, PNG o WebP de hasta 2 MB.")
+      const extension = selectedFile.name.split(".").pop()?.toLowerCase() || ""
+      const mimeByExtension: Record<string, string> = {
+        pdf: "application/pdf",
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        png: "image/png",
+        webp: "image/webp",
+      }
+      const resolvedType = allowedCvTypes.includes(selectedFile.type)
+        ? selectedFile.type
+        : mimeByExtension[extension]
+      if (!resolvedType) {
+        setNotice("Formato no admitido. Elegí un archivo PDF, JPG, PNG o WebP.")
+        return
+      }
+      if (selectedFile.size > 5_000_000) {
+        setNotice("El currículum supera el límite de 5 MB.")
         return
       }
       const reader = new FileReader()
-      reader.onload = () => update(key, String(reader.result || ""))
+      reader.onload = () => {
+        const result = String(reader.result || "")
+        const normalized = result.replace(/^data:[^;]*;/, `data:${resolvedType};`)
+        update(key, normalized)
+        setNotice("")
+      }
+      reader.onerror = () => setNotice("No se pudo leer el currículum seleccionado.")
       reader.readAsDataURL(selectedFile)
       return
     }
@@ -156,11 +180,19 @@ export function OpportunitiesClient() {
           {form.publicar_perfil ? <><label className="mt-4 block text-sm font-semibold">¿Por cuánto tiempo querés publicar tu búsqueda?<select value={form.duracion_publicacion} onChange={e => update("duracion_publicacion", e.target.value)} required className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 font-normal">{JOB_SEARCH_DURATIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>{form.duracion_publicacion === "hasta_aviso" ? <p className="mt-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Cuando ya no estés buscando trabajo, avisanos para retirar tu publicación.</p> : null}</> : null}
         </>}
         <div className="grid gap-4 sm:grid-cols-2"><Field label="Teléfono (opcional)" value={form.telefono} onChange={v => update("telefono", v)} type="tel"/><Field label="Correo electrónico (opcional)" value={form.email} onChange={v => update("email", v)} type="email"/>{modal === "oferta" && <><Field label="Forma de postulación" value={form.forma_postulacion} onChange={v => update("forma_postulacion", v)}/><Field label="Fecha límite (opcional)" value={form.fecha_vencimiento} onChange={v => update("fecha_vencimiento", v)} type="date"/></>}</div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2"><FileField label={modal === "busqueda" ? "Foto (opcional)" : "Imagen o logo (opcional)"} accept="image/*" onChange={f => void file("imagen_url", f)}/>{modal === "busqueda" && <FileField label="Currículum vitae (opcional, PDF o imagen de hasta 2 MB)" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={f => void file("cv_url", f)}/>}</div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2"><FileField label={modal === "busqueda" ? "Foto (opcional)" : "Imagen o logo (opcional)"} accept="image/*" onChange={f => void file("imagen_url", f)}/>{modal === "busqueda" && <FileField label="Currículum vitae (opcional, PDF o imagen de hasta 5 MB)" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" onChange={f => void file("cv_url", f)}/>}</div>
         <label className="mt-5 flex gap-3 rounded-2xl bg-sky-50 p-4 text-sm text-slate-700"><input type="checkbox" checked={form.consentimiento} onChange={e => update("consentimiento", e.target.checked)} required className="mt-1"/><span>{modal === "busqueda" ? "Autorizo a Hola Varela a almacenar mis datos y mi currículum en su base privada para facilitar contactos laborales. Puedo solicitar su eliminación. La publicación pública depende exclusivamente de la opción anterior." : "Autorizo a Hola Varela a publicar la información ingresada. Entiendo que los datos de contacto solo aparecerán en el detalle."}</span></label>
-        {notice && <p className={`mt-4 rounded-xl p-3 text-sm ${notice.includes("Guardamos") || notice.startsWith("Publicaci") ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>{notice}</p>}<button disabled={sending} className="mt-5 w-full rounded-xl bg-sky-600 py-3.5 font-bold text-white hover:bg-sky-700 disabled:opacity-60">{sending ? "Enviando..." : modal === "busqueda" ? "Guardar información" : "Enviar para revisión"}</button>
+        {notice && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{notice}</p>}<button disabled={sending} className="mt-5 w-full rounded-xl bg-sky-600 py-3.5 font-bold text-white hover:bg-sky-700 disabled:opacity-60">{sending ? "Enviando..." : modal === "busqueda" ? "Guardar información" : "Enviar para revisión"}</button>
       </form>}
     </div></div>}
+    {successMessage ? <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="success-title">
+      <div className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl sm:p-8">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><CheckCircle2 className="h-8 w-8"/></div>
+        <h2 id="success-title" className="mt-4 text-2xl font-black text-slate-950">Información guardada</h2>
+        <p className="mt-3 text-sm leading-6 text-slate-600">{successMessage}</p>
+        <button type="button" autoFocus onClick={() => setSuccessMessage("")} className="mt-6 w-full rounded-xl bg-sky-600 px-5 py-3 font-bold text-white transition hover:bg-sky-700">Aceptar</button>
+      </div>
+    </div> : null}
   </main>
 }
 

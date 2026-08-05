@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   if (search) {
     const safe = search.replace(/[%_,]/g, " ")
     query = query.or(
-      `nombre_completo.ilike.%${safe}%,puesto_buscado.ilike.%${safe}%,habilidades.ilike.%${safe}%,experiencia.ilike.%${safe}%,localidad.ilike.%${safe}%`
+      `nombre_completo.ilike.%${safe}%,puesto_buscado.ilike.%${safe}%,presentacion.ilike.%${safe}%,habilidades.ilike.%${safe}%,experiencia.ilike.%${safe}%,localidad.ilike.%${safe}%,telefono.ilike.%${safe}%,email.ilike.%${safe}%`
     )
   }
   const { data, error } = await query

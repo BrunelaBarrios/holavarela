@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const habilidades = clean(body.habilidades)
     const localidad = clean(body.localidad, 100)
     const autorizaPublicacion = body.publicar_perfil === true
-    const cvUrl = clean(body.cv_url, 3_000_000)
+    const cvUrl = clean(body.cv_url, 7_000_000)
 
     if (!body.consentimiento || !nombre || !presentacion || !experiencia || !habilidades || !localidad) {
       return NextResponse.json({ error: "Revisá los campos obligatorios y la autorización de almacenamiento." }, { status: 400 })
