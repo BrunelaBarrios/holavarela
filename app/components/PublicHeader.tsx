@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import { Menu, X } from "lucide-react"
+import { GlobalHighlightAd } from "./GlobalHighlightAd"
 
 type NavItem = {
   href: string
@@ -28,6 +29,7 @@ export function PublicHeader({
 
   return (
     <div className="relative">
+      <GlobalHighlightAd />
       {isMobileMenuOpen ? (
         <button
           type="button"
