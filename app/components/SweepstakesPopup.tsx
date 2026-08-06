@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Gift, Info, Phone, UserRound, X } from "lucide-react"
 import { OptimizedImage } from "./OptimizedImage"
 import type { SweepstakesParticipant } from "../lib/sweepstakes"
@@ -34,6 +34,17 @@ export function SweepstakesPopup({
   const [telefono, setTelefono] = useState("")
   const [success, setSuccess] = useState("")
 
+  useEffect(() => {
+    if (!open) return
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose()
+    }
+
+    window.addEventListener("keydown", handleEscape)
+    return () => window.removeEventListener("keydown", handleEscape)
+  }, [onClose, open])
+
   if (!open) return null
 
   const isEntryMode = mode === "entry"
@@ -56,9 +67,15 @@ export function SweepstakesPopup({
   }
 
   return (
-    <div className="fixed inset-0 z-[95] overflow-y-auto bg-slate-950/45 p-4">
+    <div
+      className="fixed inset-0 z-[95] overflow-y-auto bg-slate-950/45 p-4"
+      onClick={onClose}
+    >
       <div className="mx-auto flex min-h-full items-center justify-center">
-        <div className={`relative my-6 w-full overflow-hidden rounded-[30px] border border-white/20 bg-white shadow-2xl ${isEntryMode ? "max-w-3xl" : "max-w-xl"}`}>
+        <div
+          className={`relative my-6 w-full overflow-hidden rounded-[30px] border border-white/20 bg-white shadow-2xl ${isEntryMode ? "max-w-3xl" : "max-w-xl"}`}
+          onClick={(event) => event.stopPropagation()}
+        >
           <button
             type="button"
             onClick={onClose}

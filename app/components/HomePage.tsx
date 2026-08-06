@@ -914,6 +914,14 @@ export function HomePage({
 
   useEffect(() => {
     if (!delayedPromo?.image || typeof window === "undefined") return
+    if (
+      sweepstakesPopup.open ||
+      selectedComercio ||
+      selectedServicio ||
+      selectedEvento ||
+      selectedCurso ||
+      selectedInstitucion
+    ) return
 
     const timeoutId = window.setTimeout(() => {
       window.localStorage.setItem(DELAYED_PROMO_LAST_KEY, `ad:${delayedPromo.id}`)
@@ -922,7 +930,15 @@ export function HomePage({
     }, delayedPromo.delaySeconds * 1000)
 
     return () => window.clearTimeout(timeoutId)
-  }, [delayedPromo])
+  }, [
+    delayedPromo,
+    selectedComercio,
+    selectedCurso,
+    selectedEvento,
+    selectedInstitucion,
+    selectedServicio,
+    sweepstakesPopup.open,
+  ])
 
   const WeatherIcon = useMemo(() => {
     if (!weather) return CloudSun
