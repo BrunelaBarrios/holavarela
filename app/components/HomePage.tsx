@@ -2792,7 +2792,7 @@ export function HomePage({
         </div>
       </section>
 
-      <section id="cursos" className="order-3 py-8 [content-visibility:auto] [contain-intrinsic-size:430px] sm:py-10">
+      <section id="cursos" className="hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="relative overflow-hidden rounded-[28px] border border-violet-100/70 bg-[linear-gradient(135deg,#faf8ff_0%,#ffffff_58%,#f7f2ff_100%)] p-7 shadow-[0_18px_48px_-38px_rgba(88,28,135,0.32)] sm:rounded-[34px] sm:p-10 lg:p-12">
             <div className="absolute right-0 top-0 h-full w-3/5 bg-[radial-gradient(circle_at_72%_35%,rgba(139,92,246,0.1),transparent_36%),radial-gradient(circle_at_42%_85%,rgba(196,181,253,0.14),transparent_40%)]" />
@@ -2854,7 +2854,7 @@ export function HomePage({
         </div>
       </section>
 
-      <section id="instituciones" className="order-4 py-8 [content-visibility:auto] [contain-intrinsic-size:450px] sm:py-10">
+      <section id="instituciones" className="hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="relative overflow-hidden rounded-[28px] border border-emerald-100/70 bg-[linear-gradient(135deg,#f9fffc_0%,#ffffff_58%,#f1fbf6_100%)] p-7 shadow-[0_18px_48px_-38px_rgba(6,95,70,0.3)] sm:rounded-[34px] sm:p-10 lg:p-12">
             <div className="absolute right-0 top-0 h-full w-3/5 bg-[radial-gradient(circle_at_68%_40%,rgba(16,185,129,0.08),transparent_36%),radial-gradient(circle_at_40%_88%,rgba(167,243,208,0.2),transparent_40%)]" />
