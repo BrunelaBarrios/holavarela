@@ -2010,7 +2010,7 @@ export function HomePage({
         items={buildHomePublicNav()}
         borderClassName="border-white/60"
         backgroundClassName="bg-white/80"
-        action={{ href: "/sumate", label: "Publicá gratis" }}
+        action={{ href: "/usuarios/eventos/nuevo?public=1", label: "Agregar un evento" }}
       />
 
       <aside className="hidden">
