@@ -194,7 +194,7 @@ const getHomePageData = unstable_cache(
       })(),
       supabaseServer
         .from("cursos")
-        .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, edad_destino, destacado, usa_whatsapp")
+        .select("id, nombre, descripcion, responsable, contacto, web_url, instagram_url, facebook_url, edad_destino, destacado, usa_whatsapp, institucion_id")
         .or("estado.is.null,estado.eq.activo")
         .order("id", { ascending: false })
         .limit(HOME_COURSES_LIMIT),
@@ -326,6 +326,18 @@ const getHomePageData = unstable_cache(
       weatherPromise,
     ])
 
+    const courseInstitutionIds = Array.from(
+      new Set((cursos || []).map((curso) => curso.institucion_id).filter(Boolean) as number[])
+    )
+    const { data: courseInstitutionRows } = courseInstitutionIds.length
+      ? await supabaseServer
+          .from("instituciones")
+          .select("id, nombre")
+          .in("id", courseInstitutionIds)
+      : { data: [] }
+    const institutionNameById = new Map(
+      (courseInstitutionRows || []).map((institucion) => [Number(institucion.id), institucion.nombre])
+    )
     const highlightedCursos = (cursos || []).filter((curso) => curso.destacado).slice(0, 12)
     const highlightedServicios = (servicios || [])
       .filter(
@@ -366,6 +378,9 @@ const getHomePageData = unstable_cache(
       nearbyActivities,
       cursos: (cursos || []).slice(0, 8).map((item) => ({
         ...item,
+        institucion_nombre: item.institucion_id
+          ? institutionNameById.get(Number(item.institucion_id)) || null
+          : null,
         imagen: `/api/cursos/${item.id}/image`,
         premium_galeria: [],
       })),
@@ -373,6 +388,9 @@ const getHomePageData = unstable_cache(
       instituciones: (instituciones || []).map((item) => ({ ...item, foto: null })),
       allCursos: (highlightedCursos.length ? highlightedCursos : cursos || []).map((item) => ({
         ...item,
+        institucion_nombre: item.institucion_id
+          ? institutionNameById.get(Number(item.institucion_id)) || null
+          : null,
         imagen: `/api/cursos/${item.id}/image`,
         premium_galeria: [],
       })),

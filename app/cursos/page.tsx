@@ -18,12 +18,25 @@ export const metadata: Metadata = buildPageMetadata({
 export default async function CursosPage() {
   const { data } = await supabaseServer
     .from("cursos")
-    .select("id, nombre, descripcion, responsable, contacto, edad_destino, categoria, lugar, dias_semana, hora_inicio, hora_fin, horarios, costo_tipo, web_url, instagram_url, facebook_url, imagen, premium_galeria, estado, usa_whatsapp")
+    .select("id, nombre, descripcion, responsable, contacto, edad_destino, categoria, lugar, dias_semana, hora_inicio, hora_fin, horarios, costo_tipo, web_url, instagram_url, facebook_url, imagen, premium_galeria, estado, usa_whatsapp, institucion_id")
     .eq("estado", "activo")
     .order("id", { ascending: false })
 
+  const institutionIds = Array.from(
+    new Set((data || []).map((curso) => curso.institucion_id).filter(Boolean) as number[])
+  )
+  const { data: institutionRows } = institutionIds.length
+    ? await supabaseServer.from("instituciones").select("id, nombre").in("id", institutionIds)
+    : { data: [] }
+  const institutionNameById = new Map(
+    (institutionRows || []).map((institution) => [Number(institution.id), institution.nombre])
+  )
+
   const cursos = (data || []).map((curso) => ({
     ...curso,
+    institucion_nombre: curso.institucion_id
+      ? institutionNameById.get(Number(curso.institucion_id)) || null
+      : null,
     imagen: curso.imagen ? `/api/cursos/${curso.id}/image` : null,
     premium_galeria: curso.premium_galeria || [],
   }))

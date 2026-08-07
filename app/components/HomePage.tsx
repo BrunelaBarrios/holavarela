@@ -171,6 +171,8 @@ type Curso = {
   premium_galeria?: string[] | null
   destacado?: boolean | null
   usa_whatsapp?: boolean | null
+  institucion_id?: number | null
+  institucion_nombre?: string | null
 }
 
 type Servicio = {
@@ -1811,6 +1813,16 @@ export function HomePage({
                   <GraduationCap className="h-4 w-4" />
                   <span>{selectedCurso.responsable}</span>
                 </div>
+
+                {selectedCurso.institucion_nombre ? (
+                  <div className="mt-3 flex items-center gap-2 text-slate-600">
+                    <Building2 className="h-4 w-4" />
+                    <span>
+                      <span className="font-semibold">Pertenece a:</span>{" "}
+                      {selectedCurso.institucion_nombre}
+                    </span>
+                  </div>
+                ) : null}
 
                 <div className="mt-3 flex items-center gap-2 text-slate-500">
                   <Phone className="h-4 w-4" />

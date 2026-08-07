@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
 import {
   ArrowRight,
+  Building2,
   CalendarDays,
   CalendarRange,
   Clock,
@@ -48,6 +49,8 @@ export type Curso = {
   premium_galeria?: string[] | null
   estado?: string | null
   usa_whatsapp?: boolean | null
+  institucion_id?: number | null
+  institucion_nombre?: string | null
 }
 
 type CursoHorario = {
@@ -466,6 +469,9 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
             : []),
           ...(selectedCurso?.responsable
             ? [{ icon: GraduationCap, text: selectedCurso.responsable }]
+            : []),
+          ...(selectedCurso?.institucion_nombre
+            ? [{ icon: Building2, text: `Pertenece a: ${selectedCurso.institucion_nombre}` }]
             : []),
           ...(selectedCurso?.contacto
             ? [{ icon: Phone, text: selectedCurso.contacto }]
