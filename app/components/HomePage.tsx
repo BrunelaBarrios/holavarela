@@ -217,6 +217,7 @@ type HomeSearchResult = {
   href: string
   icon: typeof Search
   searchableText: string
+  course?: Curso
 }
 
 const normalizeSearchText = (value: string | null | undefined) =>
@@ -641,6 +642,7 @@ export function HomePage({
         category: "Curso o clase",
         href: `/cursos/${item.id}`,
         icon: GraduationCap,
+        course: item,
         searchableText: normalizeSearchText(
           `${item.nombre} ${item.descripcion || ""} ${item.responsable || ""}`
         ),
@@ -1111,6 +1113,22 @@ export function HomePage({
     void recordViewMore(section, rawId, delayedPromo.title)
     void recordContentVisit(section, rawId, delayedPromo.title)
     router.push(delayedPromo.href)
+  }
+
+  const openHomeSearchResult = (result: HomeSearchResult) => {
+    setHomeSearch("")
+
+    if (result.course) {
+      handleViewMoreClick(
+        "cursos",
+        String(result.course.id),
+        result.course.nombre,
+        () => setSelectedCurso(result.course || null)
+      )
+      return
+    }
+
+    router.push(result.href)
   }
 
   const contactLeadIntro =
@@ -2063,7 +2081,7 @@ export function HomePage({
               className="relative mt-8 flex max-w-2xl gap-2 rounded-2xl bg-white p-2 shadow-[0_22px_55px_-20px_rgba(0,0,0,0.75)]"
               onSubmit={(event) => {
                 event.preventDefault()
-                if (homeSearchResults[0]) router.push(homeSearchResults[0].href)
+                if (homeSearchResults[0]) openHomeSearchResult(homeSearchResults[0])
               }}
             >
               <label htmlFor="home-search" className="sr-only">Buscar en Hola Varela</label>
@@ -2112,11 +2130,13 @@ export function HomePage({
                       {homeSearchResults.map((result) => {
                         const ResultIcon = result.icon
                         return (
-                          <Link
+                          <button
+                            type="button"
                             key={result.id}
-                            href={result.href}
                             role="option"
-                            className="flex items-center gap-3 rounded-xl px-3 py-3 transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
+                            aria-selected="false"
+                            onClick={() => openHomeSearchResult(result)}
+                            className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-blue-50 focus:bg-blue-50 focus:outline-none"
                           >
                             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                               <ResultIcon className="h-5 w-5" />
@@ -2130,7 +2150,7 @@ export function HomePage({
                               </span>
                             </span>
                             <ArrowRight className="h-4 w-4 shrink-0 text-slate-400" />
-                          </Link>
+                          </button>
                         )
                       })}
                       <p className="px-3 pb-1 pt-2 text-xs text-slate-500">
