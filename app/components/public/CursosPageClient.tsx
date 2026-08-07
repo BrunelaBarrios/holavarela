@@ -113,6 +113,13 @@ const parseCourseAgeGroups = (value?: string | null) => {
 const courseAgeLabels = (value?: string | null) =>
   parseCourseAgeGroups(value).map(courseAgeLabel).join(", ")
 
+const normalizeCourseName = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+
 const courseMatchesAgeFilter = (curso: Curso, filter: string) => {
   if (filter === "todos") return true
 
@@ -341,15 +348,11 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
   }
 
   const filteredCursos = useMemo(() => {
-    const term = search.trim().toLowerCase()
+    const term = normalizeCourseName(search)
 
     return sortBySchedule(
       cursos.filter((curso) => {
-        const matchesSearch =
-          !term ||
-          `${curso.nombre} ${curso.descripcion || ""} ${curso.responsable || ""} ${curso.lugar || ""} ${curso.categoria || ""}`
-            .toLowerCase()
-            .includes(term)
+        const matchesSearch = !term || normalizeCourseName(curso.nombre).includes(term)
         const matchesDay =
           selectedDay === "todos" || courseHasDay(curso, selectedDay)
         const matchesCategory =
@@ -574,7 +577,8 @@ export function CursosPageClient({ initialCursos }: { initialCursos: Curso[] }) 
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscar por curso, lugar, categoría o responsable"
+                placeholder="Buscar curso o clase por nombre"
+                aria-label="Buscar curso o clase por nombre"
                 className="w-full text-sm outline-none"
               />
             </div>
