@@ -2589,7 +2589,7 @@ export function HomePage({
                           })
                         }
                         aria-label={`Ver mas de ${servicio.nombre}`}
-                        className={`cursor-pointer overflow-hidden rounded-2xl border bg-white [content-visibility:auto] [contain-intrinsic-size:160px] shadow-[0_14px_32px_-24px_rgba(15,23,42,0.45)] transition hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:rounded-[28px] ${index >= ITEMS_PER_ROTATION ? "xl:hidden" : ""} ${servicio.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"}`}
+                        className={`cursor-pointer overflow-hidden rounded-2xl border bg-white shadow-[0_14px_32px_-24px_rgba(15,23,42,0.45)] transition hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 sm:rounded-[28px] ${index >= ITEMS_PER_ROTATION ? "xl:hidden" : ""} ${servicio.premium_activo ? "border-violet-200 hover:shadow-[0_28px_60px_-30px_rgba(139,92,246,0.35)]" : "border-white/80 hover:shadow-[0_28px_60px_-30px_rgba(245,158,11,0.35)]"}`}
                       >
                         {servicio.imagen ? (
                           <div className="relative aspect-square w-full bg-white">
@@ -2607,8 +2607,8 @@ export function HomePage({
                           </div>
                         )}
 
-                        <div className="hidden">
-                          <h3 className="text-lg font-semibold leading-tight text-slate-900 sm:text-xl">
+                        <div className="border-t border-slate-100 p-3 sm:p-4">
+                          <h3 className="line-clamp-2 text-sm font-semibold leading-tight text-slate-900 sm:text-lg">
                             {servicio.nombre}
                           </h3>
 
