@@ -692,9 +692,7 @@ export function HomePage({
   }, [])
 
   useEffect(() => {
-    return scheduleIdleTask(() => {
-      void loadHomePopupBubble()
-    })
+    void loadHomePopupBubble()
   }, [loadHomePopupBubble])
 
   const [contactLeadLoading, setContactLeadLoading] = useState(false)
