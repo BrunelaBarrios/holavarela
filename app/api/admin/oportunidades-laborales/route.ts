@@ -7,6 +7,21 @@ import { JOB_STATUSES } from "../../../lib/jobOpportunities"
 const clean = (value: unknown, max = 3000) =>
   typeof value === "string" ? value.trim().slice(0, max) : ""
 
+const todayInUruguay = () => new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/Montevideo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(new Date())
+
+async function expireClosedOpportunities() {
+  return getSupabaseAdmin()
+    .from("oportunidades_laborales")
+    .update({ estado: "vencida" })
+    .eq("estado", "activa")
+    .lt("fecha_vencimiento", todayInUruguay())
+}
+
 const cleanHttpUrl = (value: unknown) => {
   const raw = clean(value, 500)
   if (!raw) return null
@@ -21,6 +36,8 @@ const cleanHttpUrl = (value: unknown) => {
 
 export async function GET(request: NextRequest) {
   if (!await readAdminSessionFromRequest(request)) return NextResponse.json({ error: "No autorizado." }, { status: 401 })
+  const { error: expirationError } = await expireClosedOpportunities()
+  if (expirationError) return NextResponse.json({ error: expirationError.message }, { status: 500 })
   const params = request.nextUrl.searchParams
   const supabaseAdmin = getSupabaseAdmin()
   let query = supabaseAdmin.from("oportunidades_laborales").select("*").order("fecha_creacion", { ascending: false })

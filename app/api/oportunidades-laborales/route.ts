@@ -3,8 +3,26 @@ import { getSupabaseAdmin } from "../../lib/supabaseAdmin"
 
 const clean = (value: unknown, max = 3000) => typeof value === "string" ? value.trim().slice(0, max) : ""
 
+const todayInUruguay = () => new Intl.DateTimeFormat("en-CA", {
+  timeZone: "America/Montevideo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(new Date())
+
+async function expireClosedOpportunities() {
+  const { error } = await getSupabaseAdmin()
+    .from("oportunidades_laborales")
+    .update({ estado: "vencida" })
+    .eq("estado", "activa")
+    .lt("fecha_vencimiento", todayInUruguay())
+
+  if (error) throw error
+}
+
 export async function GET(request: NextRequest) {
   try {
+    await expireClosedOpportunities()
     const params = request.nextUrl.searchParams
     const id = clean(params.get("id"), 80)
     const limit = Math.min(Math.max(Number(params.get("limit")) || 50, 1), 100)
@@ -13,7 +31,7 @@ export async function GET(request: NextRequest) {
         ? "*"
         : "id,tipo_publicacion,nombre_publicante,titulo,categoria,descripcion,requisitos,experiencia,habilidades,tipo_jornada,horario,disponibilidad,localidad,imagen_url,estado,fecha_creacion,fecha_vencimiento"
     ).eq("estado", "activa")
-    query = query.or(`fecha_vencimiento.is.null,fecha_vencimiento.gte.${new Date().toISOString().slice(0, 10)}`)
+    query = query.or(`fecha_vencimiento.is.null,fecha_vencimiento.gte.${todayInUruguay()}`)
     if (id) query = query.eq("id", id)
     const type = clean(params.get("tipo"), 20)
     const category = clean(params.get("categoria"), 80)

@@ -1170,6 +1170,7 @@ export default function AdminSitioPage() {
             </div>
           </form>
 
+          {false && (
           <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center gap-3">
               <div className="rounded-xl bg-amber-500 p-3 text-white">
@@ -1398,6 +1399,7 @@ export default function AdminSitioPage() {
               )}
             </div>
           </section>
+          )}
         </div>
 
         <div>

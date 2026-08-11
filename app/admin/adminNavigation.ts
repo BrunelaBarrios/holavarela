@@ -13,6 +13,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   Mail,
+  Megaphone,
   MessageSquareText,
   BriefcaseBusiness,
   Radio,
@@ -102,6 +103,15 @@ export const adminNavigationItems: AdminNavigationItem[] = [
     roles: ["superadmin", "admin"],
     description: "Clases, talleres y propuestas educativas.",
     keywords: ["clases", "talleres", "educacion"],
+  },
+  {
+    href: "/admin/destacados",
+    icon: Megaphone,
+    label: "Destacados",
+    group: "contenido",
+    roles: ["superadmin", "admin"],
+    description: "Avisos rotativos vinculados a las propuestas de la web.",
+    keywords: ["avisos", "publicidad", "home", "rotacion"],
   },
   {
     href: "/admin/oportunidades-laborales",
