@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowRight, MapPin, Phone, Search } from "lucide-react"
+import { ArrowRight, MapPin, MessageCircle, Phone, Search, Sparkles, Store } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
@@ -125,7 +125,7 @@ export function ComerciosPageClient({
   }, [comercios, search])
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-[#f7faf8]">
       <PublicDetailModal
         open={Boolean(selectedComercio && !selectedComercio.premium_activo)}
         onClose={() => setSelectedComercioId(null)}
@@ -235,28 +235,64 @@ export function ComerciosPageClient({
 
       <PublicHeader items={buildPublicNav("comercios")} />
 
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Comercios</h1>
-            <p className="mt-2 max-w-2xl text-gray-600">
-              Encontrá negocios locales, datos de contacto y perfiles completos.
-            </p>
+      <section className="relative overflow-hidden border-b border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#f0f9ff_52%,#fff7ed_100%)]">
+        <div className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-emerald-300/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 left-[18%] h-72 w-72 rounded-full bg-sky-300/20 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
+          <div className="grid items-end gap-8 lg:grid-cols-[1fr_auto]">
+            <div>
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white/80 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-emerald-700 shadow-sm backdrop-blur">
+                <Sparkles className="h-4 w-4" />
+                Elegí local, elegí Varela
+              </div>
+              <h1 className="max-w-3xl text-4xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-6xl">
+                Todo lo que buscás,
+                <span className="block text-emerald-600">más cerca de casa.</span>
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+                Descubrí comercios de José Pedro Varela, conocé sus propuestas y contactalos directamente.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-start gap-3 lg:items-end">
+              <div className="inline-flex items-center gap-3 rounded-2xl border border-white/80 bg-white/75 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                  <Store className="h-5 w-5" />
+                </span>
+                <span><strong className="block text-lg leading-none text-slate-950">{comercios.length}</strong> comercios para descubrir</span>
+              </div>
+              <PublicAddButton href="/?sumate=comercio" label="Sumar mi comercio" />
+            </div>
           </div>
 
-          <PublicAddButton href="/?sumate=comercio" label="Sumar mi comercio" />
-        </div>
-        <div className="mt-6 max-w-xl">
-          <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">
-            <Search className="h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nombre, dirección o descripción"
-              className="w-full text-sm outline-none"
-            />
+          <div className="mt-9 max-w-3xl">
+            <label htmlFor="buscar-comercio" className="sr-only">Buscar comercios</label>
+            <div className="flex items-center gap-3 rounded-2xl border border-white bg-white p-2 pl-5 shadow-[0_18px_45px_-24px_rgba(15,118,110,0.45)] transition focus-within:border-emerald-300 focus-within:ring-4 focus-within:ring-emerald-100/70">
+              <Search className="h-5 w-5 shrink-0 text-emerald-600" />
+              <input
+                id="buscar-comercio"
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="¿Qué estás buscando hoy?"
+                className="min-w-0 flex-1 bg-transparent py-3 text-base text-slate-900 outline-none placeholder:text-slate-400"
+              />
+              <span className="hidden rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white sm:block">Buscar</span>
+            </div>
+            <p className="mt-3 pl-1 text-xs font-medium text-slate-500">Buscá por nombre, dirección o palabra clave</p>
           </div>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">Guía local</p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+              {search ? <>Resultados para “{search}”</> : "Conocé los comercios de la ciudad"}
+            </h2>
+          </div>
+          <span className="hidden text-sm font-medium text-slate-500 sm:block">{comerciosFiltrados.length} resultados</span>
         </div>
 
         {comerciosFiltrados.length === 0 ? (
@@ -268,7 +304,7 @@ export function ComerciosPageClient({
             </p>
           </div>
         ) : (
-          <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-7 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
             {comerciosFiltrados.map((comercio) => {
               const imagenSrc = comercio.imagen || comercio.imagen_url
 
@@ -295,26 +331,33 @@ export function ComerciosPageClient({
                       handleOpenComercio(comercio)
                     })
                   }
-                  className={`cursor-pointer rounded-2xl border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${comercio.premium_activo ? "border-violet-200" : "border-gray-200 hover:border-blue-200"}`}
+                  className={`group flex cursor-pointer flex-col overflow-hidden rounded-[24px] border bg-white shadow-[0_12px_35px_-26px_rgba(15,23,42,0.45)] transition duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_-28px_rgba(15,118,110,0.38)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${comercio.premium_activo ? "border-violet-200" : "border-slate-200/80 hover:border-emerald-200"}`}
                 >
                   {imagenSrc && (
-                    <div className="relative mb-3 h-40 w-full overflow-hidden rounded-lg border border-slate-100 bg-white">
+                    <div className="relative h-48 w-full overflow-hidden border-b border-slate-100 bg-[radial-gradient(circle_at_top,#ffffff_0%,#f8fafc_100%)]">
                       <OptimizedImage
                         src={imagenSrc}
                         alt={comercio.nombre}
                         sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                        className="object-contain p-3"
+                        className="object-contain p-5 transition duration-500 group-hover:scale-[1.04]"
                       />
+                      {comercio.premium_activo ? (
+                        <span className="absolute right-3 top-3 rounded-full border border-violet-200 bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700 shadow-sm backdrop-blur">
+                          Destacado
+                        </span>
+                      ) : null}
                     </div>
                   )}
 
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <div className="flex flex-1 flex-col p-5">
+                  <h3 className="text-lg font-bold leading-snug text-slate-950 transition group-hover:text-emerald-700">
                     {comercio.nombre}
-                  </h2>
+                  </h3>
 
                   {comercio.direccion ? (
-                    <p className="mt-2 line-clamp-2 text-sm text-gray-600">
-                      {comercio.direccion}
+                    <p className="mt-3 flex items-start gap-2 text-sm text-slate-500">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                      <span className="line-clamp-2">{comercio.direccion}</span>
                     </p>
                   ) : null}
 
@@ -325,13 +368,13 @@ export function ComerciosPageClient({
                   ) : null}
 
                   {comercio.telefono ? (
-                    <p className="mt-3 text-sm font-medium text-slate-700">
-                      {comercio.usa_whatsapp === false ? "Teléfono" : "WhatsApp"}:{" "}
+                    <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                      {comercio.usa_whatsapp === false ? <Phone className="h-4 w-4 text-sky-600" /> : <MessageCircle className="h-4 w-4 text-emerald-600" />}
                       {comercio.telefono}
                     </p>
                   ) : null}
 
-                  <div className="mt-4 flex flex-wrap gap-3">
+                  <div className="mt-auto pt-5">
                     {comercio.premium_activo ? (
                       <Link
                         href={`/comercios/${comercio.id}`}
@@ -339,7 +382,7 @@ export function ComerciosPageClient({
                           event.stopPropagation()
                           handleOpenPremiumProfile(comercio)
                         }}
-                        className="inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
+                        className="inline-flex w-full items-center justify-between gap-2 rounded-xl bg-violet-50 px-4 py-3 text-sm font-bold text-violet-700 transition hover:bg-violet-100"
                       >
                         Ver perfil completo
                         <ArrowRight className="h-4 w-4" />
@@ -351,13 +394,14 @@ export function ComerciosPageClient({
                           event.stopPropagation()
                           handleOpenComercio(comercio)
                         }}
-                        className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                        className="inline-flex w-full items-center justify-between gap-2 rounded-xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 transition group-hover:bg-emerald-50 group-hover:text-emerald-700"
                       >
                         Ver más
                         <ArrowRight className="h-4 w-4" />
                       </button>
                     )}
 
+                  </div>
                   </div>
                 </div>
               )
