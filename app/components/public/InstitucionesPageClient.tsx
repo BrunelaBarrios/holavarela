@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowRight, Building2, MapPin, Phone, Search } from "lucide-react"
+import { ArrowRight, Building2, MapPin, MessageCircle, Phone, Search, Sparkles } from "lucide-react"
 import { ContactActionLink } from "../ContactActionLink"
 import { ExternalLinksButtons } from "../ExternalLinksButtons"
 import { OptimizedImage } from "../OptimizedImage"
@@ -123,7 +123,7 @@ export function InstitucionesPageClient({
   }
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-[#f7fafc]">
       <PublicDetailModal
         open={Boolean(selectedInstitucion && !hasInstitutionPremium(selectedInstitucion))}
         onClose={() => setSelectedInstitucion(null)}
@@ -234,31 +234,62 @@ export function InstitucionesPageClient({
 
       <PublicHeader items={buildPublicNav("instituciones")} />
 
-      <div className="mx-auto max-w-7xl px-6 py-16">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Instituciones</h1>
-        <p className="mt-2 text-gray-600">
-          Conocé instituciones y espacios de referencia en la ciudad
-            </p>
+      <section className="relative overflow-hidden border-b border-cyan-100 bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_50%,#f5f3ff_100%)]">
+        <div className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-cyan-300/25 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 left-[18%] h-72 w-72 rounded-full bg-violet-300/20 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
+          <div className="grid items-end gap-8 lg:grid-cols-[1fr_auto]">
+            <div>
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-white/80 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-cyan-700 shadow-sm backdrop-blur">
+                <Sparkles className="h-4 w-4" />
+                Espacios que hacen comunidad
+              </div>
+              <h1 className="max-w-3xl text-4xl font-black tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-6xl">
+                Lugares que acompañan,
+                <span className="block text-cyan-700">enseñan y conectan.</span>
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+                Encontrá instituciones, organizaciones y espacios de referencia de José Pedro Varela.
+              </p>
+            </div>
+            <div className="flex flex-col items-start gap-3 lg:items-end">
+              <div className="inline-flex items-center gap-3 rounded-2xl border border-white/80 bg-white/75 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm backdrop-blur">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-100 text-cyan-700">
+                  <Building2 className="h-5 w-5" />
+                </span>
+                <span><strong className="block text-lg leading-none text-slate-950">{instituciones.length}</strong> instituciones para conocer</span>
+              </div>
+              <PublicAddButton href="/sumate/institucion" label="Sumar mi institución" />
+            </div>
           </div>
-
-          <PublicAddButton
-            href="/sumate/institucion"
-            label="Sumar mi institucion"
-          />
+          <div className="mt-9 max-w-3xl">
+            <label htmlFor="buscar-institucion" className="sr-only">Buscar instituciones</label>
+            <div className="flex items-center gap-3 rounded-2xl border border-white bg-white p-2 pl-5 shadow-[0_18px_45px_-24px_rgba(8,145,178,0.45)] transition focus-within:border-cyan-300 focus-within:ring-4 focus-within:ring-cyan-100/70">
+              <Search className="h-5 w-5 shrink-0 text-cyan-700" />
+              <input
+                id="buscar-institucion"
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="¿Qué institución estás buscando?"
+                className="min-w-0 flex-1 bg-transparent py-3 text-base text-slate-900 outline-none placeholder:text-slate-400"
+              />
+              <span className="hidden rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white sm:block">Buscar</span>
+            </div>
+            <p className="mt-3 pl-1 text-xs font-medium text-slate-500">Buscá por nombre, dirección o palabra clave</p>
+          </div>
         </div>
-        <div className="mt-6 max-w-xl">
-          <div className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3">
-            <Search className="h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por nombre, dirección o descripción"
-              className="w-full text-sm outline-none"
-            />
+      </section>
+
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-700">Guía de instituciones</p>
+            <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+              {search ? <>Resultados para “{search}”</> : "Conocé los espacios de nuestra ciudad"}
+            </h2>
           </div>
+          <span className="hidden text-sm font-medium text-slate-500 sm:block">{institucionesFiltradas.length} resultados</span>
         </div>
 
         {institucionesFiltradas.length === 0 ? (
@@ -270,7 +301,7 @@ export function InstitucionesPageClient({
             </p>
           </div>
         ) : (
-          <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <div className="mt-7 grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {institucionesFiltradas.map((institucion) => (
               <div
                 key={institucion.id}
@@ -280,19 +311,19 @@ export function InstitucionesPageClient({
                 onKeyDown={(event) =>
                   handleCardKeyDown(event, () => handleOpenInstitucion(institucion))
                 }
-                className="cursor-pointer overflow-hidden rounded-xl border border-gray-200 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+                className="group flex cursor-pointer flex-col overflow-hidden rounded-[24px] border border-slate-200/80 bg-white shadow-[0_12px_35px_-26px_rgba(15,23,42,0.45)] transition duration-300 hover:-translate-y-1.5 hover:border-cyan-200 hover:shadow-[0_24px_50px_-28px_rgba(8,145,178,0.38)] focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
               >
                 {institucion.foto ? (
-                  <div className="relative h-56 w-full border-b border-slate-100 bg-white">
+                  <div className="relative h-52 w-full border-b border-slate-100 bg-[radial-gradient(circle_at_top,#ffffff_0%,#f8fafc_100%)]">
                     <OptimizedImage
                       src={institucion.foto}
                       alt={institucion.nombre}
                       sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 20vw"
-                      className="object-contain p-4"
+                      className="object-contain p-5 transition duration-500 group-hover:scale-[1.04]"
                     />
                   </div>
                 ) : (
-                  <div className="flex h-56 w-full items-center justify-center bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_50%,#f8fafc_100%)]">
+                  <div className="flex h-52 w-full items-center justify-center border-b border-cyan-100 bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_50%,#f8fafc_100%)]">
                     <div className="flex flex-col items-center text-center">
                       <div className="flex h-20 w-20 items-center justify-center rounded-[28px] border border-cyan-100 bg-white text-cyan-700 shadow-sm">
                         <Building2 className="h-10 w-10" />
@@ -301,10 +332,30 @@ export function InstitucionesPageClient({
                   </div>
                 )}
 
-                <div className="p-5">
-                  <h2 className="text-xl font-semibold text-gray-900">
+                <div className="flex flex-1 flex-col p-5">
+                  <h3 className="text-xl font-bold leading-snug text-slate-950 transition group-hover:text-cyan-700">
                     {institucion.nombre}
-                  </h2>
+                  </h3>
+
+                  {institucion.direccion ? (
+                    <p className="mt-3 flex items-start gap-2 text-sm text-slate-500">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-cyan-700" />
+                      <span className="line-clamp-2">{institucion.direccion}</span>
+                    </p>
+                  ) : null}
+
+                  {institucion.descripcion ? (
+                    <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">
+                      {institucion.descripcion}
+                    </p>
+                  ) : null}
+
+                  {institucion.telefono ? (
+                    <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                      {institucion.usa_whatsapp === false ? <Phone className="h-4 w-4 text-sky-600" /> : <MessageCircle className="h-4 w-4 text-emerald-600" />}
+                      {institucion.telefono}
+                    </p>
+                  ) : null}
 
                   {hasInstitutionPremium(institucion) ? (
                     <Link
@@ -313,7 +364,7 @@ export function InstitucionesPageClient({
                         event.stopPropagation()
                         handleOpenPremiumProfile(institucion)
                       }}
-                      className="mt-5 inline-flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2 text-sm font-medium text-violet-700 transition hover:border-violet-300 hover:bg-violet-100"
+                      className="mt-auto inline-flex w-full items-center justify-between gap-2 rounded-xl bg-violet-50 px-4 py-3 pt-3 text-sm font-bold text-violet-700 transition hover:bg-violet-100"
                     >
                       Ver perfil completo
                       <ArrowRight className="h-4 w-4" />
@@ -325,7 +376,7 @@ export function InstitucionesPageClient({
                         event.stopPropagation()
                         handleOpenInstitucion(institucion)
                       }}
-                      className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-600"
+                      className="mt-auto inline-flex w-full items-center justify-between gap-2 rounded-xl bg-slate-50 px-4 py-3 pt-3 text-sm font-bold text-slate-700 transition group-hover:bg-cyan-50 group-hover:text-cyan-700"
                     >
                       Ver más
                       <ArrowRight className="h-4 w-4" />

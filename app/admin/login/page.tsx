@@ -37,7 +37,13 @@ export default function AdminLoginPage() {
     }
 
     saveAdminSession(result.session)
-    router.push("/admin")
+    const requestedPath = new URLSearchParams(window.location.search).get("next")
+    const nextPath =
+      requestedPath?.startsWith("/admin") && !requestedPath.startsWith("//")
+        ? requestedPath
+        : "/admin"
+
+    router.push(nextPath)
     router.refresh()
   }
 

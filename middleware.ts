@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { readAdminSessionFromRequest } from "./app/lib/adminSession"
+import {
+  attachAdminSessionCookie,
+  readAdminSessionFromRequest,
+} from "./app/lib/adminSession"
 import { canAccessAdminPath } from "./app/lib/adminPermissions"
 
 const ADMIN_LOGIN_PATH = "/admin/login"
@@ -43,7 +46,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(dashboardUrl)
   }
 
-  return NextResponse.next()
+  const response = NextResponse.next()
+
+  // Keep the admin session alive while the user is actively working.
+  // Without this rolling renewal, an already-open panel remains visible after
+  // the cookie expires and the next save unexpectedly fails with a 401.
+  if (session) {
+    return await attachAdminSessionCookie(response, session)
+  }
+
+  return response
 }
 
 export const config = {
