@@ -746,7 +746,7 @@ export function HomePage({
         : featuredServiciosForHome.slice(0, MOBILE_ITEMS_PER_ROTATION),
     [featuredServiciosForHome, scheduledServicePage, shouldRotateServicios]
   )
-  const visiblePrimaryEventos = useMemo(
+  const primaryEventos = useMemo(
     () =>
       sortEventsForHome(
         eventos
@@ -755,20 +755,23 @@ export function HomePage({
             !isAvisoCategory(event.categoria) &&
             !isPromoOrSweepstakesCategory(event.categoria)
         )
-      ).slice(0, 6),
+      ),
     [eventos]
   )
-  const visibleAvisoEventos = useMemo(
-    () => sortEventsForHome(eventos.filter((event) => isAvisoCategory(event.categoria))).slice(0, 8),
+  const avisoEventos = useMemo(
+    () => sortEventsForHome(eventos.filter((event) => isAvisoCategory(event.categoria))),
     [eventos]
   )
-  const visiblePromoEventos = useMemo(
+  const promoEventos = useMemo(
     () =>
       sortEventsForHome(
         eventos.filter((event) => isPromoOrSweepstakesCategory(event.categoria))
-      ).slice(0, 8),
+      ),
     [eventos]
   )
+  const visiblePrimaryEventos = useMemo(() => primaryEventos.slice(0, 6), [primaryEventos])
+  const visibleAvisoEventos = useMemo(() => avisoEventos.slice(0, 8), [avisoEventos])
+  const visiblePromoEventos = useMemo(() => promoEventos.slice(0, 8), [promoEventos])
   const visiblePromoImageEventos = useMemo(
     () => visiblePromoEventos.filter((event) => Boolean(event.imagen)),
     [visiblePromoEventos]
@@ -2705,15 +2708,15 @@ export function HomePage({
               </div>
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 <div className="rounded-2xl border border-white/80 bg-white/75 px-3 py-4 text-center shadow-sm backdrop-blur sm:min-w-24">
-                  <strong className="block text-2xl font-black text-emerald-700">{visiblePrimaryEventos.length}</strong>
+                  <strong className="block text-2xl font-black text-emerald-700">{primaryEventos.length}</strong>
                   <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Eventos</span>
                 </div>
                 <div className="rounded-2xl border border-white/80 bg-white/75 px-3 py-4 text-center shadow-sm backdrop-blur sm:min-w-24">
-                  <strong className="block text-2xl font-black text-cyan-700">{visibleAvisoEventos.length}</strong>
+                  <strong className="block text-2xl font-black text-cyan-700">{avisoEventos.length}</strong>
                   <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Avisos</span>
                 </div>
                 <div className="rounded-2xl border border-white/80 bg-white/75 px-3 py-4 text-center shadow-sm backdrop-blur sm:min-w-24">
-                  <strong className="block text-2xl font-black text-orange-700">{visiblePromoImageEventos.length}</strong>
+                  <strong className="block text-2xl font-black text-orange-700">{promoEventos.length}</strong>
                   <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Promos</span>
                 </div>
               </div>
@@ -2760,7 +2763,7 @@ export function HomePage({
                       <p className="mt-1 text-sm text-slate-500">Próximas propuestas para disfrutar y participar</p>
                     </div>
                   </div>
-                  <span className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 shadow-sm">{visiblePrimaryEventos.length} activos</span>
+                  <span className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 shadow-sm">{primaryEventos.length} activos</span>
                 </div>
 
                 {visiblePrimaryEventos.length === 0 ? (
@@ -2804,7 +2807,7 @@ export function HomePage({
                       <p className="mt-1 text-sm text-slate-500">Información útil que conviene tener a mano</p>
                     </div>
                   </div>
-                  <span className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-bold text-cyan-700 shadow-sm">{visibleAvisoEventos.length} activos</span>
+                  <span className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-bold text-cyan-700 shadow-sm">{avisoEventos.length} activos</span>
                 </div>
 
                 {visibleAvisoEventos.length === 0 ? (
@@ -2851,7 +2854,7 @@ export function HomePage({
                       <p className="mt-1 text-sm text-slate-500">Beneficios y oportunidades por tiempo limitado</p>
                     </div>
                   </div>
-                  <span className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-bold text-orange-700 shadow-sm">{visiblePromoImageEventos.length} activos</span>
+                  <span className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-bold text-orange-700 shadow-sm">{promoEventos.length} activos</span>
                 </div>
 
                 {visiblePromoImageEventos.length === 0 ? (

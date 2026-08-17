@@ -45,7 +45,6 @@ const defaultSobreVarela = {
 
 const RECENT_COMMERCIAL_EVENT_DAYS = 1
 const HOME_BUSINESS_LIMIT = 16
-const HOME_EVENTS_LIMIT = 24
 const HOME_COURSES_LIMIT = 12
 const HOME_SERVICES_LIMIT = 24
 const HOME_INSTITUTIONS_LIMIT = 12
@@ -173,8 +172,7 @@ const getHomePageData = unstable_cache(
         .select("id, titulo, categoria, descripcion, fecha, fecha_fin, fecha_solo_mes, ubicacion, telefono, web_url, instagram_url, facebook_url, estado, usa_whatsapp, created_at")
         .or("estado.is.null,estado.eq.activo")
         .or(buildActiveEventsFilter(today))
-        .order("fecha", { ascending: true })
-        .limit(HOME_EVENTS_LIMIT),
+        .order("fecha", { ascending: true }),
       (async () => {
         try {
           const { data, error } = await supabaseServer
@@ -372,7 +370,6 @@ const getHomePageData = unstable_cache(
         // commercial posts without a usable event date as a fallback.
         return (eventsForHome.length ? eventsForHome : localEvents)
           .sort((first, second) => compareUpcomingEvents(first, second, today))
-          .slice(0, 30)
           .map((item) => withApiImage(item, "eventos"))
       })(),
       nearbyActivities,
@@ -420,7 +417,7 @@ const getHomePageData = unstable_cache(
       weather,
     }
   },
-  ["home-page-data-v16"],
+  ["home-page-data-v17"],
   { revalidate: 300 }
 )
 
