@@ -38,10 +38,13 @@ import {
   GraduationCap,
   Mail,
   MapPin,
+  Megaphone,
   Phone,
   Plus,
   Search,
+  Sparkles,
   Store,
+  Tags,
   Trophy,
   UserRound,
   X,
@@ -2681,26 +2684,54 @@ export function HomePage({
       <section
         id="eventos"
         ref={eventsSectionRef}
-        className="order-2 py-16 [content-visibility:auto] [contain-intrinsic-size:920px]"
+        className="relative order-2 overflow-hidden border-y border-sky-100/70 bg-[linear-gradient(180deg,#f8fbff_0%,#ffffff_42%,#f8fafc_100%)] py-16 [content-visibility:auto] [contain-intrinsic-size:920px] sm:py-20"
       >
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-12 text-center">
-            <div className="mb-4 inline-flex rounded-full bg-sky-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
-              Novedades
+        <div className="pointer-events-none absolute -right-28 top-0 h-80 w-80 rounded-full bg-sky-300/15 blur-3xl" />
+        <div className="pointer-events-none absolute -left-32 top-72 h-80 w-80 rounded-full bg-emerald-300/10 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 overflow-hidden rounded-[32px] border border-sky-100 bg-[linear-gradient(135deg,#e0f2fe_0%,#ecfdf5_52%,#fff7ed_100%)] p-7 shadow-[0_24px_70px_-45px_rgba(14,116,144,0.45)] sm:p-10 lg:p-12">
+            <div className="grid items-end gap-8 lg:grid-cols-[1fr_auto]">
+              <div>
+                <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/75 px-4 py-2 text-xs font-bold uppercase tracking-[0.18em] text-sky-700 shadow-sm backdrop-blur">
+                  <Sparkles className="h-4 w-4" />
+                  La ciudad en movimiento
+                </div>
+                <h2 className="text-4xl font-black tracking-[-0.04em] text-slate-950 md:text-5xl lg:text-6xl">
+                  Hoy en <span className="text-sky-600">Varela</span>
+                </h2>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
+                  Una mirada rápida a los eventos, avisos y oportunidades que están activos en la ciudad.
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="rounded-2xl border border-white/80 bg-white/75 px-3 py-4 text-center shadow-sm backdrop-blur sm:min-w-24">
+                  <strong className="block text-2xl font-black text-emerald-700">{visiblePrimaryEventos.length}</strong>
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Eventos</span>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/75 px-3 py-4 text-center shadow-sm backdrop-blur sm:min-w-24">
+                  <strong className="block text-2xl font-black text-cyan-700">{visibleAvisoEventos.length}</strong>
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Avisos</span>
+                </div>
+                <div className="rounded-2xl border border-white/80 bg-white/75 px-3 py-4 text-center shadow-sm backdrop-blur sm:min-w-24">
+                  <strong className="block text-2xl font-black text-orange-700">{visiblePromoImageEventos.length}</strong>
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Promos</span>
+                </div>
+              </div>
             </div>
-            <h2 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
-              Hoy en Varela
-            </h2>
-            <p className="mt-4 text-xl text-slate-500">
-              Eventos, aviso, promos y sorteos activos
-            </p>
-            <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/eventos"
-                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-6 py-3.5 text-sm font-bold text-white shadow-[0_16px_34px_-20px_rgba(15,23,42,0.8)] transition hover:-translate-y-0.5 hover:bg-sky-700"
               >
-                Ver todo Hoy en Varela
+                Ver todas las novedades
                 <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/usuarios/eventos/nuevo?public=1"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white bg-white/80 px-6 py-3.5 text-sm font-bold text-slate-700 shadow-sm transition hover:-translate-y-0.5 hover:text-sky-700"
+              >
+                <Plus className="h-4 w-4" />
+                Sumar una novedad
               </Link>
             </div>
           </div>
@@ -2719,10 +2750,17 @@ export function HomePage({
           ) : (
             <div className="space-y-10">
               <section className="space-y-5">
-                <div className="rounded-[28px] border border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#f6fbff_70%,#ffffff_100%)] p-6">
-                  <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
-                    Eventos y Beneficios
-                  </h3>
+                <div className="flex flex-col justify-between gap-4 rounded-[24px] border border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#ffffff_100%)] p-5 sm:flex-row sm:items-center sm:p-6">
+                  <div className="flex items-center gap-4">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                      <CalendarDays className="h-6 w-6" />
+                    </span>
+                    <div>
+                      <h3 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Eventos y beneficios</h3>
+                      <p className="mt-1 text-sm text-slate-500">Próximas propuestas para disfrutar y participar</p>
+                    </div>
+                  </div>
+                  <span className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 shadow-sm">{visiblePrimaryEventos.length} activos</span>
                 </div>
 
                 {visiblePrimaryEventos.length === 0 ? (
@@ -2756,10 +2794,17 @@ export function HomePage({
               </section>
 
               <section className="space-y-5">
-                <div className="rounded-[28px] border border-cyan-100 bg-[linear-gradient(135deg,#ecfeff_0%,#eff6ff_60%,#ffffff_100%)] p-6">
-                  <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
-                    Avisos importantes
-                  </h3>
+                <div className="flex flex-col justify-between gap-4 rounded-[24px] border border-cyan-100 bg-[linear-gradient(135deg,#ecfeff_0%,#ffffff_100%)] p-5 sm:flex-row sm:items-center sm:p-6">
+                  <div className="flex items-center gap-4">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-cyan-100 text-cyan-700">
+                      <Megaphone className="h-6 w-6" />
+                    </span>
+                    <div>
+                      <h3 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Avisos importantes</h3>
+                      <p className="mt-1 text-sm text-slate-500">Información útil que conviene tener a mano</p>
+                    </div>
+                  </div>
+                  <span className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-bold text-cyan-700 shadow-sm">{visibleAvisoEventos.length} activos</span>
                 </div>
 
                 {visibleAvisoEventos.length === 0 ? (
@@ -2796,10 +2841,17 @@ export function HomePage({
               </section>
 
               <section className="space-y-5">
-                <div className="rounded-[28px] border border-amber-100 bg-[linear-gradient(135deg,#fff7ed_0%,#fff1f2_55%,#ffffff_100%)] p-6">
-                  <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
-                    Promociones, Sorteos y Consultas
-                  </h3>
+                <div className="flex flex-col justify-between gap-4 rounded-[24px] border border-amber-100 bg-[linear-gradient(135deg,#fff7ed_0%,#ffffff_100%)] p-5 sm:flex-row sm:items-center sm:p-6">
+                  <div className="flex items-center gap-4">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-orange-700">
+                      <Tags className="h-6 w-6" />
+                    </span>
+                    <div>
+                      <h3 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Promociones y sorteos</h3>
+                      <p className="mt-1 text-sm text-slate-500">Beneficios y oportunidades por tiempo limitado</p>
+                    </div>
+                  </div>
+                  <span className="w-fit rounded-full bg-white px-3 py-1.5 text-xs font-bold text-orange-700 shadow-sm">{visiblePromoImageEventos.length} activos</span>
                 </div>
 
                 {visiblePromoImageEventos.length === 0 ? (
