@@ -1,7 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react"
-import { ArrowRight, BriefcaseBusiness, CalendarDays, CheckCircle2, Clock3, ExternalLink, Mail, MapPin, Phone, Search, X } from "lucide-react"
+import Link from "next/link"
+import { ArrowRight, BriefcaseBusiness, CalendarDays, CheckCircle2, Clock3, ExternalLink, FileText, Mail, MapPin, Phone, Search, X } from "lucide-react"
 import { PublicHeader } from "../components/PublicHeader"
 import { OpportunityPartnersBand } from "../components/OpportunityPartnersBand"
 import { OptimizedImage } from "../components/OptimizedImage"
@@ -134,9 +135,12 @@ export function OpportunitiesClient() {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-lg"><BriefcaseBusiness className="h-8 w-8" /></div>
         <h1 className="mt-6 text-4xl font-black tracking-tight sm:text-6xl">Oportunidades Laborales</h1>
         <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-slate-600">Conectamos personas que buscan empleo con comercios, empresas e instituciones de José Pedro Varela.</p>
-        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <button onClick={() => openForm("oferta")} className="rounded-full bg-slate-950 px-6 py-3 font-bold text-white hover:bg-sky-700">Publicar una oferta laboral</button>
-          <button onClick={() => openForm("busqueda")} className="rounded-full border border-sky-200 bg-white px-6 py-3 font-bold text-sky-700 hover:bg-sky-50">Cargar mi currículum</button>
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
+          <Link href="/armar-curriculum" className="inline-flex items-center justify-center gap-2 rounded-full bg-sky-600 px-6 py-3 font-bold text-white shadow-lg shadow-sky-200 transition hover:-translate-y-0.5 hover:bg-sky-700">
+            <FileText className="h-5 w-5" />Hacé tu currículum
+          </Link>
+          <button onClick={() => openForm("busqueda")} className="rounded-full border border-sky-200 bg-white px-6 py-3 font-bold text-sky-700 transition hover:bg-sky-50">Ya tengo CV: cargarlo</button>
+          <button onClick={() => openForm("oferta")} className="rounded-full bg-slate-950 px-6 py-3 font-bold text-white transition hover:bg-sky-700">Publicar una oferta laboral</button>
         </div>
       </div>
     </section>
