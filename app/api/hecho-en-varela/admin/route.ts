@@ -30,9 +30,8 @@ export async function POST(request: NextRequest) {
   const table = isVenture ? "emprendimientos_varela" : "productos_varela"
   if (session.role !== "superadmin") {
     if (!session.emprendimientoId) return NextResponse.json({ error: "Cuenta sin emprendimiento asignado." }, { status: 403 })
-    if (isVenture && body.id !== session.emprendimientoId) return NextResponse.json({ error: "No podés administrar otro emprendimiento." }, { status: 403 })
+    if (isVenture) return NextResponse.json({ error: "Esta cuenta solo puede administrar productos." }, { status: 403 })
     if (!isVenture && body.id) { const { data } = await db.from("productos_varela").select("emprendimiento_id").eq("id", body.id).maybeSingle(); if (!data || data.emprendimiento_id !== session.emprendimientoId) return NextResponse.json({ error: "No podés administrar este producto." }, { status: 403 }) }
-    if (body.action === "delete" && isVenture) return NextResponse.json({ error: "Solo el administrador principal puede eliminar emprendimientos." }, { status: 403 })
   }
   if (body.action === "delete") { const result = await db.from(table).delete().eq("id", body.id); if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 }); refresh(); return NextResponse.json({ ok: true }) }
   if (body.action === "toggle") { const result = await db.from(table).update({ activo: !body.activo }).eq("id", body.id); if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 }); refresh(body.slug); return NextResponse.json({ ok: true }) }
