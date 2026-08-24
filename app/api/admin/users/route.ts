@@ -204,6 +204,31 @@ async function syncOwnerAssignment({
   }
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    const adminSession = await requireAdminSession(request)
+    if (!adminSession) return NextResponse.json({ error: "Sesion admin requerida." }, { status: 401 })
+    const supabaseAdmin = getSupabaseAdmin()
+    const [users, requests, comercios, servicios, cursos, instituciones] = await Promise.all([
+      supabaseAdmin.from("usuarios_registrados").select("*").order("created_at", { ascending: false }),
+      supabaseAdmin.from("password_reset_requests").select("id, user_id, email, contact_name, phone, message, status, created_at").eq("status", "pending").order("created_at", { ascending: false }),
+      supabaseAdmin.from("comercios").select("id, nombre, owner_email").order("nombre"),
+      supabaseAdmin.from("servicios").select("id, nombre, owner_email").order("nombre"),
+      supabaseAdmin.from("cursos").select("id, nombre, owner_email").order("nombre"),
+      supabaseAdmin.from("instituciones").select("id, nombre, owner_email").order("nombre"),
+    ])
+    const error = users.error || requests.error || comercios.error || servicios.error || cursos.error || instituciones.error
+    if (error) throw error
+    return NextResponse.json({
+      users: users.data || [],
+      requests: requests.data || [],
+      options: { comercio: comercios.data || [], servicio: servicios.data || [], curso: cursos.data || [], institucion: instituciones.data || [] },
+    })
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "No pudimos cargar los usuarios." }, { status: 500 })
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const adminSession = await requireAdminSession(request)

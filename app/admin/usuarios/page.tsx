@@ -15,7 +15,6 @@ import {
   UserRound,
   X,
 } from "lucide-react"
-import { supabase } from "../../supabase"
 import { logAdminActivity } from "../../lib/adminActivity"
 
 type OwnerType = "comercio" | "servicio" | "curso" | "institucion"
@@ -96,78 +95,17 @@ export default function AdminUsuariosPage() {
   const [deleteAdminPassword, setDeleteAdminPassword] = useState("")
   const [deleting, setDeleting] = useState(false)
 
-  const cargarUsuarios = async () => {
-    const { data, error: loadError } = await supabase
-      .from("usuarios_registrados")
-      .select("*")
-      .order("created_at", { ascending: false })
-
-    if (loadError) {
-      throw new Error(`Error al cargar usuarios: ${loadError.message}`)
-    }
-
-    setUsuarios((data || []) as UsuarioRegistrado[])
-  }
-
-  const cargarSolicitudes = async () => {
-    const { data, error: loadError } = await supabase
-      .from("password_reset_requests")
-      .select("id, user_id, email, contact_name, phone, message, status, created_at")
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
-
-    if (loadError) {
-      throw new Error(`Error al cargar solicitudes: ${loadError.message}`)
-    }
-
-    setSolicitudes((data || []) as PasswordResetRequest[])
-  }
-
-  const cargarOpciones = async () => {
-    const [comerciosResult, serviciosResult, cursosResult, institucionesResult] =
-      await Promise.all([
-        supabase
-          .from("comercios")
-          .select("id, nombre, owner_email")
-          .order("nombre", { ascending: true }),
-        supabase
-          .from("servicios")
-          .select("id, nombre, owner_email")
-          .order("nombre", { ascending: true }),
-        supabase
-          .from("cursos")
-          .select("id, nombre, owner_email")
-          .order("nombre", { ascending: true }),
-        supabase
-          .from("instituciones")
-          .select("id, nombre, owner_email")
-          .order("nombre", { ascending: true }),
-      ])
-
-    const firstError =
-      comerciosResult.error ||
-      serviciosResult.error ||
-      cursosResult.error ||
-      institucionesResult.error
-
-    if (firstError) {
-      throw new Error(`Error al cargar perfiles para asignar: ${firstError.message}`)
-    }
-
-    setOwnerOptions({
-      comercio: (comerciosResult.data || []) as OwnerOption[],
-      servicio: (serviciosResult.data || []) as OwnerOption[],
-      curso: (cursosResult.data || []) as OwnerOption[],
-      institucion: (institucionesResult.data || []) as OwnerOption[],
-    })
-  }
-
   const refrescarPantalla = useCallback(async () => {
     setError("")
     setLoading(true)
 
     try {
-      await Promise.all([cargarUsuarios(), cargarSolicitudes(), cargarOpciones()])
+      const response = await fetch("/api/admin/users", { cache: "no-store" })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || "No pudimos cargar los usuarios.")
+      setUsuarios((result.users || []) as UsuarioRegistrado[])
+      setSolicitudes((result.requests || []) as PasswordResetRequest[])
+      setOwnerOptions(result.options as Record<OwnerType, OwnerOption[]>)
     } catch (loadError) {
       setError(
         loadError instanceof Error
