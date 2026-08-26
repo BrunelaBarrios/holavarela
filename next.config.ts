@@ -32,6 +32,15 @@ const nextConfig: NextConfig = {
 
     return [
       {
+        source: "/hecho-en-varela/gestion",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-store, no-cache, max-age=0, must-revalidate",
+          },
+        ],
+      },
+      {
         source: "/:path*",
         headers: [
           {

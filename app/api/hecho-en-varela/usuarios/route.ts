@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+ try {
   const session = await readHechoVarelaSession(request)
   if (!session) return NextResponse.json({ error: "Acceso requerido." }, { status: 401 })
   const body = await request.json(), db = getSupabaseAdmin()
@@ -39,4 +40,8 @@ export async function POST(request: NextRequest) {
   const password = await hashHechoVarelaPassword(body.password)
   const { error } = await db.from("usuarios_hecho_varela").insert({ username: body.username.trim().toLowerCase(), nombre: body.nombre.trim(), password_hash: password.hash, password_salt: password.salt, role: "admin", emprendimiento_id: body.emprendimientoId })
   return error ? NextResponse.json({ error: error.message }, { status: 400 }) : NextResponse.json({ ok: true })
+ } catch (error) {
+  console.error("Error al administrar usuarios de Hecho en Varela", error)
+  return NextResponse.json({ error: error instanceof Error ? error.message : "El servidor no pudo completar la creación del administrador." }, { status: 500 })
+ }
 }
