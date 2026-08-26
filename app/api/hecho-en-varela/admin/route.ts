@@ -42,8 +42,13 @@ export async function POST(request: NextRequest) {
   if (session.role !== "superadmin" && !isVenture) payload.emprendimiento_id = session.emprendimientoId
   if (session.role !== "superadmin" && isVenture) { delete payload.activo; delete payload.orden }
   if (!isVenture) { payload.precio = payload.consultar_precio || payload.precio === "" ? null : Number(payload.precio); payload.imagenes = (payload.imagenes || []).slice(0, 10); payload.variantes = (payload.variantes || []).filter(Boolean); payload.categorias = [...new Set((payload.categorias || [payload.categoria]).filter(Boolean))]; payload.categoria = payload.categorias[0] || "Otros" }
-  const query = body.id ? db.from(table).update(payload).eq("id", body.id) : db.from(table).insert(payload)
-  const result = await query.select("*").single()
+  const save = (values: typeof payload) => (body.id ? db.from(table).update(values).eq("id", body.id) : db.from(table).insert(values)).select("*").single()
+  let result = await save(payload)
+  if (result.error && !isVenture && /categorias.*schema cache/i.test(result.error.message)) {
+    const compatiblePayload = { ...payload }
+    delete compatiblePayload.categorias
+    result = await save(compatiblePayload)
+  }
   if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 })
   refresh(result.data.slug); return NextResponse.json({ ok: true, record: result.data })
  } catch (error) {
