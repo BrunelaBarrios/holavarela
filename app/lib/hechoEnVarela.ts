@@ -11,7 +11,7 @@ export type EmprendimientoVarela = {
 
 export type ProductoVarela = {
   id: string; emprendimiento_id: string; nombre: string; slug: string
-  descripcion_breve: string | null; descripcion: string | null; categoria: string
+  descripcion_breve: string | null; descripcion: string | null; categoria: string; categorias?: string[]
   precio: number | null; consultar_precio: boolean; imagenes: string[]; variantes: string[]
   informacion_entrega: string | null; activo: boolean; destacado: boolean; orden: number
   emprendimientos_varela?: EmprendimientoVarela | null

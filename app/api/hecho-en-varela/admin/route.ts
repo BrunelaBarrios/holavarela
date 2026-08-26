@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
   const payload = { ...body.payload, slug: body.payload.slug?.trim() || makeSlug(body.payload.nombre || ""), orden: Number(body.payload.orden || 0) }
   if (session.role !== "superadmin" && !isVenture) payload.emprendimiento_id = session.emprendimientoId
   if (session.role !== "superadmin" && isVenture) { delete payload.activo; delete payload.orden }
-  if (!isVenture) { payload.precio = payload.consultar_precio || payload.precio === "" ? null : Number(payload.precio); payload.imagenes = (payload.imagenes || []).slice(0, 10); payload.variantes = (payload.variantes || []).filter(Boolean) }
+  if (!isVenture) { payload.precio = payload.consultar_precio || payload.precio === "" ? null : Number(payload.precio); payload.imagenes = (payload.imagenes || []).slice(0, 10); payload.variantes = (payload.variantes || []).filter(Boolean); payload.categorias = [...new Set((payload.categorias || [payload.categoria]).filter(Boolean))]; payload.categoria = payload.categorias[0] || "Otros" }
   const query = body.id ? db.from(table).update(payload).eq("id", body.id) : db.from(table).insert(payload)
   const result = await query.select("*").single()
   if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 })
