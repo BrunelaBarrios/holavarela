@@ -8,13 +8,18 @@ import { HECHO_EN_VARELA_CATEGORIES, formatPrice, whatsappUrl, type ProductoVare
 export function HechoEnVarelaClient({ products }: { products: ProductoVarela[] }) {
   const [query, setQuery] = useState("")
   const [category, setCategory] = useState("Todos")
+  const [ventureId, setVentureId] = useState("Todos")
+  const ventures = useMemo(() => Array.from(new Map(products.flatMap(product => {
+    const venture = product.emprendimientos_varela
+    return venture ? [[venture.id, { id: venture.id, nombre: venture.nombre }]] as const : []
+  })).values()).sort((a, b) => a.nombre.localeCompare(b.nombre, "es")), [products])
   const visible = useMemo(() => {
     const term = query.trim().toLocaleLowerCase("es")
     return products.filter((product) => {
       const venture = product.emprendimientos_varela?.nombre || ""
-      return (category === "Todos" || product.categoria === category) && (!term || `${product.nombre} ${venture} ${product.descripcion_breve || ""}`.toLocaleLowerCase("es").includes(term))
+      return (category === "Todos" || product.categoria === category) && (ventureId === "Todos" || product.emprendimiento_id === ventureId) && (!term || `${product.nombre} ${venture} ${product.descripcion_breve || ""}`.toLocaleLowerCase("es").includes(term))
     })
-  }, [products, query, category])
+  }, [products, query, category, ventureId])
 
   return <main className="min-h-screen bg-[#fbf7ef] text-stone-900">
     <section className="relative overflow-hidden border-b border-amber-900/10 bg-[#efe3cd]">
@@ -34,6 +39,7 @@ export function HechoEnVarelaClient({ products }: { products: ProductoVarela[] }
       <div className="flex gap-2 overflow-x-auto pb-3 [scrollbar-width:none]" aria-label="Categorías">
         {["Todos", ...HECHO_EN_VARELA_CATEGORIES].map(item => <button key={item} onClick={() => setCategory(item)} className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${category === item ? "border-amber-800 bg-amber-800 text-white" : "border-stone-300 bg-white text-stone-700 hover:border-amber-700"}`}>{item}</button>)}
       </div>
+      <div className="mt-4 flex flex-col gap-2 sm:max-w-sm"><label htmlFor="venture-filter" className="text-sm font-bold text-stone-700">Filtrar por emprendimiento</label><div className="flex items-center gap-3 rounded-2xl border border-stone-300 bg-white px-4 shadow-sm focus-within:border-amber-700 focus-within:ring-2 focus-within:ring-amber-700/20"><Store className="h-5 w-5 shrink-0 text-amber-800" /><select id="venture-filter" value={ventureId} onChange={event => setVentureId(event.target.value)} className="min-h-12 w-full bg-transparent text-sm font-semibold outline-none"><option value="Todos">Todos los emprendimientos</option>{ventures.map(venture => <option key={venture.id} value={venture.id}>{venture.nombre}</option>)}</select></div></div>
       <div className="mb-6 mt-5 flex items-end justify-between"><div><p className="text-sm font-semibold text-amber-800">Catálogo local</p><h2 className="text-2xl font-black">Productos para descubrir</h2></div><span className="text-sm text-stone-500">{visible.length} {visible.length === 1 ? "producto" : "productos"}</span></div>
 
       {visible.length ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{visible.map(product => {
@@ -49,7 +55,7 @@ export function HechoEnVarelaClient({ products }: { products: ProductoVarela[] }
             <p className="mt-4 text-lg font-black text-amber-900">{formatPrice(product.precio, product.consultar_precio)}</p>
             <div className="mt-4 grid gap-2"><a href={whatsappUrl(venture?.whatsapp || "", product.nombre)} target="_blank" rel="noreferrer" className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-3 font-bold text-white hover:bg-[#20bd5a]"><MessageCircle className="h-5 w-5" /> Consultar por WhatsApp</a><Link href={`/hecho-en-varela/producto/${product.slug}`} className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-300 font-bold text-stone-700 hover:bg-stone-50">Ver producto <ArrowRight className="h-4 w-4" /></Link></div>
           </div>
-        </article>})}</div> : <div className="rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-16 text-center"><Store className="mx-auto h-10 w-10 text-amber-700" /><h3 className="mt-4 text-xl font-black">No encontramos resultados</h3><p className="mt-2 text-stone-600">Probá con otra búsqueda o categoría.</p></div>}
+        </article>})}</div> : <div className="rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-16 text-center"><Store className="mx-auto h-10 w-10 text-amber-700" /><h3 className="mt-4 text-xl font-black">No encontramos resultados</h3><p className="mt-2 text-stone-600">Probá con otra búsqueda, categoría o emprendimiento.</p></div>}
     </section>
   </main>
 }

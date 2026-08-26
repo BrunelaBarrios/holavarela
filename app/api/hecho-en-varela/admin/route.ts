@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+ try {
   const session = await readHechoVarelaSession(request)
   if (!session) return NextResponse.json({ error: "Acceso requerido." }, { status: 401 })
   const db = getSupabaseAdmin(), body = await request.json()
@@ -44,4 +45,8 @@ export async function POST(request: NextRequest) {
   const result = await query.select("*").single()
   if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 })
   refresh(result.data.slug); return NextResponse.json({ ok: true, record: result.data })
+ } catch (error) {
+  console.error("Error al guardar el catálogo de Hecho en Varela", error)
+  return NextResponse.json({ error: error instanceof Error ? error.message : "No se pudo guardar el producto." }, { status: 500 })
+ }
 }
