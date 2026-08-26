@@ -13,7 +13,6 @@ import {
 import { useRouter } from "next/navigation"
 import { ContactActionLink } from "./ContactActionLink"
 import { ExternalLinksButtons } from "./ExternalLinksButtons"
-import { CommunityMessages } from "./CommunityMessages"
 import { OptimizedImage } from "./OptimizedImage"
 import { PublicHeader } from "./PublicHeader"
 import { ShareButton } from "./ShareButton"
@@ -2450,7 +2449,22 @@ export function HomePage({
         </section>
       )}
 
-      <CommunityMessages showOpportunities={sobreVarela.mostrar_oportunidades_laborales_home !== false} />
+      {sobreVarela.mostrar_oportunidades_laborales_home !== false ? (
+        <section className="py-4 sm:py-6">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex min-h-[210px] flex-col justify-between rounded-[26px] border border-slate-200 bg-white p-6 shadow-[0_16px_45px_-36px_rgba(15,23,42,.5)] sm:p-7">
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700"><BriefcaseBusiness className="h-5 w-5" /></span>
+                  <h2 className="text-xl font-bold tracking-tight text-slate-900">Oportunidades laborales</h2>
+                </div>
+                <p className="mt-4 max-w-md text-sm leading-6 text-slate-600">Encontrá ofertas de trabajo o compartí tu búsqueda laboral.</p>
+              </div>
+              <Link href="/oportunidades-laborales" className="mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800">Ver oportunidades <ArrowRight className="h-4 w-4" /></Link>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <div className="flex flex-col">
 
