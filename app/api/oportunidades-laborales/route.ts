@@ -1,3 +1,5 @@
+import type { JobOpportunity } from "../../lib/jobOpportunities"
+import { missingJobLinkColumn, normalizeJobStorage } from "../../lib/jobOpportunityStorage"
 import { NextResponse, type NextRequest } from "next/server"
 import { getSupabaseAdmin } from "../../lib/supabaseAdmin"
 
@@ -26,27 +28,32 @@ export async function GET(request: NextRequest) {
     const params = request.nextUrl.searchParams
     const id = clean(params.get("id"), 80)
     const limit = Math.min(Math.max(Number(params.get("limit")) || 50, 1), 100)
-    let query = getSupabaseAdmin().from("oportunidades_laborales").select(
-      id
-        ? "*"
-        : "id,tipo_publicacion,nombre_publicante,titulo,categoria,descripcion,requisitos,experiencia,habilidades,tipo_jornada,horario,disponibilidad,localidad,imagen_url,estado,fecha_creacion,fecha_vencimiento"
-    ).eq("estado", "activa")
-    query = query.or(`fecha_vencimiento.is.null,fecha_vencimiento.gte.${todayInUruguay()}`)
-    if (id) query = query.eq("id", id)
-    const type = clean(params.get("tipo"), 20)
-    const category = clean(params.get("categoria"), 80)
-    const schedule = clean(params.get("jornada"), 80)
-    const location = clean(params.get("localidad"), 100)
-    const position = clean(params.get("puesto"), 160)
-    if (type === "oferta" || type === "busqueda") query = query.eq("tipo_publicacion", type)
-    if (category) query = query.eq("categoria", category)
-    if (schedule) query = query.eq("tipo_jornada", schedule)
-    if (location) query = query.ilike("localidad", location)
-    if (position && type === "busqueda") query = query.ilike("titulo", `%${position}%`)
-    const { data, error } = await query.order("fecha_creacion", { ascending: false }).limit(limit)
+    const publicFields = "id,tipo_publicacion,nombre_publicante,titulo,categoria,descripcion,requisitos,experiencia,habilidades,tipo_jornada,horario,disponibilidad,localidad,imagen_url,estado,fecha_creacion,fecha_vencimiento"
+    const runQuery = async (includeLink: boolean) => {
+      let query = getSupabaseAdmin().from("oportunidades_laborales").select(
+        id
+          ? "*"
+          : `${publicFields}${includeLink ? ",enlace_url" : ""}`
+      ).eq("estado", "activa")
+      query = query.or(`fecha_vencimiento.is.null,fecha_vencimiento.gte.${todayInUruguay()}`)
+      if (id) query = query.eq("id", id)
+      const type = clean(params.get("tipo"), 20)
+      const category = clean(params.get("categoria"), 80)
+      const schedule = clean(params.get("jornada"), 80)
+      const location = clean(params.get("localidad"), 100)
+      const position = clean(params.get("puesto"), 160)
+      if (type === "oferta" || type === "busqueda") query = query.eq("tipo_publicacion", type)
+      if (category) query = query.eq("categoria", category)
+      if (schedule) query = query.eq("tipo_jornada", schedule)
+      if (location) query = query.ilike("localidad", location)
+      if (position && type === "busqueda") query = query.ilike("titulo", `%${position}%`)
+      return await query.order("fecha_creacion", { ascending: false }).limit(limit).returns<JobOpportunity[]>()
+    }
+    let { data, error } = await runQuery(true)
+    if (missingJobLinkColumn(error)) ({ data, error } = await runQuery(false))
     if (error) throw error
     if (id && !data?.length) return NextResponse.json({ error: "Publicación no encontrada." }, { status: 404 })
-    return NextResponse.json({ items: data || [] })
+    return NextResponse.json({ items: (data || []).map(normalizeJobStorage) })
   } catch {
     return NextResponse.json({ error: "No se pudieron cargar las oportunidades." }, { status: 500 })
   }

@@ -1,11 +1,11 @@
 'use client'
 
-import { useCallback, useEffect, useState, type FormEvent } from "react"
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import Image from "next/image"
 import { BriefcaseBusiness, Check, Eye, EyeOff, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react"
 import { AdminConfirmModal } from "../../components/AdminConfirmModal"
 import { fileToDataUrl } from "../../lib/fileToDataUrl"
-import { formatJobDate, getJobImages, getJobLink, JOB_CATEGORIES, JOB_STATUSES, type JobOpportunity, type JobStatus } from "../../lib/jobOpportunities"
+import { formatJobDate, getJobImages, getJobLink, JOB_CATEGORIES, JOB_SCHEDULES, JOB_STATUSES, type JobOpportunity, type JobStatus } from "../../lib/jobOpportunities"
 
 const emptyPoster = {
   nombre_publicante: "",
@@ -23,6 +23,8 @@ const emptyPoster = {
 }
 
 export default function AdminJobsPage() {
+  const editDialogRef = useRef<HTMLDialogElement>(null)
+  const [processingFile, setProcessingFile] = useState(false)
   const [items, setItems] = useState<JobOpportunity[]>([])
   const [loading, setLoading] = useState(true)
   const [visibleEnHome, setVisibleEnHome] = useState(true)
@@ -37,7 +39,22 @@ export default function AdminJobsPage() {
   const [poster, setPoster] = useState(emptyPoster)
   const [posterSaving, setPosterSaving] = useState(false)
   const [posterError, setPosterError] = useState("")
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState("")
   const [editingImageError, setEditingImageError] = useState("")
+
+  useEffect(() => {
+    const dialog = editDialogRef.current
+    if (!editing || !dialog || dialog.open) return
+    dialog.showModal()
+  }, [editing])
+  const editingOpen = Boolean(editing)
+  useEffect(() => {
+    if (!editingOpen) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => { document.body.style.overflow = previous }
+  }, [editingOpen])
 
   const load = useCallback(async () => {
     const query = new URLSearchParams()
@@ -67,15 +84,26 @@ export default function AdminJobsPage() {
     void load()
   }
 
-  const save = async () => {
-    if (!editing) return
-    await fetch("/api/admin/oportunidades-laborales", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ...editing, enlace_url: getJobLink(editing) || "" }),
-    })
-    setEditing(null)
-    void load()
+  const save = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!editing || editSaving || processingFile) return
+    setEditSaving(true)
+    setEditError("")
+    try {
+      const response = await fetch("/api/admin/oportunidades-laborales", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editing),
+      })
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || "No se pudieron guardar los cambios.")
+      setEditing(null)
+      void load()
+    } catch (cause) {
+      setEditError(cause instanceof Error ? cause.message : "No se pudo conectar. Tus cambios siguen en el formulario.")
+    } finally {
+      setEditSaving(false)
+    }
   }
 
   const remove = async () => {
@@ -131,6 +159,7 @@ export default function AdminJobsPage() {
   const addEditingImages = async (selectedFiles?: FileList | null) => {
     if (!editing || !selectedFiles?.length) return
     setEditingImageError("")
+    setProcessingFile(true)
     try {
       const currentImages = getJobImages(editing)
       const files = Array.from(selectedFiles)
@@ -148,7 +177,21 @@ export default function AdminJobsPage() {
       setEditingImages([...currentImages, ...added])
     } catch (cause) {
       setEditingImageError(cause instanceof Error ? cause.message : "No se pudieron procesar las fotos.")
+    } finally { setProcessingFile(false) }
+  }
+
+  const replaceCv = async (file?: File) => {
+    if (!file) return
+    setEditError("")
+    if (!["application/pdf", "image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5_000_000) {
+      setEditError("Elegí un PDF, JPG, PNG o WebP de hasta 5 MB.")
+      return
     }
+    setProcessingFile(true)
+    const reader = new FileReader()
+    reader.onload = () => { setEditing(current => current ? {...current, cv_url: String(reader.result)} : current); setProcessingFile(false) }
+    reader.onerror = () => { setEditError("No se pudo leer el currículum."); setProcessingFile(false) }
+    reader.readAsDataURL(file)
   }
 
   const publishPoster = async (event: FormEvent) => {
@@ -226,7 +269,7 @@ export default function AdminJobsPage() {
           <button onClick={() => void changeStatus(item.id, "activa")} title="Aprobar" className="rounded-lg bg-emerald-50 p-2 text-emerald-700"><Check className="h-4 w-4"/></button>
           <button onClick={() => void changeStatus(item.id, "rechazada")} title="Rechazar" className="rounded-lg bg-amber-50 p-2 text-amber-700"><X className="h-4 w-4"/></button>
           <button onClick={() => void changeStatus(item.id, item.estado === "activa" ? "vencida" : "pendiente")} className="rounded-lg border px-3 py-2 text-xs font-semibold">{item.estado === "activa" ? "Desactivar" : "Pendiente"}</button>
-          <button onClick={() => { setEditingImageError(""); setEditing(item) }} className="rounded-lg bg-blue-50 p-2 text-blue-700"><Pencil className="h-4 w-4"/></button>
+          <button onClick={() => { setEditingImageError(""); setEditError(""); setEditing({...item, enlace_url: getJobLink(item) || "", horario: /^https?:\/\//i.test(item.horario || "") ? "" : item.horario}) }} aria-label={`Editar ${item.titulo}`} className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-blue-50 px-3 text-blue-700"><Pencil className="h-4 w-4"/>Editar</button>
           <button onClick={() => setDeleting(item)} className="rounded-lg bg-red-50 p-2 text-red-700"><Trash2 className="h-4 w-4"/></button>
         </div>
       </div>
@@ -239,14 +282,14 @@ export default function AdminJobsPage() {
           <div className="grid content-start gap-4 sm:grid-cols-2">
             <AdminField label="Título de la oferta" value={poster.titulo} onChange={value => setPoster({...poster, titulo: value})} required />
             <AdminField label="Empresa o anunciante" value={poster.nombre_publicante} onChange={value => setPoster({...poster, nombre_publicante: value})} required />
-            <label className="text-sm font-semibold">Categoría<select value={poster.categoria} onChange={event => setPoster({...poster, categoria: event.target.value})} className="mt-2 w-full rounded-xl border p-3 font-normal">{JOB_CATEGORIES.map(value => <option key={value}>{value}</option>)}</select></label>
+            <label className="text-sm font-semibold">Categoría<select value={poster.categoria} onChange={event => setPoster({...poster, categoria: event.target.value})} className="mt-2 min-w-0 w-full rounded-xl border p-3 text-base font-normal">{JOB_CATEGORIES.map(value => <option key={value}>{value}</option>)}</select></label>
             <AdminField label="Localidad" value={poster.localidad} onChange={value => setPoster({...poster, localidad: value})} required />
             <AdminField label="Teléfono (opcional)" value={poster.telefono} onChange={value => setPoster({...poster, telefono: value})} type="tel" />
             <AdminField label="Correo (opcional)" value={poster.email} onChange={value => setPoster({...poster, email: value})} type="email" />
             <AdminField label="Fecha límite (opcional)" value={poster.fecha_vencimiento} onChange={value => setPoster({...poster, fecha_vencimiento: value})} type="date" />
             <AdminField label="Cómo postularse (opcional)" value={poster.forma_postulacion} onChange={value => setPoster({...poster, forma_postulacion: value})} />
-            <AdminField label="Enlace al sitio (opcional)" value={poster.enlace_url} onChange={value => setPoster({...poster, enlace_url: value})} placeholder="www.ejemplo.com" />
-            <label className="text-sm font-semibold sm:col-span-2">Descripción breve (opcional)<textarea rows={4} value={poster.descripcion} onChange={event => setPoster({...poster, descripcion: event.target.value})} placeholder="Si la dejás vacía, invitaremos a consultar el afiche." className="mt-2 w-full rounded-xl border p-3 font-normal"/></label>
+            <AdminField label="Enlace de inscripción (opcional)" value={poster.enlace_url} onChange={value => setPoster({...poster, enlace_url: value})} placeholder="Pegá el enlace para el botón Inscribite aquí" />
+            <label className="text-sm font-semibold sm:col-span-2">Descripción breve (opcional)<textarea rows={4} value={poster.descripcion} onChange={event => setPoster({...poster, descripcion: event.target.value})} placeholder="Si la dejás vacía, invitaremos a consultar el afiche." className="mt-2 min-w-0 w-full rounded-xl border p-3 text-base font-normal"/></label>
           </div>
           <div className="flex min-h-80 flex-col rounded-2xl border-2 border-dashed border-sky-200 bg-sky-50 p-3">
             {poster.imagenes_url.length ? <div className="grid max-h-[450px] flex-1 grid-cols-2 gap-2 overflow-y-auto">
@@ -267,20 +310,40 @@ export default function AdminJobsPage() {
       </form>
     </div> : null}
 
-    {editing ? <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4">
-      <div className="mx-auto my-8 max-w-3xl rounded-2xl bg-white p-6">
+    {editing ? <dialog ref={editDialogRef} onCancel={event => { if (editSaving || processingFile) event.preventDefault(); else setEditing(null) }} aria-labelledby="edit-job-title" className="fixed inset-0 m-auto max-h-[94dvh] w-[calc(100%-1rem)] max-w-3xl overflow-y-auto overscroll-contain rounded-2xl bg-white p-0 backdrop:bg-slate-950/60">
+      <form onSubmit={save} className="mx-auto my-2 max-w-3xl rounded-2xl bg-white p-4 sm:my-8 sm:p-6">
+        <fieldset disabled={editSaving || processingFile} className="min-w-0">
         <div className="flex items-start justify-between gap-4">
-          <div><h2 className="text-xl font-bold">Editar publicación</h2><p className="mt-1 text-sm text-slate-500">Modificá los datos y administrá las fotos publicadas.</p></div>
-          <button onClick={() => setEditing(null)} aria-label="Cerrar" className="rounded-full p-2 hover:bg-slate-100"><X/></button>
+          <div><h2 id="edit-job-title" className="text-xl font-bold">Editar publicación</h2><p className="mt-1 text-sm text-slate-500">Editá la información, el contacto, la inscripción y las fotos de tu publicación.</p></div>
+          <button type="button" onClick={() => setEditing(null)} aria-label="Cerrar" className="rounded-full p-2 hover:bg-slate-100"><X/></button>
         </div>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <AdminField label="Nombre" value={editing.nombre_publicante} onChange={value => setEditing({...editing, nombre_publicante: value})}/>
-          <AdminField label="Título" value={editing.titulo} onChange={value => setEditing({...editing, titulo: value})}/>
-          <AdminField label="Localidad" value={editing.localidad} onChange={value => setEditing({...editing, localidad: value})}/>
-          <AdminField label="Enlace al sitio (opcional)" value={getJobLink(editing) || ""} onChange={value => setEditing({...editing, enlace_url: value})} placeholder="www.ejemplo.com"/>
-          <label className="text-sm font-semibold sm:col-span-2">Descripción<textarea rows={5} value={editing.descripcion} onChange={event => setEditing({...editing, descripcion: event.target.value})} className="mt-2 w-full rounded-xl border p-3 font-normal"/></label>
+          <AdminField label="Nombre" required value={editing.nombre_publicante} onChange={value => setEditing({...editing, nombre_publicante: value})}/>
+          <AdminField label="Título" required value={editing.titulo} onChange={value => setEditing({...editing, titulo: value})}/>
+          <AdminField label="Localidad" required value={editing.localidad} onChange={value => setEditing({...editing, localidad: value})}/>
+          <AdminField label="Enlace de inscripción (opcional)" value={editing.enlace_url || ""} onChange={value => setEditing({...editing, enlace_url: value})} placeholder="Pegá el enlace para el botón Inscribite aquí"/>
+          <label className="text-sm font-semibold">Tipo de publicación<select value={editing.tipo_publicacion} onChange={e => setEditing({...editing, tipo_publicacion: e.target.value as JobOpportunity["tipo_publicacion"]})} className="mt-2 w-full rounded-xl border p-3 text-base font-normal"><option value="oferta">Buscan personal</option><option value="busqueda">Busca trabajo</option></select></label>
+          <label className="text-sm font-semibold">Categoría<select value={editing.categoria} onChange={e => setEditing({...editing, categoria: e.target.value})} className="mt-2 w-full rounded-xl border p-3 text-base font-normal">{JOB_CATEGORIES.map(value => <option key={value}>{value}</option>)}</select></label>
+          <label className="text-sm font-semibold">Estado<select value={editing.estado} onChange={e => setEditing({...editing, estado: e.target.value as JobStatus})} className="mt-2 w-full rounded-xl border p-3 text-base font-normal">{JOB_STATUSES.map(value => <option key={value}>{value}</option>)}</select></label>
+          <label className="text-sm font-semibold">Jornada<select value={editing.tipo_jornada || ""} onChange={e => setEditing({...editing, tipo_jornada: e.target.value})} className="mt-2 w-full rounded-xl border p-3 text-base font-normal"><option value="">Sin especificar</option>{JOB_SCHEDULES.map(value => <option key={value}>{value}</option>)}</select></label>
+          <AdminField label="Horario" type="text" value={editing.horario || ""} onChange={value => setEditing({...editing, horario: value})}/>
+          <AdminField label="Disponibilidad" type="text" value={editing.disponibilidad || ""} onChange={value => setEditing({...editing, disponibilidad: value})}/>
+          <AdminField label="Teléfono" type="tel" value={editing.telefono || ""} onChange={value => setEditing({...editing, telefono: value})}/>
+          <AdminField label="Correo electrónico" type="email" value={editing.email || ""} onChange={value => setEditing({...editing, email: value})}/>
+          <AdminField label="Fecha límite (vacía para no tener vencimiento)" type="date" value={editing.fecha_vencimiento || ""} onChange={value => setEditing({...editing, fecha_vencimiento: value})}/>
+          <label className="text-sm font-semibold sm:col-span-2">Cómo postularse<textarea rows={3} value={editing.forma_postulacion || ""} onChange={e => setEditing({...editing, forma_postulacion: e.target.value})} className="mt-2 w-full rounded-xl border p-3 text-base font-normal"/></label>
+          <label className="text-sm font-semibold sm:col-span-2">Requisitos<textarea rows={3} value={editing.requisitos || ""} onChange={e => setEditing({...editing, requisitos: e.target.value})} className="mt-2 w-full rounded-xl border p-3 text-base font-normal"/></label>
+          <label className="text-sm font-semibold sm:col-span-2">Experiencia<textarea rows={3} value={editing.experiencia || ""} onChange={e => setEditing({...editing, experiencia: e.target.value})} className="mt-2 w-full rounded-xl border p-3 text-base font-normal"/></label>
+          <label className="text-sm font-semibold sm:col-span-2">Habilidades<textarea rows={3} value={editing.habilidades || ""} onChange={e => setEditing({...editing, habilidades: e.target.value})} className="mt-2 w-full rounded-xl border p-3 text-base font-normal"/></label>
+          <label className="text-sm font-semibold sm:col-span-2">Descripción<textarea rows={5} value={editing.descripcion} onChange={event => setEditing({...editing, descripcion: event.target.value})} className="mt-2 min-w-0 w-full rounded-xl border p-3 text-base font-normal"/></label>
         </div>
 
+        {(editing.tipo_publicacion === "busqueda" || editing.cv_url) && <section className="mt-6 rounded-xl border border-slate-200 p-4">
+          <h3 className="font-bold">Currículum</h3>
+          <p className="mt-1 text-sm text-slate-600">{editing.cv_url ? "Hay un currículum adjunto. Podés reemplazarlo o quitarlo." : "Podés adjuntar un PDF o una imagen de hasta 5 MB."}</p>
+          <label className="mt-3 block text-sm font-semibold">{editing.cv_url ? "Reemplazar currículum" : "Adjuntar currículum"}<input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={e => { void replaceCv(e.target.files?.[0]); e.currentTarget.value = "" }} className="mt-2 block w-full min-w-0 text-base"/></label>
+          {editing.cv_url && <button type="button" onClick={() => setEditing({...editing, cv_url: null})} className="mt-3 min-h-11 rounded-lg bg-red-50 px-3 text-sm font-bold text-red-700">Quitar currículum</button>}
+        </section>}
         <section className="mt-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div><h3 className="font-bold text-slate-950">Fotos de la publicación</h3><p className="text-sm text-slate-500">La primera imagen será la portada. Máximo 6 fotos.</p></div>
@@ -302,13 +365,15 @@ export default function AdminJobsPage() {
           {editingImageError ? <p className="mt-3 rounded-xl bg-red-50 p-3 text-sm font-semibold text-red-700">{editingImageError}</p> : null}
         </section>
 
-        <div className="mt-6 flex justify-end gap-3"><button onClick={() => setEditing(null)} className="rounded-xl border px-5 py-3">Cancelar</button><button onClick={() => void save()} className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white">Guardar cambios</button></div>
-      </div>
-    </div> : null}
+        {editError && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{editError}</p>}
+        <div className="sticky bottom-0 mt-6 grid grid-cols-2 gap-3 border-t border-slate-100 bg-white py-4"><button type="button" onClick={() => setEditing(null)} className="rounded-xl border px-3 py-3">Cancelar</button><button type="submit" disabled={editSaving} className="rounded-xl bg-sky-700 px-3 py-3 font-semibold text-white disabled:opacity-60">{processingFile ? "Procesando…" : editSaving ? "Guardando…" : "Guardar cambios"}</button></div>
+        </fieldset>
+      </form>
+    </dialog> : null}
     <AdminConfirmModal isOpen={Boolean(deleting)} title="Eliminar publicación" description={`Se eliminará definitivamente “${deleting?.titulo || ""}”.`} confirmLabel="Eliminar" confirmVariant="danger" onCancel={() => setDeleting(null)} onConfirm={() => void remove()}/>
   </div>
 }
 
 function AdminField({ label, value, onChange, required, type = "text", placeholder }: { label: string; value: string; onChange: (value: string) => void; required?: boolean; type?: string; placeholder?: string }) {
-  return <label className="text-sm font-semibold">{label}<input type={type} value={value} onChange={event => onChange(event.target.value)} required={required} placeholder={placeholder} className="mt-2 w-full rounded-xl border p-3 font-normal"/></label>
+  return <label className="text-sm font-semibold">{label}<input type={type} value={value} onChange={event => onChange(event.target.value)} required={required} placeholder={placeholder} className="mt-2 min-w-0 w-full rounded-xl border p-3 text-base font-normal"/></label>
 }

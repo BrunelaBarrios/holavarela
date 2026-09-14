@@ -1,3 +1,4 @@
+import { legacyJobChanges, missingJobLinkColumn, normalizeJobStorage } from "../../../lib/jobOpportunityStorage"
 import { NextResponse, type NextRequest } from "next/server"
 import { revalidatePath } from "next/cache"
 import { readAdminSessionFromRequest } from "../../../lib/adminSession"
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
   return error
     ? NextResponse.json({ error: error.message }, { status: 500 })
     : NextResponse.json({
-        items: data || [],
+        items: (data || []).map(normalizeJobStorage),
         visibleEnHome:
           visibilityResult.error?.code === "42703"
             ? true
@@ -106,22 +107,25 @@ export async function POST(request: NextRequest) {
     telefono: clean(body.telefono, 50) || null,
     email: clean(body.email, 180).toLowerCase() || null,
     forma_postulacion: clean(body.forma_postulacion, 500) || null,
-    horario: link,
+    enlace_url: link,
     imagen_url: posterImages.length === 1 ? posterImages[0] : JSON.stringify(posterImages),
     fecha_vencimiento: clean(body.fecha_vencimiento, 20) || null,
     estado: "activa",
   }
 
-  const { data, error } = await getSupabaseAdmin()
-    .from("oportunidades_laborales")
-    .insert(payload)
-    .select("id")
-    .single()
+  let { data, error } = await getSupabaseAdmin()
+    .from("oportunidades_laborales").insert(payload).select("id").single()
+  if (missingJobLinkColumn(error)) {
+    const retry = await getSupabaseAdmin().from("oportunidades_laborales")
+      .insert(legacyJobChanges(payload)).select("id").single()
+    data = retry.data
+    error = retry.error
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   revalidatePath("/oportunidades-laborales")
   revalidatePath("/")
-  return NextResponse.json({ ok: true, id: data.id }, { status: 201 })
+  return NextResponse.json({ ok: true, id: data?.id }, { status: 201 })
 }
 
 export async function PATCH(request: NextRequest) {
@@ -150,6 +154,9 @@ export async function PATCH(request: NextRequest) {
   }
   if (!body.id) return NextResponse.json({ error: "Falta el identificador." }, { status: 400 })
   const allowed = ["nombre_publicante","titulo","categoria","descripcion","requisitos","experiencia","habilidades","tipo_jornada","horario","disponibilidad","localidad","telefono","email","forma_postulacion","enlace_url","imagen_url","cv_url","fecha_vencimiento"]
+  for (const key of ["nombre_publicante", "titulo", "localidad"]) {
+    if (key in body && !clean(body[key])) return NextResponse.json({ error: "Completá el nombre, el título y la localidad." }, { status: 400 })
+  }
   const changes: Record<string, unknown> = {}
   for (const key of allowed) {
     if (!(key in body)) continue
@@ -157,13 +164,22 @@ export async function PATCH(request: NextRequest) {
       const submittedLink = clean(body[key], 500)
       const link = cleanHttpUrl(submittedLink)
       if (submittedLink && !link) return NextResponse.json({ error: "Ingresá un enlace válido, por ejemplo www.ejemplo.com." }, { status: 400 })
-      changes.horario = link
+      changes.enlace_url = link
     } else {
       changes[key] = typeof body[key] === "string" ? body[key].trim() || null : body[key]
     }
   }
+  if (body.tipo_publicacion === "oferta" || body.tipo_publicacion === "busqueda") changes.tipo_publicacion = body.tipo_publicacion
   if (body.estado && JOB_STATUSES.includes(body.estado)) changes.estado = body.estado
-  const { error } = await getSupabaseAdmin().from("oportunidades_laborales").update(changes).eq("id", body.id)
+  let { error } = await getSupabaseAdmin().from("oportunidades_laborales").update(changes).eq("id", body.id)
+  if (missingJobLinkColumn(error)) {
+    const current = await getSupabaseAdmin().from("oportunidades_laborales").select("horario").eq("id", body.id).single()
+    if (current.error) return NextResponse.json({ error: current.error.message }, { status: 500 })
+    const retry = await getSupabaseAdmin().from("oportunidades_laborales")
+      .update(legacyJobChanges(changes, current.data)).eq("id", body.id)
+    error = retry.error
+  }
+  if (!error) { revalidatePath("/oportunidades-laborales"); revalidatePath("/") }
   return error ? NextResponse.json({ error: error.message }, { status: 500 }) : NextResponse.json({ ok: true })
 }
 
@@ -172,5 +188,6 @@ export async function DELETE(request: NextRequest) {
   const id = request.nextUrl.searchParams.get("id")
   if (!id) return NextResponse.json({ error: "Falta el identificador." }, { status: 400 })
   const { error } = await getSupabaseAdmin().from("oportunidades_laborales").delete().eq("id", id)
+  if (!error) { revalidatePath("/oportunidades-laborales"); revalidatePath("/") }
   return error ? NextResponse.json({ error: error.message }, { status: 500 }) : NextResponse.json({ ok: true })
 }

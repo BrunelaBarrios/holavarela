@@ -50,7 +50,7 @@ export function getJobImages(item: Pick<JobOpportunity, "imagen_url">) {
   try {
     const parsed: unknown = JSON.parse(value)
     return Array.isArray(parsed)
-      ? parsed.filter((image): image is string => typeof image === "string" && image.startsWith("data:image/"))
+      ? parsed.filter((image): image is string => typeof image === "string" && (image.startsWith("data:image/") || /^https?:\/\//i.test(image)))
       : []
   } catch {
     return []
@@ -58,5 +58,5 @@ export function getJobImages(item: Pick<JobOpportunity, "imagen_url">) {
 }
 
 export function getJobLink(item: Pick<JobOpportunity, "enlace_url" | "horario">) {
-  return item.enlace_url || (item.horario?.startsWith("http://") || item.horario?.startsWith("https://") ? item.horario : null)
+  return item.enlace_url ?? (item.horario?.startsWith("http://") || item.horario?.startsWith("https://") ? item.horario : null)
 }
