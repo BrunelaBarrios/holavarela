@@ -145,13 +145,10 @@ export function OpportunitiesClient() {
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-lg"><BriefcaseBusiness className="h-8 w-8" /></div>
         <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-6xl">Oportunidades Laborales</h1>
         <p className="mx-auto mt-3 max-w-2xl text-base leading-7 sm:text-lg text-slate-600">Conectamos personas que buscan empleo con comercios, empresas e instituciones de José Pedro Varela.</p>
-        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row sm:flex-wrap">
-          <a href="#publicaciones" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-sky-700 px-6 py-3 font-bold text-white shadow-lg shadow-sky-200 hover:bg-sky-800">Explorar oportunidades<ArrowRight className="h-5 w-5"/></a>
-          <Link href="/armar-curriculum" className="inline-flex items-center justify-center gap-2 rounded-full border border-sky-200 bg-white px-6 py-3 font-bold text-sky-700 transition hover:bg-sky-50">
-            <FileText className="h-5 w-5" />Hacé tu currículum
-          </Link>
-          <button onClick={() => openForm("busqueda")} className="rounded-full border border-sky-200 bg-white px-6 py-3 font-bold text-sky-700 transition hover:bg-sky-50">Ya tengo CV: cargarlo</button>
-          <button onClick={() => openForm("oferta")} className="rounded-full bg-slate-950 px-6 py-3 font-bold text-white transition hover:bg-sky-700">Publicar una oferta laboral</button>
+        <div className="mx-auto mt-6 grid max-w-4xl gap-3 md:grid-cols-3">
+          <button type="button" onClick={() => openForm("oferta")} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-sky-700 px-5 py-3 font-bold text-white shadow-lg shadow-sky-200 transition hover:bg-sky-800"><BriefcaseBusiness className="h-5 w-5 shrink-0"/>Cargar oferta laboral</button>
+          <button type="button" onClick={() => openForm("busqueda")} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-sky-200 bg-white px-5 py-3 font-bold text-sky-700 transition hover:bg-sky-50"><Search className="h-5 w-5 shrink-0"/>Cargar búsqueda laboral</button>
+          <Link href="/armar-curriculum" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-sky-200 bg-white px-5 py-3 font-bold text-sky-700 transition hover:bg-sky-50"><FileText className="h-5 w-5 shrink-0"/>Armar mi currículum</Link>
         </div>
       </div>
     </section>
@@ -181,7 +178,7 @@ export function OpportunitiesClient() {
     </section>
     <OpportunityPartnersBand />
     {modal && <dialog ref={dialogRef} onCancel={() => setModal(null)} aria-label={modal === "detail" ? "Detalle de la publicación" : "Publicar información laboral"} className="fixed inset-0 m-auto max-h-[94dvh] w-[calc(100%-1rem)] max-w-3xl overflow-y-auto overscroll-contain rounded-3xl bg-white p-4 text-slate-900 shadow-2xl backdrop:bg-slate-950/55 backdrop:backdrop-blur-sm sm:p-8"><div className="sticky top-0 z-10 flex justify-end bg-white/95"><button type="button" onClick={() => setModal(null)} aria-label="Cerrar" className="inline-flex min-h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-3 text-sm font-semibold"><X className="h-5 w-5"/>Cerrar</button></div>
-      {modal === "detail" && selected ? <JobDetail item={selected}/> : <form onSubmit={submit}><h2 className="pr-12 text-2xl font-black">{modal === "oferta" ? "Publicar una oferta laboral" : "Cargar mis datos y currículum"}</h2><p className="mt-2 text-sm text-slate-500">{modal === "busqueda" ? "Tu información se guardará de forma privada. Solo se publicará si lo elegís expresamente." : "La publicación quedará pendiente hasta que sea revisada."}</p>
+      {modal === "detail" && selected ? <JobDetail item={selected}/> : <form onSubmit={submit}><h2 className="pr-12 text-2xl font-black">{modal === "oferta" ? "Publicar una oferta laboral" : "Cargar búsqueda laboral"}</h2><p className="mt-2 text-sm text-slate-500">{modal === "busqueda" ? "Tu información se guardará de forma privada. Solo se publicará si lo elegís expresamente." : "La publicación quedará pendiente hasta que sea revisada."}</p>
         {modal === "oferta" ? <>
           <div className="mt-6 grid gap-4 sm:grid-cols-2"><Field label="Nombre de empresa, institución o particular" value={form.nombre_publicante} onChange={v => update("nombre_publicante", v)} required/><Field label="Puesto solicitado" value={form.titulo} onChange={v => update("titulo", v)} required/><Field label="Localidad" value={form.localidad} onChange={v => update("localidad", v)} required/><Field label="Horario" value={form.horario} onChange={v => update("horario", v)}/></div>
           <Area label="Descripción del puesto" value={form.descripcion} onChange={v => update("descripcion", v)} required/><Area label="Requisitos" value={form.requisitos} onChange={v => update("requisitos", v)}/>
