@@ -1,5 +1,7 @@
 'use client'
 
+import { SweepstakesDrawPanel } from "../components/SweepstakesDrawPanel"
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Copy, Download, Gift, Plus, QrCode, Save, Search } from "lucide-react"
 import { supabase } from "../../supabase"
@@ -702,6 +704,8 @@ export default function AdminSorteosPage() {
           Crea campañas, activa una sola a la vez y define qué fichas aparecen en el popup.
         </p>
       </div>
+
+      {schemaReady && selectedCampaign && <SweepstakesDrawPanel key={selectedCampaign.id} campaignId={selectedCampaign.id} title={selectedCampaign.titulo}/> }
 
       {!schemaReady ? (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">

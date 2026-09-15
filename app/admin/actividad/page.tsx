@@ -36,7 +36,14 @@ export default function AdminActividadPage() {
         return
       }
 
-      setActividad(data || [])
+      setActividad((data || []).map(item => {
+        if (item.seccion !== "Extracciones de sorteos") return item
+        try {
+          const record = JSON.parse(JSON.parse(item.detalle || "{}").payload)
+          return { ...item, objetivo: record.title || item.objetivo,
+            detalle: `${record.tickets?.length || 0} cupones · ${record.count} ganadores. ${record.completedAt ? "Resultado guardado" : "Preparado, sin sortear"}. Consultá la extracción #${item.id} en Sorteos.` }
+        } catch { return { ...item, detalle: "Consultá este registro en el historial de Sorteos." } }
+      }))
     }
 
     cargarActividad()
