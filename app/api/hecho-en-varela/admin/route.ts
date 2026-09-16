@@ -38,6 +38,9 @@ export async function POST(request: NextRequest) {
   if (body.action === "toggle") { const result = await db.from(table).update({ activo: !body.activo }).eq("id", body.id); if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 }); refresh(body.slug); return NextResponse.json({ ok: true }) }
   if (body.action !== "save") return NextResponse.json({ error: "Acción no válida." }, { status: 400 })
   if (!isVenture && session.role === "superadmin" && !body.payload?.emprendimiento_id) return NextResponse.json({ error: "Seleccioná el emprendimiento del producto." }, { status: 400 })
+  if (isVenture && body.payload?.origen !== undefined && !["varela", "region"].includes(body.payload.origen)) {
+    return NextResponse.json({ error: "Seleccioná Hecho en Varela o Hecho en la región." }, { status: 400 })
+  }
   const payload = { ...body.payload, slug: body.payload.slug?.trim() || makeSlug(body.payload.nombre || ""), orden: Number(body.payload.orden || 0) }
   if (session.role !== "superadmin" && !isVenture) payload.emprendimiento_id = session.emprendimientoId
   if (session.role !== "superadmin" && isVenture) { delete payload.activo; delete payload.orden }
@@ -48,6 +51,9 @@ export async function POST(request: NextRequest) {
     const compatiblePayload = { ...payload }
     delete compatiblePayload.categorias
     result = await save(compatiblePayload)
+  }
+  if (result.error && isVenture && ["42703", "PGRST204"].includes(result.error.code) && result.error.message.includes("origen")) {
+    return NextResponse.json({ error: "Falta agregar el campo origen en Supabase. Ejecutá el SQL de Hecho en Varela y la región y volvé a guardar." }, { status: 400 })
   }
   if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 })
   refresh(result.data.slug); return NextResponse.json({ ok: true, record: result.data })

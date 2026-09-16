@@ -1,9 +1,19 @@
+export const VENTURE_ORIGINS = [
+  { value: "varela", label: "Hecho en Varela" },
+  { value: "region", label: "Hecho en la región" },
+] as const
+export type VentureOrigin = (typeof VENTURE_ORIGINS)[number]["value"]
+export function ventureOriginLabel(origin?: string | null) {
+  return origin === "region" ? "Hecho en la región" : "Hecho en Varela"
+}
+
 export const HECHO_EN_VARELA_CATEGORIES = [
   "Artesanías", "Decoración", "Regalos", "Tejidos y textiles", "Accesorios",
   "Alimentos artesanales", "Cuidado personal", "Otros",
 ] as const
 
 export type EmprendimientoVarela = {
+  origen?: VentureOrigin
   id: string; nombre: string; slug: string; descripcion: string | null; whatsapp: string
   instagram_url: string | null; redes_url: string | null; modalidad_entrega: string | null
   logo_url: string | null; activo: boolean; orden: number
@@ -19,7 +29,7 @@ export type ProductoVarela = {
 
 export function whatsappUrl(phone: string, productName: string) {
   const number = phone.replace(/\D/g, "")
-  const message = `Hola, vi este producto en Hecho en Varela y me gustaría recibir más información: ${productName}`
+  const message = `Hola, vi este producto en Hecho en Varela y la región y me gustaría recibir más información: ${productName}`
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`
 }
 
