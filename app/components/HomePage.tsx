@@ -3278,6 +3278,8 @@ export function HomePage({
         </section>
       ) : null}
 
+      {catalogPreview}
+
       <section className="py-16 [content-visibility:auto] [contain-intrinsic-size:560px]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
@@ -3339,8 +3341,6 @@ export function HomePage({
           </div>
         </div>
       </section>
-
-      {catalogPreview}
 
       <footer id="contacto" className="mt-6 border-t border-slate-200/80 bg-white/80 py-14 [content-visibility:auto] [contain-intrinsic-size:420px] backdrop-blur">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 sm:px-6 md:grid-cols-2 lg:px-8">
