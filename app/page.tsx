@@ -1,3 +1,5 @@
+import { Suspense } from "react"
+import { HomeHechoEnVarela, HechoEnVarelaSection } from "./components/HomeHechoEnVarela"
 import { HomePage, type HomePageData, type WeatherData } from "./components/HomePage"
 import { unstable_cache } from "next/cache"
 import {
@@ -424,5 +426,5 @@ const getHomePageData = unstable_cache(
 export default async function Page() {
   const initialData = await getHomePageData(getTodayInMontevideo())
 
-  return <HomePage initialData={initialData} />
+  return <HomePage initialData={initialData} catalogPreview={<Suspense fallback={<HechoEnVarelaSection/>}><HomeHechoEnVarela/></Suspense>} />
 }

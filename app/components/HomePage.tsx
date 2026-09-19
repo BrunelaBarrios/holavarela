@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
   type KeyboardEvent,
+  type ReactNode,
 } from "react"
 import { useRouter } from "next/navigation"
 import { ContactActionLink } from "./ContactActionLink"
@@ -547,8 +548,10 @@ function getScheduledRotationPage(totalPages: number, rotationDays = FEATURED_RO
 
 export function HomePage({
   initialData,
+  catalogPreview,
 }: {
   initialData: HomePageData
+  catalogPreview?: ReactNode
 }) {
   const router = useRouter()
   const featuredBusinesses = initialData.featuredBusinesses
@@ -3353,6 +3356,8 @@ export function HomePage({
           </div>
         </div>
       </section>
+
+      {catalogPreview}
 
       <footer id="contacto" className="mt-6 border-t border-slate-200/80 bg-white/80 py-14 [content-visibility:auto] [contain-intrinsic-size:420px] backdrop-blur">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-4 sm:px-6 md:grid-cols-2 lg:px-8">
