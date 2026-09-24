@@ -35,7 +35,7 @@ export function HechoEnVarelaSection({ products = [] }: { products?: PreviewProd
       <div className="overflow-hidden rounded-[28px] border border-amber-900/10 bg-gradient-to-br from-[#efe3cd] via-[#fbf7ef] to-white p-4 shadow-[0_20px_60px_-40px_rgba(120,53,15,.35)] sm:p-8">
         <div className="max-w-2xl">
           <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-amber-900"><Sparkles className="h-4 w-4" aria-hidden="true"/>Talento de nuestra tierra</p>
-          <h2 id="home-catalog-title" className="mt-3 text-3xl font-black tracking-tight text-stone-900 sm:text-4xl">Hecho en Varela y la región</h2>
+          <h2 id="home-catalog-title" className="mt-3 text-3xl font-black tracking-tight text-stone-900 sm:text-4xl">Talento de acá</h2>
           <p className="mt-3 text-base leading-7 text-stone-700">Descubrí productos de artesanos y emprendedores de acá. Conocé sus creaciones y contactalos directamente.</p>
         </div>
         {products.length > 0 && <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{products.map(product => <Link key={product.id} href={`/hecho-en-varela/producto/${product.slug}`} className="group min-w-0 overflow-hidden rounded-2xl border border-amber-900/10 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-800">

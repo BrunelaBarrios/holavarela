@@ -28,7 +28,7 @@ export function HechoEnVarelaClient({ products }: { products: ProductoVarela[] }
       <div className="absolute -right-24 -top-28 h-80 w-80 rounded-full bg-orange-300/20 blur-3xl" />
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-900/10 bg-white/55 px-3 py-1.5 text-xs font-bold uppercase tracking-[.18em] text-amber-900"><Sparkles className="h-4 w-4" /> Talento local y regional</div>
-        <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">Hecho en Varela y la región</h1>
+        <h1 className="max-w-3xl text-4xl font-black tracking-tight sm:text-6xl">Talento de acá</h1>
         <p className="mt-4 max-w-2xl text-lg leading-8 text-stone-700">Descubrí productos creados por artesanos y emprendedores de nuestra ciudad y la región.</p>
         <label className="mt-8 flex max-w-2xl items-center gap-3 rounded-2xl border border-amber-900/15 bg-white px-4 py-3.5 shadow-sm focus-within:ring-2 focus-within:ring-amber-700/30">
           <Search className="h-5 w-5 text-amber-800" /><span className="sr-only">Buscar</span>

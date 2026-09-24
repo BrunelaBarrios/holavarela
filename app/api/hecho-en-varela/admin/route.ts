@@ -53,12 +53,12 @@ export async function POST(request: NextRequest) {
     result = await save(compatiblePayload)
   }
   if (result.error && isVenture && ["42703", "PGRST204"].includes(result.error.code) && result.error.message.includes("origen")) {
-    return NextResponse.json({ error: "Falta agregar el campo origen en Supabase. Ejecutá el SQL de Hecho en Varela y la región y volvé a guardar." }, { status: 400 })
+    return NextResponse.json({ error: "Falta agregar el campo origen en Supabase. Ejecutá el SQL de Talento de acá y volvé a guardar." }, { status: 400 })
   }
   if (result.error) return NextResponse.json({ error: result.error.message }, { status: 400 })
   refresh(result.data.slug); return NextResponse.json({ ok: true, record: result.data })
  } catch (error) {
-  console.error("Error al guardar el catálogo de Hecho en Varela", error)
+  console.error("Error al guardar el catálogo de Talento de acá", error)
   return NextResponse.json({ error: error instanceof Error ? error.message : "No se pudo guardar el producto." }, { status: 500 })
  }
 }

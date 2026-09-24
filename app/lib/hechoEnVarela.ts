@@ -29,7 +29,7 @@ export type ProductoVarela = {
 
 export function whatsappUrl(phone: string, productName: string) {
   const number = phone.replace(/\D/g, "")
-  const message = `Hola, vi este producto en Hecho en Varela y la región y me gustaría recibir más información: ${productName}`
+  const message = `Hola, vi este producto en Talento de acá y me gustaría recibir más información: ${productName}`
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`
 }
 
