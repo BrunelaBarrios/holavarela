@@ -1,0 +1,76 @@
+.profile {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.profile > div {
+  max-width: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  padding: 0;
+}
+
+.profile > div > section:first-child {
+  grid-column: 1 / -1;
+  border: 1px solid #e3eae6;
+  border-radius: 28px;
+  background: linear-gradient(120deg, #fff 50%, #eef8f2);
+  padding: clamp(24px, 4vw, 40px);
+  box-shadow: 0 12px 40px -30px #36564a;
+}
+
+.profile > div > section:first-child h1 { font-size: clamp(32px, 5vw, 54px); }
+.profile > div > section:first-child > div:first-child > div:first-child { width: 104px; height: 104px; border-radius: 22px; }
+.profile > div > section:first-child > div:nth-child(2) { display: flex; flex-wrap: wrap; gap: 8px 24px; }
+.profile > div > section:first-child > div:nth-child(2) > div { border: 0; background: transparent; min-height: 40px; padding: 0; }
+.profile > div > section:first-child > div:nth-child(2) > div > div { width: 28px; height: 28px; background: transparent; box-shadow: none; color: #428269; }
+
+.profile > div > section:nth-child(2):not(.gallery):not(.detail):not(.extra) {
+  border: 0;
+  background: white;
+  border-radius: 24px;
+  box-shadow: none;
+  padding: clamp(24px, 3vw, 36px);
+}
+
+.gallery { min-width: 0; }
+.photoBlock { min-width: 0; }
+.galleryHeading { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 14px; font-size: 12px; color: #68766d; }
+.galleryHeading > span:first-child { font-weight: 700; text-transform: uppercase; letter-spacing: .16em; }
+.cover { display: block; position: relative; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 24px; background: #e8ece7; cursor: zoom-in; }
+.coverAction { position: absolute; right: 16px; bottom: 16px; display: flex; align-items: center; gap: 10px; background: #ffffffed; color: #233d30; padding: 10px 16px; border-radius: 30px; font-size: 13px; font-weight: 600; }
+.photoRail { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: thin; scrollbar-color: #c7d5cc transparent; padding: 12px 0 6px; }
+.thumbnail { position: relative; flex: 0 0 28%; aspect-ratio: 1; border-radius: 16px; overflow: hidden; background: #e8ece7; scroll-snap-align: start; cursor: zoom-in; }
+.galleryFooter { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; color: #68766d; font-size: 12px; }
+.galleryFooter > div { display: flex; gap: 8px; }
+.galleryFooter button { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid #d9e2dc; border-radius: 50%; background: white; color: #375d48; cursor: pointer; }
+.photoBlock button:focus-visible, .photoRail:focus-visible { outline: 3px solid #428269; outline-offset: 3px; }
+.photoBlock button:hover { filter: brightness(.96); }
+.detail { grid-column: 1 / -1; border: 0; border-left: 3px solid #8db89e; border-radius: 0 22px 22px 0; background: #eaf4ee; box-shadow: none; padding: 28px 32px; }
+.extra { grid-column: 1 / -1; display: grid; gap: 16px; min-width: 0; border: 1px solid #ece4db; border-radius: 28px; background: #fbf7f2; padding: clamp(24px, 4vw, 40px); box-shadow: none; }
+.extra > p { margin-top: 0; }
+.extraGallery { min-width: 0; margin-top: 8px; }
+
+@media (min-width: 768px) {
+  .profile > div { grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); gap: 32px; align-items: start; }
+  .gallery { position: sticky; top: 24px; }
+  .extra { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); column-gap: 36px; }
+  .extra > h3 { grid-column: 1; align-self: end; }
+  .extra > p { grid-column: 1; }
+  .extraGallery { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; }
+}
+
+@media (max-width: 767px) {
+  .profile > div > section { order: 2; }
+  .profile > div > section:first-child { order: 0; }
+  .profile > div > .gallery { order: 1; }
+  .profile > div > .detail { order: 3; }
+  .profile > div > .extra { order: 4; }
+}
+
+@media (min-width: 768px) {
+  .extra { grid-template-rows: auto 1fr; }
+}

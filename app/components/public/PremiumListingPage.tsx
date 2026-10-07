@@ -25,6 +25,8 @@ import { formatEventDateRange } from "../../lib/eventDates"
 import { buildJosePedroVarelaDirectionsUrl } from "../../lib/mapLinks"
 import { parseEventDescription, shouldHideEventDate } from "../../lib/eventSubmissionMeta"
 import { buildPublicNav } from "../../lib/publicNav"
+import { ProfilePhotoGallery } from "./ProfilePhotoGallery"
+import styles from "./EditorialProfile.module.css"
 
 type RelatedEvent = {
   id: number
@@ -97,6 +99,7 @@ export function PremiumListingPage({
   relatedCourses = [],
   relatedCoursesTitle,
 }: PremiumListingPageProps) {
+  const editorial = kind === "servicio" && id === 15
   const basePath =
     kind === "comercio"
       ? "/comercios"
@@ -322,7 +325,7 @@ export function PremiumListingPage({
           </Link>
         </div>
 
-        <section className="overflow-hidden rounded-[30px] border border-slate-200/80 bg-white shadow-[0_24px_70px_-40px_rgba(15,23,42,0.42)]">
+        <section className={`${editorial ? styles.profile : ""} overflow-hidden rounded-[30px] border border-slate-200/80 bg-white shadow-[0_24px_70px_-40px_rgba(15,23,42,0.42)]`}>
           <div className="mx-auto flex w-full max-w-[860px] flex-col gap-6 p-5 sm:p-7 lg:p-8">
             <section className="rounded-[26px] border border-slate-100 bg-white/80 p-5 shadow-sm sm:p-6">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-7">
@@ -434,7 +437,11 @@ export function PremiumListingPage({
               </section>
             ) : null}
 
-            {mainGalleryImages.length > 1 ? (
+            {editorial && mainGalleryImages.length > 1 ? (
+              <section className={styles.gallery}>
+                <ProfilePhotoGallery images={mainGalleryImages} title={title} skipImage={imageSrc} onOpen={(index) => openImageAt(index, "main")} />
+              </section>
+            ) : mainGalleryImages.length > 1 ? (
               <section className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -494,7 +501,7 @@ export function PremiumListingPage({
             ) : null}
 
             {premiumDetail ? (
-              <section className="rounded-[24px] border border-sky-100 bg-sky-50/70 p-5 shadow-sm sm:p-6">
+              <section className={`${editorial ? styles.detail : ""} rounded-[24px] border border-sky-100 bg-sky-50/70 p-5 shadow-sm sm:p-6`}>
                 <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
                   <ExternalLink className="h-4 w-4" />
                   Información ampliada
@@ -506,7 +513,7 @@ export function PremiumListingPage({
             ) : null}
 
             {premiumExtraTitle || premiumExtraDetail || extraGalleryImages.length ? (
-              <section className="rounded-[24px] border border-amber-100 bg-amber-50/80 p-5 shadow-sm sm:p-6">
+              <section className={`${editorial ? styles.extra : ""} rounded-[24px] border border-amber-100 bg-amber-50/80 p-5 shadow-sm sm:p-6`}>
                 {premiumExtraTitle ? (
                   <h3 className="text-2xl font-semibold tracking-tight text-slate-950">
                     {premiumExtraTitle}
@@ -519,7 +526,11 @@ export function PremiumListingPage({
                   </p>
                 ) : null}
 
-                {extraGalleryImages.length ? (
+                {editorial && extraGalleryImages.length ? (
+                  <div className={styles.extraGallery}>
+                    <ProfilePhotoGallery images={extraGalleryImages} title={premiumExtraTitle || title} onOpen={(index) => openImageAt(index, "extra")} />
+                  </div>
+                ) : extraGalleryImages.length ? (
                   <div className="mt-5 overflow-x-auto pb-2">
                     <div className="flex min-w-max gap-3">
                       {extraGalleryImages.map((image, index) => (
