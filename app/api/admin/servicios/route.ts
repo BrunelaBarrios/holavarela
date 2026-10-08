@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { readAdminSessionFromRequest } from "../../../lib/adminSession"
 import { logAdminActivityServer } from "../../../lib/adminActivityServer"
 import { getSupabaseAdmin } from "../../../lib/supabaseAdmin"
+import { servicioSaveError } from "../../../lib/servicioSaveError"
 
 type SaveServicioPayload = {
   action: "save"
@@ -277,8 +278,15 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true, record: data })
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "No pudimos guardar el servicio."
-    return NextResponse.json({ error: message }, { status: 500 })
+    // PostgREST throws plain objects, not necessarily Error instances.
+    // Keep database details in server logs rather than exposing them to the UI.
+    const details = error && typeof error === "object"
+      ? error as { code?: unknown; message?: unknown }
+      : {}
+    console.error("[admin/servicios] Operation failed", {
+      code: details.code,
+      message: details.message,
+    })
+    return NextResponse.json({ error: servicioSaveError(error) }, { status: 500 })
   }
 }
